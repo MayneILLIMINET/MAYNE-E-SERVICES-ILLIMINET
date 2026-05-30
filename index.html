@@ -1,35 +1,233 @@
-<div id="service-credit" class="sub-panel" style="display: none;">
-    <h4 style="color: #0000ff; border-bottom: 2px solid #0000ff; margin-top: 0; padding-bottom: 5px;">Forfait & Crédit</h4>
-    
-    <div class="input-group">
-        <label class="input-label" style="color:#000; font-weight: bold; font-size: 13px;">Sélectionner le Réseau :</label>
-        <select id="forfait-reseau" class="select-field dark-field" style="width: 100%; padding: 10px; background-color: #000000; color: #ffffff; border: 2px solid #ffffff; border-radius: 6px; font-weight: bold;">
-            <option value="MTN">MTN Bénin</option>
-            <option value="MOOV">Moov Africa</option>
-            <option value="CELTIS">Celtis Bénin</option>
-        </select>
-    </div>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MAYNE E-SERVICES</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    <div class="input-group" style="margin-top: 10px;">
-        <label class="input-label" style="color:#000; font-weight: bold; font-size: 13px;">Type de forfait :</label>
-        <select id="forfait-motif" class="select-field dark-field" style="width: 100%; padding: 10px; background-color: #000000; color: #ffffff; border: 2px solid #ffffff; border-radius: 6px; font-weight: bold;">
-            <option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option>
-            <option value="FORFAIT APPEL">FORFAIT APPEL</option>
-            <option value="INTERNET VOLUME">INTERNET VOLUME</option>
-            <option value="ILLIMITE">ILLIMITÉ (Illiminet)</option>
-        </select>
-    </div>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        /* Cadre principal de l'application */
+        .app-container {
+            max-width: 450px;
+            margin: 10px auto;
+            padding: 20px;
+            background-color: #0000ff; 
+            border: 2px solid #ffffff;
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
 
-    <div class="input-group" style="margin-top: 10px;">
-        <label class="input-label" style="color:#000; font-weight: bold; font-size: 13px;">Numéro bénéficiaire :</label>
-        <input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX" style="width: 100%; padding: 10px; background-color: #000000; color: #ffffff; border: 2px solid #ffffff; border-radius: 6px; font-weight: bold; text-align: center;">
-    </div>
+        /* Formulaires (Connexion / Inscription) */
+        .input-group {
+            text-align: left;
+            margin-bottom: 12px;
+        }
+        .input-label {
+            display: block;
+            font-size: 13px;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-field, .select-field {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 2px solid #ffffff;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        /* Style cases de formulaires en FOND NOIR */
+        .dark-field {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 2px solid #ffffff !important;
+        }
+        .dark-field option {
+            background-color: #000000;
+            color: #ffffff;
+        }
+        
+        /* Boutons principaux */
+        .btn-primary {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+        .btn-link {
+            background: none;
+            border: none;
+            color: #ffeb3b;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 12px;
+            display: inline-block;
+        }
 
-    <div class="input-group" style="margin-top: 10px;">
-        <label class="input-label" style="color:#000; font-weight: bold; font-size: 13px;">Montant (FCFA) :</label>
-        <input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Ex: 500" min="100" style="width: 100%; padding: 10px; background-color: #000000; color: #ffffff; border: 2px solid #ffffff; border-radius: 6px; font-weight: bold; text-align: center;">
-    </div>
+        /* --- ZONE CLIENT CONNECTÉ --- */
+        .user-header {
+            background-color: #000000; 
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .profile-line {
+            font-size: 15px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            width: 75%;
+            color: #ffffff;
+        }
+        .solde-val {
+            font-size: 22px;
+            font-weight: bold;
+            color: #00ff00; 
+        }
+        .btn-logout {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: #cc0000;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
 
-    <button id="btn-acheter-forfait" class="btn-primary" style="width: 100%; background-color: #0000ff; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 15px;">Acheter</button>
-    <p id="forfait-status" class="status-msg" style="display: none; font-size: 13px; font-weight: bold; margin-top: 10px; text-align: center; color: #006600;"></p>
-</div>
+        /* Menu des Services en Grille (2 colonnes) */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .tab-btn {
+            padding: 10px 5px;
+            font-size: 11px;
+            font-weight: bold;
+            background-color: #cc2222; 
+            color: white;
+            border: 1px solid #ffffff;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .tab-btn.btn-home {
+            grid-column: span 2;
+            background-color: #d4af37; 
+            color: #000000; 
+            font-size: 13px;
+        }
+
+        /* Panneau de contenu des Services en OR */
+        .service-panel {
+            background-color: #d4af37; 
+            color: #000000; 
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 150px;
+            box-shadow: inset 0px 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .sub-panel h4.main-title {
+            margin-top: 0;
+            color: #ffffff; 
+            border-bottom: 2px solid #ffffff;
+            padding-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+        }
+        
+        .sub-panel h4 {
+            margin-top: 0;
+            color: #0000ff;
+            border-bottom: 2px solid #0000ff;
+            padding-bottom: 5px;
+        }
+
+        /* Zone À Propos & Partenaires */
+        .about-section {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed #0000ff;
+            font-size: 12px;
+            color: #111;
+        }
+        .partners-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .partner-logo {
+            width: 50px;
+            height: 30px;
+            background-color: #ffffff; 
+            border: 1px solid #333;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        .status-msg {
+            display: none;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <div id="logged-out-zone">
+        <div id="login-interface">
+            <h3 style="margin-top: 0; text-align: center;">Espace Client Sécurisé</h3>
+            <div class="input-group">
+                <label class="input-label">Numéro de téléphone :</label>
+                <input type="text" id="login-id" class="input-field" placeholder="Ex: 0166302734">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Code PIN :</label>
+                <input type="password" id="login-pin" class="input-field" placeholder="••••">
+            </div>
+            <button id="btn-login
