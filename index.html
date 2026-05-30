@@ -15,8 +15,6 @@
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
         }
-        
-        /* Cadre principal Bleu */
         .app-container {
             max-width: 450px;
             margin: 10px auto;
@@ -29,8 +27,6 @@
             box-sizing: border-box;
             text-align: center;
         }
-
-        /* Groupes de champs */
         .input-group {
             text-align: left;
             margin-bottom: 15px;
@@ -54,19 +50,15 @@
             background-color: #ffffff;
             color: #000000;
         }
-        
-        /* Champs spéciaux en Fond Noir */
         .dark-field {
             background-color: #000000 !important;
             color: #ffffff !important;
             border: 2px solid #ffffff !important;
         }
-        
-        /* Boutons de l'interface de connexion (VERT TRÈS VISIBLE) */
         .btn-submit {
             width: 100%;
-            background-color: #2b8a3e !important;
-            color: #ffffff !important;
+            background-color: #2b8a3e;
+            color: #ffffff;
             border: 2px solid #ffffff;
             padding: 14px;
             font-size: 16px;
@@ -76,7 +68,6 @@
             margin-top: 10px;
             display: block;
         }
-
         .btn-link {
             background: none;
             border: none;
@@ -87,8 +78,6 @@
             margin-top: 15px;
             display: inline-block;
         }
-
-        /* --- ZONE CLIENT CONNECTÉ --- */
         .user-header {
             background-color: #000000; 
             padding: 12px;
@@ -105,7 +94,6 @@
             padding-bottom: 4px;
             margin-bottom: 6px;
             width: 75%;
-            color: #ffffff;
         }
         .solde-val {
             font-size: 22px;
@@ -125,8 +113,6 @@
             border-radius: 4px;
             cursor: pointer;
         }
-
-        /* Grille des menus (Rouge) */
         .services-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -151,8 +137,6 @@
             color: #000000; 
             font-size: 13px;
         }
-
-        /* Zone de contenu Jaune/Or */
         .service-panel {
             background-color: #d4af37; 
             color: #000000; 
@@ -167,7 +151,6 @@
             padding-bottom: 5px;
             text-transform: uppercase;
         }
-        
         .about-section {
             margin-top: 25px;
             padding-top: 15px;
@@ -212,48 +195,38 @@
         
         <div id="login-interface">
             <h3 style="margin-top: 0; margin-bottom: 20px;">Espace Client Sécurisé</h3>
-            
             <div class="input-group">
                 <label class="input-label">Numéro de téléphone :</label>
                 <input type="text" id="login-id" class="input-field" placeholder="Ex: 0166302734">
             </div>
-            
             <div class="input-group">
                 <label class="input-label">Code PIN :</label>
                 <input type="password" id="login-pin" class="input-field" placeholder="••••" maxlength="4">
             </div>
-            
             <button id="btn-login" class="btn-submit">Se connecter</button>
-            
             <button id="go-to-register" class="btn-link">Pas de compte ? S'inscrire ici</button>
         </div>
 
         <div id="register-interface" style="display: none;">
             <h3 style="margin-top: 0; margin-bottom: 20px;">Créer un Compte</h3>
-            
             <div class="input-group">
                 <label class="input-label">Nom et Prénom :</label>
                 <input type="text" id="reg-name" class="input-field" placeholder="Ex: Marius Ayizan">
             </div>
-            
             <div class="input-group">
                 <label class="input-label">Numéro de téléphone :</label>
                 <input type="text" id="reg-id" class="input-field" placeholder="Ex: 0166302734">
             </div>
-            
             <div class="input-group">
                 <label class="input-label">Choisir un Code PIN (4 chiffres) :</label>
                 <input type="password" id="reg-pin" class="input-field" placeholder="••••" maxlength="4">
             </div>
-            
             <button id="btn-register" class="btn-submit" style="background-color: #00bcd4 !important;">Valider l'inscription</button>
-            
             <button id="go-to-login" class="btn-link">Déjà inscrit ? Se connecter</button>
         </div>
     </div>
 
     <div id="logged-in-zone" style="display: none;">
-        
         <div class="user-header">
             <button id="btn-logout" class="btn-logout">Quitter</button>
             <div class="profile-line" id="user-name">Chargement...</div>
@@ -275,127 +248,67 @@
         </div>
 
         <div class="service-panel">
-            
             <div id="menu-principal" class="sub-panel">
                 <h4 style="color:#fff; border-bottom-color:#fff;">MAYNE SERVICE ILLIMINET</h4>
-                <p style="font-size:13px; font-weight: bold; text-align: justify;">
-                    Votre plateforme de confiance au Bénin pour tous vos besoins numériques et quotidiens :
-                </p>
-                <ul style="font-size:12px; font-weight: bold; padding-left: 18px;">
-                    <li>Forfaits Illimités (Internet & Appels)</li>
-                    <li>Règlement de factures (SBEE, SONEB, CANAL+)</li>
-                    <li>Vente d'Électroménagers de qualité</li>
-                    <li>Dépôts instantanés 1XBET</li>
-                </ul>
+                <p style="font-size:13px; font-weight: bold; text-align: justify;">Votre plateforme de confiance au Bénin pour tous vos besoins numériques.</p>
                 <div class="about-section">
                     <center><b>NOS PARTENAIRES</b></center>
                     <div class="partners-container">
-                        <div class="partner-logo">MTN</div>
-                        <div class="partner-logo">MOOV</div>
-                        <div class="partner-logo">CELTIS</div>
-                        <div class="partner-logo">1XBET</div>
-                        <div class="partner-logo">CANAL+</div>
-                        <div class="partner-logo">SBEE</div>
+                        <div class="partner-logo">MTN</div><div class="partner-logo">MOOV</div><div class="partner-logo">CELTIS</div>
+                        <div class="partner-logo">1XBET</div><div class="partner-logo">CANAL+</div><div class="partner-logo">SBEE</div>
                     </div>
                 </div>
             </div>
 
             <div id="service-market" class="sub-panel" style="display: none;">
-                <h4>Market-place</h4>
-                <p style="font-size:13px; font-weight: bold;">Articles multimédias et électroménagers disponibles en livraison partout au Bénin.</p>
+                <h4>Market-place</h4><p style="font-size:13px; font-weight: bold;">Articles multimédias et électroménagers disponibles au Bénin.</p>
             </div>
 
             <div id="service-1xbet" class="sub-panel" style="display: none;">
                 <h4>Rechargement 1XBET</h4>
-                <div class="input-group">
-                    <label class="input-label" style="color:#000;">ID Joueur 1XBET :</label>
-                    <input type="text" id="xbet-id-joueur" class="input-field dark-field" placeholder="Ex: 45981235">
-                </div>
-                <div class="input-group">
-                    <label class="input-label" style="color:#000;">Montant (FCFA) :</label>
-                    <input type="number" id="xbet-montant" class="input-field dark-field" placeholder="Minimum 100">
-                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">ID Joueur 1XBET :</label><input type="text" id="xbet-id-joueur" class="input-field dark-field"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant :</label><input type="number" id="xbet-montant" class="input-field dark-field"></div>
                 <button id="btn-recharger-1xbet" class="btn-submit" style="background-color: #0000ff !important;">Confirmer le dépôt</button>
                 <p id="xbet-status" class="status-msg"></p>
             </div>
 
-            <div id="service-facture" class="sub-panel" style="display: none;">
-                <h4>Paiement Facture</h4>
-                <p style="font-size:13px; font-weight: bold;">Réglez vos abonnements d'électricité, d'eau ou de télévision.</p>
-            </div>
-            <div id="service-immo" class="sub-panel" style="display: none;">
-                <h4>Service Immobilier</h4>
-                <p style="font-size:13px; font-weight: bold;">Recherche et gestion de parcelles, maisons et locations au Bénin.</p>
-            </div>
-            <div id="service-epargne" class="sub-panel" style="display: none;">
-                <h4>Épargne</h4>
-                <p style="font-size:13px; font-weight: bold;">Sécurisez vos économies directement sur votre compte MAYNE.</p>
-            </div>
-            <div id="service-tontine" class="sub-panel" style="display: none;">
-                <h4>Tontine</h4>
-                <p style="font-size:13px; font-weight: bold;">Participez à nos collectes de fonds solidaires et programmées.</p>
-            </div>
-            <div id="service-pret" class="sub-panel" style="display: none;">
-                <h4>Prêt</h4>
-                <p style="font-size:13px; font-weight: bold;">Demandes d'emprunts financiers d'urgence sous conditions d'éligibilité.</p>
-            </div>
-            <div id="service-echange" class="sub-panel" style="display: none;">
-                <h4>Échange</h4>
-                <p style="font-size:13px; font-weight: bold;">Convertissez vos monnaies électroniques ou cryptos en cash instantanément.</p>
-            </div>
+            <div id="service-facture" class="sub-panel" style="display: none;"><h4>Paiement Facture</h4><p style="font-size:13px; font-weight: bold;">Réglez vos abonnements d'électricité, d'eau ou de télévision.</p></div>
+            <div id="service-immo" class="sub-panel" style="display: none;"><h4>Service Immobilier</h4><p style="font-size:13px; font-weight: bold;">Gestion de parcelles, maisons et locations.</p></div>
+            <div id="service-epargne" class="sub-panel" style="display: none;"><h4>Épargne</h4><p style="font-size:13px; font-weight: bold;">Sécurisez vos économies sur votre compte MAYNE.</p></div>
+            <div id="service-tontine" class="sub-panel" style="display: none;"><h4>Tontine</h4><p style="font-size:13px; font-weight: bold;">Participez à nos collectes de fonds programmées.</p></div>
+            <div id="service-pret" class="sub-panel" style="display: none;"><h4>Prêt</h4><p style="font-size:13px; font-weight: bold;">Demandes d'emprunts financiers d'urgence sous conditions.</p></div>
+            <div id="service-echange" class="sub-panel" style="display: none;"><h4>Échange</h4><p style="font-size:13px; font-weight: bold;">Convertissez vos monnaies électroniques ou cryptos.</p></div>
 
             <div id="service-credit" class="sub-panel" style="display: none;">
                 <h4>Forfait & Crédit</h4>
-                <div class="input-group">
-                    <label class="input-label" style="color:#000;">Choisir le Réseau :</label>
-                    <select id="forfait-reseau" class="select-field dark-field">
-                        <option value="MTN">MTN Bénin</option>
-                        <option value="MOOV">Moov Africa</option>
-                        <option value="CELTIS">Celtis Bénin</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label class="input-label" style="color:#000;">Type de Forfait :</label>
-                    <select id="forfait-motif" class="select-field dark-field">
-                        <option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option>
-                        <option value="FORFAIT APPEL">FORFAIT APPEL</option>
-                        <option value="INTERNET VOLUME">INTERNET VOLUME</option>
-                        <option value="ILLIMITE">ILLIMITÉ (Illiminet)</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label class="input-label" style="color:#000;">Numéro du bénéficiaire :</label>
-                    <input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Ex: 0166000000">
-                </div>
-                <div class="input-group">
-                    <label class="input-label" style="color:#000;">Montant (FCFA) :</label>
-                    <input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Ex: 500">
-                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Choisir le Réseau :</label><select id="forfait-reseau" class="select-field dark-field"><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Type de Forfait :</label><select id="forfait-motif" class="select-field dark-field"><option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option><option value="FORFAIT APPEL">FORFAIT APPEL</option><option value="INTERNET VOLUME">INTERNET VOLUME</option><option value="ILLIMITE">ILLIMITÉ</option></select></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro :</label><input type="text" id="forfait-numero" class="input-field dark-field"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant :</label><input type="number" id="forfait-offre" class="input-field dark-field"></div>
                 <button id="btn-acheter-forfait" class="btn-submit" style="background-color: #0000ff !important;">Acheter</button>
                 <p id="forfait-status" class="status-msg"></p>
             </div>
-
         </div>
     </div>
 </div>
 
 <script>
-    // Navigation Commutation écrans
-    document.getElementById('go-to-register').onclick = function() {
+    // Navigation Manuelle Immédiate (Sécurisée contre le gel)
+    document.getElementById('go-to-register').addEventListener('click', function() {
         document.getElementById('login-interface').style.display = 'none';
         document.getElementById('register-interface').style.display = 'block';
-    };
-    document.getElementById('go-to-login').onclick = function() {
+    });
+    document.getElementById('go-to-login').addEventListener('click', function() {
         document.getElementById('register-interface').style.display = 'none';
         document.getElementById('login-interface').style.display = 'block';
-    };
+    });
 
     function switchService(panelId) {
-        document.querySelectorAll('.sub-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.sub-panel').forEach(function(p) { p.style.display = 'none'; });
         document.getElementById(panelId).style.display = 'block';
     }
 
-    // Script Fonctionnel Firebase Realtime
+    // Bloc Firebase Réel
     try {
         const firebaseConfig = {
             apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
@@ -409,19 +322,19 @@
         let currentUserId = null;
         let currentUserSolde = 0;
 
-        // Action Connexion
-        document.getElementById('btn-login').onclick = function() {
+        // Connexion
+        document.getElementById('btn-login').addEventListener('click', function() {
             const id = document.getElementById('login-id').value.trim();
             const pin = document.getElementById('login-pin').value.trim();
             if(!id || !pin) { alert("Entrez votre numéro et votre code PIN"); return; }
             
             const encryptedInputPin = CryptoJS.SHA256(pin).toString();
-            database.ref('clients/' + id).once('value').then((snapshot) => {
+            database.ref('clients/' + id).once('value').then(function(snapshot) {
                 if(snapshot.exists()) {
                     const data = snapshot.val();
                     if(data.pin === encryptedInputPin) {
                         currentUserId = id;
-                        database.ref('clients/' + id).on('value', (realtimeSnap) => {
+                        database.ref('clients/' + id).on('value', function(realtimeSnap) {
                             const updatedData = realtimeSnap.val();
                             currentUserSolde = updatedData.solde || 0;
                             document.getElementById('logged-out-zone').style.display = 'none';
@@ -431,11 +344,11 @@
                         });
                     } else { alert("Code PIN incorrect"); }
                 } else { alert("Aucun compte associé à ce numéro"); }
-            }).catch(err => alert("Erreur de connexion : " + err.message));
+            }).catch(function(err) { alert("Erreur: " + err.message); });
         };
 
-        // Action Inscription
-        document.getElementById('btn-register').onclick = function() {
+        // Inscription
+        document.getElementById('btn-register').addEventListener('click', function() {
             const name = document.getElementById('reg-name').value.trim();
             const id = document.getElementById('reg-id').value.trim();
             const pin = document.getElementById('reg-pin').value.trim();
@@ -443,16 +356,16 @@
             if(!name || !id || !pin) { alert("Veuillez remplir tous les champs"); return; }
             const encryptedPin = CryptoJS.SHA256(pin).toString();
             
-            database.ref('clients/' + id).set({ nom: name, pin: encryptedPin, solde: 0 }).then(() => {
-                alert("Compte créé avec succès ! Connectez-vous.");
+            database.ref('clients/' + id).set({ nom: name, pin: encryptedPin, solde: 0 }).then(function() {
+                alert("Compte créé ! Connectez-vous.");
                 document.getElementById('register-interface').style.display = 'none';
                 document.getElementById('login-interface').style.display = 'block';
                 document.getElementById('login-id').value = id;
-            }).catch(e => alert("Erreur: " + e.message));
+            }).catch(function(e) { alert("Erreur: " + e.message); });
         };
 
-        // Soumission Recharge 1XBET
-        document.getElementById('btn-recharger-1xbet').onclick = function() {
+        // Envoi 1XBET
+        document.getElementById('btn-recharger-1xbet').addEventListener('click', function() {
             const idJoueur = document.getElementById('xbet-id-joueur').value.trim();
             const montant = Number(document.getElementById('xbet-montant').value);
             const statusBox = document.getElementById('xbet-status');
@@ -461,22 +374,19 @@
             if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
 
             const nouveauSolde = currentUserSolde - montant;
-            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(() => {
+            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
                 database.ref('commandes_1xbet').push().set({
-                    client_id: currentUserId,
-                    id_joueur_1xbet: idJoueur,
-                    montant: montant,
-                    date: new Date().toLocaleString('fr-FR'),
-                    statut: "En attente"
-                }).then(() => {
+                    client_id: currentUserId, id_joueur_1xbet: idJoueur, montant: montant,
+                    date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+                }).then(function() {
                     statusBox.style.color = "#006600"; statusBox.innerText = "Demande reçue ! Traitement en cours."; statusBox.style.display = "block";
                     document.getElementById('xbet-id-joueur').value = ""; document.getElementById('xbet-montant').value = "";
                 });
             });
         };
 
-        // Soumission Achat Forfait
-        document.getElementById('btn-acheter-forfait').onclick = function() {
+        // Envoi Forfait
+        document.getElementById('btn-acheter-forfait').addEventListener('click', function() {
             const reseau = document.getElementById('forfait-reseau').value;
             const motif = document.getElementById('forfait-motif').value;
             const montant = Number(document.getElementById('forfait-offre').value);
@@ -487,16 +397,11 @@
             if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
 
             const nouveauSolde = currentUserSolde - montant;
-            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(() => {
+            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
                 database.ref('commandes_forfaits').push().set({
-                    client_id: currentUserId,
-                    reseau: reseau,
-                    motif: motif,
-                    montant: montant,
-                    numero_beneficiaire: numero,
-                    date: new Date().toLocaleString('fr-FR'),
-                    statut: "En attente"
-                }).then(() => {
+                    client_id: currentUserId, reseau: reseau, motif: motif, montant: montant, numero_beneficiaire: numero,
+                    date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+                }).then(function() {
                     statusBox.style.color = "#006600"; statusBox.innerText = "Achat enregistré ! Activation imminente."; statusBox.style.display = "block";
                     document.getElementById('forfait-offre').value = ""; document.getElementById('forfait-numero').value = "";
                 });
@@ -504,14 +409,14 @@
         };
 
         // Déconnexion
-        document.getElementById('btn-logout').onclick = function() {
+        document.getElementById('btn-logout').addEventListener('click', function() {
             database.ref('clients/' + currentUserId).off();
             currentUserId = null;
             document.getElementById('logged-in-zone').style.display = 'none';
             document.getElementById('logged-out-zone').style.display = 'block';
-        };
+        });
 
-    } catch(e) { console.log("Erreur Firebase : " + e.message); }
+    } catch(e) { console.log("Erreur initialisation : " + e.message); }
 </script>
 </body>
 </html>
