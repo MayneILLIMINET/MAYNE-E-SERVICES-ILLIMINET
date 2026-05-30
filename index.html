@@ -137,6 +137,10 @@
             color: #000000; 
             font-size: 13px;
         }
+        /* CORRECTION : Aligne le bouton Forfait sur 2 colonnes pour centrer le design */
+        .tab-btn.btn-full {
+            grid-column: span 2;
+        }
         .service-panel {
             background-color: #d4af37; 
             color: #000000; 
@@ -192,7 +196,6 @@
 <div class="app-container">
 
     <div id="logged-out-zone">
-        
         <div id="login-interface">
             <h3 style="margin-top: 0; margin-bottom: 20px;">Espace Client Sécurisé</h3>
             <div class="input-group">
@@ -244,7 +247,7 @@
             <button class="tab-btn" onclick="switchService('service-tontine')">Tontine</button>
             <button class="tab-btn" onclick="switchService('service-pret')">Prêt</button>
             <button class="tab-btn" onclick="switchService('service-echange')">Échange</button>
-            <button class="tab-btn" onclick="switchService('service-credit')">Forfait & Crédit</button>
+            <button class="tab-btn btn-full" onclick="switchService('service-credit')">Forfait & Crédit</button>
         </div>
 
         <div class="service-panel">
@@ -266,13 +269,31 @@
 
             <div id="service-1xbet" class="sub-panel" style="display: none;">
                 <h4>Rechargement 1XBET</h4>
-                <div class="input-group"><label class="input-label" style="color:#000;">ID Joueur 1XBET :</label><input type="text" id="xbet-id-joueur" class="input-field dark-field"></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Montant :</label><input type="number" id="xbet-montant" class="input-field dark-field"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">ID Joueur 1XBET :</label><input type="text" id="xbet-id-joueur" class="input-field dark-field" placeholder="Ex: 45981235"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="xbet-montant" class="input-field dark-field" placeholder="Minimum 100"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp du rechargeur :</label><input type="text" id="xbet-whatsapp" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
                 <button id="btn-recharger-1xbet" class="btn-submit" style="background-color: #0000ff !important;">Confirmer le dépôt</button>
                 <p id="xbet-status" class="status-msg"></p>
             </div>
 
-            <div id="service-facture" class="sub-panel" style="display: none;"><h4>Paiement Facture</h4><p style="font-size:13px; font-weight: bold;">Réglez vos abonnements d'électricité, d'eau ou de télévision.</p></div>
+            <div id="service-facture" class="sub-panel" style="display: none;">
+                <h4>Paiement Facture</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Type de Facture :</label>
+                    <select id="facture-type" class="select-field dark-field">
+                        <option value="SBEE">SBEE</option>
+                        <option value="CANAL+">CANAL+</option>
+                        <option value="SONEB">SONEB</option>
+                        <option value="CELTIIS FIBRE">CELTIIS FIBRE</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">ID du compte :</label><input type="text" id="facture-id" class="input-field dark-field" placeholder="Compte, Compteur ou Abonné"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="facture-montant" class="input-field dark-field" placeholder="Entrez le montant"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp du rechargeur :</label><input type="text" id="facture-whatsapp" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
+                <button id="btn-payer-facture" class="btn-submit" style="background-color: #0000ff !important;">Payer la facture</button>
+                <p id="facture-status" class="status-msg"></p>
+            </div>
+
             <div id="service-immo" class="sub-panel" style="display: none;"><h4>Service Immobilier</h4><p style="font-size:13px; font-weight: bold;">Gestion de parcelles, maisons et locations.</p></div>
             <div id="service-epargne" class="sub-panel" style="display: none;"><h4>Épargne</h4><p style="font-size:13px; font-weight: bold;">Sécurisez vos économies sur votre compte MAYNE.</p></div>
             <div id="service-tontine" class="sub-panel" style="display: none;"><h4>Tontine</h4><p style="font-size:13px; font-weight: bold;">Participez à nos collectes de fonds programmées.</p></div>
@@ -282,9 +303,17 @@
             <div id="service-credit" class="sub-panel" style="display: none;">
                 <h4>Forfait & Crédit</h4>
                 <div class="input-group"><label class="input-label" style="color:#000;">Choisir le Réseau :</label><select id="forfait-reseau" class="select-field dark-field"><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Type de Forfait :</label><select id="forfait-motif" class="select-field dark-field"><option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option><option value="FORFAIT APPEL">FORFAIT APPEL</option><option value="INTERNET VOLUME">INTERNET VOLUME</option><option value="ILLIMITE">ILLIMITÉ</option></select></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Numéro :</label><input type="text" id="forfait-numero" class="input-field dark-field"></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Montant :</label><input type="number" id="forfait-offre" class="input-field dark-field"></div>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Type de Forfait :</label>
+                    <select id="forfait-motif" class="select-field dark-field">
+                        <option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option>
+                        <option value="FORFAIT APPEL">FORFAIT APPEL</option>
+                        <option value="INTERNET VOLUME">INTERNET VOLUME</option>
+                        <option value="APPEL ET INTERNET">APPEL ET INTERNET</option> <option value="ILLIMITE">ILLIMITÉ (Illiminet)</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro du bénéficiaire :</label><input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Ex: 500"></div>
                 <button id="btn-acheter-forfait" class="btn-submit" style="background-color: #0000ff !important;">Acheter</button>
                 <p id="forfait-status" class="status-msg"></p>
             </div>
@@ -293,7 +322,7 @@
 </div>
 
 <script>
-    // Navigation Manuelle Immédiate (Sécurisée contre le gel)
+    // Navigation Manuelle Immédiate
     document.getElementById('go-to-register').addEventListener('click', function() {
         document.getElementById('login-interface').style.display = 'none';
         document.getElementById('register-interface').style.display = 'block';
@@ -308,7 +337,7 @@
         document.getElementById(panelId).style.display = 'block';
     }
 
-    // Bloc Firebase Réel
+    // Gestion Firebase
     try {
         const firebaseConfig = {
             apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
@@ -345,7 +374,7 @@
                     } else { alert("Code PIN incorrect"); }
                 } else { alert("Aucun compte associé à ce numéro"); }
             }).catch(function(err) { alert("Erreur: " + err.message); });
-        };
+        });
 
         // Inscription
         document.getElementById('btn-register').addEventListener('click', function() {
@@ -362,30 +391,54 @@
                 document.getElementById('login-interface').style.display = 'block';
                 document.getElementById('login-id').value = id;
             }).catch(function(e) { alert("Erreur: " + e.message); });
-        };
+        });
 
-        // Envoi 1XBET
+        // Action 1XBET avec WhatsApp
         document.getElementById('btn-recharger-1xbet').addEventListener('click', function() {
             const idJoueur = document.getElementById('xbet-id-joueur').value.trim();
             const montant = Number(document.getElementById('xbet-montant').value);
+            const whatsapp = document.getElementById('xbet-whatsapp').value.trim();
             const statusBox = document.getElementById('xbet-status');
 
-            if(!idJoueur || !montant || montant < 100) { alert("Informations invalides"); return; }
+            if(!idJoueur || !montant || montant < 100 || !whatsapp) { alert("Informations invalides ou manquantes"); return; }
             if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
 
             const nouveauSolde = currentUserSolde - montant;
             database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
                 database.ref('commandes_1xbet').push().set({
-                    client_id: currentUserId, id_joueur_1xbet: idJoueur, montant: montant,
+                    client_id: currentUserId, id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp,
                     date: new Date().toLocaleString('fr-FR'), statut: "En attente"
                 }).then(function() {
                     statusBox.style.color = "#006600"; statusBox.innerText = "Demande reçue ! Traitement en cours."; statusBox.style.display = "block";
-                    document.getElementById('xbet-id-joueur').value = ""; document.getElementById('xbet-montant').value = "";
+                    document.getElementById('xbet-id-joueur').value = ""; document.getElementById('xbet-montant').value = ""; document.getElementById('xbet-whatsapp').value = "";
                 });
             });
-        };
+        });
 
-        // Envoi Forfait
+        // Action Paiement Facture
+        document.getElementById('btn-payer-facture').addEventListener('click', function() {
+            const type = document.getElementById('facture-type').value;
+            const idCompte = document.getElementById('facture-id').value.trim();
+            const montant = Number(document.getElementById('facture-montant').value);
+            const whatsapp = document.getElementById('facture-whatsapp').value.trim();
+            const statusBox = document.getElementById('facture-status');
+
+            if(!idCompte || !montant || montant <= 0 || !whatsapp) { alert("Veuillez remplir tous les champs correctement"); return; }
+            if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
+
+            const nouveauSolde = currentUserSolde - montant;
+            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
+                database.ref('commandes_factures').push().set({
+                    client_id: currentUserId, type_facture: type, id_compte: idCompte, montant: montant, whatsapp_rechargeur: whatsapp,
+                    date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+                }).then(function() {
+                    statusBox.style.color = "#006600"; statusBox.innerText = "Paiement enregistré ! Traitement en cours."; statusBox.style.display = "block";
+                    document.getElementById('facture-id').value = ""; document.getElementById('facture-montant').value = ""; document.getElementById('facture-whatsapp').value = "";
+                });
+            });
+        });
+
+        // Action Forfait & Crédit
         document.getElementById('btn-acheter-forfait').addEventListener('click', function() {
             const reseau = document.getElementById('forfait-reseau').value;
             const motif = document.getElementById('forfait-motif').value;
@@ -406,7 +459,7 @@
                     document.getElementById('forfait-offre').value = ""; document.getElementById('forfait-numero').value = "";
                 });
             });
-        };
+        });
 
         // Déconnexion
         document.getElementById('btn-logout').addEventListener('click', function() {
@@ -416,7 +469,7 @@
             document.getElementById('logged-out-zone').style.display = 'block';
         });
 
-    } catch(e) { console.log("Erreur initialisation : " + e.message); }
+    } catch(e) { console.log("Erreur : " + e.message); }
 </script>
 </body>
 </html>
