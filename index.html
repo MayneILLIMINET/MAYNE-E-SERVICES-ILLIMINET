@@ -6,6 +6,7 @@
     <title>MAYNE E-SERVICES</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.kkiapay.me/k.js"></script>
 
     <style>
         body {
@@ -174,6 +175,25 @@
             padding-bottom: 5px;
             text-transform: uppercase;
         }
+        .inner-toggle {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .inner-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #000000;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .inner-btn.active {
+            background-color: #0000ff;
+        }
         .about-section {
             margin-top: 25px;
             padding-top: 15px;
@@ -322,12 +342,13 @@
         <div class="services-grid">
             <button class="tab-btn btn-home" onclick="switchService('menu-principal')">🏠 ACCUEIL</button>
             <button class="tab-btn" onclick="switchService('service-market')">Market-place</button>
-            <button class="tab-btn" onclick="switchService('service-1xbet')">Recharge 1XBET</button>
+            <button class="tab-btn" onclick="switchService('service-1xbet')">1XBET (Dep/Ret)</button>
             <button class="tab-btn" onclick="switchService('service-facture')">Paiement Facture</button>
             <button class="tab-btn" onclick="switchService('service-immo')">Immobilier</button>
             <button class="tab-btn" onclick="switchService('service-epargne')">Épargne</button>
             <button class="tab-btn" onclick="switchService('service-livraison')">Livraison</button>
             <button class="tab-btn" onclick="switchService('service-echange')">Échange</button>
+            <button class="tab-btn" onclick="switchService('service-p2p')">🚀 P2P / P2M</button>
             <button class="tab-btn btn-full" onclick="switchService('service-credit')">Forfait & Crédit</button>
         </div>
 
@@ -335,10 +356,11 @@
             
             <div id="menu-principal" class="sub-panel">
                 <h4 style="color:#fff; border-bottom-color:#fff;">MAYNE SERVICE ILLIMINET</h4>
-                <p style="font-size:13px; font-weight: bold; text-align: justify; margin-bottom: 20px;">Votre plateforme de confiance au Bénin pour tous vos besoins numériques.</p>
+                <p style="font-size:13px; font-weight: bold; text-align: justify; margin-bottom: 20px; line-height: 18px;">
+                    MAYNE E-SERVICES simplifie votre quotidien numérique au Bénin en un clic ! Accédez instantanément à nos services : Forfaits & Crédits de communication, Recharges & Retraits 1XBET, Transferts d'argent P2P/P2M, Échanges de Devises locales & Cryptomonnaies, Paiements de Factures (SBEE, SONEB, CANAL+, CELTIIS), Épargne sécurisée, Commandes de Livraisons urbaines, Services Immobiliers et notre Market-place exclusive. Une gestion globale, rapide et 100% sécurisée.
+                </p>
                 
                 <div class="about-section">
-                    <p style="font-size: 11px; text-align: center; font-weight: normal; margin-bottom: 10px;">À propos : MAYNE E-SERVICES simplifie vos transactions quotidiennes (Forfaits, 1XBet, Factures & Échanges) en toute sécurité au Bénin.</p>
                     <center><b>NOS PARTENAIRES</b></center>
                     <div class="partners-container">
                         <div class="partner-logo partner-mtn">MTN</div>
@@ -402,11 +424,25 @@
             </div>
 
             <div id="service-1xbet" class="sub-panel" style="display: none;">
-                <h4>Rechargement 1XBET</h4>
-                <div class="input-group"><label class="input-label" style="color:#000;">ID Joueur 1XBET :</label><input type="text" id="xbet-id-joueur" class="input-field dark-field" placeholder="Ex: 45981235"></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="xbet-montant" class="input-field dark-field" placeholder="Minimum 100"></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="xbet-whatsapp" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
-                <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="recharger1XBet()">Confirmer le dépôt</button>
+                <h4>Service 1XBET</h4>
+                <div class="inner-toggle">
+                    <button class="inner-btn active" id="tab-xbet-depot" onclick="toggleXbetMode('depot')">Dépôt</button>
+                    <button class="inner-btn" id="tab-xbet-retrait" onclick="toggleXbetMode('retrait')">Retrait</button>
+                </div>
+
+                <div id="xbet-depot-zone">
+                    <div class="input-group"><label class="input-label" style="color:#000;">ID Joueur 1XBET (Dépôt) :</label><input type="text" id="xbet-id-joueur" class="input-field dark-field" placeholder="Ex: 45981235"></div>
+                    <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="xbet-montant" class="input-field dark-field" placeholder="Minimum 100"></div>
+                    <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="xbet-whatsapp" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
+                    <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="recharger1XBet()">Confirmer le dépôt</button>
+                </div>
+
+                <div id="xbet-retrait-zone" style="display: none;">
+                    <div class="input-group"><label class="input-label" style="color:#000;">ID Joueur 1XBET (Retrait) :</label><input type="text" id="xbet-retrait-id" class="input-field dark-field" placeholder="Ex: 45981235"></div>
+                    <div class="input-group"><label class="input-label" style="color:#000;">Montant à retirer (FCFA) :</label><input type="number" id="xbet-retrait-montant" class="input-field dark-field" placeholder="Entrez le montant"></div>
+                    <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="xbet-retrait-whatsapp" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
+                    <button type="button" class="btn-submit" style="background-color: #e67e22 !important;" onclick="retrait1XBet()">Demander le retrait 1XBET</button>
+                </div>
                 <p id="xbet-status" class="status-msg"></p>
             </div>
 
@@ -416,10 +452,12 @@
                     <label class="input-label" style="color:#000;">Type de Facture :</label>
                     <select id="facture-type" class="select-field dark-field">
                         <option value="SBEE">SBEE</option>
+                        <option value="SONEB">SONEB</option>
                         <option value="CANAL+">CANAL+</option>
+                        <option value="CELTIIS DUAL FIBRE">CELTIIS DUAL FIBRE</option>
                     </select>
                 </div>
-                <div class="input-group"><label class="input-label" style="color:#000;">ID du compte :</label><input type="text" id="facture-id" class="input-field dark-field" placeholder="Compteur ou Abonné"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">ID du compte / Compteur / Abonné :</label><input type="text" id="facture-id" class="input-field dark-field" placeholder="Numéro de Référence"></div>
                 <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="facture-montant" class="input-field dark-field" placeholder="Entrez le montant"></div>
                 <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="facture-whatsapp" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="payerFacture()">Payer la facture</button>
@@ -435,6 +473,8 @@
                         <option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option>
                         <option value="FORFAIT APPEL">FORFAIT APPEL</option>
                         <option value="INTERNET VOLUME">INTERNET VOLUME</option>
+                        <option value="APPEL ET INTERNET">APPEL ET INTERNET</option>
+                        <option value="ILLIMITE">ILLIMITÉ (Illiminet)</option>
                     </select>
                 </div>
                 <div class="input-group"><label class="input-label" style="color:#000;">Numéro du bénéficiaire :</label><input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
@@ -443,9 +483,29 @@
                 <p id="forfait-status" class="status-msg"></p>
             </div>
 
+            <div id="service-immo" class="sub-panel" style="display: none;">
+                <h4>Service Immobilier</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Choix de la ville :</label>
+                    <select id="immo-ville" class="select-field dark-field">
+                        <option value="Cotonou">Cotonou</option>
+                        <option value="Calavi">Calavi</option>
+                        <option value="Porto-Novo">Porto-Novo</option>
+                        <option value="Golo">Golo</option>
+                        <option value="Houegbo">Houegbo</option>
+                        <option value="Bohicon">Bohicon</option>
+                        <option value="Ouidah">Ouidah</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="immo-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant de visite (FCFA) :</label><input type="number" id="immo-montant" class="input-field dark-field" placeholder="Montant de la visite"></div>
+                <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="solliciterImmo()">Valider la demande</button>
+                <p id="immo-status" class="status-msg"></p>
+            </div>
+
             <div id="service-epargne" class="sub-panel" style="display: none;">
                 <h4>Épargne MAYNE</h4>
-                <div class="input-group"><label class="input-label" style="color:#000;">Type :</label><select id="epargne-compteur" class="select-field dark-field"><option value="Mensuel">Mensuel</option><option value="Annuel">Annuel</option></select></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Type :</label><select id="epargne-compteur" class="select-field dark-field"><option value="Mensuel">Mensuel</option><option value="Annuel">Annuel</option><option value="Fermé">Fermé</option></select></div>
                 <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="epargne-montant" class="input-field dark-field" placeholder="Montant"></div>
                 <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="epargne-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
                 <button type="button" class="btn-submit" style="background-color: #2b8a3e !important;" onclick="placerEpargne()">Placer l'épargne</button>
@@ -455,22 +515,85 @@
 
             <div id="service-livraison" class="sub-panel" style="display: none;">
                 <h4>Service Livraison</h4>
-                <div class="input-group"><label class="input-label" style="color:#000;">Ville :</label><select id="livraison-ville" class="select-field dark-field"><option value="Cotonou">Cotonou</option><option value="Calavi">Calavi</option></select></div>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Ville de livraison :</label>
+                    <select id="livraison-ville" class="select-field dark-field">
+                        <option value="Cotonou">Cotonou</option>
+                        <option value="Calavi">Calavi</option>
+                        <option value="Porto-Novo">Porto-Novo</option>
+                        <option value="Golo">Golo</option>
+                        <option value="Houegbo">Houegbo</option>
+                        <option value="Bohicon">Bohicon</option>
+                        <option value="Ouidah">Ouidah</option>
+                    </select>
+                </div>
                 <div class="input-group"><label class="input-label" style="color:#000;">WhatsApp :</label><input type="text" id="livraison-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Montant (Min 500F) :</label><input type="number" id="livraison-montant" class="input-field dark-field" min="500"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant de la course (Min 500F) :</label><input type="number" id="livraison-montant" class="input-field dark-field" min="500" placeholder="500"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="demanderLivraison()">Commander</button>
                 <p id="livraison-status" class="status-msg"></p>
             </div>
 
             <div id="service-echange" class="sub-panel" style="display: none;">
                 <h4>Échange de Devises</h4>
-                <div class="input-group"><label class="input-label" style="color:#000;">Je donne :</label><select id="echange-donne" class="select-field dark-field"><option value="XOF">XOF (F CFA)</option><option value="USDT">USDT</option></select></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Je reçois :</label><select id="echange-recoit" class="select-field dark-field"><option value="USDT">USDT</option><option value="XOF">XOF (F CFA)</option></select></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Montant :</label><input type="number" id="echange-montant" class="input-field dark-field"></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">Adresse / Numéro :</label><input type="text" id="echange-adresse" class="input-field dark-field"></div>
-                <div class="input-group"><label class="input-label" style="color:#000;">WhatsApp :</label><input type="text" id="echange-whatsapp" class="input-field dark-field"></div>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Je donne :</label>
+                    <select id="echange-donne" class="select-field dark-field">
+                        <option value="XOF">XOF (F CFA)</option>
+                        <option value="MTN">MTN</option>
+                        <option value="MOOV">MOOV</option>
+                        <option value="CELTIIS">CELTIIS</option>
+                        <option value="USDT">USDT</option>
+                        <option value="BTC">BTC (Bitcoin)</option>
+                        <option value="LTC">LTC (Litecoin)</option>
+                        <option value="EURO">EURO (€)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="PI NETWORK">PI NETWORK</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Je reçois :</label>
+                    <select id="echange-recoit" class="select-field dark-field">
+                        <option value="USDT">USDT</option>
+                        <option value="XOF">XOF (F CFA)</option>
+                        <option value="MTN">MTN</option>
+                        <option value="MOOV">MOOV</option>
+                        <option value="CELTIIS">CELTIIS</option>
+                        <option value="BTC">BTC (Bitcoin)</option>
+                        <option value="LTC">LTC (Litecoin)</option>
+                        <option value="EURO">EURO (€)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="PI NETWORK">PI NETWORK</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant à échanger :</label><input type="number" id="echange-montant" class="input-field dark-field" placeholder="Montant"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Adresse / Numéro bénéficiaire :</label><input type="text" id="echange-adresse" class="input-field dark-field" placeholder="Adresse crypto ou Numéro"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">WhatsApp :</label><input type="text" id="echange-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="executerEchange()">Confirmer l'échange</button>
                 <p id="echange-status" class="status-msg"></p>
+            </div>
+
+            <div id="service-p2p" class="sub-panel" style="display: none;">
+                <h4>Transfert P2P / P2M</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Réseau Donneur (Émetteur) :</label>
+                    <select id="p2p-donneur" class="select-field dark-field">
+                        <option value="MTN">MTN</option>
+                        <option value="MOOV">MOOV</option>
+                        <option value="CELTIIS">CELTIIS</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Réseau Receveur :</label>
+                    <select id="p2p-receveur" class="select-field dark-field">
+                        <option value="MTN">MTN</option>
+                        <option value="MOOV">MOOV</option>
+                        <option value="CELTIIS">CELTIIS</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro du Receveur :</label><input type="text" id="p2p-numero" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant du transfert (FCFA) :</label><input type="number" id="p2p-montant" class="input-field dark-field" placeholder="Montant"></div>
+                <button type="button" class="btn-submit" style="background-color: #2b8a3e !important;" onclick="executerP2P()">Valider le transfert P2P/P2M</button>
+                <p id="p2p-status" class="status-msg"></p>
             </div>
 
         </div>
@@ -478,23 +601,34 @@
 </div>
 
 <script>
-    // Fonctions de Navigation des écrans d'authentification
+    // Écrans d'authentification
     function afficherFormulaireInscription() {
         document.getElementById('login-interface').style.display = 'none';
         document.getElementById('register-interface').style.display = 'block';
     }
-
     function afficherFormulaireConnexion() {
         document.getElementById('register-interface').style.display = 'none';
         document.getElementById('login-interface').style.display = 'block';
     }
-
     function switchService(panelId) {
         document.querySelectorAll('.sub-panel').forEach(function(p) { p.style.display = 'none'; });
         document.getElementById(panelId).style.display = 'block';
     }
+    function toggleXbetMode(mode) {
+        document.getElementById('tab-xbet-depot').classList.remove('active');
+        document.getElementById('tab-xbet-retrait').classList.remove('active');
+        if(mode === 'depot') {
+            document.getElementById('tab-xbet-depot').classList.add('active');
+            document.getElementById('xbet-depot-zone').style.display = 'block';
+            document.getElementById('xbet-retrait-zone').style.display = 'none';
+        } else {
+            document.getElementById('tab-xbet-retrait').classList.add('active');
+            document.getElementById('xbet-depot-zone').style.display = 'none';
+            document.getElementById('xbet-retrait-zone').style.display = 'block';
+        }
+    }
 
-    // Gestion des codes marchands
+    // Gestion des codes marchands manuels
     function updateCodeMarchand() {
         const reseau = document.getElementById('depot-reseau').value;
         const montant = document.getElementById('depot-montant').value || "montant";
@@ -513,7 +647,7 @@
         }
     }
 
-    // Intégration Kkiapay
+    // Intégration Kkiapay avec initialisation explicite
     function declencherKkiapay() {
         var userAmount = document.getElementById('depot-montant').value;
         if (!userAmount || userAmount < 100) {
@@ -522,14 +656,17 @@
         }
         document.getElementById('setup-zone').style.display = 'none';
         var zone = document.getElementById('kkiapay-zone');
+        
+        // Injection du widget propre avec clé publique
         zone.innerHTML = `<kkiapay-widget amount="${userAmount}" key="74170d0b81d2b061f72e26503f07388d05854969" sandbox="false" position="inline" display="inline"></kkiapay-widget>`;
         
-        var script = document.createElement('script');
-        script.src = "https://cdn.kkiapay.me/k.js";
-        document.body.appendChild(script);
+        // Forcer le re-rendu du composant Kkiapay injecté dynamiquement
+        if (typeof window.initKkiapay === 'function') {
+            window.initKkiapay();
+        }
     }
 
-    // Configuration Firebase
+    // Configuration Firebase Directe
     let database = null;
     let currentUserId = null;
     let currentUserSolde = 0;
@@ -548,7 +685,7 @@
         console.error("Erreur Firebase : " + e.message);
     }
 
-    // Connexion Directe
+    // Connexion
     function executerConnexion() {
         const id = document.getElementById('login-id').value.trim();
         const pin = document.getElementById('login-pin').value.trim();
@@ -568,7 +705,7 @@
                         document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
                     });
                     
-                    // Charger historique Épargne
+                    // Épargne Historique
                     database.ref('commandes_epargne').orderByChild('client_id').equalTo(currentUserId).on('value', function(snapHist) {
                         const histBox = document.getElementById('epargne-historique');
                         if(snapHist.exists()) {
@@ -584,7 +721,7 @@
         }).catch(function(err) { alert("Erreur serveur : " + err.message); });
     }
 
-    // Inscription Directe
+    // Inscription
     function executerInscription() {
         const name = document.getElementById('reg-name').value.trim();
         const id = document.getElementById('reg-id').value.trim();
@@ -607,7 +744,7 @@
         document.getElementById('logged-out-zone').style.display = 'block';
     }
 
-    // Traitement des opérations de services après connexion
+    // Achat Marketplace
     function acheterProduit(nomProduit, prix, qteId, waId) {
         const qte = Number(document.getElementById(qteId).value);
         const whatsapp = document.getElementById(waId).value.trim();
@@ -622,6 +759,7 @@
         });
     }
 
+    // Demande de Retrait Portefeuille Principal
     function validerRetrait() {
         const montant = Number(document.getElementById('retrait-montant').value);
         const numero = document.getElementById('retrait-numero').value.trim();
@@ -640,6 +778,7 @@
         });
     }
 
+    // 1XBET Dépôt
     function recharger1XBet() {
         const idJoueur = document.getElementById('xbet-id-joueur').value.trim();
         const montant = Number(document.getElementById('xbet-montant').value);
@@ -651,13 +790,30 @@
 
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
             database.ref('commandes_1xbet').push().set({
-                client_id: currentUserId, id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+                client_id: currentUserId, type_operation: "Dépôt", id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
             }).then(function() {
-                statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande 1XBET validée."; statusBox.style.display = "block";
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande de dépôt 1XBET validée."; statusBox.style.display = "block";
             });
         });
     }
 
+    // 1XBET Retrait
+    function retrait1XBet() {
+        const idJoueur = document.getElementById('xbet-retrait-id').value.trim();
+        const montant = Number(document.getElementById('xbet-retrait-montant').value);
+        const whatsapp = document.getElementById('xbet-retrait-whatsapp').value.trim();
+        const statusBox = document.getElementById('xbet-status');
+
+        if(!idJoueur || !montant || montant <= 0 || !whatsapp) { alert("Veuillez remplir correctement les champs de retrait."); return; }
+        
+        database.ref('commandes_1xbet').push().set({
+            client_id: currentUserId, type_operation: "Retrait", id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+        }).then(function() {
+            statusBox.style.color = "#ffeb3b"; statusBox.innerText = "Demande de retrait 1XBET soumise ! Nous vous contacterons."; statusBox.style.display = "block";
+        });
+    }
+
+    // Factures
     function payerFacture() {
         const type = document.getElementById('facture-type').value;
         const idCompte = document.getElementById('facture-id').value.trim();
@@ -677,6 +833,7 @@
         });
     }
 
+    // Forfaits
     function acheterForfait() {
         const reseau = document.getElementById('forfait-reseau').value;
         const motif = document.getElementById('forfait-motif').value;
@@ -696,6 +853,26 @@
         });
     }
 
+    // Immobilier
+    function solliciterImmo() {
+        const ville = document.getElementById('immo-ville').value;
+        const whatsapp = document.getElementById('immo-whatsapp').value.trim();
+        const montant = Number(document.getElementById('immo-montant').value);
+        const statusBox = document.getElementById('immo-status');
+
+        if(!whatsapp || !montant) { alert("Veuillez remplir les champs."); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant."); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_immobilier').push().set({
+                client_id: currentUserId, ville: ville, whatsapp: whatsapp, montant_visite: montant, date: new Date().toLocaleString('fr-FR')
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande de visite enregistrée !"; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // Épargne
     function placerEpargne() {
         const compteur = document.getElementById('epargne-compteur').value;
         const montant = Number(document.getElementById('epargne-montant').value);
@@ -714,6 +891,7 @@
         });
     }
 
+    // Livraison
     function demanderLivraison() {
         const ville = document.getElementById('livraison-ville').value;
         const whatsapp = document.getElementById('livraison-whatsapp').value.trim();
@@ -732,6 +910,7 @@
         });
     }
 
+    // Échanges Devises
     function executerEchange() {
         const donne = document.getElementById('echange-donne').value;
         const recoit = document.getElementById('echange-recoit').value;
@@ -746,6 +925,26 @@
             client_id: currentUserId, donne: donne, recoit: recoit, montant: montant, adresse: adresse, whatsapp: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
         }).then(function() {
             statusBox.style.color = "#00ff00"; statusBox.innerText = "Échange en attente de validation."; statusBox.style.display = "block";
+        });
+    }
+
+    // P2P / P2M
+    function executerP2P() {
+        const donneur = document.getElementById('p2p-donneur').value;
+        const receveur = document.getElementById('p2p-receveur').value;
+        const numero = document.getElementById('p2p-numero').value.trim();
+        const montant = Number(document.getElementById('p2p-montant').value);
+        const statusBox = document.getElementById('p2p-status');
+
+        if(!numero || !montant || montant <= 0) { alert("Veuillez saisir un numéro valide et un montant."); return; }
+        if(currentUserSolde < montant) { alert("Solde de compte insuffisant."); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_p2p_p2m').push().set({
+                client_id: currentUserId, reseau_donneur: donneur, reseau_receveur: receveur, numero_receveur: numero, montant: montant, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Transaction P2P/P2M enregistrée en attente."; statusBox.style.display = "block";
+            });
         });
     }
 </script>
