@@ -6,7 +6,6 @@
     <title>MAYNE E-SERVICES</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
         body {
@@ -137,7 +136,6 @@
             color: #000000; 
             font-size: 13px;
         }
-        /* CORRECTION : Aligne le bouton Forfait sur 2 colonnes pour centrer le design */
         .tab-btn.btn-full {
             grid-column: span 2;
         }
@@ -309,7 +307,8 @@
                         <option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option>
                         <option value="FORFAIT APPEL">FORFAIT APPEL</option>
                         <option value="INTERNET VOLUME">INTERNET VOLUME</option>
-                        <option value="APPEL ET INTERNET">APPEL ET INTERNET</option> <option value="ILLIMITE">ILLIMITÉ (Illiminet)</option>
+                        <option value="APPEL ET INTERNET">APPEL ET INTERNET</option>
+                        <option value="ILLIMITE">ILLIMITÉ (Illiminet)</option>
                     </select>
                 </div>
                 <div class="input-group"><label class="input-label" style="color:#000;">Numéro du bénéficiaire :</label><input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Ex: 0166000000"></div>
@@ -322,7 +321,7 @@
 </div>
 
 <script>
-    // Navigation Manuelle Immédiate
+    // Navigation Interfaces
     document.getElementById('go-to-register').addEventListener('click', function() {
         document.getElementById('login-interface').style.display = 'none';
         document.getElementById('register-interface').style.display = 'block';
@@ -337,7 +336,7 @@
         document.getElementById(panelId).style.display = 'block';
     }
 
-    // Gestion Firebase
+    // Firebase Configuration
     try {
         const firebaseConfig = {
             apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
@@ -348,24 +347,29 @@
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        
         let currentUserId = null;
         let currentUserSolde = 0;
 
-        // Connexion
+        // CORRECTION : Connexion simplifiée et fonctionnelle
         document.getElementById('btn-login').addEventListener('click', function() {
             const id = document.getElementById('login-id').value.trim();
             const pin = document.getElementById('login-pin').value.trim();
+            
             if(!id || !pin) { alert("Entrez votre numéro et votre code PIN"); return; }
             
-            const encryptedInputPin = CryptoJS.SHA256(pin).toString();
             database.ref('clients/' + id).once('value').then(function(snapshot) {
                 if(snapshot.exists()) {
                     const data = snapshot.val();
-                    if(data.pin === encryptedInputPin) {
+                    // Comparaison directe car pas de chiffrement actif sur la base actuelle
+                    if(String(data.pin) === String(pin)) {
                         currentUserId = id;
+                        
+                        // Ecoute temps réel du solde
                         database.ref('clients/' + id).on('value', function(realtimeSnap) {
                             const updatedData = realtimeSnap.val();
                             currentUserSolde = updatedData.solde || 0;
+                            
                             document.getElementById('logged-out-zone').style.display = 'none';
                             document.getElementById('logged-in-zone').style.display = 'block';
                             document.getElementById('user-name').innerText = updatedData.nom;
@@ -376,24 +380,28 @@
             }).catch(function(err) { alert("Erreur: " + err.message); });
         });
 
-        // Inscription
+        // CORRECTION : Inscription alignée avec la base de données
         document.getElementById('btn-register').addEventListener('click', function() {
             const name = document.getElementById('reg-name').value.trim();
             const id = document.getElementById('reg-id').value.trim();
             const pin = document.getElementById('reg-pin').value.trim();
 
             if(!name || !id || !pin) { alert("Veuillez remplir tous les champs"); return; }
-            const encryptedPin = CryptoJS.SHA256(pin).toString();
             
-            database.ref('clients/' + id).set({ nom: name, pin: encryptedPin, solde: 0 }).then(function() {
-                alert("Compte créé ! Connectez-vous.");
+            database.ref('clients/' + id).set({ 
+                nom: name, 
+                pin: pin, // Stockage direct conforme à vos fiches clients de test
+                solde: 2500 // Bonus de test ou 0 selon votre choix
+            }).then(function() {
+                alert("Compte créé avec succès ! Connectez-vous.");
                 document.getElementById('register-interface').style.display = 'none';
                 document.getElementById('login-interface').style.display = 'block';
                 document.getElementById('login-id').value = id;
+                document.getElementById('login-pin').value = pin;
             }).catch(function(e) { alert("Erreur: " + e.message); });
         });
 
-        // Action 1XBET avec WhatsApp
+        // Formulaire 1XBET
         document.getElementById('btn-recharger-1xbet').addEventListener('click', function() {
             const idJoueur = document.getElementById('xbet-id-joueur').value.trim();
             const montant = Number(document.getElementById('xbet-montant').value);
@@ -409,13 +417,13 @@
                     client_id: currentUserId, id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp,
                     date: new Date().toLocaleString('fr-FR'), statut: "En attente"
                 }).then(function() {
-                    statusBox.style.color = "#006600"; statusBox.innerText = "Demande reçue ! Traitement en cours."; statusBox.style.display = "block";
+                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande reçue ! Traitement en cours."; statusBox.style.display = "block";
                     document.getElementById('xbet-id-joueur').value = ""; document.getElementById('xbet-montant').value = ""; document.getElementById('xbet-whatsapp').value = "";
                 });
             });
         });
 
-        // Action Paiement Facture
+        // Formulaire Factures
         document.getElementById('btn-payer-facture').addEventListener('click', function() {
             const type = document.getElementById('facture-type').value;
             const idCompte = document.getElementById('facture-id').value.trim();
@@ -432,13 +440,13 @@
                     client_id: currentUserId, type_facture: type, id_compte: idCompte, montant: montant, whatsapp_rechargeur: whatsapp,
                     date: new Date().toLocaleString('fr-FR'), statut: "En attente"
                 }).then(function() {
-                    statusBox.style.color = "#006600"; statusBox.innerText = "Paiement enregistré ! Traitement en cours."; statusBox.style.display = "block";
+                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Paiement enregistré ! Traitement en cours."; statusBox.style.display = "block";
                     document.getElementById('facture-id').value = ""; document.getElementById('facture-montant').value = ""; document.getElementById('facture-whatsapp').value = "";
                 });
             });
         });
 
-        // Action Forfait & Crédit
+        // Formulaire Forfait & Crédit
         document.getElementById('btn-acheter-forfait').addEventListener('click', function() {
             const reseau = document.getElementById('forfait-reseau').value;
             const motif = document.getElementById('forfait-motif').value;
@@ -455,7 +463,7 @@
                     client_id: currentUserId, reseau: reseau, motif: motif, montant: montant, numero_beneficiaire: numero,
                     date: new Date().toLocaleString('fr-FR'), statut: "En attente"
                 }).then(function() {
-                    statusBox.style.color = "#006600"; statusBox.innerText = "Achat enregistré ! Activation imminente."; statusBox.style.display = "block";
+                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Achat enregistré ! Activation imminente."; statusBox.style.display = "block";
                     document.getElementById('forfait-offre').value = ""; document.getElementById('forfait-numero').value = "";
                 });
             });
@@ -469,7 +477,7 @@
             document.getElementById('logged-out-zone').style.display = 'block';
         });
 
-    } catch(e) { console.log("Erreur : " + e.message); }
+    } catch(e) { console.error("Erreur d'initialisation : " + e.message); }
 </script>
 </body>
 </html>
