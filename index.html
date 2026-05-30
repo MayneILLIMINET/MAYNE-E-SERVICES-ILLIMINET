@@ -321,7 +321,7 @@
 </div>
 
 <script>
-    // Navigation Interfaces
+    // Navigation Interfaces (Bascule Inscription / Connexion)
     document.getElementById('go-to-register').addEventListener('click', function() {
         document.getElementById('login-interface').style.display = 'none';
         document.getElementById('register-interface').style.display = 'block';
@@ -331,12 +331,13 @@
         document.getElementById('login-interface').style.display = 'block';
     });
 
+    // Basculer d'un onglet de service à un autre
     function switchService(panelId) {
         document.querySelectorAll('.sub-panel').forEach(function(p) { p.style.display = 'none'; });
         document.getElementById(panelId).style.display = 'block';
     }
 
-    // Firebase Configuration
+    // Configuration Firebase
     try {
         const firebaseConfig = {
             apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
@@ -351,7 +352,7 @@
         let currentUserId = null;
         let currentUserSolde = 0;
 
-        // CORRECTION : Connexion simplifiée et fonctionnelle
+        // --- CORRECTION SYSTEME DE CONNEXION ---
         document.getElementById('btn-login').addEventListener('click', function() {
             const id = document.getElementById('login-id').value.trim();
             const pin = document.getElementById('login-pin').value.trim();
@@ -361,44 +362,56 @@
             database.ref('clients/' + id).once('value').then(function(snapshot) {
                 if(snapshot.exists()) {
                     const data = snapshot.val();
-                    // Comparaison directe car pas de chiffrement actif sur la base actuelle
+                    // Vérification de sécurité stricte en chaîne de caractères
                     if(String(data.pin) === String(pin)) {
                         currentUserId = id;
                         
-                        // Ecoute temps réel du solde
+                        // Écoute en temps réel du solde et des infos utilisateur
                         database.ref('clients/' + id).on('value', function(realtimeSnap) {
                             const updatedData = realtimeSnap.val();
-                            currentUserSolde = updatedData.solde || 0;
-                            
-                            document.getElementById('logged-out-zone').style.display = 'none';
-                            document.getElementById('logged-in-zone').style.display = 'block';
-                            document.getElementById('user-name').innerText = updatedData.nom;
-                            document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+                            if(updatedData) {
+                                currentUserSolde = updatedData.solde || 0;
+                                
+                                document.getElementById('logged-out-zone').style.display = 'none';
+                                document.getElementById('logged-in-zone').style.display = 'block';
+                                document.getElementById('user-name').innerText = updatedData.nom;
+                                document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+                            }
                         });
                     } else { alert("Code PIN incorrect"); }
                 } else { alert("Aucun compte associé à ce numéro"); }
-            }).catch(function(err) { alert("Erreur: " + err.message); });
+            }).catch(function(err) { alert("Erreur de connexion : " + err.message); });
         });
 
-        // CORRECTION : Inscription alignée avec la base de données
+        // --- CORRECTION SYSTEME D'INSCRIPTION ---
         document.getElementById('btn-register').addEventListener('click', function() {
             const name = document.getElementById('reg-name').value.trim();
             const id = document.getElementById('reg-id').value.trim();
             const pin = document.getElementById('reg-pin').value.trim();
 
-            if(!name || !id || !pin) { alert("Veuillez remplir tous les champs"); return; }
+            if(!name || !id || !pin) { alert("Veuillez remplir tous les champs d'inscription"); return; }
+            if(pin.length < 4) { alert("Le code PIN doit comporter 4 chiffres"); return; }
             
-            database.ref('clients/' + id).set({ 
-                nom: name, 
-                pin: pin, // Stockage direct conforme à vos fiches clients de test
-                solde: 2500 // Bonus de test ou 0 selon votre choix
-            }).then(function() {
-                alert("Compte créé avec succès ! Connectez-vous.");
-                document.getElementById('register-interface').style.display = 'none';
-                document.getElementById('login-interface').style.display = 'block';
-                document.getElementById('login-id').value = id;
-                document.getElementById('login-pin').value = pin;
-            }).catch(function(e) { alert("Erreur: " + e.message); });
+            // On vérifie d'abord si le numéro existe déjà pour éviter d'écraser un compte existant
+            database.ref('clients/' + id).once('value').then(function(snapshot) {
+                if(snapshot.exists()) {
+                    alert("Ce numéro de téléphone est déjà enregistré.");
+                } else {
+                    // Création du compte client
+                    database.ref('clients/' + id).set({ 
+                        nom: name, 
+                        pin: pin, 
+                        solde: 2500 // Ton bonus de test configuré par défaut
+                    }).then(function() {
+                        alert("Compte créé avec succès ! Connectez-vous.");
+                        // Redirection automatique sur l'écran de login
+                        document.getElementById('register-interface').style.display = 'none';
+                        document.getElementById('login-interface').style.display = 'block';
+                        document.getElementById('login-id').value = id;
+                        document.getElementById('login-pin').value = pin;
+                    }).catch(function(e) { alert("Erreur d'inscription : " + e.message); });
+                }
+            });
         });
 
         // Formulaire 1XBET
@@ -471,13 +484,15 @@
 
         // Déconnexion
         document.getElementById('btn-logout').addEventListener('click', function() {
-            database.ref('clients/' + currentUserId).off();
+            if (currentUserId) {
+                database.ref('clients/' + currentUserId).off();
+            }
             currentUserId = null;
             document.getElementById('logged-in-zone').style.display = 'none';
             document.getElementById('logged-out-zone').style.display = 'block';
         });
 
-    } catch(e) { console.error("Erreur d'initialisation : " + e.message); }
+    } catch(e) { console.error("Erreur d'initialisation Firebase : " + e.message); }
 </script>
 </body>
 </html>
