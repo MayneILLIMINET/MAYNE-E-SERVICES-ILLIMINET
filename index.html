@@ -25,6 +25,27 @@
             box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
             box-sizing: border-box;
             text-align: center;
+            position: relative;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .btn-action-top {
+            background-color: #ffeb3b;
+            color: #000000;
+            border: 1px solid #ffffff;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-action-top.retrait {
+            background-color: #e67e22;
+            color: #ffffff;
         }
         .input-group {
             text-align: left;
@@ -92,7 +113,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.2);
             padding-bottom: 4px;
             margin-bottom: 6px;
-            width: 75%;
+            width: 60%;
         }
         .solde-val {
             font-size: 22px;
@@ -168,23 +189,82 @@
             margin-top: 10px;
         }
         .partner-logo {
-            width: 52px;
+            width: 60px;
             height: 32px;
-            background-color: #ffffff; 
-            border: 1px solid #333;
+            border: 1px solid #ffffff;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: bold;
-            color: #333;
+            color: white;
         }
+        /* Couleurs personnalisées des partenaires */
+        .partner-mtn { background-color: #ffcc00; color: #000; border-color: #000; }
+        .partner-moov { background-color: #ff6600; }
+        .partner-celtis { background-color: #0099ff; }
+        .partner-canal { background-color: #000000; }
+        .partner-sbee { background-color: #2b8a3e; }
+        .partner-1xbet { background-color: #0033aa; }
+
         .status-msg {
             display: none;
             font-size: 13px;
             font-weight: bold;
             margin-top: 10px;
+            text-align: center;
+        }
+        /* Styles pour la Marketplace */
+        .market-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .product-card {
+            background-color: #ffffff;
+            border: 2px solid #0000ff;
+            border-radius: 8px;
+            padding: 10px;
+            color: #000;
+        }
+        .product-img {
+            width: 100%;
+            height: 150px;
+            background-color: #ddd;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+            object-fit: cover;
+        }
+        .product-title { font-weight: bold; font-size: 15px; margin: 8px 0; }
+        .product-price { color: #cc2222; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
+        
+        .history-box {
+            background: #000;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 8px;
+            border-radius: 4px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+        .info-block-code {
+            background-color: #fff;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #000;
+            font-size: 12px;
+            font-family: monospace;
+            word-break: break-all;
+            margin-top: 5px;
+            color: #c0392b;
+            font-weight: bold;
             text-align: center;
         }
     </style>
@@ -228,6 +308,12 @@
     </div>
 
     <div id="logged-in-zone" style="display: none;">
+        
+        <div class="header-actions">
+            <button class="btn-action-top" onclick="switchService('solde-depot')">➕ Faites un dépôt</button>
+            <button class="btn-action-top retrait" onclick="switchService('solde-retrait')">💸 Retirer</button>
+        </div>
+
         <div class="user-header">
             <button id="btn-logout" class="btn-logout">Quitter</button>
             <div class="profile-line" id="user-name">Chargement...</div>
@@ -240,29 +326,89 @@
             <button class="tab-btn" onclick="switchService('service-market')">Market-place</button>
             <button class="tab-btn" onclick="switchService('service-1xbet')">Recharge 1XBET</button>
             <button class="tab-btn" onclick="switchService('service-facture')">Paiement Facture</button>
-            <button class="tab-btn" onclick="switchService('service-immo')">Service Immobilier</button>
+            <button class="tab-btn" onclick="switchService('service-immo')">Immobilier</button>
             <button class="tab-btn" onclick="switchService('service-epargne')">Épargne</button>
-            <button class="tab-btn" onclick="switchService('service-tontine')">Tontine</button>
-            <button class="tab-btn" onclick="switchService('service-pret')">Prêt</button>
+            <button class="tab-btn" onclick="switchService('service-livraison')">Livraison</button>
             <button class="tab-btn" onclick="switchService('service-echange')">Échange</button>
             <button class="tab-btn btn-full" onclick="switchService('service-credit')">Forfait & Crédit</button>
         </div>
 
         <div class="service-panel">
+            
             <div id="menu-principal" class="sub-panel">
                 <h4 style="color:#fff; border-bottom-color:#fff;">MAYNE SERVICE ILLIMINET</h4>
-                <p style="font-size:13px; font-weight: bold; text-align: justify;">Votre plateforme de confiance au Bénin pour tous vos besoins numériques.</p>
+                <p style="font-size:13px; font-weight: bold; text-align: justify; margin-bottom: 20px;">Votre plateforme de confiance au Bénin pour tous vos besoins numériques.</p>
+                
                 <div class="about-section">
+                    <p style="font-size: 11px; text-align: center; font-weight: normal; margin-bottom: 10px;">À propos : MAYNE E-SERVICES simplifie vos transactions quotidiennes (Forfaits, 1XBet, Factures & Échanges) en toute sécurité au Bénin.</p>
                     <center><b>NOS PARTENAIRES</b></center>
                     <div class="partners-container">
-                        <div class="partner-logo">MTN</div><div class="partner-logo">MOOV</div><div class="partner-logo">CELTIS</div>
-                        <div class="partner-logo">1XBET</div><div class="partner-logo">CANAL+</div><div class="partner-logo">SBEE</div>
+                        <div class="partner-logo partner-mtn">MTN</div>
+                        <div class="partner-logo partner-moov">MOOV</div>
+                        <div class="partner-logo partner-celtis">CELTIS</div>
+                        <div class="partner-logo partner-1xbet">1XBET</div>
+                        <div class="partner-logo partner-canal">CANAL+</div>
+                        <div class="partner-logo partner-sbee">SBEE</div>
                     </div>
                 </div>
             </div>
 
+            <div id="solde-depot" class="sub-panel" style="display: none;">
+                <h4>Faites un dépôt</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Sélectionner le réseau pour voir le code :</label>
+                    <select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()">
+                        <option value="">-- Choisir --</option>
+                        <option value="MTN">MTN Bénin</option>
+                        <option value="MOOV">Moov Africa</option>
+                        <option value="CELTIS">Celtis Bénin</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant à déposer (FCFA) :</label><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Ex: 2000" oninput="updateCodeMarchand()"></div>
+                
+                <div id="zone-code-marchand" style="display:none; margin-bottom: 15px;">
+                    <label class="input-label" style="color:#000;">Code de transfert à lancer sur votre mobile :</label>
+                    <div id="code-marchand-affiche" class="info-block-code"></div>
+                </div>
+
+                <hr style="border: 1px dashed #000;">
+                <p style="font-size:12px; font-weight:bold; text-align:center; color:#000;">OU PAYER VIA CARTE / MOBILE MONEY DIRECT :</p>
+                
+                <div class="payment-container" id="setup-zone">
+                    <button id="pay-btn" class="btn-submit" style="background-color: #4CAF50 !important;">Payer par KKIAPAY</button>
+                </div>
+                <div id="kkiapay-zone"></div>
+            </div>
+
+            <div id="solde-retrait" class="sub-panel" style="display: none;">
+                <h4>Retirer de l'argent</h4>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant à retirer (FCFA) :</label><input type="number" id="retrait-montant" class="input-field dark-field" placeholder="Montant"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro de réception :</label><input type="text" id="retrait-numero" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Réseau de retrait :</label><select id="retrait-reseau" class="select-field dark-field"><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div>
+                <button id="btn-valider-retrait" class="btn-submit" style="background-color: #cc0000 !important;">Demander le retrait</button>
+                <p id="retrait-status" class="status-msg"></p>
+            </div>
+
             <div id="service-market" class="sub-panel" style="display: none;">
-                <h4>Market-place</h4><p style="font-size:13px; font-weight: bold;">Articles multimédias et électroménagers disponibles au Bénin.</p>
+                <h4>Market-place</h4>
+                <div class="market-grid">
+                    <div class="product-card">
+                        <div class="product-img">📷 Image Multimédia</div>
+                        <div class="product-title">Téléviseur Smart TV Led</div>
+                        <div class="product-price">135 000 FCFA</div>
+                        <div class="input-group"><label style="font-size:11px; font-weight:bold;">Quantité :</label><input type="number" id="mkt-qte-1" value="1" min="1" class="input-field" style="padding:5px; font-size:14px;"></div>
+                        <div class="input-group"><label style="font-size:11px; font-weight:bold;">Votre WhatsApp :</label><input type="text" id="mkt-wa-1" placeholder="Numéro WhatsApp" class="input-field" style="padding:5px; font-size:14px;"></div>
+                        <button class="btn-submit" style="padding:8px; font-size:13px;" onclick="acheterProduit('Téléviseur Smart TV', 135000, 'mkt-qte-1', 'mkt-wa-1')">Commander cet article</button>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-img">📷 Image Électroménager</div>
+                        <div class="product-title">Réfrigérateur Combiné</div>
+                        <div class="product-price">185 000 FCFA</div>
+                        <div class="input-group"><label style="font-size:11px; font-weight:bold;">Quantité :</label><input type="number" id="mkt-qte-2" value="1" min="1" class="input-field" style="padding:5px; font-size:14px;"></div>
+                        <div class="input-group"><label style="font-size:11px; font-weight:bold;">Votre WhatsApp :</label><input type="text" id="mkt-wa-2" placeholder="Numéro WhatsApp" class="input-field" style="padding:5px; font-size:14px;"></div>
+                        <button class="btn-submit" style="padding:8px; font-size:13px;" onclick="acheterProduit('Réfrigérateur Combiné', 185000, 'mkt-qte-2', 'mkt-wa-2')">Commander cet article</button>
+                    </div>
+                </div>
             </div>
 
             <div id="service-1xbet" class="sub-panel" style="display: none;">
@@ -292,11 +438,80 @@
                 <p id="facture-status" class="status-msg"></p>
             </div>
 
-            <div id="service-immo" class="sub-panel" style="display: none;"><h4>Service Immobilier</h4><p style="font-size:13px; font-weight: bold;">Gestion de parcelles, maisons et locations.</p></div>
-            <div id="service-epargne" class="sub-panel" style="display: none;"><h4>Épargne</h4><p style="font-size:13px; font-weight: bold;">Sécurisez vos économies sur votre compte MAYNE.</p></div>
-            <div id="service-tontine" class="sub-panel" style="display: none;"><h4>Tontine</h4><p style="font-size:13px; font-weight: bold;">Participez à nos collectes de fonds programmées.</p></div>
-            <div id="service-pret" class="sub-panel" style="display: none;"><h4>Prêt</h4><p style="font-size:13px; font-weight: bold;">Demandes d'emprunts financiers d'urgence sous conditions.</p></div>
-            <div id="service-echange" class="sub-panel" style="display: none;"><h4>Échange</h4><p style="font-size:13px; font-weight: bold;">Convertissez vos monnaies électroniques ou cryptos.</p></div>
+            <div id="service-immo" class="sub-panel" style="display: none;">
+                <h4>Service Immobilier</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Choix de la ville :</label>
+                    <select id="immo-ville" class="select-field dark-field">
+                        <option value="Cotonou">Cotonou</option><option value="Calavi">Calavi</option>
+                        <option value="Porto-Novo">Porto-Novo</option><option value="Golo">Golo</option>
+                        <option value="Houegbo">Houegbo</option><option value="Bohicon">Bohicon</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="immo-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant de visite (FCFA) :</label><input type="number" id="immo-montant" class="input-field dark-field" placeholder="Montant de la visite"></div>
+                <button id="btn-soumettre-immo" class="btn-submit" style="background-color: #0000ff !important;">Valider la demande</button>
+                <p id="immo-status" class="status-msg"></p>
+            </div>
+
+            <div id="service-epargne" class="sub-panel" style="display: none;">
+                <h4>Épargne MAYNE</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Choix du compteur :</label>
+                    <select id="epargne-compteur" class="select-field dark-field">
+                        <option value="Mensuel">Mensuel</option>
+                        <option value="Annuel">Annuel</option>
+                        <option value="Fermé">Fermé</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant (FCFA) :</label><input type="number" id="epargne-montant" class="input-field dark-field" placeholder="Montant à épargner"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="epargne-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
+                <button id="btn-epargner" class="btn-submit" style="background-color: #2b8a3e !important;">Placer l'épargne</button>
+                <p id="epargne-status" class="status-msg"></p>
+                <div style="color: #000; font-size:12px; font-weight:bold; margin-top:10px;">Historique des épargnes :</div>
+                <div id="epargne-historique" class="history-box">Aucun dépôt enregistré</div>
+            </div>
+
+            <div id="service-livraison" class="sub-panel" style="display: none;">
+                <h4>Service Livraison</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Choix de la ville :</label>
+                    <select id="livraison-ville" class="select-field dark-field">
+                        <option value="Cotonou">Cotonou</option><option value="Calavi">Calavi</option>
+                        <option value="Porto-Novo">Porto-Novo</option><option value="Golo">Golo</option>
+                        <option value="Houegbo">Houegbo</option><option value="Bohicon">Bohicon</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="livraison-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant de la course (Minimum 500F) :</label><input type="number" id="livraison-montant" class="input-field dark-field" placeholder="Ex: 500" min="500"></div>
+                <button id="btn-livraison" class="btn-submit" style="background-color: #0000ff !important;">Commander la livraison</button>
+                <p id="livraison-status" class="status-msg"></p>
+            </div>
+
+            <div id="service-echange" class="sub-panel" style="display: none;">
+                <h4>Échange de Devises</h4>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Je donne :</label>
+                    <select id="echange-donne" class="select-field dark-field">
+                        <option value="XOF">XOF (F CFA)</option><option value="USD">USD ($)</option><option value="EURO">EURO (€)</option>
+                        <option value="BTC">BTC (Bitcoin)</option><option value="LTC">LTC (Litecoin)</option><option value="TRON">TRON (TRX)</option>
+                        <option value="PI NETWORK">PI NETWORK</option><option value="USDT">USDT</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" style="color:#000;">Je reçois :</label>
+                    <select id="echange-recoit" class="select-field dark-field">
+                        <option value="USDT">USDT</option><option value="XOF">XOF (F CFA)</option><option value="USD">USD ($)</option>
+                        <option value="EURO">EURO (€)</option><option value="BTC">BTC (Bitcoin)</option><option value="LTC">LTC (Litecoin)</option>
+                        <option value="TRON">TRON (TRX)</option><option value="PI NETWORK">PI NETWORK</option>
+                    </select>
+                </div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Montant à échanger :</label><input type="number" id="echange-montant" class="input-field dark-field" placeholder="Montant"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Adresse / Numéro à recharger :</label><input type="text" id="echange-adresse" class="input-field dark-field" placeholder="Adresse crypto ou Numéro de compte"></div>
+                <div class="input-group"><label class="input-label" style="color:#000;">Numéro WhatsApp :</label><input type="text" id="echange-whatsapp" class="input-field dark-field" placeholder="Ex: 01XXXXXXXX"></div>
+                <button id="btn-echange" class="btn-submit" style="background-color: #0000ff !important;">Confirmer l'échange</button>
+                <p id="echange-status" class="status-msg"></p>
+            </div>
 
             <div id="service-credit" class="sub-panel" style="display: none;">
                 <h4>Forfait & Crédit</h4>
@@ -321,7 +536,7 @@
 </div>
 
 <script>
-    // Navigation Interfaces (Bascule Inscription / Connexion)
+    // Navigation Manuelle Immédiate
     document.getElementById('go-to-register').addEventListener('click', function() {
         document.getElementById('login-interface').style.display = 'none';
         document.getElementById('register-interface').style.display = 'block';
@@ -331,13 +546,47 @@
         document.getElementById('login-interface').style.display = 'block';
     });
 
-    // Basculer d'un onglet de service à un autre
     function switchService(panelId) {
         document.querySelectorAll('.sub-panel').forEach(function(p) { p.style.display = 'none'; });
         document.getElementById(panelId).style.display = 'block';
     }
 
-    // Configuration Firebase
+    // Gestion Dynamique Des Codes Marchands
+    function updateCodeMarchand() {
+        const reseau = document.getElementById('depot-reseau').value;
+        const montant = document.getElementById('depot-montant').value || "montant";
+        const zone = document.getElementById('zone-code-marchand');
+        const affiche = document.getElementById('code-marchand-affiche');
+
+        if(!reseau) { zone.style.display = "none"; return; }
+        zone.style.display = "block";
+
+        if(reseau === "MTN") {
+            affiche.innerText = `*880*41*340807*${montant}#`;
+        } else if(reseau === "MOOV") {
+            affiche.innerText = `*855*4*1*307657*${montant}#`;
+        } else if(reseau === "CELTIS") {
+            affiche.innerText = `*889*6*1# (Entrer MAY01 puis le montant ${montant})`;
+        }
+    }
+
+    // Intégration Réelle de KKIAPAY
+    document.getElementById('pay-btn').addEventListener('click', function() {
+        var userAmount = document.getElementById('depot-montant').value;
+        if (!userAmount || userAmount < 100) {
+            alert("Veuillez entrer un montant valide pour le dépôt (minimum 100 FCFA).");
+            return;
+        }
+        document.getElementById('setup-zone').style.display = 'none';
+        var zone = document.getElementById('kkiapay-zone');
+        zone.innerHTML = `<kkiapay-widget amount="${userAmount}" key="74170d0b81d2b061f72e26503f07388d05854969" sandbox="false" position="inline" display="inline"></kkiapay-widget>`;
+        
+        var script = document.createElement('script');
+        script.src = "https://cdn.kkiapay.me/k.js";
+        document.body.appendChild(script);
+    });
+
+    // Firebase
     try {
         const firebaseConfig = {
             apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
@@ -352,147 +601,126 @@
         let currentUserId = null;
         let currentUserSolde = 0;
 
-        // --- CORRECTION SYSTEME DE CONNEXION ---
+        // Connexion
         document.getElementById('btn-login').addEventListener('click', function() {
             const id = document.getElementById('login-id').value.trim();
             const pin = document.getElementById('login-pin').value.trim();
-            
             if(!id || !pin) { alert("Entrez votre numéro et votre code PIN"); return; }
             
             database.ref('clients/' + id).once('value').then(function(snapshot) {
                 if(snapshot.exists()) {
                     const data = snapshot.val();
-                    // Vérification de sécurité stricte en chaîne de caractères
                     if(String(data.pin) === String(pin)) {
                         currentUserId = id;
-                        
-                        // Écoute en temps réel du solde et des infos utilisateur
                         database.ref('clients/' + id).on('value', function(realtimeSnap) {
                             const updatedData = realtimeSnap.val();
-                            if(updatedData) {
-                                currentUserSolde = updatedData.solde || 0;
-                                
-                                document.getElementById('logged-out-zone').style.display = 'none';
-                                document.getElementById('logged-in-zone').style.display = 'block';
-                                document.getElementById('user-name').innerText = updatedData.nom;
-                                document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+                            currentUserSolde = updatedData.solde || 0;
+                            document.getElementById('logged-out-zone').style.display = 'none';
+                            document.getElementById('logged-in-zone').style.display = 'block';
+                            document.getElementById('user-name').innerText = updatedData.nom;
+                            document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+                        });
+                        
+                        // Charger l'historique d'Épargne en temps réel
+                        database.ref('commandes_epargne').orderByChild('client_id').equalTo(currentUserId).on('value', function(snapHist) {
+                            const histBox = document.getElementById('epargne-historique');
+                            if(snapHist.exists()) {
+                                histBox.innerHTML = "";
+                                snapHist.forEach(function(child) {
+                                    const val = child.val();
+                                    histBox.innerHTML += `• ${val.montant}F (${val.compteur}) - ${val.date}<br>`;
+                                });
                             }
                         });
                     } else { alert("Code PIN incorrect"); }
                 } else { alert("Aucun compte associé à ce numéro"); }
-            }).catch(function(err) { alert("Erreur de connexion : " + err.message); });
+            }).catch(function(err) { alert("Erreur: " + err.message); });
         });
 
-        // --- CORRECTION SYSTEME D'INSCRIPTION ---
+        // Inscription
         document.getElementById('btn-register').addEventListener('click', function() {
             const name = document.getElementById('reg-name').value.trim();
             const id = document.getElementById('reg-id').value.trim();
             const pin = document.getElementById('reg-pin').value.trim();
-
-            if(!name || !id || !pin) { alert("Veuillez remplir tous les champs d'inscription"); return; }
-            if(pin.length < 4) { alert("Le code PIN doit comporter 4 chiffres"); return; }
+            if(!name || !id || !pin) { alert("Veuillez remplir tous les champs"); return; }
             
-            // On vérifie d'abord si le numéro existe déjà pour éviter d'écraser un compte existant
-            database.ref('clients/' + id).once('value').then(function(snapshot) {
-                if(snapshot.exists()) {
-                    alert("Ce numéro de téléphone est déjà enregistré.");
-                } else {
-                    // Création du compte client
-                    database.ref('clients/' + id).set({ 
-                        nom: name, 
-                        pin: pin, 
-                        solde: 2500 // Ton bonus de test configuré par défaut
-                    }).then(function() {
-                        alert("Compte créé avec succès ! Connectez-vous.");
-                        // Redirection automatique sur l'écran de login
-                        document.getElementById('register-interface').style.display = 'none';
-                        document.getElementById('login-interface').style.display = 'block';
-                        document.getElementById('login-id').value = id;
-                        document.getElementById('login-pin').value = pin;
-                    }).catch(function(e) { alert("Erreur d'inscription : " + e.message); });
-                }
-            });
+            database.ref('clients/' + id).set({ nom: name, pin: pin, solde: 0 }).then(function() {
+                alert("Compte créé avec succès ! Connectez-vous.");
+                document.getElementById('register-interface').style.display = 'none';
+                document.getElementById('login-interface').style.display = 'block';
+                document.getElementById('login-id').value = id;
+            }).catch(function(e) { alert("Erreur: " + e.message); });
         });
 
-        // Formulaire 1XBET
-        document.getElementById('btn-recharger-1xbet').addEventListener('click', function() {
-            const idJoueur = document.getElementById('xbet-id-joueur').value.trim();
-            const montant = Number(document.getElementById('xbet-montant').value);
-            const whatsapp = document.getElementById('xbet-whatsapp').value.trim();
-            const statusBox = document.getElementById('xbet-status');
+        // Achat Marketplace
+        window.acheterProduit = function(nomProduit, prix, qteId, waId) {
+            const qte = Number(document.getElementById(qteId).value);
+            const whatsapp = document.getElementById(waId).value.trim();
+            if(!whatsapp || qte < 1) { alert("Veuillez entrer un numéro WhatsApp et une quantité valide."); return; }
+            const total = prix * qte;
+            if(currentUserSolde < total) { alert("Solde insuffisant pour cette commande."); return; }
 
-            if(!idJoueur || !montant || montant < 100 || !whatsapp) { alert("Informations invalides ou manquantes"); return; }
+            const nouveauSolde = currentUserSolde - total;
+            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
+                database.ref('commandes_marketplace').push().set({
+                    client_id: currentUserId, produit: nomProduit, quantite: qte, montant_total: total, whatsapp: whatsapp, date: new Date().toLocaleString('fr-FR')
+                }).then(function() { alert("Commande marketplace enregistrée !"); });
+            });
+        };
+
+        // Formulaire Retrait
+        document.getElementById('btn-valider-retrait').addEventListener('click', function() {
+            const montant = Number(document.getElementById('retrait-montant').value);
+            const numero = document.getElementById('retrait-numero').value.trim();
+            const reseau = document.getElementById('retrait-reseau').value;
+            const statusBox = document.getElementById('retrait-status');
+
+            if(!montant || montant <= 0 || !numero) { alert("Champs invalides"); return; }
             if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
 
-            const nouveauSolde = currentUserSolde - montant;
-            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
-                database.ref('commandes_1xbet').push().set({
-                    client_id: currentUserId, id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp,
-                    date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            const nSolde = currentUserSolde - montant;
+            database.ref('clients/' + currentUserId).update({ solde: nSolde }).then(function() {
+                database.ref('commandes_retraits').push().set({
+                    client_id: currentUserId, montant: montant, numero: numero, reseau: reseau, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
                 }).then(function() {
-                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande reçue ! Traitement en cours."; statusBox.style.display = "block";
-                    document.getElementById('xbet-id-joueur').value = ""; document.getElementById('xbet-montant').value = ""; document.getElementById('xbet-whatsapp').value = "";
+                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande de retrait enregistrée !"; statusBox.style.display = "block";
                 });
             });
         });
 
-        // Formulaire Factures
-        document.getElementById('btn-payer-facture').addEventListener('click', function() {
-            const type = document.getElementById('facture-type').value;
-            const idCompte = document.getElementById('facture-id').value.trim();
-            const montant = Number(document.getElementById('facture-montant').value);
-            const whatsapp = document.getElementById('facture-whatsapp').value.trim();
-            const statusBox = document.getElementById('facture-status');
+        // Épargne Action
+        document.getElementById('btn-epargner').addEventListener('click', function() {
+            const compteur = document.getElementById('epargne-compteur').value;
+            const montant = Number(document.getElementById('epargne-montant').value);
+            const whatsapp = document.getElementById('epargne-whatsapp').value.trim();
+            const statusBox = document.getElementById('epargne-status');
 
-            if(!idCompte || !montant || montant <= 0 || !whatsapp) { alert("Veuillez remplir tous les champs correctement"); return; }
+            if(!montant || montant <= 0 || !whatsapp) { alert("Veuillez remplir tous les champs"); return; }
             if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
 
-            const nouveauSolde = currentUserSolde - montant;
-            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
-                database.ref('commandes_factures').push().set({
-                    client_id: currentUserId, type_facture: type, id_compte: idCompte, montant: montant, whatsapp_rechargeur: whatsapp,
-                    date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            const nSolde = currentUserSolde - montant;
+            database.ref('clients/' + currentUserId).update({ solde: nSolde }).then(function() {
+                database.ref('commandes_epargne').push().set({
+                    client_id: currentUserId, compteur: compteur, montant: montant, whatsapp: whatsapp, date: new Date().toLocaleString('fr-FR')
                 }).then(function() {
-                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Paiement enregistré ! Traitement en cours."; statusBox.style.display = "block";
-                    document.getElementById('facture-id').value = ""; document.getElementById('facture-montant').value = ""; document.getElementById('facture-whatsapp').value = "";
+                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Épargne placée avec succès !"; statusBox.style.display = "block";
                 });
             });
         });
 
-        // Formulaire Forfait & Crédit
-        document.getElementById('btn-acheter-forfait').addEventListener('click', function() {
-            const reseau = document.getElementById('forfait-reseau').value;
-            const motif = document.getElementById('forfait-motif').value;
-            const montant = Number(document.getElementById('forfait-offre').value);
-            const numero = document.getElementById('forfait-numero').value.trim();
-            const statusBox = document.getElementById('forfait-status');
+        // Livraison Action
+        document.getElementById('btn-livraison').addEventListener('click', function() {
+            const ville = document.getElementById('livraison-ville').value;
+            const whatsapp = document.getElementById('livraison-whatsapp').value.trim();
+            const montant = Number(document.getElementById('livraison-montant').value);
+            const statusBox = document.getElementById('livraison-status');
 
-            if(!montant || !numero) { alert("Veuillez remplir tous les champs"); return; }
+            if(!whatsapp || montant < 500) { alert("Champs invalides (Minimum 500F pour la livraison)"); return; }
             if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
 
-            const nouveauSolde = currentUserSolde - montant;
-            database.ref('clients/' + currentUserId).update({ solde: nouveauSolde }).then(function() {
-                database.ref('commandes_forfaits').push().set({
-                    client_id: currentUserId, reseau: reseau, motif: motif, montant: montant, numero_beneficiaire: numero,
-                    date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            const nSolde = currentUserSolde - montant;
+            database.ref('clients/' + currentUserId).update({ solde: nSolde }).then(function() {
+                database.ref('commandes_livraison').push().set({
+                    client_id: currentUserId, ville: ville, whatsapp: whatsapp, montant: montant, date: new Date().toLocaleString('fr-FR')
                 }).then(function() {
-                    statusBox.style.color = "#00ff00"; statusBox.innerText = "Achat enregistré ! Activation imminente."; statusBox.style.display = "block";
-                    document.getElementById('forfait-offre').value = ""; document.getElementById('forfait-numero').value = "";
-                });
-            });
-        });
-
-        // Déconnexion
-        document.getElementById('btn-logout').addEventListener('click', function() {
-            if (currentUserId) {
-                database.ref('clients/' + currentUserId).off();
-            }
-            currentUserId = null;
-            document.getElementById('logged-in-zone').style.display = 'none';
-            document.getElementById('logged-out-zone').style.display = 'block';
-        });
-
-    } catch(e) { console.error("Erreur d'initialisation Firebase : " + e.message); }
-</script>
-</body>
-</html>
+                    statusBox.style.
