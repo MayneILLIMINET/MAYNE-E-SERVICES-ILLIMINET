@@ -35,7 +35,7 @@
         }
         .btn-action-top {
             background-color: #ffeb3b;
-            color: #000;
+            color: #000000;
             border: 1px solid #ffffff;
             padding: 6px 10px;
             font-size: 11px;
@@ -68,10 +68,10 @@
             font-size: 16px;
             font-weight: bold;
             background-color: #ffffff;
-            color: #000;
+            color: #000000;
         }
         .dark-field {
-            background-color: #000 !important;
+            background-color: #000000 !important;
             color: #ffffff !important;
             border: 2px solid #ffffff !important;
         }
@@ -99,7 +99,7 @@
             display: inline-block;
         }
         .user-header {
-            background-color: #000; 
+            background-color: #000000; 
             padding: 12px;
             border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.3);
@@ -154,7 +154,7 @@
         .tab-btn.btn-home {
             grid-column: span 2;
             background-color: #d4af37; 
-            color: #000; 
+            color: #000000; 
             font-size: 13px;
         }
         .tab-btn.btn-full {
@@ -162,7 +162,7 @@
         }
         .service-panel {
             background-color: #d4af37; 
-            color: #000; 
+            color: #000000; 
             padding: 15px;
             border-radius: 8px;
             text-align: left;
@@ -184,7 +184,7 @@
             padding: 10px;
             font-size: 12px;
             font-weight: bold;
-            background-color: #000;
+            background-color: #000000;
             color: #ffffff;
             border: 1px solid #ffffff;
             border-radius: 4px;
@@ -222,7 +222,7 @@
         .partner-mtn { background-color: #ffcc00; color: #000; border-color: #000; }
         .partner-moov { background-color: #ff6600; }
         .partner-celtis { background-color: #0099ff; }
-        .partner-canal { background-color: #000; }
+        .partner-canal { background-color: #000000; }
         .partner-sbee { background-color: #2b8a3e; }
         .partner-1xbet { background-color: #0033aa; }
 
@@ -391,10 +391,10 @@
                 </div>
 
                 <hr style="border: 1px dashed #000;">
-                <p style="font-size:12px; font-weight:bold; text-align:center; color:#000;">OU PAYER MAINTENANT :</p>
+                <p style="font-size:12px; font-weight:bold; text-align:center; color:#000;">OU PROCÉDER AU PAIEMENT DIRECT :</p>
                 
-                <div class="payment-container">
-                    <button type="button" id="pay-btn" class="btn-submit" style="background-color: #4CAF50 !important;" onclick="envoyerWhatsAppDepot()">Payer maintenant</button>
+                <div class="payment-container" id="setup-zone">
+                    <button type="button" id="pay-btn" class="btn-submit" style="background-color: #4CAF50 !important;" onclick="envoyerInfosDepotWhatsApp()">Payer maintenant</button>
                 </div>
             </div>
 
@@ -613,4 +613,351 @@
         document.getElementById(panelId).style.display = 'block';
     }
     function toggleXbetMode(mode) {
-        document.getElementById('
+        document.getElementById('tab-xbet-depot').classList.remove('active');
+        document.getElementById('tab-xbet-retrait').classList.remove('active');
+        if(mode === 'depot') {
+            document.getElementById('tab-xbet-depot').classList.add('active');
+            document.getElementById('xbet-depot-zone').style.display = 'block';
+            document.getElementById('xbet-retrait-zone').style.display = 'none';
+        } else {
+            document.getElementById('tab-xbet-retrait').classList.add('active');
+            document.getElementById('xbet-depot-zone').style.display = 'none';
+            document.getElementById('xbet-retrait-zone').style.display = 'block';
+        }
+    }
+
+    // Gestion des codes marchands manuels
+    function updateCodeMarchand() {
+        const reseau = document.getElementById('depot-reseau').value;
+        const montant = document.getElementById('depot-montant').value || "montant";
+        const zone = document.getElementById('zone-code-marchand');
+        const affiche = document.getElementById('code-marchand-affiche');
+
+        if(!reseau) { zone.style.display = "none"; return; }
+        zone.style.display = "block";
+
+        if(reseau === "MTN") {
+            affiche.innerText = `*880*41*340807*${montant}#`;
+        } else if(reseau === "MOOV") {
+            affiche.innerText = `*855*4*1*307657*${montant}#`;
+        } else if(reseau === "CELTIS") {
+            affiche.innerText = `*889*6*1# (Entrer MAY01 puis le montant ${montant})`;
+        }
+    }
+
+    // Envoi des détails du dépôt vers WhatsApp 0159415617
+    function envoyerInfosDepotWhatsApp() {
+        var userAmount = document.getElementById('depot-montant').value;
+        var reseau = document.getElementById('depot-reseau').value;
+
+        if (!reseau) {
+            alert("Veuillez sélectionner un réseau.");
+            return;
+        }
+        if (!userAmount || userAmount < 100) {
+            alert("Veuillez entrer un montant valide (minimum 100 FCFA).");
+            return;
+        }
+
+        // Récupération du nom de l'utilisateur stocké dans l'interface
+        var clientNom = document.getElementById('user-name').innerText;
+        
+        // Construction du message textuel pour WhatsApp
+        var message = `✨ *NOUVELLE DEMANDE DE DÉPÔT*\n\n` +
+                      `👤 *Client :* ${clientNom}\n` +
+                      `📞 *Téléphone :* ${currentUserId}\n` +
+                      `📱 *Réseau :* ${reseau}\n` +
+                      `💰 *Montant :* ${userAmount} FCFA\n` +
+                      `📅 *Date :* ${new Date().toLocaleString('fr-FR')}`;
+
+        // Encodage pour l'URL WhatsApp
+        var urlWhatsApp = `https://wa.me/2290159415617?text=${encodeURIComponent(message)}`;
+        
+        // Ouvrir WhatsApp dans un nouvel onglet
+        window.open(urlWhatsApp, '_blank');
+    }
+
+    // Configuration Firebase Directe
+    let database = null;
+    let currentUserId = null;
+    let currentUserSolde = 0;
+
+    try {
+        const firebaseConfig = {
+            apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
+            authDomain: "mayneilliminetdb.firebaseapp.com",
+            databaseURL: "https://mayneilliminetdb-default-rtdb.firebaseio.com/",
+            projectId: "mayneilliminetdb",
+            storageBucket: "mayneilliminetdb.appspot.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+    } catch(e) {
+        console.error("Erreur Firebase : " + e.message);
+    }
+
+    // Connexion
+    function executerConnexion() {
+        const id = document.getElementById('login-id').value.trim();
+        const pin = document.getElementById('login-pin').value.trim();
+        if(!id || !pin) { alert("Entrez votre numéro et votre code PIN"); return; }
+        
+        database.ref('clients/' + id).once('value').then(function(snapshot) {
+            if(snapshot.exists()) {
+                const data = snapshot.val();
+                if(String(data.pin) === String(pin)) {
+                    currentUserId = id;
+                    database.ref('clients/' + id).on('value', function(realtimeSnap) {
+                        const updatedData = realtimeSnap.val();
+                        currentUserSolde = updatedData.solde || 0;
+                        document.getElementById('logged-out-zone').style.display = 'none';
+                        document.getElementById('logged-in-zone').style.display = 'block';
+                        document.getElementById('user-name').innerText = updatedData.nom;
+                        document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+                    });
+                    
+                    // Épargne Historique
+                    database.ref('commandes_epargne').orderByChild('client_id').equalTo(currentUserId).on('value', function(snapHist) {
+                        const histBox = document.getElementById('epargne-historique');
+                        if(snapHist.exists()) {
+                            histBox.innerHTML = "";
+                            snapHist.forEach(function(child) {
+                                const val = child.val();
+                                histBox.innerHTML += `• ${val.montant}F (${val.compteur}) - ${val.date}<br>`;
+                            });
+                        }
+                    });
+                } else { alert("Code PIN incorrect"); }
+            } else { alert("Aucun compte associé à ce numéro"); }
+        }).catch(function(err) { alert("Erreur serveur : " + err.message); });
+    }
+
+    // Inscription
+    function executerInscription() {
+        const name = document.getElementById('reg-name').value.trim();
+        const id = document.getElementById('reg-id').value.trim();
+        const pin = document.getElementById('reg-pin').value.trim();
+        if(!name || !id || !pin) { alert("Veuillez remplir tous les champs"); return; }
+        
+        database.ref('clients/' + id).set({ nom: name, pin: pin, solde: 0 }).then(function() {
+            alert("Compte créé avec succès ! Connectez-vous.");
+            document.getElementById('register-interface').style.display = 'none';
+            document.getElementById('login-interface').style.display = 'block';
+            document.getElementById('login-id').value = id;
+        }).catch(function(e) { alert("Erreur d'enregistrement : " + e.message); });
+    }
+
+    // Déconnexion
+    function executerDeconnexion() {
+        if(currentUserId) { database.ref('clients/' + currentUserId).off(); }
+        currentUserId = null;
+        document.getElementById('logged-in-zone').style.display = 'none';
+        document.getElementById('logged-out-zone').style.display = 'block';
+    }
+
+    // Achat Marketplace
+    function acheterProduit(nomProduit, prix, qteId, waId) {
+        const qte = Number(document.getElementById(qteId).value);
+        const whatsapp = document.getElementById(waId).value.trim();
+        if(!whatsapp || qte < 1) { alert("Format invalide."); return; }
+        const total = prix * qte;
+        if(currentUserSolde < total) { alert("Solde insuffisant."); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - total }).then(function() {
+            database.ref('commandes_marketplace').push().set({
+                client_id: currentUserId, produit: nomProduit, quantite: qte, montant_total: total, whatsapp: whatsapp, date: new Date().toLocaleString('fr-FR')
+            }).then(function() { alert("Commande enregistrée !"); });
+        });
+    }
+
+    // Demande de Retrait Portefeuille Principal
+    function validerRetrait() {
+        const montant = Number(document.getElementById('retrait-montant').value);
+        const numero = document.getElementById('retrait-numero').value.trim();
+        const reseau = document.getElementById('retrait-reseau').value;
+        const statusBox = document.getElementById('retrait-status');
+
+        if(!montant || montant <= 0 || !numero) { alert("Données invalides"); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_retraits').push().set({
+                client_id: currentUserId, montant: montant, numero: numero, reseau: reseau, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Retrait en cours de traitement."; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // 1XBET Dépôt
+    function recharger1XBet() {
+        const idJoueur = document.getElementById('xbet-id-joueur').value.trim();
+        const montant = Number(document.getElementById('xbet-montant').value);
+        const whatsapp = document.getElementById('xbet-whatsapp').value.trim();
+        const statusBox = document.getElementById('xbet-status');
+
+        if(!idJoueur || !montant || montant < 100 || !whatsapp) { alert("Champs invalides."); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_1xbet').push().set({
+                client_id: currentUserId, type_operation: "Dépôt", id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande de dépôt 1XBET validée."; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // 1XBET Retrait
+    function retrait1XBet() {
+        const idJoueur = document.getElementById('xbet-retrait-id').value.trim();
+        const montant = Number(document.getElementById('xbet-retrait-montant').value);
+        const whatsapp = document.getElementById('xbet-retrait-whatsapp').value.trim();
+        const statusBox = document.getElementById('xbet-status');
+
+        if(!idJoueur || !montant || montant <= 0 || !whatsapp) { alert("Veuillez remplir correctement les champs de retrait."); return; }
+        
+        database.ref('commandes_1xbet').push().set({
+            client_id: currentUserId, type_operation: "Retrait", id_joueur_1xbet: idJoueur, montant: montant, whatsapp_rechargeur: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+        }).then(function() {
+            statusBox.style.color = "#ffeb3b"; statusBox.innerText = "Demande de retrait 1XBET soumise ! Nous vous contacterons."; statusBox.style.display = "block";
+        });
+    }
+
+    // Factures
+    function payerFacture() {
+        const type = document.getElementById('facture-type').value;
+        const idCompte = document.getElementById('facture-id').value.trim();
+        const montant = Number(document.getElementById('facture-montant').value);
+        const whatsapp = document.getElementById('facture-whatsapp').value.trim();
+        const statusBox = document.getElementById('facture-status');
+
+        if(!idCompte || !montant || !whatsapp) { alert("Champs obligatoires."); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_factures').push().set({
+                client_id: currentUserId, type_facture: type, id_compte: idCompte, montant: montant, whatsapp_rechargeur: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Paiement envoyé avec succès."; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // Forfaits
+    function acheterForfait() {
+        const reseau = document.getElementById('forfait-reseau').value;
+        const motif = document.getElementById('forfait-motif').value;
+        const montant = Number(document.getElementById('forfait-offre').value);
+        const numero = document.getElementById('forfait-numero').value.trim();
+        const statusBox = document.getElementById('forfait-status');
+
+        if(!montant || !numero) { alert("Données manquantes."); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_forfaits').push().set({
+                client_id: currentUserId, reseau: reseau, motif: motif, montant: montant, numero_beneficiaire: numero, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Traitement du forfait en cours."; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // Immobilier
+    function solliciterImmo() {
+        const ville = document.getElementById('immo-ville').value;
+        const whatsapp = document.getElementById('immo-whatsapp').value.trim();
+        const montant = Number(document.getElementById('immo-montant').value);
+        const statusBox = document.getElementById('immo-status');
+
+        if(!whatsapp || !montant) { alert("Veuillez remplir les champs."); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant."); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_immobilier').push().set({
+                client_id: currentUserId, ville: ville, whatsapp: whatsapp, montant_visite: montant, date: new Date().toLocaleString('fr-FR')
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Demande de visite enregistrée !"; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // Épargne
+    function placerEpargne() {
+        const compteur = document.getElementById('epargne-compteur').value;
+        const montant = Number(document.getElementById('epargne-montant').value);
+        const whatsapp = document.getElementById('epargne-whatsapp').value.trim();
+        const statusBox = document.getElementById('epargne-status');
+
+        if(!montant || !whatsapp) { alert("Complétez le formulaire."); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_epargne').push().set({
+                client_id: currentUserId, compteur: compteur, montant: montant, whatsapp: whatsapp, date: new Date().toLocaleString('fr-FR')
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Épargne enregistrée."; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // Livraison
+    function demanderLivraison() {
+        const ville = document.getElementById('livraison-ville').value;
+        const whatsapp = document.getElementById('livraison-whatsapp').value.trim();
+        const montant = Number(document.getElementById('livraison-montant').value);
+        const statusBox = document.getElementById('livraison-status');
+
+        if(!whatsapp || montant < 500) { alert("Minimum 500F."); return; }
+        if(currentUserSolde < montant) { alert("Solde insuffisant"); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_livraison').push().set({
+                client_id: currentUserId, ville: ville, whatsapp: whatsapp, montant: montant, date: new Date().toLocaleString('fr-FR')
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Livreur notifié !"; statusBox.style.display = "block";
+            });
+        });
+    }
+
+    // Échanges Devises
+    function executerEchange() {
+        const donne = document.getElementById('echange-donne').value;
+        const recoit = document.getElementById('echange-recoit').value;
+        const montant = Number(document.getElementById('echange-montant').value);
+        const adresse = document.getElementById('echange-adresse').value.trim();
+        const whatsapp = document.getElementById('echange-whatsapp').value.trim();
+        const statusBox = document.getElementById('echange-status');
+
+        if(!montant || !adresse || !whatsapp) { alert("Champs requis vides."); return; }
+        
+        database.ref('commandes_echanges').push().set({
+            client_id: currentUserId, donne: donne, recoit: recoit, montant: montant, adresse: adresse, whatsapp: whatsapp, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+        }).then(function() {
+            statusBox.style.color = "#00ff00"; statusBox.innerText = "Échange en attente de validation."; statusBox.style.display = "block";
+        });
+    }
+
+    // P2P / P2M
+    function executerP2P() {
+        const donneur = document.getElementById('p2p-donneur').value;
+        const receveur = document.getElementById('p2p-receveur').value;
+        const numero = document.getElementById('p2p-numero').value.trim();
+        const montant = Number(document.getElementById('p2p-montant').value);
+        const statusBox = document.getElementById('p2p-status');
+
+        if(!numero || !montant || montant <= 0) { alert("Veuillez saisir un numéro valide et un montant."); return; }
+        if(currentUserSolde < montant) { alert("Solde de compte insuffisant."); return; }
+
+        database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - montant }).then(function() {
+            database.ref('commandes_p2p_p2m').push().set({
+                client_id: currentUserId, reseau_donneur: donneur, reseau_receveur: receveur, numero_receveur: numero, montant: montant, date: new Date().toLocaleString('fr-FR'), statut: "En attente"
+            }).then(function() {
+                statusBox.style.color = "#00ff00"; statusBox.innerText = "Transaction P2P/P2M enregistrée en attente."; statusBox.style.display = "block";
+            });
+        });
+    }
+</script>
+</body>
+</html>
