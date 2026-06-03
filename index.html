@@ -455,7 +455,7 @@
 
     function recharger1XBet() {
         const id = document.getElementById('xbet-id-joueur').value.trim(); const m = Number(document.getElementById('xbet-montant').value); const wa = document.getElementById('xbet-whatsapp').value.trim();
-        if(!id || m < 100 || currentUserSolde < m) return;
+        if(!id || m < 100 || currentUserSolde < m) { alert("Solde insuffisant ou données invalides"); return; }
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
             database.ref('commandes_1xbet').push().set({ type: "Dépôt", id: id, montant: m, wa: wa });
             notifierWhatsApp("DÉPÔT 1XBET", `🎮 *ID Joueur:* ${id}\n💰 *Montant:* ${m} F\n📲 *Contact WA:* ${wa}`);
@@ -464,7 +464,7 @@
 
     function retrait1XBet() {
         const id = document.getElementById('xbet-retrait-id').value.trim(); const m = Number(document.getElementById('xbet-retrait-montant').value); const wa = document.getElementById('xbet-retrait-whatsapp').value.trim();
-        if(!id || m <= 0) return;
+        if(!id || m <= 0) { alert("Champs invalides"); return; }
         database.ref('commandes_1xbet').push().set({ type: "Retrait", id: id, montant: m, wa: wa });
         notifierWhatsApp("RETRAIT 1XBET", `🎮 *ID Joueur:* ${id}\n💰 *Montant à retirer:* ${m} F\n📲 *Contact WA:* ${wa}`);
     }
@@ -500,7 +500,7 @@
         const c = document.getElementById('epargne-compteur').value; const m = Number(document.getElementById('epargne-montant').value); const wa = document.getElementById('epargne-whatsapp').value.trim();
         if(!wa || currentUserSolde < m) return;
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_epargne').push().set({ compteur: c, montant: m, wa: wa, date: new Date().toLocaleString() });
+            database.ref('commandes_epargne').push().set({ client_id: currentUserId, compteur: c, montant: m, wa: wa, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("PLACEMENT ÉPARGNE", `🏦 *Type:* ${c}\n💰 *Montant:* ${m} F\n📲 *Contact WA:* ${wa}`);
         });
     }
