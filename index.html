@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MAYNE E-SERVICES</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -14,9 +14,16 @@
             padding: 5px;
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
+            min-height: 100vh; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            box-sizing: border-box;
         }
         .app-container {
+            width: 100%; 
             max-width: 450px;
+            min-height: calc(100vh - 10px); 
             margin: 0 auto;
             padding: 12px;
             background-color: #0000ff; 
@@ -28,113 +35,31 @@
             text-align: center;
             position: relative;
         }
-        .header-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-        .btn-action-top {
-            background-color: #ffeb3b;
-            color: #000000;
-            border: 1px solid #ffffff;
-            padding: 5px 8px;
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        .header-actions { display: flex; justify-content: flex-end; gap: 5px; margin-bottom: 10px; }
+        .btn-action-top { background-color: #ffeb3b; color: #000000; border: 1px solid #ffffff; padding: 5px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; }
         .btn-action-top.retrait { background-color: #e67e22; color: #ffffff; }
-        .input-group {
-            text-align: left;
-            margin-bottom: 8px;
-        }
-        .input-label {
-            display: block;
-            font-size: 12px;
-            color: #ffffff;
-            margin-bottom: 4px;
-            font-weight: bold;
-        }
-        .input-field, .select-field {
-            width: 100%;
-            padding: 8px;
-            border-radius: 4px;
-            border: 2px solid #ffffff;
-            box-sizing: border-box;
-            text-align: center;
-            font-size: 14px;
-            font-weight: bold;
-            background-color: #ffffff;
-            color: #000000;
-        }
-        .dark-field {
-            background-color: #000000 !important;
-            color: #ffffff !important;
-            border: 2px solid #ffffff !important;
-        }
-        .btn-submit {
-            width: 100%;
-            background-color: #2b8a3e;
-            color: #ffffff;
-            border: 2px solid #ffffff;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-top: 5px;
-            display: block;
-        }
-        .btn-link {
-            background: none; border: none; color: #ffeb3b; text-decoration: underline;
-            cursor: pointer; font-size: 12px; margin-top: 10px; display: inline-block;
-        }
-        .user-header {
-            background-color: #000000; 
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.3);
-            margin-bottom: 10px;
-            position: relative;
-            text-align: left;
-        }
+        .input-group { text-align: left; margin-bottom: 8px; }
+        .input-label { display: block; font-size: 12px; color: #ffffff; margin-bottom: 4px; font-weight: bold; }
+        .input-field, .select-field { width: 100%; padding: 8px; border-radius: 4px; border: 2px solid #ffffff; box-sizing: border-box; text-align: center; font-size: 14px; font-weight: bold; background-color: #ffffff; color: #000000; }
+        .dark-field { background-color: #000000 !important; color: #ffffff !important; border: 2px solid #ffffff !important; }
+        .btn-submit { width: 100%; background-color: #2b8a3e; color: #ffffff; border: 2px solid #ffffff; padding: 10px; font-size: 14px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 5px; display: block; }
+        .btn-link { background: none; border: none; color: #ffeb3b; text-decoration: underline; cursor: pointer; font-size: 12px; margin-top: 10px; display: inline-block; }
+        .user-header { background-color: #000000; padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); margin-bottom: 10px; position: relative; text-align: left; }
         .profile-line { font-size: 14px; font-weight: bold; margin-bottom: 2px; width: 65%; }
         .solde-val { font-size: 18px; font-weight: bold; color: #00ff00; }
-        .btn-logout {
-            position: absolute; top: 8px; right: 8px; background-color: #cc0000;
-            color: white; border: none; padding: 5px 10px; font-size: 11px;
-            font-weight: bold; border-radius: 4px; cursor: pointer;
-        }
-        .services-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 10px;
-        }
-        .tab-btn {
-            padding: 8px 4px; font-size: 10px; font-weight: bold; background-color: #cc2222; 
-            color: white; border: 1px solid #ffffff; border-radius: 4px; cursor: pointer;
-            text-transform: uppercase;
-        }
+        .btn-logout { position: absolute; top: 8px; right: 8px; background-color: #cc0000; color: white; border: none; padding: 5px 10px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .services-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 10px; }
+        .tab-btn { padding: 8px 4px; font-size: 10px; font-weight: bold; background-color: #cc2222; color: white; border: 1px solid #ffffff; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
         .tab-btn.btn-home { grid-column: span 2; background-color: #d4af37; color: #000000; font-size: 12px; }
         .tab-btn.btn-full { grid-column: span 2; }
-        .service-panel {
-            background-color: #d4af37; color: #000000; padding: 10px; border-radius: 6px; text-align: left;
-        }
-        .sub-panel h4 {
-            margin: 0 0 8px 0; color: #0000ff; border-bottom: 2px solid #0000ff;
-            padding-bottom: 3px; font-size: 14px; text-transform: uppercase;
-        }
+        .service-panel { background-color: #d4af37; color: #000000; padding: 10px; border-radius: 6px; text-align: left; }
+        .sub-panel h4 { margin: 0 0 8px 0; color: #0000ff; border-bottom: 2px solid #0000ff; padding-bottom: 3px; font-size: 14px; text-transform: uppercase; }
         .inner-toggle { display: flex; gap: 4px; margin-bottom: 10px; }
-        .inner-btn {
-            flex: 1; padding: 8px; font-size: 11px; font-weight: bold;
-            background-color: #000000; color: #ffffff; border: 1px solid #ffffff; border-radius: 4px;
-        }
+        .inner-btn { flex: 1; padding: 8px; font-size: 11px; font-weight: bold; background-color: #000000; color: #ffffff; border: 1px solid #ffffff; border-radius: 4px; }
         .inner-btn.active { background-color: #0000ff; }
         .about-section { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #0000ff; font-size: 11px; color: #111; }
         .partners-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-top: 5px; }
-        .partner-logo {
-            width: 50px; height: 25px; border: 1px solid #ffffff; border-radius: 3px;
-            display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: white;
-        }
+        .partner-logo { width: 50px; height: 25px; border: 1px solid #ffffff; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: white; }
         .partner-mtn { background-color: #ffcc00; color: #000; border-color: #000; }
         .partner-moov { background-color: #ff6600; }
         .partner-celtis { background-color: #0099ff; }
@@ -157,7 +82,7 @@
 
     <div id="logged-out-zone">
         <div id="login-interface">
-            <h3 style="margin-top: 0; margin-bottom: 15px;">Espace Client</h3>
+            <h3 style="margin-top: 0; margin-bottom: 15px;">BIENVENUE SUR MAYNE ILLIMINET</h3>
             <div class="input-group">
                 <label class="input-label">Numéro de téléphone :</label>
                 <input type="text" id="login-id" class="input-field" placeholder="Ex: 0166302734">
@@ -171,7 +96,7 @@
         </div>
 
         <div id="register-interface" style="display: none;">
-            <h3 style="margin-top: 0; margin-bottom: 15px;">Inscription</h3>
+            <h3 style="margin-top: 0; margin-bottom: 15px;">BIENVENUE SUR MAYNE ILLIMINET</h3>
             <div class="input-group">
                 <label class="input-label">Nom et Prénom :</label>
                 <input type="text" id="reg-name" class="input-field" placeholder="Ex: Marius Ayizan">
@@ -218,13 +143,24 @@
 
         <div class="service-panel">
             
-            <div id="menu-principal" class="sub-panel">
-                <h4 style="color:#fff; border-bottom-color:#fff;">MAYNE SERVICE</h4>
-                <p style="font-size:11px; font-weight: bold; text-align: justify; margin-bottom: 10px; line-height: 15px;">
-                    Accédez instantanément à nos services : Forfaits, 1XBET, P2P/P2M, Cryptomonnaies, Factures, Épargne, Livraisons, Immobilier. Rapide et 100% sécurisé.
+            <div id="menu-principal" class="sub-panel" style="width: 100%; box-sizing: border-box;">
+                <h4 style="color:#fff; border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
+                
+                <p style="font-size:12px; font-weight: normal; text-align: justify; margin-bottom: 15px; line-height: 1.4; color: #000;">
+                    Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>. De l'achat de forfaits aux transferts P2P, en passant par le règlement de vos factures et l'épargne, gérez tous vos services essentiels en quelques clics.
                 </p>
-                <div class="about-section">
-                    <center><b>PARTENAIRES</b></center>
+
+                <div style="margin-bottom: 15px; text-align: justify; font-size: 11px; line-height: 1.4; color: #111;">
+                    <h5 style="color: #0000ff; border-bottom: 1px solid #0000ff; padding-bottom: 3px; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">
+                        À propos de nous
+                    </h5>
+                    <p style="margin: 0;">
+                        MAYNE E-SERVICES est votre partenaire numérique de confiance au Bénin. Notre mission est d'innover et de faciliter votre accès aux services financiers et du quotidien. Nous rassemblons une multitude de solutions en une seule application pratique pour vous faire gagner du temps, tout en garantissant la sécurité absolue de vos opérations.
+                    </p>
+                </div>
+
+                <div class="about-section" style="margin-top: 0; padding-top: 10px; border-top: 1px dashed #0000ff;">
+                    <center><b style="color: #000;">NOS PARTENAIRES</b></center>
                     <div class="partners-container">
                         <div class="partner-logo partner-mtn">MTN</div>
                         <div class="partner-logo partner-moov">MOOV</div>
@@ -364,11 +300,25 @@
                 <h4>Échange</h4>
                 <div class="input-group">
                     <label class="input-label" style="color:#000;">Je donne :</label>
-                    <select id="echange-donne" class="select-field dark-field"><option value="XOF">XOF</option><option value="USDT">USDT</option><option value="BTC">BTC</option></select>
+                    <select id="echange-donne" class="select-field dark-field">
+                        <option value="XOF">XOF</option>
+                        <option value="USDT">USDT</option>
+                        <option value="BTC">BTC</option>
+                        <option value="USD">USD</option>
+                        <option value="EURO">EURO</option>
+                        <option value="PI NETWORK">PI NETWORK</option>
+                    </select>
                 </div>
                 <div class="input-group">
                     <label class="input-label" style="color:#000;">Je reçois :</label>
-                    <select id="echange-recoit" class="select-field dark-field"><option value="USDT">USDT</option><option value="XOF">XOF</option><option value="BTC">BTC</option></select>
+                    <select id="echange-recoit" class="select-field dark-field">
+                        <option value="USDT">USDT</option>
+                        <option value="XOF">XOF</option>
+                        <option value="BTC">BTC</option>
+                        <option value="USD">USD</option>
+                        <option value="EURO">EURO</option>
+                        <option value="PI NETWORK">PI NETWORK</option>
+                    </select>
                 </div>
                 <div class="input-group"><input type="number" id="echange-montant" class="input-field dark-field" placeholder="Montant"></div>
                 <div class="input-group"><input type="text" id="echange-adresse" class="input-field dark-field" placeholder="Adresse / Numéro"></div>
@@ -380,10 +330,18 @@
             <div id="service-p2p" class="sub-panel" style="display: none;">
                 <h4>P2P / P2M</h4>
                 <div class="input-group">
-                    <select id="p2p-donneur" class="select-field dark-field"><option value="MTN">MTN Donneur</option><option value="MOOV">MOOV Donneur</option></select>
+                    <select id="p2p-donneur" class="select-field dark-field">
+                        <option value="MTN">MTN Donneur</option>
+                        <option value="MOOV">MOOV Donneur</option>
+                        <option value="CELTIS">CELTIS Donneur</option>
+                    </select>
                 </div>
                 <div class="input-group">
-                    <select id="p2p-receveur" class="select-field dark-field"><option value="MTN">MTN Receveur</option><option value="MOOV">MOOV Receveur</option></select>
+                    <select id="p2p-receveur" class="select-field dark-field">
+                        <option value="MTN">MTN Receveur</option>
+                        <option value="MOOV">MOOV Receveur</option>
+                        <option value="CELTIS">CELTIS Receveur</option>
+                    </select>
                 </div>
                 <div class="input-group"><input type="text" id="p2p-numero" class="input-field dark-field" placeholder="Numéro Receveur"></div>
                 <div class="input-group"><input type="number" id="p2p-montant" class="input-field dark-field" placeholder="Montant"></div>
