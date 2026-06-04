@@ -145,11 +145,9 @@
             
             <div id="menu-principal" class="sub-panel" style="width: 100%; box-sizing: border-box;">
                 <h4 style="color:#fff; border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
-                
                 <p style="font-size:12px; font-weight: normal; text-align: justify; margin-bottom: 15px; line-height: 1.4; color: #000;">
                     Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>. De l'achat de forfaits aux transferts P2P, en passant par le règlement de vos factures et l'épargne, gérez tous vos services essentiels en quelques clics.
                 </p>
-
                 <div style="margin-bottom: 15px; text-align: justify; font-size: 11px; line-height: 1.4; color: #111;">
                     <h5 style="color: #0000ff; border-bottom: 1px solid #0000ff; padding-bottom: 3px; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">
                         À propos de nous
@@ -158,7 +156,6 @@
                         MAYNE E-SERVICES est votre partenaire numérique de confiance au Bénin. Notre mission est d'innover et de faciliter votre accès aux services financiers et du quotidien. Nous rassemblons une multitude de solutions en une seule application pratique pour vous faire gagner du temps, tout en garantissant la sécurité absolue de vos opérations.
                     </p>
                 </div>
-
                 <div class="about-section" style="margin-top: 0; padding-top: 10px; border-top: 1px dashed #0000ff;">
                     <center><b style="color: #000;">NOS PARTENAIRES</b></center>
                     <div class="partners-container">
@@ -186,6 +183,7 @@
                     <div id="code-marchand-affiche" class="info-block-code"></div>
                 </div>
                 <button type="button" class="btn-submit" style="background-color: #4CAF50 !important;" onclick="envoyerInfosDepotWhatsApp()">Confirmer le paiement</button>
+                <div id="depot-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="solde-retrait" class="sub-panel" style="display: none;">
@@ -195,6 +193,7 @@
                 <div class="input-group"><select id="retrait-reseau" class="select-field dark-field"><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div>
                 <button type="button" class="btn-submit" style="background-color: #cc0000 !important;" onclick="validerRetrait()">Valider le retrait</button>
                 <p id="retrait-status" class="status-msg"></p>
+                <div id="retrait-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-market" class="sub-panel" style="display: none;">
@@ -209,6 +208,7 @@
                         <button type="button" class="btn-submit" style="padding:6px; font-size:12px;" onclick="acheterProduit('Téléviseur Smart TV', 135000, 'mkt-qte-1', 'mkt-wa-1')">Commander</button>
                     </div>
                 </div>
+                <div id="market-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-1xbet" class="sub-panel" style="display: none;">
@@ -230,6 +230,7 @@
                     <button type="button" class="btn-submit" style="background-color: #e67e22 !important;" onclick="retrait1XBet()">Valider Retrait</button>
                 </div>
                 <p id="xbet-status" class="status-msg"></p>
+                <div id="xbet-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-facture" class="sub-panel" style="display: none;">
@@ -244,6 +245,7 @@
                 <div class="input-group"><input type="text" id="facture-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="payerFacture()">Payer</button>
                 <p id="facture-status" class="status-msg"></p>
+                <div id="facture-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-credit" class="sub-panel" style="display: none;">
@@ -258,6 +260,7 @@
                 <div class="input-group"><input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Montant"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="acheterForfait()">Valider</button>
                 <p id="forfait-status" class="status-msg"></p>
+                <div id="forfait-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-immo" class="sub-panel" style="display: none;">
@@ -271,6 +274,7 @@
                 <div class="input-group"><input type="text" id="immo-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="solliciterImmo()">Valider</button>
                 <p id="immo-status" class="status-msg"></p>
+                <div id="immo-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-epargne" class="sub-panel" style="display: none;">
@@ -280,7 +284,7 @@
                 <div class="input-group"><input type="text" id="epargne-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
                 <button type="button" class="btn-submit" style="background-color: #2b8a3e !important;" onclick="placerEpargne()">Valider</button>
                 <p id="epargne-status" class="status-msg"></p>
-                <div id="epargne-historique" class="history-box">Aucun dépôt</div>
+                <div id="epargne-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-livraison" class="sub-panel" style="display: none;">
@@ -294,6 +298,7 @@
                 <div class="input-group"><input type="text" id="livraison-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="demanderLivraison()">Valider</button>
                 <p id="livraison-status" class="status-msg"></p>
+                <div id="livraison-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-echange" class="sub-panel" style="display: none;">
@@ -325,6 +330,7 @@
                 <div class="input-group"><input type="text" id="echange-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
                 <button type="button" class="btn-submit" style="background-color: #0000ff !important;" onclick="executerEchange()">Valider</button>
                 <p id="echange-status" class="status-msg"></p>
+                <div id="echange-historique" class="history-box">Aucune transaction</div>
             </div>
 
             <div id="service-p2p" class="sub-panel" style="display: none;">
@@ -347,6 +353,7 @@
                 <div class="input-group"><input type="number" id="p2p-montant" class="input-field dark-field" placeholder="Montant"></div>
                 <button type="button" class="btn-submit" style="background-color: #2b8a3e !important;" onclick="executerP2P()">Valider</button>
                 <p id="p2p-status" class="status-msg"></p>
+                <div id="p2p-historique" class="history-box">Aucune transaction</div>
             </div>
 
         </div>
@@ -378,13 +385,50 @@
         else if(reseau === "CELTIS") affiche.innerText = `*889*6*1# (MAY01 puis ${montant})`;
     }
 
-    // --- FONCTION WHATSAPP GLOBALE ---
-    function notifierWhatsApp(titre, details) {
+    // --- FONCTION GREEN API WHATSAPP GLOBALE ---
+    async function notifierWhatsApp(titre, details) {
         var clientNom = document.getElementById('user-name') ? document.getElementById('user-name').innerText : "Inconnu";
         var telephoneClient = document.getElementById('login-id').value.trim() || currentUserId || "Non spécifié";
         var message = `✨ *${titre}*\n\n👤 *Client:* ${clientNom}\n📞 *Tél Compte:* ${telephoneClient}\n\n${details}\n\n📅 *Date:* ${new Date().toLocaleString('fr-FR')}`;
-        var urlWhatsApp = `https://wa.me/2290159415617?text=${encodeURIComponent(message)}`;
-        window.open(urlWhatsApp, '_blank');
+        
+        const urlInstance = "https://7107.api.greenapi.com";
+        const idInstance = "7107642247";
+        const apiTokenInstance = "45667be1d42943818b0c6a40d395a892242a55a945194071b4";
+        const chatId = "22959415617@c.us"; // Numéro cible ajouté avec le suffixe WhatsApp
+
+        const url = `${urlInstance}/waInstance${idInstance}/sendMessage/${apiTokenInstance}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chatId: chatId, message: message })
+            });
+            if(response.ok) {
+                alert("Requête envoyée avec succès !");
+            } else {
+                alert("Erreur lors de l'envoi de la requête.");
+            }
+        } catch (error) {
+            console.error("Erreur Green API:", error);
+            alert("Erreur de connexion pour l'envoi de la notification.");
+        }
+    }
+
+    // --- HELPER D'AFFICHAGE D'HISTORIQUE ---
+    function chargerHistorique(collection, elementId, formatFn) {
+        database.ref(collection).orderByChild('client_id').equalTo(currentUserId).on('value', function(sh) {
+            const container = document.getElementById(elementId);
+            if(sh.exists()) {
+                let html = "";
+                sh.forEach(function(c) {
+                    html = `• ${formatFn(c.val())}<br>` + html; // Ajout en haut pour afficher les plus récents en premier
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = "Aucune transaction";
+            }
+        });
     }
 
     // --- DÉPÔT ---
@@ -392,6 +436,16 @@
         var montant = document.getElementById('depot-montant').value;
         var reseau = document.getElementById('depot-reseau').value;
         if (!reseau || !montant || montant < 100) { alert("Champs invalides."); return; }
+        
+        // Enregistrement de l'historique du dépôt
+        if(currentUserId) {
+            database.ref('commandes_depots').push().set({
+                client_id: currentUserId,
+                reseau: reseau,
+                montant: montant,
+                date: new Date().toLocaleString('fr-FR')
+            });
+        }
         notifierWhatsApp("NOUVELLE DEMANDE DE DÉPÔT", `📱 *Réseau:* ${reseau}\n💰 *Montant:* ${montant} FCFA`);
     }
 
@@ -415,9 +469,20 @@
                     document.getElementById('logged-out-zone').style.display = 'none'; document.getElementById('logged-in-zone').style.display = 'block';
                     document.getElementById('user-name').innerText = snap.val().nom; document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
                 });
-                database.ref('commandes_epargne').orderByChild('client_id').equalTo(currentUserId).on('value', function(sh) {
-                    if(sh.exists()) { const hb = document.getElementById('epargne-historique'); hb.innerHTML = ""; sh.forEach(function(c) { hb.innerHTML += `• ${c.val().montant}F - ${c.val().date}<br>`; }); }
-                });
+
+                // Chargement de tous les historiques pour l'utilisateur
+                chargerHistorique('commandes_depots', 'depot-historique', v => `Dépôt ${v.reseau} - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_epargne', 'epargne-historique', v => `Épargne ${v.compteur} - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_retraits', 'retrait-historique', v => `Retrait ${v.reseau} - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_marketplace', 'market-historique', v => `Achat: ${v.produit} - ${v.total}F (${v.date})`);
+                chargerHistorique('commandes_1xbet', 'xbet-historique', v => `${v.type} 1XBET - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_factures', 'facture-historique', v => `Facture ${v.type} - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_forfaits', 'forfait-historique', v => `${v.motif} ${v.reseau} - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_immobilier', 'immo-historique', v => `Immo à ${v.ville} - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_livraison', 'livraison-historique', v => `Livraison à ${v.ville} - ${v.montant}F (${v.date})`);
+                chargerHistorique('commandes_echanges', 'echange-historique', v => `Échange ${v.donne} => ${v.recoit} - Montant: ${v.montant} (${v.date})`);
+                chargerHistorique('commandes_p2p_p2m', 'p2p-historique', v => `P2P ${v.donneur} => ${v.receveur} - ${v.montant}F (${v.date})`);
+
             } else alert("Erreur d'identifiants");
         });
     }
@@ -438,7 +503,7 @@
         if(!wa || qte < 1) return; const total = prix * qte;
         if(currentUserSolde < total) { alert("Solde insuffisant."); return; }
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - total }).then(function() {
-            database.ref('commandes_marketplace').push().set({ client_id: currentUserId, produit: nom, total: total, wa: wa, date: new Date().toLocaleString() });
+            database.ref('commandes_marketplace').push().set({ client_id: currentUserId, produit: nom, total: total, wa: wa, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("COMMANDE MARKETPLACE", `🛒 *Produit:* ${nom}\n📦 *Quantité:* ${qte}\n💰 *Total:* ${total} F\n📲 *Contact WA:* ${wa}`);
         });
     }
@@ -447,7 +512,7 @@
         const m = Number(document.getElementById('retrait-montant').value); const n = document.getElementById('retrait-numero').value.trim(); const r = document.getElementById('retrait-reseau').value;
         if(!m || !n || currentUserSolde < m) { alert("Erreur de retrait"); return; }
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_retraits').push().set({ client_id: currentUserId, montant: m, numero: n, reseau: r, date: new Date().toLocaleString() });
+            database.ref('commandes_retraits').push().set({ client_id: currentUserId, montant: m, numero: n, reseau: r, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("DEMANDE DE RETRAIT", `💸 *Montant:* ${m} F\n📍 *Réception:* ${n}\n📶 *Réseau:* ${r}`);
             document.getElementById('retrait-status').innerText = "En cours..."; document.getElementById('retrait-status').style.display = "block";
         });
@@ -457,7 +522,7 @@
         const id = document.getElementById('xbet-id-joueur').value.trim(); const m = Number(document.getElementById('xbet-montant').value); const wa = document.getElementById('xbet-whatsapp').value.trim();
         if(!id || m < 100 || currentUserSolde < m) { alert("Solde insuffisant ou données invalides"); return; }
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_1xbet').push().set({ type: "Dépôt", id: id, montant: m, wa: wa });
+            database.ref('commandes_1xbet').push().set({ client_id: currentUserId, type: "Dépôt", id: id, montant: m, wa: wa, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("DÉPÔT 1XBET", `🎮 *ID Joueur:* ${id}\n💰 *Montant:* ${m} F\n📲 *Contact WA:* ${wa}`);
         });
     }
@@ -465,7 +530,7 @@
     function retrait1XBet() {
         const id = document.getElementById('xbet-retrait-id').value.trim(); const m = Number(document.getElementById('xbet-retrait-montant').value); const wa = document.getElementById('xbet-retrait-whatsapp').value.trim();
         if(!id || m <= 0) { alert("Champs invalides"); return; }
-        database.ref('commandes_1xbet').push().set({ type: "Retrait", id: id, montant: m, wa: wa });
+        database.ref('commandes_1xbet').push().set({ client_id: currentUserId, type: "Retrait", id: id, montant: m, wa: wa, date: new Date().toLocaleString('fr-FR') });
         notifierWhatsApp("RETRAIT 1XBET", `🎮 *ID Joueur:* ${id}\n💰 *Montant à retirer:* ${m} F\n📲 *Contact WA:* ${wa}`);
     }
 
@@ -473,7 +538,7 @@
         const t = document.getElementById('facture-type').value; const id = document.getElementById('facture-id').value.trim(); const m = Number(document.getElementById('facture-montant').value); const wa = document.getElementById('facture-whatsapp').value.trim();
         if(!id || currentUserSolde < m) return;
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_factures').push().set({ type: t, id: id, montant: m, wa: wa });
+            database.ref('commandes_factures').push().set({ client_id: currentUserId, type: t, id: id, montant: m, wa: wa, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("PAIEMENT FACTURE", `🧾 *Type:* ${t}\n🔢 *ID/Compteur:* ${id}\n💰 *Montant:* ${m} F\n📲 *Contact WA:* ${wa}`);
         });
     }
@@ -482,7 +547,7 @@
         const r = document.getElementById('forfait-reseau').value; const motif = document.getElementById('forfait-motif').value; const n = document.getElementById('forfait-numero').value.trim(); const m = Number(document.getElementById('forfait-offre').value);
         if(!n || currentUserSolde < m) return;
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_forfaits').push().set({ reseau: r, motif: motif, numero: n, montant: m });
+            database.ref('commandes_forfaits').push().set({ client_id: currentUserId, reseau: r, motif: motif, numero: n, montant: m, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("ACHAT FORFAIT/CRÉDIT", `📶 *Réseau:* ${r}\n📦 *Offre:* ${motif}\n📍 *Bénéficiaire:* ${n}\n💰 *Montant:* ${m} F`);
         });
     }
@@ -491,7 +556,7 @@
         const v = document.getElementById('immo-ville').value; const m = Number(document.getElementById('immo-montant').value); const wa = document.getElementById('immo-whatsapp').value.trim();
         if(!wa || currentUserSolde < m) return;
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_immobilier').push().set({ ville: v, montant: m, wa: wa });
+            database.ref('commandes_immobilier').push().set({ client_id: currentUserId, ville: v, montant: m, wa: wa, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("DEMANDE IMMOBILIÈRE", `🏙️ *Ville:* ${v}\n💵 *Frais visite:* ${m} F\n📲 *Contact WA:* ${wa}`);
         });
     }
@@ -509,7 +574,7 @@
         const v = document.getElementById('livraison-ville').value; const m = Number(document.getElementById('livraison-montant').value); const wa = document.getElementById('livraison-whatsapp').value.trim();
         if(!wa || m < 500 || currentUserSolde < m) return;
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_livraison').push().set({ ville: v, montant: m, wa: wa });
+            database.ref('commandes_livraison').push().set({ client_id: currentUserId, ville: v, montant: m, wa: wa, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("DEMANDE LIVRAISON", `🛵 *Ville:* ${v}\n💵 *Montant:* ${m} F\n📲 *Contact WA:* ${wa}`);
         });
     }
@@ -517,7 +582,7 @@
     function executerEchange() {
         const d = document.getElementById('echange-donne').value; const r = document.getElementById('echange-recoit').value; const m = Number(document.getElementById('echange-montant').value); const a = document.getElementById('echange-adresse').value.trim(); const wa = document.getElementById('echange-whatsapp').value.trim();
         if(!a || !wa) return;
-        database.ref('commandes_echanges').push().set({ donne: d, recoit: r, montant: m, adresse: a, wa: wa });
+        database.ref('commandes_echanges').push().set({ client_id: currentUserId, donne: d, recoit: r, montant: m, adresse: a, wa: wa, date: new Date().toLocaleString('fr-FR') });
         notifierWhatsApp("ÉCHANGE DE DEVISES", `🔄 *Donne:* ${d}\n🔁 *Reçoit:* ${r}\n💰 *Montant:* ${m}\n📍 *Adresse:* ${a}\n📲 *Contact WA:* ${wa}`);
     }
 
@@ -525,7 +590,7 @@
         const d = document.getElementById('p2p-donneur').value; const r = document.getElementById('p2p-receveur').value; const n = document.getElementById('p2p-numero').value.trim(); const m = Number(document.getElementById('p2p-montant').value);
         if(!n || currentUserSolde < m) return;
         database.ref('clients/' + currentUserId).update({ solde: currentUserSolde - m }).then(function() {
-            database.ref('commandes_p2p_p2m').push().set({ donneur: d, receveur: r, numero: n, montant: m });
+            database.ref('commandes_p2p_p2m').push().set({ client_id: currentUserId, donneur: d, receveur: r, numero: n, montant: m, date: new Date().toLocaleString('fr-FR') });
             notifierWhatsApp("TRANSFERT P2P/P2M", `📤 *Donneur:* ${d}\n📥 *Receveur:* ${r}\n📍 *N° Receveur:* ${n}\n💰 *Montant:* ${m} F`);
         });
     }
