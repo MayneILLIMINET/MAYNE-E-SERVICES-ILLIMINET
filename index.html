@@ -99,6 +99,13 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0;min-heig
 <div id="menu-principal" class="sub-panel" style="width:100%;box-sizing:border-box;">
 <h4 style="color:#fff;border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
 <p style="font-size:12px;font-weight:normal;text-align:justify;margin-bottom:15px;line-height:1.4;color:#000;">Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
+
+<div style="background:#fff;color:#000;padding:8px;border-radius:6px;margin:10px 0;text-align:left;font-size:11px;line-height:1.4;border:1px solid #00f;">
+<b style="color:#00f;">À PROPOS DE MAYNE E-SERVICES</b><br>
+Mayne E-Services est votre guichet digital 100% béninois pour toutes vos opérations du quotidien : achat de crédit et forfaits internet MTN, Moov, Celtiis, paiement de factures SBEE, SONEB et Canal+, dépôt et retrait 1XBET, transferts P2P/P2M, épargne sécurisée, service immobilier, livraison rapide et market-place. <br><br>
+Notre mission est simple : rapidité, fiabilité et disponibilité 24h/7. Chaque commande est notifiée instantanément sur WhatsApp avec tous les détails, pour un traitement immédiat et un suivi transparent.
+</div>
+
 <div class="about-section" style="margin-top:0;padding-top:10px;border-top:1px dashed #00f;">
 <center><b style="color:#000;">NOS PARTENAIRES</b></center>
 <div class="partners-container">
@@ -135,7 +142,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0;min-heig
 </div></div></div>
 
 <script>
-const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';let _lock=false;let database=null;let currentUserId=null;let currentUserSolde=0;
+const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; _lock=false;let database=null;let currentUserId=null;let currentUserSolde=0;
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});}catch(e){}}
 function afficherSucces(id){if(_lock)return false;_lock=true;setTimeout(()=>{_lock=false},5000);const m='commande envoyée avec succès ! Attendez le retour immédiat du traitement';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',4000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}return true;}
 function proposerSupport(s,d){const r=Object.entries(d).map(([k,v])=>k+':'+v).join(' | ');const txt=`Bonjour MAYNE, je viens de valider ${s} (${r}). Client: ${document.getElementById('user-name')?.innerText||''}. Merci traitement rapide.`;if(confirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide ?')){window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');}}
