@@ -6,7 +6,35 @@
 <title>MAYNE-ILLIMINET E-SERVICES</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style></style>body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
+<style></style>
+ <!-- MAYNE CHATBOT -->
+<style>
+#mayne-chat-btn{position:fixed;bottom:18px;right:18px;z-index:9999;background:#488F1A;color:#000;width:55px;height:55px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.4);cursor:pointer;border:2px solid #fff}
+2#mayne-chat-box{position:fixed;bottom:85px;right:15px;width:200px;max-height:200px;background:#F50000;color:#000;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.4);display:none;flex-direction:column;overflow:hidden;z-index:9999;font-family:Arial,sans-serif}
+#mayne-chat-header{background:#488F1A;color:#fff;padding:10px;font-weight:bold;text-align:center}
+#mayne-chat-messages{flex:1;padding:10px;overflow-y:auto;font-size:13px;background:#f0f0f0}
+#mayne-chat-input{display:flex;border-top:1px solid #ddd}
+#mayne-chat-input input{flex:1;border:none;padding:10px;font-size:13px}
+#mayne-chat-input button{background:#000000;color:#fff;border:none;padding:0 12px;cursor:pointer}
+.msg-user{text-align:right;margin:5px 0}
+.msg-bot{text-align:left;margin:5px 0;color:#ffeb3b}
+</style>
+
+<div id="mayne-chat-btn" onclick="toggleMayneChat()">☎️ </div>
+<div id="mayne-chat-box">
+  <div id="mayne-chat-header">ASSISTANT MAYNE</div>
+  <div id="mayne-chat-messages"><div class="msg-bot">Bonjour ! Je suis l'assistant MAYNE. Taper ces mots clés pour avoir des détails : dépôt, retrait, 1xbet, facture, solde, forfait</div></div>
+  <div id="mayne-chat-input">
+    <input id="mayne-chat-text" placeholder="Écriver ici..." onkeypress="if(event.key==='Enter')sendMayneChat()">
+    <button onclick="sendMayneChat()">Envoyer</button>
+  </div>
+</div>
+
+<script>
+function toggleMayneChat(){const b=document.getElementById('mayne-chat-box');b.style.display=b.style.display==='flex'?'none':'flex';b.style.flexDirection='column'}
+function sendMayneChat(){const i=document.getElementById('mayne-chat-text');const txt=i.value.trim();if(!txt)return;const m=document.getElementById('mayne-chat-messages');m.innerHTML+=`<div class="msg-user">${txt}</div>`;i.value='';setTimeout(()=>{let rep="Je n'ai pas compris. Écriver 'menu' ou contacte-nous sur WhatsApp.";const t=txt.toLowerCase();if(t.includes('depot')||t.includes('dépôt'))rep="Pour déposer : Menu > ➕ Dépôt > choisis MTN/Moov/Celtiis > copie le code marchand.";else if(t.includes('retrait'))rep="Retrait : Menu > 💸 Retrait > montant > numéro. Solde débité instantanément.";else if(t.includes('1xbet'))rep="1XBET : Menu > 1XBET > Dépôt ou Retrait > ID joueur + montant.";else if(t.includes('facture'))rep="Facture : SBEE, SONEB, CANAL+, CELTIIS DUAL FIBRE disponibles dans Menu > Facture.";else if(t.includes('solde'))rep="Ton solde s'affiche en haut après connexion.";else if(t.includes('menu'))rep="Services : Dépôt, Retrait, Market, 1XBET, Facture, Forfait, Immo, Épargne, Livraison, Échange, P2P.";else if(t.includes('whatsapp'))rep="Clique ici pour WhatsApp";m.innerHTML+=`<div class="msg-bot">${rep} <br><a href="https://wa.me/2290159415617" target="_blank" style="color:#2b8a3e">Parler à un agent</a></div>`;m.scrollTop=m.scrollHeight},400)}
+</script>
+<!-- FIN MAYNE CHATBOT -->,<style>body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
 .app-container{width:100%;max-width:450px;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#0000ff;border:2px solid #fff;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
 .header-actions{display:flex;justify-content:flex-end;gap:5px;margin-bottom:10px}
 .btn-action-top{background:#ffeb3b;color:#000;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
