@@ -55,10 +55,16 @@
 .modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
 .btn-yes{background:#2b8a3e;color:#fff}
 .btn-no{background:#ddd;color:#000}
+/* MODE SOMBRE */
+.app-container.dark-mode{background:#000000!important;color:#fff!important;border-color:#444!important}
+.dark-mode .user-header{background:#111!important}
+.dark-mode .service-panel{background:#222!important;color:#fff!important}
+.dark-mode .tab-btn{background:#333!important}
 </style>
 </head>
 <body>
 <div class="app-container">
+<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:8px;z-index:9999;background:#ffeb3b;color:#000;border:1px solid #fff;padding:5px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.4);"></div>
 
 <div id="logged-out-zone">
@@ -95,9 +101,9 @@
 <div class="profile-line" id="user-name">Chargement...</div>
 <div style="font-size:10px;color:#e0e0e0;">Solde :</div>
 <div class="solde-val"><span id="user-balance">0</span> F</div>
-</div>
-<div style="font-size:10px;color:#e0e0e0;margin-top:4px;">Commission :</div>
+<div style="font-size:10px;color:#e0e0e0;margin-top:4px;"><b>BONUS :</div>
 <div class="solde-val" style="color:#ffeb3b"><span id="user-commission">0</span> F</div>
+</div>
 <div class="services-grid">
 <button class="tab-btn btn-home" onclick="switchService('menu-principal')">🏠 ACCUEIL</button>
 <button class="tab-btn" onclick="switchService('service-market')">Market</button>
@@ -113,9 +119,9 @@
 <div class="service-panel">
 <div id="menu-principal" class="sub-panel" style="width:100%;box-sizing:border-box;">
 <h4 style="color:#fff;border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
-<p style="font-size:12px;font-weight:normal;text-align:justify;margin-bottom:15px;line-height:1.4;color:#000;"><b><br>Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
+<p style="font-size:12px;font-weight:normal;text-align:justify;margin-bottom:15px;line-height:1.4;color:#fff;"><b><br>Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
 <div style="background:#fff;color:#000;padding:8px;border-radius:6px;margin:10px 0;text-align:left;font-size:11px;line-height:1.4;border:1px solid #00f;">
-<b style="color:#00f;">À PROPOS DE MAYNE E-SERVICES</b><br>
+<b style="color:#fff;">À PROPOS DE MAYNE E-SERVICES</b><br>
 Mayne E-Services est votre guichet digital 100% béninois pour toutes vos opérations du quotidien : achat de crédit et forfaits internet MTN, Moov, Celtiis, paiement de factures SBEE, SONEB et Canal+, dépôt et retrait 1XBET, transferts P2P/P2M, épargne sécurisée, service immobilier, livraison rapide et market-place.<br><br>
 Notre mission est simple : rapidité, fiabilité et disponibilité 24h/7. Chaque commande est notifiée instantanément sur WhatsApp avec tous les détails, pour un traitement immédiat et un suivi transparent.
 </div>
@@ -128,11 +134,14 @@ Notre mission est simple : rapidité, fiabilité et disponibilité 24h/7. Chaque
 <div class="partner-logo partner-1xbet">1XBET</div>
 <div class="partner-logo partner-canal">CANAL+</div>
 <div class="partner-logo partner-sbee">SBEE</div>
-</div></div></div><div id="solde-depot" class="sub-panel" style="display:none;"><h4>Faites un dépôt</h4><div class="input-group"><select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()"><option value="">-- Réseau --</option><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div><div class="input-group"><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()"></div><div id="zone-code-marchand" style="display:none;margin-bottom:10px;"><label class="input-label" style="color:#000;">Code à lancer sur votre mobile :</label><div id="code-marchand-affiche" class="info-block-code"></div></div><button type="button" class="btn-submit" style="background-color:#4CAF50 !important;" onclick="envoyerInfosDepotWhatsApp()">Je Confirme Avoir Validé le Dépôt</button><p id="depot-status" class="status-msg"></p></div>
+</div></div></div><div id="solde-depot" class="sub-panel" style="display:none;"><h4>Faites un dépôt</h4><div class="input-group"><select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()"><option value="">-- Réseau --</option><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div><div class="input-group"><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()"></div><div id="zone-code-marchand" style="display:none;margin-bottom:10px;"><label class="input-label" style="color:#000;">Code à lancer sur votre mobile NB 👉 <b>MAYNE SERVICE👈 avant tout confirmation👌 dans le cas contraire annulez :</label><div id="code-marchand-affiche" class="info-block-code"></div></div><button type="button" class="btn-submit" style="background-color:#4CAF50 !important;" onclick="envoyerInfosDepotWhatsApp()">Je Confirme Avoir Validé le Dépôt</button><p id="depot-status" class="status-msg"></p>
 <div class="history-title" style="color:#fff; font-weight:bold; text-align:center; font-size:14px;">MES DÉPÔTS </div>
-<div id="depot-historique" class="history-box">Aucun dépôt</div><div id="solde-retrait" class="sub-panel" style="display:none;"><h4>Retirer de l'argent</h4><div class="input-group"><input type="number" id="retrait-montant" class="input-field dark-field" placeholder="Montant à retirer"></div><div class="input-group"><input type="text" id="retrait-numero" class="input-field dark-field" placeholder="Numéro de réception"></div><div class="input-group"><select id="retrait-reseau" class="select-field dark-field"><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div><button type="button" class="btn-submit" style="background-color:#cc0000 !important;" onclick="validerRetrait()">Valider le retrait</button><p id="retrait-status" class="status-msg"></p></div> 
+<div id="depot-historique" class="history-box">Aucun dépôt</div>
+</div>
+<div id="solde-retrait" class="sub-panel" style="display:none;"><h4>Retirer de l'argent</h4><div class="input-group"><input type="number" id="retrait-montant" class="input-field dark-field" placeholder="Montant à retirer"></div><div class="input-group"><input type="text" id="retrait-numero" class="input-field dark-field" placeholder="Numéro de réception"></div><div class="input-group"><select id="retrait-reseau" class="select-field dark-field"><option value=””>-- Choix_Réseau--</option><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div><button type="button" class="btn-submit" style="background-color:#cc0000 !important;" onclick="validerRetrait()">Valider le retrait</button><p id="retrait-status" class="status-msg"></p>
 <div class="history-title" style="color:#fff; font-weight:bold; text-align:center; font-size:14px;">MES RETRAITS</div>
 <div id="retrait-historique" class="history-box">Aucun retrait Effectué</div>
+</div>
 
 <div id="service-market" class="sub-panel" style="display:none;"><h4>Market-place</h4><div class="market-grid"><div class="product-card"><div class="product-img">📷</div><div class="product-title">Téléviseur Smart TV Led</div><div class="product-price">135 000 F</div><div class="input-group"><input type="number" id="mkt-qte-1" value="1" min="1" class="input-field" placeholder="Quantité"></div><div class="input-group"><input type="text" id="mkt-wa-1" placeholder="Votre WhatsApp" class="input-field"></div><button type="button" class="btn-submit" style="padding:6px;font-size:12px;" onclick="acheterProduit('Téléviseur Smart TV',135000,'mkt-qte-1','mkt-wa-1')">Commander</button></div></div><p id="market-status" class="status-msg">
 <div class="history-title" style="color:#fff; font-weight:bold; text-align:center; font-size:14px;">MES ACHATS </div>
@@ -146,7 +155,7 @@ Notre mission est simple : rapidité, fiabilité et disponibilité 24h/7. Chaque
 <div class="history-title" style="color:#fff; font-weight:bold; text-align:center; font-size:14px;">MON HISTORIQUE DE FACTURE </div>
 <div id="facture-historique" class="history-box">Aucune facture</div></div>
 
-<div id="service-credit" class="sub-panel" style="display:none;"><h4>Forfait & Crédit</h4><div class="input-group"><select id="forfait-reseau" class="select-field dark-field"><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div><div class="input-group"><select id="forfait-motif" class="select-field dark-field"><option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option><option value="FORFAIT APPEL">FORFAIT APPEL</option><option value="INTERNET VOLUME">INTERNET VOLUME</option><option value="APPEL ET INTERNET">APPEL ET INTERNET</option><option value="ILLIMITE">ILLIMITÉ</option></select></div><div class="input-group"><input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Numéro bénéficiaire"></div><div class="input-group"><input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Montant"></div><button type="button" class="btn-submit" style="background-color:#0000ff !important;" onclick="acheterForfait()">Valider</button><p id="forfait-status" class="status-msg"></p>
+<div id="service-credit" class="sub-panel" style="display:none;"><h4>Forfait & Crédit</h4><div class="input-group"><select id="forfait-reseau" class="select-field dark-field"><option value=”” >--Choix_Reseau--</option><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div><div class="input-group"><select id="forfait-motif" class="select-field dark-field"><option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option><option value="FORFAIT APPEL">FORFAIT APPEL</option><option value="INTERNET VOLUME">INTERNET VOLUME</option><option value="APPEL ET INTERNET">APPEL ET INTERNET</option><option value="ILLIMITE">ILLIMITÉ</option></select></div><div class="input-group"><input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Numéro bénéficiaire"></div><div class="input-group"><input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Montant"></div><button type="button" class="btn-submit" style="background-color:#0000ff !important;" onclick="acheterForfait()">Valider</button><p id="forfait-status" class="status-msg"></p>
 <div class="history-title" style="color:#fff; font-weight:bold; text-align:center; font-size:14px;">MON HISTORIQUE D'ACHAT </div>
 <div id="forfait-historique" class="history-box">Aucun achat</div></div>
 
@@ -163,14 +172,18 @@ Notre mission est simple : rapidité, fiabilité et disponibilité 24h/7. Chaque
 <div class="history-title" style="color:#fff; font-weight:bold; text-align:center; font-size:14px;">MES ÉCHANGES PRÉCÉDENTS </div>
 <div id="echange-historique" class="history-box">Aucun échange</div></div>
 
-<div id="service-p2p" class="sub-panel" style="display:none;"><h4>P2P / P2M</h4><div class="input-group"><select id="p2p-donneur" class="select-field dark-field"><option value="MTN">MTN Donneur</option><option value="MOOV">MOOV Donneur</option><option value="CELTIS">CELTIS Donneur</option></select></div><div class="input-group"><select id="p2p-receveur" class="select-field dark-field"><option value="MTN">MTN Receveur</option><option value="MOOV">MOOV Receveur</option><option value="CELTIS">CELTIS Receveur</option></select></div><div class="input-group"><input type="text" id="p2p-numero" class="input-field dark-field" placeholder="Numéro Receveur"></div><div class="input-group"><input type="number" id="p2p-montant" class="input-field dark-field" placeholder="Montant"></div><button type="button" class="btn-submit" style="background-color:#2b8a3e !important;" onclick="executerP2P()">Valider</button><p id="p2p-status" class="status-msg"></p>
+<div id="service-p2p" class="sub-panel" style="display:none;"><h4>P2P / P2M</h4>
+<div class="input-group"><select id="p2p-donneur" class="select-field dark-field"><option value="MTN">MTN Donneur</option><option value="MOOV">MOOV Donneur</option><option value="CELTIS">CELTIS Donneur</option></select></div>
+<div class="input-group"><input type="text" id="p2p-numero" class="input-field dark-field" placeholder="Numéro Donneur"></div>
+<div class="input-group"><select id="p2p-receveur" class="select-field dark-field"><option value="MTN">MTN Receveur</option><option value="MOOV">MOOV Receveur</option><option value="CELTIS">CELTIS Receveur</option></select></div>
+<div class="input-group"><input type="text" id="p2p-numero" class="input-field dark-field" placeholder="Numéro Receveur"></div><div class="input-group"><input type="number" id="p2p-montant" class="input-field dark-field" placeholder="Montant"></div><button type="button" class="btn-submit" style="background-color:#2b8a3e !important;" onclick="executerP2P()">Valider</button><p id="p2p-status" class="status-msg"></p>
 <div class="history-title" style="color:#fff; font-weight:bold; text-align:center; font-size:14px;">MON RELEVÉ DE COMPTE </div>
 <div id="p2p-historique" class="history-box">Aucun transfert</div></div>
 
 </div></div></div>
 
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div>
+<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div>
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
@@ -179,35 +192,18 @@ function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;do
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
+function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
+window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='dark'){document.querySelector('.app-container').classList.add('dark-mode');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText='☀️';}});
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès !';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
-function proposerSupport(s,d,cb){
-  let details = '';
-  for(const [key, value] of Object.entries(d)){
-    details += `${key}: ${value}\n`; } const txt = `🔔 URGENT🧭 
-🔈 SERVICE : ${s}
-👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}
-💬 DÉTAILS:
-${details}`; showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide ?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank'); if(cb)cb();});}
+function proposerSupport(s,d,cb){let details='';for(const [key,value] of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭 \n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide ?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
 function switchService(id){document.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');document.getElementById(id).style.display='block';}
 function toggleXbetMode(m){document.getElementById('tab-xbet-depot').classList.toggle('active',m==='depot');document.getElementById('tab-xbet-retrait').classList.toggle('active',m==='retrait');document.getElementById('xbet-depot-zone').style.display=m==='depot'?'block':'none';document.getElementById('xbet-retrait-zone').style.display=m==='retrait'?'block':'none';}
 function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
 try{const c={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com"};firebase.initializeApp(c);database=firebase.database();}catch(e){}
-function executerConnexion(){const i=document.getElementById('login-id').value.trim();const p=document.getElementById('login-pin').value.trim();if(!i||!p)return;database.ref('clients/'+i).once('value').then(s=>{if(s.exists()&&String(s.val().pin)===String(p)){currentUserId=i;database.ref('clients/'+i).on('value',v=>{
-  const data=v.val()||{};
-  currentUserSolde=data.solde||0;
-  const commission=data.commission||0;
-  document.getElementById('logged-out-zone').style.display='none';
-  document.getElementById('logged-in-zone').style.display='block';
-  document.getElementById('user-name').innerText=data.nom;
-  document.getElementById('user-balance').innerText=currentUserSolde.toLocaleString('fr-FR');
-  document.getElementById('user-commission').innerText=commission.toLocaleString('fr-FR');
-});
-      // === HISTORIQUES RÉINTÉGRÉS ===
-      const listen=(path,el,fmt)=>{database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{const hb=document.getElementById(el);if(!hb)return;if(sh.exists()){let h='';sh.forEach(c=>{const v=c.val();const statut=(v.statut||'en cours').toLowerCase().trim();let couleur='#ffbb00';if(statut.includes('valid'))couleur='#28a745';else if(statut.includes('annul'))couleur='#dc3545';h+=`• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut||'en cours'}</span><br>`});hb.innerHTML=h;}else{hb.innerHTML='Aucun';}});};listen('commandes_marketplace','market-historique',v=>`${v.produit} (${v.total}F)`);listen('commandes_depots','depot-historique',v=>`${v.montant}F ${v.reseau}`);listen('commandes_retraits','retrait-historique',v=>`${v.montant}F vers ${v.numero_reception}`);listen('commandes_1xbet','xbet-historique',v=>`${v.type||v.action} ${v.montant}F`);listen('commandes_factures','facture-historique',v=>`${v.type||v.fournisseur} ${v.montant}F`);listen('commandes_forfaits','forfait-historique',v=>`${v.motif} ${v.montant}F`);listen('commandes_immobilier','immo-historique',v=>`${v.ville} ${v.montant||v.montant_visite}F`);listen('commandes_epargne','epargne-historique',v=>`${v.compteur} ${v.montant}F`);listen('commandes_livraison','livraison-historique',v=>`${v.ville} ${v.montant||v.montant_course}F`);listen('commandes_echanges','echange-historique',v=>`${v.donne}→${v.recoit} ${v.montant}`);listen('commandes_p2p_p2m','p2p-historique',v=>`${v.montant}F vers ${v.numero_receveur||v.numero}`);
-}else{showAlert('Numéro ou mot de passe incorrect');}});}
+function executerConnexion(){const i=document.getElementById('login-id').value.trim();const p=document.getElementById('login-pin').value.trim();if(!i||!p)return;database.ref('clients/'+i).once('value').then(s=>{if(s.exists()&&String(s.val().pin)===String(p)){currentUserId=i;database.ref('clients/'+i).on('value',v=>{const data=v.val()||{};currentUserSolde=data.solde||0;const commission=data.commission||0;document.getElementById('logged-out-zone').style.display='none';document.getElementById('logged-in-zone').style.display='block';document.getElementById('user-name').innerText=data.nom;document.getElementById('user-balance').innerText=currentUserSolde.toLocaleString('fr-FR');document.getElementById('user-commission').innerText=commission.toLocaleString('fr-FR');});const listen=(path,el,fmt)=>{database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{const hb=document.getElementById(el);if(!hb)return;if(sh.exists()){let h='';sh.forEach(c=>{const v=c.val();const statut=(v.statut||'en cours').toLowerCase().trim();let couleur='#ffbb00';if(statut.includes('valid'))couleur='#28a745';else if(statut.includes('annul'))couleur='#dc3545';h+=`• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut||'en cours'}</span><br>`});hb.innerHTML=h;}else{hb.innerHTML='Aucun';}});};listen('commandes_marketplace','market-historique',v=>`${v.produit} (${v.total}F)`);listen('commandes_depots','depot-historique',v=>`${v.montant}F ${v.reseau}`);listen('commandes_retraits','retrait-historique',v=>`${v.montant}F vers ${v.numero_reception}`);listen('commandes_1xbet','xbet-historique',v=>`${v.type||v.action} ${v.montant}F`);listen('commandes_factures','facture-historique',v=>`${v.type||v.fournisseur} ${v.montant}F`);listen('commandes_forfaits','forfait-historique',v=>`${v.motif} ${v.montant}F`);listen('commandes_immobilier','immo-historique',v=>`${v.ville} ${v.montant||v.montant_visite}F`);listen('commandes_epargne','epargne-historique',v=>`${v.compteur} ${v.montant}F`);listen('commandes_livraison','livraison-historique',v=>`${v.ville} ${v.montant||v.montant_course}F`);listen('commandes_echanges','echange-historique',v=>`${v.donne}→${v.recoit} ${v.montant}`);listen('commandes_p2p_p2m','p2p-historique',v=>`${v.montant}F vers ${v.numero_receveur||v.numero}`);}else{showAlert('Numéro ou mot de passe incorrect');}});}
 function executerInscription(){const n=document.getElementById('reg-name').value.trim();const i=document.getElementById('reg-id').value.trim();const p=document.getElementById('reg-pin').value.trim();if(!n||!i||!p)return showAlert('Remplissez tous les champs');database.ref('clients/'+i).set({nom:n,pin:p,solde:0,commission:0,recompense:0}).then(()=>{showAlert('Compte créé avec succès !');afficherFormulaireConnexion();document.getElementById('login-id').value=i;});}
 function executerDeconnexion(){if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
 function envoyerInfosDepotWhatsApp(){const m=document.getElementById('depot-montant').value;const r=document.getElementById('depot-reseau').value;if(!r||!m||m<100)return showAlert('Choisissez un réseau et un montant minimum de 100F');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={reseau:r,montant:Number(m)};envoyerAlerte('depot',d);proposerSupport('depot',d,()=>afficherSucces('depot-status'));database.ref('commandes_depots').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
@@ -225,3 +221,4 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 </script>
 </body>
 </html>
+
