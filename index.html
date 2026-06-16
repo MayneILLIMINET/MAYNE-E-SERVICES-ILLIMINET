@@ -443,6 +443,7 @@ function chargerMessagerie(){database.ref('conversations').on('value',snap=>{con
 function ouvrirConversation(convId,nom){switchService('service-messagerie');const feed=document.getElementById('messagerie-feed');database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value',s=>{let html=`<div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:-10px;z-index:10"><span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span><div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div>${nom}</div><div class="chat-container" id="chat-scroll">`;s.forEach(m=>{const v=m.val();const isMe=v.senderId===currentUserId;const heure=new Date(v.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});let contenu=v.texte||'';if(v.type==='image')contenu=`<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;if(v.type==='audio')contenu=`<audio controls src="${v.url}" type="audio/webm" style="width:200px; max-width:100%; height:40px;"></audio>`;html+=`<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">${!isMe?`<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>`:''}<div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${contenu}<span class="msg-time">${heure}</span></div></div>`;});html+=`</div><div class="chat-input-bar"><input type="file" id="file-input" accept="image/*" style="display:none" onchange="envoyerFichier('${convId}')"><button onclick="document.getElementById('file-input').click()" style="background:none;border:none;font-size:20px">📷</button><button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:20px;cursor:pointer;">🎤</button>
 <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')"><button class="btn-submit" style="width:auto;padding:8px 16px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button></div>`;feed.innerHTML=html;setTimeout(()=>{const el=document.getElementById('chat-scroll');if(el)el.scrollTop=el.scrollHeight},100);});}
 let isRecording = false; 
+let mediaStream = null; // Indispensable pour couper le micro matériellement
 
 function startRecord(cid) {
   if (isRecording) {
@@ -450,46 +451,71 @@ function startRecord(cid) {
     return;
   }
 
+  // SÉCURITÉ 1 : Empêcher le crash Javascript si on n'est pas en HTTPS
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showAlert('Erreur : L\'accès au micro nécessite une connexion sécurisée (HTTPS).');
+    return;
+  }
+
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    mediaStream = stream; // On garde le flux en mémoire
     mediaRecorder = new MediaRecorder(stream);
     audioChunks = [];
     
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    // SÉCURITÉ 2 : On définit l'action de fin d'enregistrement DÈS LE DÉPART
+    mediaRecorder.onstop = () => {
+      if (audioChunks.length === 0) return;
+
+      const b = new Blob(audioChunks, { type: 'audio/webm' });
+      const r = new FileReader();
+      
+      r.onload = e => {
+        database.ref(`conversations/${cid}/messages`).push({
+          senderId: currentUserId,
+          senderNom: document.getElementById('user-name').innerText,
+          type: 'audio',
+          url: e.target.result,
+          createdAt: Date.now()
+        });
+      };
+      r.readAsDataURL(b);
+      
+      isRecording = false;
+      
+      // SÉCURITÉ 3 : Libérer physiquement le micro du téléphone
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+
+      // Remettre le bouton normal (on vérifie qu'il existe car Firebase peut avoir rechargé la page entre-temps)
+      const micBtn = document.getElementById('mic-btn');
+      if (micBtn) {
+        micBtn.style.color = '';
+        micBtn.innerText = '🎤';
+      }
+    };
+
     mediaRecorder.start();
-    
     isRecording = true;
+    
     const micBtn = document.getElementById('mic-btn');
-    micBtn.style.color = 'red';
-    micBtn.innerText = '🛑';
-  }).catch(() => {
-    showAlert('Micro non autorisé - active dans Chrome > paramètres site');
+    if (micBtn) {
+      micBtn.style.color = 'red';
+      micBtn.innerText = '🛑';
+    }
+  }).catch(err => {
+    console.error(err);
+    showAlert('Micro bloqué. Autorisez-le dans les paramètres de Chrome.');
   });
 }
 
 function stopRecord(cid) {
   if (!mediaRecorder || mediaRecorder.state === "inactive") return;
-  
-  mediaRecorder.onstop = () => {
-    const b = new Blob(audioChunks, { type: 'audio/webm' });
-    const r = new FileReader();
-    
-    r.onload = e => {
-      database.ref(`conversations/${cid}/messages`).push({
-        senderId: currentUserId,
-        senderNom: document.getElementById('user-name').innerText,
-        type: 'audio',
-        url: e.target.result,
-        createdAt: Date.now()
-      });
-    };
-    r.readAsDataURL(b);
-    
-    isRecording = false;
-    const micBtn = document.getElementById('mic-btn');
-    micBtn.style.color = '';
-    micBtn.innerText = '🎤';
-  };
-  
+  // Ceci va déclencher automatiquement le 'onstop' qu'on a défini plus haut
   mediaRecorder.stop();
 }
 function envoyerFichier(cid){const f=document.getElementById('file-input').files[0];if(!f)return;if(f.size>800000)return showAlert('Photo trop lourde >800Ko');const r=new FileReader();r.onload=e=>{database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:e.target.result,texte:'📷',createdAt:Date.now()});};r.readAsDataURL(f);}
