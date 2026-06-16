@@ -440,10 +440,68 @@ function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(
 function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{showAlert('Message envoyé à '+destNom);switchService('service-messagerie');setTimeout(()=>ouvrirConversation(convId,destNom),500);});});}
 function chargerMessagerie(){database.ref('conversations').on('value',snap=>{const feed=document.getElementById('messagerie-feed');if(!feed)return;let html='';let convs=[];snap.forEach(child=>{const convId=child.key;if(!convId.includes(currentUserId))return;const msgs=child.child('messages').val();if(!msgs)return;const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);convs.push({id:convId,last:arr[0],all:arr});});convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);convs.forEach(c=>{const parts=c.id.split('_');const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];let nom=c.last.senderId!==currentUserId?c.last.senderNom:'Utilisateur';c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom});const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎤 Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}', \`${nom}\`)"><div class="chat-header"><div class="msg-avatar">${initiales}</div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;});feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';});}
 
-function ouvrirConversation(convId,nom){switchService('service-messagerie');const feed=document.getElementById('messagerie-feed');database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value',s=>{let html=`<div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:-10px;z-index:10"><span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span><div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div>${nom}</div><div class="chat-container" id="chat-scroll">`;s.forEach(m=>{const v=m.val();const isMe=v.senderId===currentUserId;const heure=new Date(v.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});let contenu=v.texte||'';if(v.type==='image')contenu=`<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;if(v.type==='audio')contenu=`<audio controls src="${v.url}" style="width:180px"></audio>`;html+=`<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">${!isMe?`<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>`:''}<div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${contenu}<span class="msg-time">${heure}</span></div></div>`;});html+=`</div><div class="chat-input-bar"><input type="file" id="file-input" accept="image/*" style="display:none" onchange="envoyerFichier('${convId}')"><button onclick="document.getElementById('file-input').click()" style="background:none;border:none;font-size:20px">📷</button><button id="mic-btn" ontouchstart="startRecord();return false" ontouchend="stopRecord('${convId}');return false" onmousedown="startRecord()" onmouseup="stopRecord('${convId}')" style="background:none;border:none;font-size:20px">🎤</button><input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')"><button class="btn-submit" style="width:auto;padding:8px 16px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button></div>`;feed.innerHTML=html;setTimeout(()=>{const el=document.getElementById('chat-scroll');if(el)el.scrollTop=el.scrollHeight},100);});}
+function ouvrirConversation(convId,nom){switchService('service-messagerie');const feed=document.getElementById('messagerie-feed');database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value',s=>{let html=`<div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:-10px;z-index:10"><span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span><div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div>${nom}</div><div class="chat-container" id="chat-scroll">`;s.forEach(m=>{const v=m.val();const isMe=v.senderId===currentUserId;const heure=new Date(v.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});let contenu=v.texte||'';if(v.type==='image')contenu=`<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;if(v.type==='audio')contenu=`<audio controls src="${v.url}" style="width:180px"></audio>`;html+=`<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">${!isMe?`<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>`:''}<div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${contenu}<span class="msg-time">${heure}</span></div></div>`;});html+=`</div><div class="chat-input-bar"><input type="file" id="file-input" accept="image/*" style="display:none" onchange="envoyerFichier('${convId}')"><button onclick="document.getElementById('file-input').click()" style="background:none;border:none;font-size:20px">📷</button><button id="mic-btn" data-cid="${convId}" onclick="startRecord()" style="background:none;border:none;font-size:20px;cursor:pointer;">🎤</button>
+<input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')"><button class="btn-submit" style="width:auto;padding:8px 16px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button></div>`;feed.innerHTML=html;setTimeout(()=>{const el=document.getElementById('chat-scroll');if(el)el.scrollTop=el.scrollHeight},100);});}
+// 1. Déclare cette variable juste AU-DESSUS de startRecord si elle n'existe pas déjà
+let isRecording = false; 
 
-function startRecord(){navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{mediaRecorder=new MediaRecorder(stream);audioChunks=[];mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);mediaRecorder.start();document.getElementById('mic-btn').style.color='red';}).catch(()=>showAlert('Micro non autorisé - active dans Chrome > paramètres site'));}
-function stopRecord(cid){if(!mediaRecorder)return;mediaRecorder.onstop=()=>{const b=new Blob(audioChunks,{type:'audio/webm'});const r=new FileReader();r.onload=e=>{database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:e.target.result,createdAt:Date.now()});};r.readAsDataURL(b);document.getElementById('mic-btn').style.color='';};mediaRecorder.stop();}
+function startRecord() {
+  // Si on est déjà en train d'enregistrer, le clic doit ARRÊTER
+  if (isRecording) {
+    const micBtn = document.getElementById('mic-btn');
+    const cid = micBtn.getAttribute('data-cid');
+    stopRecord(cid);
+    return;
+  }
+
+  // Sinon, on DEMARRE l'enregistrement
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    
+    mediaRecorder.start();
+    
+    // On change l'état et le visuel du bouton
+    isRecording = true;
+    const micBtn = document.getElementById('mic-btn');
+    micBtn.style.color = 'red';
+    micBtn.innerText = '🛑'; // Devient un carré stop rouge
+  }).catch(() => {
+    showAlert('Micro non autorisé - active dans Chrome > paramètres site');
+  });
+}
+
+function stopRecord(cid) {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") return;
+  
+  // On définit ce qui se passe QUAND le recorder s'arrête vraiment
+  mediaRecorder.onstop = () => {
+    const b = new Blob(audioChunks, { type: 'audio/webm' });
+    const r = new FileReader();
+    
+    r.onload = e => {
+      database.ref(`conversations/${cid}/messages`).push({
+        senderId: currentUserId,
+        senderNom: document.getElementById('user-name').innerText,
+        type: 'audio',
+        url: e.target.result,
+        createdAt: Date.now()
+      });
+    };
+    r.readAsDataURL(b);
+    
+    // Remise à zéro de l'état et de l'icône après l'arrêt effectif
+    isRecording = false;
+    const micBtn = document.getElementById('mic-btn');
+    micBtn.style.color = '';
+    micBtn.innerText = '🎤'; // Reprend l'icône du micro
+  };
+  
+  // On lance l'arrêt physique de l'enregistrement
+  mediaRecorder.stop();
+}
 function envoyerFichier(cid){const f=document.getElementById('file-input').files[0];if(!f)return;if(f.size>800000)return showAlert('Photo trop lourde >800Ko');const r=new FileReader();r.onload=e=>{database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:e.target.result,texte:'📷',createdAt:Date.now()});};r.readAsDataURL(f);}
 function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:t,createdAt:Date.now()});i.value='';}
 
@@ -466,3 +524,4 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
