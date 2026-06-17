@@ -407,8 +407,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
-let _lock=false,database=null,currentUserId=null,currentUserSolde=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
-
+let _lock=false,database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -436,7 +435,9 @@ function executerConnexion(){const i=document.getElementById('login-id').value.t
   const data=v.val()||{};
   currentUserSolde=data.solde||0;
   const commission=data.commission||0;
-  const recompense=data.recompense||0; // <--- NOUVEAU
+const recompense=data.recompense||0;
+currentUserRecompense = recompense; // <--- AJOUTE ÇA
+document.getElementById('user-recompense').innerText=recompense.toLocaleString('fr-FR'); // <--- NOUVEAU
   document.getElementById('logged-out-zone').style.display='none';
   document.getElementById('logged-in-zone').style.display='block';
   document.getElementById('user-name').innerText=data.nom;
@@ -593,8 +594,32 @@ function payerFacture(){const t=document.getElementById('facture-type').value;co
 function acheterForfait(){const r=document.getElementById('forfait-reseau').value;const mo=document.getElementById('forfait-motif').value;const n=document.getElementById('forfait-numero').value.trim();const m=Number(document.getElementById('forfait-offre').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={operateur:r,type:mo,numero_beneficiaire:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('forfait_credit',d);proposerSupport('forfait_credit',d,()=>afficherSucces('forfait-status'));database.ref('commandes_forfaits').push().set({...d,client_id:currentUserId,motif:mo,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 
 function solliciterImmo(){const v=document.getElementById('immo-ville').value;const m=Number(document.getElementById('immo-montant').value);const wa=document.getElementById('immo-whatsapp').value.trim();if(!wa||currentUserSolde<m)return showAlert('WhatsApp requis et solde suffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={ville:v,montant_visite:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('immobilier',d);proposerSupport('immobilier',d,()=>afficherSucces('immo-status'));database.ref('commandes_immobilier').push().set({...d,client_id:currentUserId,montant:m,date:new Date().toLocaleString('fr-FR'),statut:'en cours'});});}
-function placerEpargne(){const c=document.getElementById('epargne-compteur').value;const m=Number(document.getElementById('epargne-montant').value);const wa=document.getElementById('epargne-whatsapp').value.trim();if(!wa||currentUserSolde<m)return showAlert('Vérifiez WhatsApp et solde');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={plan:c,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('epargne',d);proposerSupport('epargne',d,()=>afficherSucces('epargne-status'));database.ref('commandes_epargne').push().set({...d,client_id:currentUserId,compteur:c,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
-
+function placerEpargne(){
+  const c=document.getElementById('epargne-compteur').value;
+  const m=Number(document.getElementById('epargne-montant').value);
+  const wa=document.getElementById('epargne-whatsapp').value.trim();
+  
+  if(!wa || m<=0 || currentUserSolde < m) return showAlert('Vérifiez WhatsApp et solde');
+  if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
+  
+  const d={plan:c,montant:m,whatsapp_client:wa};
+  
+  // PRÉLÈVE SOLDE PRINCIPAL + CRÉDITE SOLDE_EPARGNE
+  database.ref('clients/'+currentUserId).update({
+    solde: currentUserSolde - m,
+    recompense: currentUserRecompense + m
+  }).then(()=>{
+    envoyerAlerte('epargne',d);
+    proposerSupport('epargne',d,()=>afficherSucces('epargne-status'));
+    database.ref('commandes_epargne').push().set({
+      ...d,
+      client_id:currentUserId,
+      compteur:c,
+      date:new Date().toLocaleString('fr-FR'),
+      statut:'en cours'
+    });
+  });
+}
 function demanderLivraison(){const v=document.getElementById('livraison-ville').value;const m=Number(document.getElementById('livraison-montant').value);const wa=document.getElementById('livraison-whatsapp').value.trim();if(!wa||m<500||currentUserSolde<m)return showAlert('Minimum 500F et solde suffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={ville:v,montant_course:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('livraison',d);proposerSupport('livraison',d,()=>afficherSucces('livraison-status'));database.ref('commandes_livraison').push().set({...d,client_id:currentUserId,montant:m,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function executerEchange(){const d=document.getElementById('echange-donne').value;const r=document.getElementById('echange-recoit').value;const m=Number(document.getElementById('echange-montant').value);const a=document.getElementById('echange-adresse').value.trim();const wa=document.getElementById('echange-whatsapp').value.trim();if(!a||!wa)return showAlert('Remplissez adresse et WhatsApp');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donne:d,recoit:r,montant:m,adresse_numero:a,whatsapp_client:wa};envoyerAlerte('echange',data);proposerSupport('echange',data,()=>afficherSucces('echange-status'));database.ref('commandes_echanges').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
 
@@ -603,5 +628,6 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
