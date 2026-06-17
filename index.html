@@ -120,10 +120,19 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div style="font-size:10px;color:#e0e0e0;">Solde :</div>
     <div class="solde-val"><span id="user-balance">0</span> F</div>
     <div style="font-size:10px;color:#e0e0e0;margin-top:4px;">BONUS :</div>
-    <div class="solde-val" style="color:#ffeb3b"><span id="user-commission">0</span> F</div>
+    <div class="solde-val" style="color:#ffeb3b"><span id="user-commission">0</span> F</div></div> <!-- fin user-header -->
+
+<!-- NOUVEAU BLOC RECOMPENSE -->
+<div id="recompense-box" style="background:#000;padding:8px;border-radius:6px;margin-bottom:4px;text-align:center;border:2px solid #00ffcc;">
+  <div style="font-size:15px;color:#fff;"><b>SOLDE EPARGNE :</div>
+  <div class="solde-val" style="color:#ff488fa;font-size:25px"><span id="user-recompense">0</span> F</div>
+</div>
+
+<div class="services-grid">
   </div>
   <div class="services-grid">
     <button class="tab-btn btn-home" onclick="switchService('menu-principal')">🏠 ACCUEIL</button>
+
     <button class="tab-btn" onclick="switchService('service-market')">Market</button>
     <button class="tab-btn" onclick="switchService('service-1xbet')">1XBET</button>
     <button class="tab-btn" onclick="switchService('service-facture')">Facture</button>
@@ -423,7 +432,18 @@ function updateCodeMarchand(){const r=document.getElementById('depot-reseau').va
 
 try{const c={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com"};firebase.initializeApp(c);database=firebase.database();}catch(e){}
 
-function executerConnexion(){const i=document.getElementById('login-id').value.trim();const p=document.getElementById('login-pin').value.trim();if(!i||!p)return;database.ref('clients/'+i).once('value').then(s=>{if(s.exists()&&String(s.val().pin)===String(p)){currentUserId=i;database.ref('clients/'+i).on('value',v=>{const data=v.val()||{};currentUserSolde=data.solde||0;const commission=data.commission||0;document.getElementById('logged-out-zone').style.display='none';document.getElementById('logged-in-zone').style.display='block';document.getElementById('user-name').innerText=data.nom;document.getElementById('user-balance').innerText=currentUserSolde.toLocaleString('fr-FR');document.getElementById('user-commission').innerText=commission.toLocaleString('fr-FR');});const listen=(path,el,fmt)=>{database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{const hb=document.getElementById(el);if(!hb)return;if(sh.exists()){let h='';sh.forEach(c=>{const v=c.val();const statut=(v.statut||'en cours').toLowerCase().trim();let couleur='#ffbb00';if(statut.includes('valid'))couleur='#28a745';else if(statut.includes('annul'))couleur='#dc3545';h+=`• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut||'en cours'}</span><br>`});hb.innerHTML=h;}else{hb.innerHTML='Aucun';}});};listen('commandes_marketplace','market-historique',v=>`${v.produit} (${v.total}F)`);listen('commandes_depots','depot-historique',v=>`${v.montant}F ${v.reseau}`);listen('commandes_retraits','retrait-historique',v=>`${v.montant}F vers ${v.numero_reception}`);listen('commandes_1xbet','xbet-historique',v=>`${v.type||v.action} ${v.montant}F`);listen('commandes_factures','facture-historique',v=>`${v.type||v.fournisseur} ${v.montant}F`);listen('commandes_forfaits','forfait-historique',v=>`${v.motif} ${v.montant}F`);listen('commandes_immobilier','immo-historique',v=>`${v.ville} ${v.montant||v.montant_visite}F`);listen('commandes_epargne','epargne-historique',v=>`${v.compteur} ${v.montant}F`);listen('commandes_livraison','livraison-historique',v=>`${v.ville} ${v.montant||v.montant_course}F`);listen('commandes_echanges','echange-historique',v=>`${v.donne}→${v.recoit} ${v.montant}`);listen('commandes_p2p_p2m','p2p-historique',v=>`${v.montant}F vers ${v.numero_receveur||v.numero}`);chargerFeed();chargerMessagerie();activerNotifications();}else{showAlert('Numéro ou mot de passe incorrect');}});}
+function executerConnexion(){const i=document.getElementById('login-id').value.trim();const p=document.getElementById('login-pin').value.trim();if(!i||!p)return;database.ref('clients/'+i).once('value').then(s=>{if(s.exists()&&String(s.val().pin)===String(p)){currentUserId=i;database.ref('clients/'+i).on('value',v=>{
+  const data=v.val()||{};
+  currentUserSolde=data.solde||0;
+  const commission=data.commission||0;
+  const recompense=data.recompense||0; // <--- NOUVEAU
+  document.getElementById('logged-out-zone').style.display='none';
+  document.getElementById('logged-in-zone').style.display='block';
+  document.getElementById('user-name').innerText=data.nom;
+  document.getElementById('user-balance').innerText=currentUserSolde.toLocaleString('fr-FR');
+  document.getElementById('user-commission').innerText=commission.toLocaleString('fr-FR');
+  document.getElementById('user-recompense').innerText=recompense.toLocaleString('fr-FR'); // <--- NOUVEAU
+});const listen=(path,el,fmt)=>{database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{const hb=document.getElementById(el);if(!hb)return;if(sh.exists()){let h='';sh.forEach(c=>{const v=c.val();const statut=(v.statut||'en cours').toLowerCase().trim();let couleur='#ffbb00';if(statut.includes('valid'))couleur='#28a745';else if(statut.includes('annul'))couleur='#dc3545';h+=`• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut||'en cours'}</span><br>`});hb.innerHTML=h;}else{hb.innerHTML='Aucun';}});};listen('commandes_marketplace','market-historique',v=>`${v.produit} (${v.total}F)`);listen('commandes_depots','depot-historique',v=>`${v.montant}F ${v.reseau}`);listen('commandes_retraits','retrait-historique',v=>`${v.montant}F vers ${v.numero_reception}`);listen('commandes_1xbet','xbet-historique',v=>`${v.type||v.action} ${v.montant}F`);listen('commandes_factures','facture-historique',v=>`${v.type||v.fournisseur} ${v.montant}F`);listen('commandes_forfaits','forfait-historique',v=>`${v.motif} ${v.montant}F`);listen('commandes_immobilier','immo-historique',v=>`${v.ville} ${v.montant||v.montant_visite}F`);listen('commandes_epargne','epargne-historique',v=>`${v.compteur} ${v.montant}F`);listen('commandes_livraison','livraison-historique',v=>`${v.ville} ${v.montant||v.montant_course}F`);listen('commandes_echanges','echange-historique',v=>`${v.donne}→${v.recoit} ${v.montant}`);listen('commandes_p2p_p2m','p2p-historique',v=>`${v.montant}F vers ${v.numero_receveur||v.numero}`);chargerFeed();chargerMessagerie();activerNotifications();}else{showAlert('Numéro ou mot de passe incorrect');}});}
 
 function executerInscription(){const n=document.getElementById('reg-name').value.trim();const i=document.getElementById('reg-id').value.trim();const p=document.getElementById('reg-pin').value.trim();if(!n||!i||!p)return showAlert('Remplissez tous les champs');database.ref('clients/'+i).set({nom:n,pin:p,solde:0,commission:0,recompense:0}).then(()=>{showAlert('Compte créé avec succès!');afficherFormulaireConnexion();document.getElementById('login-id').value=i;});}
 function executerDeconnexion(){if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
@@ -583,4 +603,5 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
