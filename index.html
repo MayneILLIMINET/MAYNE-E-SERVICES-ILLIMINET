@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+
 <script>
 // Playables SDK v1.0.0
 (function(){'use strict';if(window.playablesSDK)return;var HANDLER_NAME='playablesGameEventHandler';var ANDROID_BRIDGE_NAME='_MetaPlayablesBridge';var RAF_FRAME_THRESHOLD=3;var gameReadySent=false;var firstInteractionSent=false;var errorSent=false;var frameCount=0;var originalRAF=window.requestAnimationFrame;function hasIOSBridge(){return!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers[HANDLER_NAME])}function hasAndroidBridge(){return!!(window[ANDROID_BRIDGE_NAME]&&typeof window[ANDROID_BRIDGE_NAME].postEvent==='function')}function isInIframe(){return!!(window.parent&&window.parent!==window)}function sendEvent(eventName,payload){var message={type:eventName,payload:payload||{},timestamp:Date.now()};if(hasIOSBridge()){try{window.webkit.messageHandlers[HANDLER_NAME].postMessage(message)}catch(e){}return}if(hasAndroidBridge()){try{var p=payload||{};p.__secureToken=window.__fbAndroidBridgeAuthToken||'';p.timestamp=message.timestamp;window[ANDROID_BRIDGE_NAME].postEvent(eventName,JSON.stringify(p))}catch(e){}return}if(isInIframe()){try{window.parent.postMessage(message,'*')}catch(e){}return}}function onFrame(){if(gameReadySent)return;frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()});return}originalRAF.call(window,onFrame)}if(originalRAF){window.requestAnimationFrame=function(callback){if(!gameReadySent){return originalRAF.call(window,function(timestamp){frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD&&!gameReadySent){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()})}callback(timestamp)})}return originalRAF.call(window,callback)}}function setupFirstInteractionDetection(){var events=['touchstart','mousedown','keydown'];function onFirstInteraction(){if(firstInteractionSent)return;firstInteractionSent=true;sendEvent('user_interaction_start',null);for(var i=0;i<events.length;i++){document.removeEventListener(events[i],onFirstInteraction,true)}}for(var i=0;i<events.length;i++){document.addEventListener(events[i],onFirstInteraction,true)}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setupFirstInteractionDetection)}else{setupFirstInteractionDetection()}window.addEventListener('error',function(event){if(errorSent)return;errorSent=true;sendEvent('error',{message:event.message||'Unknown error',source:event.filename||'',lineno:event.lineno||0,colno:event.colno||0,auto_captured:true})});window.addEventListener('unhandledrejection',function(event){if(errorSent)return;errorSent=true;var reason=event.reason;sendEvent('error',{message:(reason instanceof Error)?reason.message:String(reason),type:'unhandled_promise_rejection',auto_captured:true})});window.playablesSDK={complete:function(score){sendEvent('game_ended',{score:score,completed:true})},error:function(message){if(errorSent)return;errorSent=true;sendEvent('error',{message:message||'Unknown error',auto_captured:false})},sendEvent:function(eventName,payload){if(!eventName||typeof eventName!=='string')return;sendEvent(eventName,payload)}};if(originalRAF){originalRAF.call(window,onFrame)}})();
@@ -393,9 +396,26 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     </div>
 
     <div id="service-messagerie" class="sub-panel" style="display:none;">
-      <h4>Mes Messages Privés</h4>
-      <div id="messagerie-feed" style="margin-top:10px"></div>
-    </div>
+  <h4>Mes Messages Privés</h4>
+  
+  <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+    <input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Rechercher par Nom ou Numéro..." oninput="rechercherUtilisateur()">
+    <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
+  </div>
+
+  <div id="messagerie-feed" style="margin-top:10px"></div>
+</div>
+<div id="service-messagerie" class="sub-panel" style="display:none;">
+  <h4>Mes Messages Privés</h4>
+  
+  <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+    <input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Rechercher par Nom ou Numéro..." oninput="rechercherUtilisateur()">
+    <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
+  </div>
+
+  <div id="messagerie-feed" style="margin-top:10px"></div>
+</div>
+
   </div>
 </div>
 
@@ -429,22 +449,165 @@ function updateCodeMarchand(){const r=document.getElementById('depot-reseau').va
 
 try{const c={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com"};firebase.initializeApp(c);database=firebase.database();}catch(e){}
 
-function executerConnexion(){const i=document.getElementById('login-id').value.trim();const p=document.getElementById('login-pin').value.trim();if(!i||!p)return;database.ref('clients/'+i).once('value').then(s=>{if(s.exists()&&String(s.val().pin)===String(p)){currentUserId=i;database.ref('clients/'+i).on('value',v=>{
-  const data=v.val()||{};
-  currentUserSolde=data.solde||0;
-  const commission=data.commission||0;
-const recompense=data.recompense||0;
-currentUserRecompense = recompense; // <--- AJOUTE ÇA
-document.getElementById('user-recompense').innerText=recompense.toLocaleString('fr-FR'); // <--- NOUVEAU
-  document.getElementById('logged-out-zone').style.display='none';
-  document.getElementById('logged-in-zone').style.display='block';
-  document.getElementById('user-name').innerText=data.nom;
-  document.getElementById('user-balance').innerText=currentUserSolde.toLocaleString('fr-FR');
-  document.getElementById('user-commission').innerText=commission.toLocaleString('fr-FR');
-  document.getElementById('user-recompense').innerText=recompense.toLocaleString('fr-FR'); // <--- NOUVEAU
-});const listen=(path,el,fmt)=>{database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{const hb=document.getElementById(el);if(!hb)return;if(sh.exists()){let h='';sh.forEach(c=>{const v=c.val();const statut=(v.statut||'en cours').toLowerCase().trim();let couleur='#ffbb00';if(statut.includes('valid'))couleur='#28a745';else if(statut.includes('annul'))couleur='#dc3545';h+=`• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut||'en cours'}</span><br>`});hb.innerHTML=h;}else{hb.innerHTML='Aucun';}});};listen('commandes_marketplace','market-historique',v=>`${v.produit} (${v.total}F)`);listen('commandes_depots','depot-historique',v=>`${v.montant}F ${v.reseau}`);listen('commandes_retraits','retrait-historique',v=>`${v.montant}F vers ${v.numero_reception}`);listen('commandes_1xbet','xbet-historique',v=>`${v.type||v.action} ${v.montant}F`);listen('commandes_factures','facture-historique',v=>`${v.type||v.fournisseur} ${v.montant}F`);listen('commandes_forfaits','forfait-historique',v=>`${v.motif} ${v.montant}F`);listen('commandes_immobilier','immo-historique',v=>`${v.ville} ${v.montant||v.montant_visite}F`);listen('commandes_epargne','epargne-historique',v=>`${v.compteur} ${v.montant}F`);listen('commandes_livraison','livraison-historique',v=>`${v.ville} ${v.montant||v.montant_course}F`);listen('commandes_echanges','echange-historique',v=>`${v.donne}→${v.recoit} ${v.montant}`);listen('commandes_p2p_p2m','p2p-historique',v=>`${v.montant}F vers ${v.numero_receveur||v.numero}`);chargerFeed();chargerMessagerie();activerNotifications();}else{showAlert('Numéro ou mot de passe incorrect');}});}
+function executerConnexion(){
+  const i = document.getElementById('login-id').value.trim();
+  const p = document.getElementById('login-pin').value.trim();
+  if(!i || !p) return;
 
-function executerInscription(){const n=document.getElementById('reg-name').value.trim();const i=document.getElementById('reg-id').value.trim();const p=document.getElementById('reg-pin').value.trim();if(!n||!i||!p)return showAlert('Remplissez tous les champs');database.ref('clients/'+i).set({nom:n,pin:p,solde:0,commission:0,recompense:0}).then(()=>{showAlert('Compte créé avec succès!');afficherFormulaireConnexion();document.getElementById('login-id').value=i;});}
+  // 1. Hachage du PIN saisi pour la comparaison
+  const pinSaisiHache = CryptoJS.MD5(p).toString();
+
+  database.ref('clients/'+i).once('value').then(s=>{
+    // 2. Comparaison avec le PIN haché stocké dans Firebase
+    if(s.exists() && String(s.val().pin) === pinSaisiHache){
+      currentUserId = i;
+      
+      // 3. Écoute en temps réel des données du client (Solde, Bonus, Épargne)
+      database.ref('clients/'+i).on('value', v=>{
+        const data = v.val() || {};
+        currentUserSolde = data.solde || 0;
+        const commission = data.commission || 0;
+        const recompense = data.recompense || 0;
+        currentUserRecompense = recompense; 
+        
+        document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
+        document.getElementById('logged-out-zone').style.display = 'none';
+        document.getElementById('logged-in-zone').style.display = 'block';
+        document.getElementById('user-name').innerText = data.nom;
+        document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+        document.getElementById('user-commission').innerText = commission.toLocaleString('fr-FR');
+        document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
+      });
+
+      // 4. Chargement de tous tes historiques (Code original conservé)
+      const listen = (path, el, fmt) => {
+        database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value', sh => {
+          const hb = document.getElementById(el);
+          if(!hb) return;
+          if(sh.exists()){
+            let h = '';
+            sh.forEach(c => {
+              const v = c.val();
+              const statut = (v.statut || 'en cours').toLowerCase().trim();
+              let couleur = '#ffbb00';
+              if(statut.includes('valid')) couleur = '#28a745';
+              else if(statut.includes('annul')) couleur = '#dc3545';
+              h += `• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut || 'en cours'}</span><br>`;
+            });
+            hb.innerHTML = h;
+          } else {
+            hb.innerHTML = 'Aucun';
+          }
+        });
+      };
+
+      listen('commandes_marketplace', 'market-historique', v => `${v.produit} (${v.total}F)`);
+      listen('commandes_depots', 'depot-historique', v => `${v.montant}F ${v.reseau}`);
+      listen('commandes_retraits', 'retrait-historique', v => `${v.montant}F vers ${v.numero_reception}`);
+      listen('commandes_1xbet', 'xbet-historique', v => `${v.type || v.action} ${v.montant}F`);
+      listen('commandes_factures', 'facture-historique', v => `${v.type || v.fournisseur} ${v.montant}F`);
+      listen('commandes_forfaits', 'forfait-historique', v => `${v.motif} ${v.montant}F`);
+      listen('commandes_immobilier', 'immo-historique', v => `${v.ville} ${v.montant || v.montant_visite}F`);
+      listen('commandes_epargne', 'epargne-historique', v => `${v.compteur} ${v.montant}F`);
+      listen('commandes_livraison', 'livraison-historique', v => `${v.ville} ${v.montant || v.montant_course}F`);
+      listen('commandes_echanges', 'echange-historique', v => `${v.donne}→${v.recoit} ${v.montant}`);
+      listen('commandes_p2p_p2m', 'p2p-historique', v => `${v.montant}F vers ${v.numero_receveur || v.numero}`);
+      
+      chargerFeed();
+      chargerMessagerie();
+      activerNotifications();
+    } else {
+      showAlert('Numéro ou mot de passe incorrect');
+    }
+  }).catch(error => {
+    console.error("Erreur de connexion:", error);
+    showAlert("Une erreur est survenue lors de la connexion.");
+  });
+}
+
+      function rechercherUtilisateur() {
+  const query = document.getElementById('recherche-user-input').value.trim().toLowerCase();
+  const zoneResultats = document.getElementById('resultats-recherche');
+
+  if (!query) {
+    zoneResultats.style.display = 'none';
+    zoneResultats.innerHTML = '';
+    return;
+  }
+
+  database.ref('clients').once('value').then(snap => {
+    let html = '';
+    let count = 0;
+
+    snap.forEach(child => {
+      const client_id = child.key; // Le numéro de téléphone est la clé du nœud
+      const data = child.val();
+      // On récupère le nom (on check client_nom ou nom par sécurité)
+      const client_nom = data.client_nom || data.nom || ''; 
+      
+      // On ignore l'utilisateur actuellement connecté (currentUserId qui contient son numéro)
+      if (client_id === currentUserId) return;
+
+      // Recherche par nom ou par numéro de téléphone (client_id)
+      if (client_nom.toLowerCase().includes(query) || client_id.includes(query)) {
+        count++;
+        html += `
+          <div style="padding: 10px; color: #000; border-bottom: 1px solid #eee; text-align: left; cursor: pointer; font-weight: bold; font-size: 13px;" 
+               onclick="selectionnerUserPourChat('${client_id}', \`${client_nom}\`)">
+               👤 ${client_nom} <span style="font-size: 11px; color: #666; font-weight: normal;">(${client_id})</span>
+          </div>
+        `;
+      }
+    });
+
+    if (count > 0) {
+      zoneResultats.innerHTML = html;
+      zoneResultats.style.display = 'block';
+    } else {
+      zoneResultats.innerHTML = '<div style="padding: 10px; color: #666; font-size: 12px;">Aucun utilisateur trouvé</div>';
+      zoneResultats.style.display = 'block';
+    }
+  }).catch(err => {
+    console.error("Erreur recherche :", err);
+  });
+}
+
+// Fonction pour nettoyer la barre et ouvrir la discussion
+function selectionnerUserPourChat(client_id, client_nom) {
+  document.getElementById('recherche-user-input').value = '';
+  document.getElementById('resultats-recherche').style.display = 'none';
+  
+  // Ouvre le chat avec les bonnes variables
+  ouvrirChat(client_id, client_nom);
+}
+
+        // ... ton code actuel pour charger le profil, les soldes, etc.
+
+
+      function executerInscription(){
+  const n = document.getElementById('reg-name').value.trim();
+  const i = document.getElementById('reg-id').value.trim();
+  const p = document.getElementById('reg-pin').value.trim();
+  
+  if(!n || !i || !p) return showAlert('Remplissez tous les champs');
+  if(p.length !== 6) return showAlert('Le mot de passe doit contenir 6 chiffres');
+
+  // Hachage du PIN avant enregistrement
+  const pinHache = CryptoJS.MD5(p).toString();
+
+  database.ref('clients/'+i).set({
+    nom: n,
+    pin: pinHache, // Enregistre la version masquée/hachée
+    solde: 0,
+    commission: 0,
+    recompense: 0
+  }).then(()=>{
+    showAlert('Compte créé avec succès!');
+    afficherFormulaireConnexion();
+    document.getElementById('login-id').value = i;
+  });
+}
+
 function executerDeconnexion(){if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
 
 function envoyerInfosDepotWhatsApp(){const m=document.getElementById('depot-montant').value;const r=document.getElementById('depot-reseau').value;if(!r||!m||m<100)return showAlert('Choisissez un réseau et un montant minimum de 100F');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={reseau:r,montant:Number(m)};envoyerAlerte('depot',d);proposerSupport('depot',d,()=>afficherSucces('depot-status'));database.ref('commandes_depots').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
@@ -461,6 +624,7 @@ function chargerMessagerie(){database.ref('conversations').on('value',snap=>{con
 function ouvrirConversation(convId,nom){
   switchService('service-messagerie');
   const feed = document.getElementById('messagerie-feed');
+  
   
   // 1. On ne génère la structure globale QU'UNE SEULE FOIS
   feed.innerHTML = `
@@ -651,6 +815,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
 
