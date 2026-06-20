@@ -425,8 +425,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
-let _lock=false, isAppInventor = !!window.AppInventor, 
-lcurrentRecordingCid = null, database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
+let _lock=false, isAppInventor = !!window.AppInventor, currentRecordingCid = null, database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -675,60 +674,42 @@ function ouvrirConversation(convId,nom){
   });
 }
 
-let isRecording = false; 
-let mediaStream = null;
+let isRecording = false, mediaStream = null;
 
 function startRecord(cid) {
   currentRecordingCid = cid;
-  
-  // --- MODE APP INVENTOR ---
-  if(isAppInventor){
+  if(window.AppInventor){
     if(isRecording){
       window.AppInventor.setWebViewString('STOP_RECORD');
-      isRecording = false;
-      document.getElementById('mic-btn').style.color = '';
-      document.getElementById('mic-btn').innerText = '🎙️';
-    } else {
+      isRecording=false;
+      document.getElementById('mic-btn').innerHTML='🎙️'; 
+      document.getElementById('mic-btn').style.color='';
+    }else{
       window.AppInventor.setWebViewString('START_RECORD:'+cid);
-      isRecording = true;
-      document.getElementById('mic-btn').style.color = 'red';
-      document.getElementById('mic-btn').innerText = '⏸️';
+      isRecording=true;
+      document.getElementById('mic-btn').innerHTML='⏸️';
+      document.getElementById('mic-btn').style.color='red';
     }
     return;
   }
-  
-  // --- MODE NAVIGATEUR ---
-  if (isRecording) { stopRecord(cid); return; }
-  if (!navigator.mediaDevices) { showAlert('Micro non supporté'); return; }
-
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    mediaStream = stream;
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = () => {
-      const b = new Blob(audioChunks, {type:'audio/webm'});
-      const r = new FileReader();
-      r.onload = e => {
-        database.ref(`conversations/${cid}/messages`).push({
-          senderId: currentUserId, senderNom: document.getElementById('user-name').innerText,
-          type:'audio', url:e.target.result, createdAt:Date.now()
-        });
-      };
+  // MODE NAVIGATEUR
+  if(isRecording){ stopRecord(); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+    mediaStream=s; mediaRecorder=new MediaRecorder(s); audioChunks=[];
+    mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+    mediaRecorder.onstop=()=>{
+      const b=new Blob(audioChunks,{type:'audio/webm'});
+      const r=new FileReader();
+      r.onload=ev=>database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:ev.target.result,createdAt:Date.now()});
       r.readAsDataURL(b);
-      isRecording = false;
-      mediaStream.getTracks().forEach(t=>t.stop());
-      document.getElementById('mic-btn').style.color=''; document.getElementById('mic-btn').innerText='🎙️';
+      isRecording=false; mediaStream.getTracks().forEach(t=>t.stop());
+      document.getElementById('mic-btn').innerHTML='🎙️'; document.getElementById('mic-btn').style.color='';
     };
-    mediaRecorder.start();
-    isRecording = true;
-    document.getElementById('mic-btn').style.color='red';
-  }).catch(()=>showAlert('Micro non autorisé'));
+    mediaRecorder.start(); isRecording=true;
+    document.getElementById('mic-btn').innerHTML='⏸️'; document.getElementById('mic-btn').style.color='red';
+  });
 }
-
-function stopRecord(cid) {
-  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-}
+function stopRecord(){ if(mediaRecorder) mediaRecorder.stop(); }
 function envoyerFichier(cid){const f=document.getElementById('file-input').files[0];if(!f)return;if(f.size>800000)return showAlert('Photo trop lourde >800Ko');const r=new FileReader();r.onload=e=>{database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:e.target.result,texte:'📷',createdAt:Date.now()});};r.readAsDataURL(f);}
 function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:t,createdAt:Date.now()});i.value='';}
 
