@@ -124,15 +124,9 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div class="solde-val"><span id="user-balance"><b>0</span> F</div>
     <div style="font-size:10px;color:#e0e0e0;margin-top:4px;"><b>BONUS :</div>
     <div class="solde-val" style="color:#ffeb3b"><span id="user-commission"><b>0</span> F</div><div style="font-size:10px;color:#fff;"><b>SOLDE EPARGNE :</div>
-  <div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div></div> <!-- fin user-header -->
-
-
-
-<div class="services-grid">
-  </div>
+  <div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div></div> <div class="services-grid"></div>
   <div class="services-grid">
     <button class="tab-btn btn-home" onclick="switchService('menu-principal')">🏠 ACCUEIL</button>
-
     <button class="tab-btn" onclick="switchService('service-market')">Market</button>
     <button class="tab-btn" onclick="switchService('service-1xbet')">1XBET</button>
     <button class="tab-btn" onclick="switchService('service-facture')">Facture</button>
@@ -150,7 +144,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
       <h4 style="color:#fff;border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
       <p style="font-size:12px;text-align:justify;margin-bottom:15px;line-height:1.4;color:#fff;">Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
       <div style="background:#fff;color:#000;padding:8px;border-radius:6px;margin:10px 0;text-align:left;font-size:11px;line-height:1.4;border:1px solid #00f;">
-        <b style="color:#f5000;">À PROPOS DE MAYNE E-SERVICES</b><br>Mayne E-Services est votre guichet digital 100% béninois pour toutes vos opérations du quotidien.
+        <b style="color:#f5000;">À PROPOS DE MAYNE E-SERVICES</b><br>Mayne E-Services is votre guichet digital 100% béninois pour toutes vos opérations du quotidien.
       </div>
       <div class="about-section">
         <center><b style="color:#000;">NOS PARTENAIRES</b></center>
@@ -209,7 +203,10 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div id="service-market" class="sub-panel" style="display:none;">
       <h4>Market-place communautaire</h4>
       <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
-      <input type="file" id="post-image" accept="image/*" style="margin:6px 0;width:100%;background:#fff;padding:4px;border-radius:4px">
+      
+      <button type="button" class="inner-btn" style="margin:6px 0; background:#fff; color:#000;" onclick="selectionnerImageMarket()">📷 Choisir une photo</button>
+      <div id="market-preview-zone" style="font-size:11px; color:#ffeb3b; margin-bottom:5px;">Aucune image sélectionnée</div>
+      
       <button class="btn-submit" style="background:#0000ff" onclick="publierPost()">Publier</button>
       <p id="market-status" class="status-msg"></p>
       <div id="market-feed" style="margin-top:10px"></div>
@@ -316,7 +313,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
       <div class="input-group"><input type="number" id="epargne-montant" class="input-field dark-field" placeholder="Montant"></div>
       <div class="input-group"><input type="text" id="epargne-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
       <button type="button" class="btn-submit" style="background-color:#2b8a3e!important;" onclick="placerEpargne()">PLACEMENT </button>
-<button type="button" class="btn-submit" style="background-color:#FF5000!important;" onclick="retirerEpargne()">VIREMENT </button>
+      <button type="button" class="btn-submit" style="background-color:#FF5000!important;" onclick="retirerEpargne()">VIREMENT </button>
       <p id="epargne-status" class="status-msg"></p>
       <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON HISTORIQUE D'ÉPARGNE </div>
       <div id="epargne-historique" class="history-box">Aucun dépôt</div>
@@ -396,25 +393,13 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     </div>
 
     <div id="service-messagerie" class="sub-panel" style="display:none;">
-  <h4>Mes Messages Privés</h4>
-  
-  <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-    <input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Rechercher par Nom ou Numéro..." oninput="rechercherUtilisateur()">
-    <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
-  </div>
-
-  <div id="messagerie-feed" style="margin-top:10px"></div>
-</div>
-<div id="service-messagerie" class="sub-panel" style="display:none;">
-  <h4>Mes Messages Privés</h4>
-  
-  <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-    <input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Rechercher par Nom ou Numéro..." oninput="rechercherUtilisateur()">
-    <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
-  </div>
-
-  <div id="messagerie-feed" style="margin-top:10px"></div>
-</div>
+      <h4>Mes Messages Privés</h4>
+      <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+        <input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Rechercher par Nom ou Numéro..." oninput="rechercherUtilisateur()">
+        <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
+      </div>
+      <div id="messagerie-feed" style="margin-top:10px"></div>
+    </div>
 
   </div>
 </div>
@@ -425,7 +410,13 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
-let _lock=false,database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
+let _lock=false,database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null;
+
+// Variables pour images et stockage temporaire
+let imageMarketBase64 = ""; 
+let imageChatBase64 = "";
+let currentActiveChatId = ""; 
+
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -453,16 +444,11 @@ function executerConnexion(){
   const i = document.getElementById('login-id').value.trim();
   const p = document.getElementById('login-pin').value.trim();
   if(!i || !p) return;
-
-  // 1. Hachage du PIN saisi pour la comparaison
   const pinSaisiHache = CryptoJS.MD5(p).toString();
 
   database.ref('clients/'+i).once('value').then(s=>{
-    // 2. Comparaison avec le PIN haché stocké dans Firebase
     if(s.exists() && String(s.val().pin) === pinSaisiHache){
       currentUserId = i;
-      
-      // 3. Écoute en temps réel des données du client (Solde, Bonus, Épargne)
       database.ref('clients/'+i).on('value', v=>{
         const data = v.val() || {};
         currentUserSolde = data.solde || 0;
@@ -479,7 +465,6 @@ function executerConnexion(){
         document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
       });
 
-      // 4. Chargement de tous tes historiques (Code original conservé)
       const listen = (path, el, fmt) => {
         database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value', sh => {
           const hb = document.getElementById(el);
@@ -520,35 +505,25 @@ function executerConnexion(){
       showAlert('Numéro ou mot de passe incorrect');
     }
   }).catch(error => {
-    console.error("Erreur de connexion:", error);
     showAlert("Une erreur est survenue lors de la connexion.");
   });
 }
 
-      function rechercherUtilisateur() {
+function rechercherUtilisateur() {
   const query = document.getElementById('recherche-user-input').value.trim().toLowerCase();
   const zoneResultats = document.getElementById('resultats-recherche');
-
   if (!query) {
     zoneResultats.style.display = 'none';
     zoneResultats.innerHTML = '';
     return;
   }
-
   database.ref('clients').once('value').then(snap => {
-    let html = '';
-    let count = 0;
-
+    let html = ''; let count = 0;
     snap.forEach(child => {
-      const client_id = child.key; // Le numéro de téléphone est la clé du nœud
+      const client_id = child.key;
       const data = child.val();
-      // On récupère le nom (on check client_nom ou nom par sécurité)
       const client_nom = data.client_nom || data.nom || ''; 
-      
-      // On ignore l'utilisateur actuellement connecté (currentUserId qui contient son numéro)
       if (client_id === currentUserId) return;
-
-      // Recherche par nom ou par numéro de téléphone (client_id)
       if (client_nom.toLowerCase().includes(query) || client_id.includes(query)) {
         count++;
         html += `
@@ -559,49 +534,25 @@ function executerConnexion(){
         `;
       }
     });
-
-    if (count > 0) {
-      zoneResultats.innerHTML = html;
-      zoneResultats.style.display = 'block';
-    } else {
-      zoneResultats.innerHTML = '<div style="padding: 10px; color: #666; font-size: 12px;">Aucun utilisateur trouvé</div>';
-      zoneResultats.style.display = 'block';
-    }
-  }).catch(err => {
-    console.error("Erreur recherche :", err);
+    if (count > 0) { zoneResultats.innerHTML = html; zoneResultats.style.display = 'block'; } 
+    else { zoneResultats.innerHTML = '<div style="padding: 10px; color: #666; font-size: 12px;">Aucun utilisateur trouvé</div>'; zoneResultats.style.display = 'block'; }
   });
 }
 
-// Fonction pour nettoyer la barre et ouvrir la discussion
 function selectionnerUserPourChat(client_id, client_nom) {
   document.getElementById('recherche-user-input').value = '';
   document.getElementById('resultats-recherche').style.display = 'none';
-  
-  // Ouvre le chat avec les bonnes variables
   ouvrirChat(client_id, client_nom);
 }
 
-        // ... ton code actuel pour charger le profil, les soldes, etc.
-
-
-      function executerInscription(){
+function executerInscription(){
   const n = document.getElementById('reg-name').value.trim();
   const i = document.getElementById('reg-id').value.trim();
   const p = document.getElementById('reg-pin').value.trim();
-  
   if(!n || !i || !p) return showAlert('Remplissez tous les champs');
   if(p.length !== 6) return showAlert('Le mot de passe doit contenir 6 chiffres');
-
-  // Hachage du PIN avant enregistrement
   const pinHache = CryptoJS.MD5(p).toString();
-
-  database.ref('clients/'+i).set({
-    nom: n,
-    pin: pinHache, // Enregistre la version masquée/hachée
-    solde: 0,
-    commission: 0,
-    recompense: 0
-  }).then(()=>{
+  database.ref('clients/'+i).set({ nom: n, pin: pinHache, solde: 0, commission: 0, recompense: 0 }).then(()=>{
     showAlert('Compte créé avec succès!');
     afficherFormulaireConnexion();
     document.getElementById('login-id').value = i;
@@ -613,7 +564,66 @@ function executerDeconnexion(){if(currentUserId){database.ref('clients/'+current
 function envoyerInfosDepotWhatsApp(){const m=document.getElementById('depot-montant').value;const r=document.getElementById('depot-reseau').value;if(!r||!m||m<100)return showAlert('Choisissez un réseau et un montant minimum de 100F');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={reseau:r,montant:Number(m)};envoyerAlerte('depot',d);proposerSupport('depot',d,()=>afficherSucces('depot-status'));database.ref('commandes_depots').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
 function validerRetrait(){const m=Number(document.getElementById('retrait-montant').value);const n=document.getElementById('retrait-numero').value.trim();const r=document.getElementById('retrait-reseau').value;if(!m||!n||currentUserSolde<m)return showAlert('Solde insuffisant ou informations invalides');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={montant:m,numero_reception:n,reseau:r};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('retrait',d);proposerSupport('retrait',d,()=>afficherSucces('retrait-status'));database.ref('commandes_retraits').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cous'});});}
 
-function publierPost(){const texte=document.getElementById('post-texte').value.trim();const file=document.getElementById('post-image')?.files[0];if(!texte&&!file)return showAlert('Écris quelque chose ou ajoute une photo');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,3000);const post={authorId:currentUserId,authorNom:document.getElementById('user-name').innerText,texte:texte,createdAt:Date.now()};const save=()=>{database.ref('posts').push().set(post).then(()=>{document.getElementById('post-texte').value='';if(document.getElementById('post-image'))document.getElementById('post-image').value='';afficherSucces('market-status');});};if(file){if(file.size>600000)return showAlert('Image trop lourde > 600Ko');const reader=new FileReader();reader.onload=e=>{post.image=e.target.result;save();};reader.readAsDataURL(file);}else{save();}}
+// --- CONFIGURATION IMAGES POUR MIT APP INVENTOR ---
+function selectionnerImageMarket() {
+  if(window.AppInventor) {
+    window.AppInventor.setWebViewString("PICK_IMAGE_MARKET");
+  } else {
+    showAlert("Disponible uniquement dans l'application mobile.");
+  }
+}
+function selectionnerImageChat() {
+  if(window.AppInventor) {
+    window.AppInventor.setWebViewString("PICK_IMAGE_CHAT");
+  } else {
+    showAlert("Disponible uniquement dans l'application mobile.");
+  }
+}
+
+// Fonction globale appelée automatiquement par App Inventor
+function recevoirImageDeLApp(typeDest, base64Data) {
+  if (typeDest === "MARKET") {
+    imageMarketBase64 = "data:image/jpeg;base64," + base64Data;
+    document.getElementById("market-preview-zone").innerText = "📸 Image sélectionnée avec succès !";
+  } else if (typeDest === "CHAT") {
+    imageChatBase64 = "data:image/jpeg;base64," + base64Data;
+    // Envoyer directement la photo dans la discussion en cours
+    if(currentActiveChatId) {
+      database.ref(`conversations/${currentActiveChatId}/messages`).push({
+        senderId: currentUserId,
+        senderNom: document.getElementById('user-name').innerText,
+        type: 'image',
+        url: imageChatBase64,
+        texte: '📷',
+        createdAt: Date.now()
+      });
+      imageChatBase64 = ""; // Clear
+    }
+  }
+}
+
+function publierPost(){
+  const texte=document.getElementById('post-texte').value.trim();
+  if(!texte && !imageMarketBase64) return showAlert('Écris quelque chose ou ajoute une photo');
+  if(_lock)return;_lock=true;setTimeout(()=>_lock=false,3000);
+  
+  const post={
+    authorId:currentUserId,
+    authorNom:document.getElementById('user-name').innerText,
+    texte:texte,
+    createdAt:Date.now()
+  };
+  if(imageMarketBase64) {
+    post.image = imageMarketBase64;
+  }
+
+  database.ref('posts').push().set(post).then(()=>{
+    document.getElementById('post-texte').value='';
+    imageMarketBase64 = "";
+    document.getElementById("market-preview-zone").innerText = "Aucune image sélectionnée";
+    afficherSucces('market-status');
+  });
+}
 
 function chargerFeed(){database.ref('posts').orderByChild('createdAt').limitToLast(30).on('value',snap=>{const feed=document.getElementById('market-feed');if(!feed)return;let html='';snap.forEach(child=>{const p=child.val();const id=child.key;const date=new Date(p.createdAt).toLocaleString('fr-FR');const img=p.image?`<img src="${p.image}" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin:4px 0" onclick="window.open('${p.image}')">`:'';html += `<div class="product-card" style="text-align:left;margin-bottom:8px;"><div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>${img}<div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div><div style="display:flex;gap:5px;margin-top:6px"><button class="inner-btn" onclick="commenterPost('${id}')">💬 Commenter</button><button class="inner-btn" onclick="ouvrirChat('${p.authorId}','${p.authorNom}')">✉️ Message</button></div><div id="comments-${id}" style="margin-top:6px;font-size:10px;color:#333"></div></div>`;});feed.innerHTML=html||'<div style="color:#666;text-align:center;padding:10px">Aucun post pour l’instant</div>';snap.forEach(c=>chargerComments(c.key));});}
 function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!txt)return;database.ref(`comments/${postId}`).push().set({authorId:currentUserId,authorNom:document.getElementById('user-name').innerText,texte:txt,createdAt:Date.now()});});}
@@ -621,46 +631,38 @@ function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(
 
 function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{showAlert('Message envoyé à '+destNom);switchService('service-messagerie');setTimeout(()=>ouvrirConversation(convId,destNom),500);});});}
 function chargerMessagerie(){database.ref('conversations').on('value',snap=>{const feed=document.getElementById('messagerie-feed');if(!feed)return;let html='';let convs=[];snap.forEach(child=>{const convId=child.key;if(!convId.includes(currentUserId))return;const msgs=child.child('messages').val();if(!msgs)return;const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);convs.push({id:convId,last:arr[0],all:arr});});convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);convs.forEach(c=>{const parts=c.id.split('_');const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];let nom=c.last.senderId!==currentUserId?c.last.senderNom:'Utilisateur';c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom});const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎤 Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}', \`${nom}\`)"><div class="chat-header"><div class="msg-avatar">${initiales}</div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;});feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';});}
+
 function ouvrirConversation(convId,nom){
   switchService('service-messagerie');
+  currentActiveChatId = convId; 
   const feed = document.getElementById('messagerie-feed');
   
-  
-  // 1. On ne génère la structure globale QU'UNE SEULE FOIS
   feed.innerHTML = `
     <div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:-10px;z-index:10">
       <span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span>
       <div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div>
       ${nom}
     </div>
-    <!-- C'est cette zone uniquement qui va se recharger -->
     <div class="chat-container" id="chat-scroll"></div>
     
-    <!-- La barre d'input est fixe, elle ne bougera plus jamais, l'enregistrement est sécurisé -->
     <div class="chat-input-bar">
-      <input type="file" id="file-input" accept="image/*" style="display:none" onchange="envoyerFichier('${convId}')">
-      <button onclick="document.getElementById('file-input').click()" style="background:none;border:none;font-size:20px">📷</button>
-      <button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:20px;cursor:pointer;">🎤</button>
+      <button onclick="selectionnerImageChat()" style="background:none;border:none;font-size:20px">📷</button>
+      <button id="mic-btn" onclick="gererAudioAppInventor('${convId}')" style="background:none;border:none;font-size:20px;cursor:pointer; color: green;">🎤</button>
       <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
       <button class="btn-submit" style="width:auto;padding:8px 16px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
     </div>
   `;
 
-  // 2. L'écouteur Firebase ne met à jour QUE la zone des messages
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value', s => {
     const scrollZone = document.getElementById('chat-scroll');
     if(!scrollZone) return;
-    
     let htmlMessages = '';
     s.forEach(m => {
-      const v = m.val();
-      const isMe = v.senderId === currentUserId;
+      const v = m.val(); const isMe = v.senderId === currentUserId;
       const heure = new Date(v.createdAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
       let contenu = v.texte || '';
-      
       if(v.type === 'image') contenu = `<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;
-      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" type="audio/webm" style="width:200px; max-width:100%; height:40px;"></audio>`;
-      
+      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" style="width:200px; max-width:100%; height:40px;"></audio>`;
       htmlMessages += `
         <div class="chat-row" style="justify-content:${isMe ? 'flex-end' : 'flex-start'}">
           ${!isMe ? `<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>` : ''}
@@ -668,85 +670,46 @@ function ouvrirConversation(convId,nom){
         </div>
       `;
     });
-    
     scrollZone.innerHTML = htmlMessages;
     setTimeout(() => { scrollZone.scrollTop = scrollZone.scrollHeight; }, 100);
   });
 }
 
-let isRecording = false; 
-let mediaStream = null;
+// --- CONFIGURATION AUDIO POUR MIT APP INVENTOR ---
+let etatAudioDeLApp = "INACTIF";
 
-function startRecord(cid) {
-  if (isRecording) {
-    stopRecord(cid);
+function gererAudioAppInventor(cid) {
+  if(!window.AppInventor) {
+    showAlert("L'enregistrement vocal nécessite l'application mobile.");
     return;
   }
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    showAlert('L\'accès au micro nécessite HTTPS.');
-    return;
+  const micBtn = document.getElementById('mic-btn');
+  
+  if (etatAudioDeLApp === "INACTIF") {
+    window.AppInventor.setWebViewString("START_RECORD");
+    etatAudioDeLApp = "EN_COURS";
+    if (micBtn) { micBtn.style.color = 'red'; micBtn.innerText = '🛑'; }
+  } else {
+    window.AppInventor.setWebViewString("STOP_RECORD");
+    etatAudioDeLApp = "INACTIF";
+    if (micBtn) { micBtn.style.color = 'green'; micBtn.innerText = '🎤'; }
   }
+}
 
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    mediaStream = stream;
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
-    
-    mediaRecorder.ondataavailable = e => {
-      if (e.data && e.data.size > 0) audioChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = () => {
-      if (audioChunks.length === 0) return;
-
-      const b = new Blob(audioChunks, { type: 'audio/webm' });
-      const r = new FileReader();
-      
-      r.onload = e => {
-        database.ref(`conversations/${cid}/messages`).push({
-          senderId: currentUserId,
-          senderNom: document.getElementById('user-name').innerText,
-          type: 'audio',
-          url: e.target.result,
-          createdAt: Date.now()
-        });
-      };
-      r.readAsDataURL(b);
-      
-      isRecording = false;
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-      }
-
-      const micBtn = document.getElementById('mic-btn');
-      if (micBtn) {
-        micBtn.style.color = '';
-        micBtn.innerText = '🎤';
-      }
-    };
-
-    mediaRecorder.start();
-    isRecording = true;
-    
-    const micBtn = document.getElementById('mic-btn');
-    if (micBtn) {
-      micBtn.style.color = 'red';
-      micBtn.innerText = '🛑';
-    }
-  }).catch(err => {
-    console.error(err);
-    showAlert('Micro non autorisé.');
+// Fonction globale appelée par App Inventor à la fin de l'enregistrement
+function recevoirAudioDeLApp(base64Audio) {
+  if(!currentActiveChatId) return;
+  
+  database.ref(`conversations/${currentActiveChatId}/messages`).push({
+    senderId: currentUserId,
+    senderNom: document.getElementById('user-name').innerText,
+    type: 'audio',
+    url: "data:audio/wav;base64," + base64Audio, // Format standard sécurisé
+    createdAt: Date.now()
   });
 }
 
-function stopRecord(cid) {
-  if (!mediaRecorder || mediaRecorder.state === "inactive") return;
-  mediaRecorder.stop();
-}
-function envoyerFichier(cid){const f=document.getElementById('file-input').files[0];if(!f)return;if(f.size>800000)return showAlert('Photo trop lourde >800Ko');const r=new FileReader();r.onload=e=>{database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:e.target.result,texte:'📷',createdAt:Date.now()});};r.readAsDataURL(f);}
 function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:t,createdAt:Date.now()});i.value='';}
-
 function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎤 Vocal':last.texte});}});}
 
 function recharger1XBet(){const id=document.getElementById('xbet-id-joueur').value.trim();const m=Number(document.getElementById('xbet-montant').value);const wa=document.getElementById('xbet-whatsapp').value.trim();if(!id||m<100||currentUserSolde<m)return showAlert('Vérifiez ID, montant et solde');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'depot',id_joueur:id,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Dépôt',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
@@ -757,66 +720,29 @@ function acheterForfait(){const r=document.getElementById('forfait-reseau').valu
 
 function solliciterImmo(){const v=document.getElementById('immo-ville').value;const m=Number(document.getElementById('immo-montant').value);const wa=document.getElementById('immo-whatsapp').value.trim();if(!wa||currentUserSolde<m)return showAlert('WhatsApp requis et solde suffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={ville:v,montant_visite:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('immobilier',d);proposerSupport('immobilier',d,()=>afficherSucces('immo-status'));database.ref('commandes_immobilier').push().set({...d,client_id:currentUserId,montant:m,date:new Date().toLocaleString('fr-FR'),statut:'en cours'});});}
 function placerEpargne(){
-  const c=document.getElementById('epargne-compteur').value;
-  const m=Number(document.getElementById('epargne-montant').value);
-  const wa=document.getElementById('epargne-whatsapp').value.trim();
-  
+  const c=document.getElementById('epargne-compteur').value;const m=Number(document.getElementById('epargne-montant').value);const wa=document.getElementById('epargne-whatsapp').value.trim();
   if(!wa || m<=0 || currentUserSolde < m) return showAlert('Vérifiez WhatsApp et solde');
   if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
-  
   const d={plan:c,montant:m,whatsapp_client:wa};
-  
-  // PRÉLÈVE SOLDE PRINCIPAL + CRÉDITE SOLDE_EPARGNE
-  database.ref('clients/'+currentUserId).update({
-    solde: currentUserSolde - m,
-    recompense: currentUserRecompense + m
-  }).then(()=>{
-    envoyerAlerte('epargne',d);
-    proposerSupport('epargne',d,()=>afficherSucces('epargne-status'));
-    database.ref('commandes_epargne').push().set({
-      ...d,
-      client_id:currentUserId,
-      compteur:c,
-      date:new Date().toLocaleString('fr-FR'),
-      statut:'validé✅ '
-    });
+  database.ref('clients/'+currentUserId).update({ solde: currentUserSolde - m, recompense: currentUserRecompense + m }).then(()=>{
+    envoyerAlerte('epargne',d); proposerSupport('epargne',d,()=>afficherSucces('epargne-status'));
+    database.ref('commandes_epargne').push().set({ ...d, client_id:currentUserId, compteur:c, date:new Date().toLocaleString('fr-FR'), statut:'validé✅ ' });
   });
 }
 function retirerEpargne(){
-  const c=document.getElementById('epargne-compteur').value;
-  const m=Number(document.getElementById('epargne-montant').value);
-  const wa=document.getElementById('epargne-whatsapp').value.trim();
-  
+  const c=document.getElementById('epargne-compteur').value;const m=Number(document.getElementById('epargne-montant').value);const wa=document.getElementById('epargne-whatsapp').value.trim();
   if(!wa || m<=0 || currentUserSolde < m) return showAlert('Vérifiez WhatsApp et solde');
   if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
-  
   const d={plan:c,montant:m,whatsapp_client:wa};
-  
-  // PRÉLÈVE SOLDE PRINCIPAL + CRÉDITE SOLDE_EPARGNE
-  database.ref('clients/'+currentUserId).update({
-    solde: currentUserSolde + m,
-    recompense: currentUserRecompense - m
-  }).then(()=>{
-    database.ref('commandes_epargne').push().set({
-      ...d,
-      client_id:currentUserId,
-      compteur:c,
-      date:new Date().toLocaleString('fr-FR'),
-      statut:'annulé ✅ '
-    });
+  database.ref('clients/'+currentUserId).update({ solde: currentUserSolde + m, recompense: currentUserRecompense - m }).then(()=>{
+    database.ref('commandes_epargne').push().set({ ...d, client_id:currentUserId, compteur:c, date:new Date().toLocaleString('fr-FR'), statut:'annulé ✅ ' });
   });
 }
 
 function demanderLivraison(){const v=document.getElementById('livraison-ville').value;const m=Number(document.getElementById('livraison-montant').value);const wa=document.getElementById('livraison-whatsapp').value.trim();if(!wa||m<500||currentUserSolde<m)return showAlert('Minimum 500F et solde suffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={ville:v,montant_course:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('livraison',d);proposerSupport('livraison',d,()=>afficherSucces('livraison-status'));database.ref('commandes_livraison').push().set({...d,client_id:currentUserId,montant:m,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function executerEchange(){const d=document.getElementById('echange-donne').value;const r=document.getElementById('echange-recoit').value;const m=Number(document.getElementById('echange-montant').value);const a=document.getElementById('echange-adresse').value.trim();const wa=document.getElementById('echange-whatsapp').value.trim();if(!a||!wa)return showAlert('Remplissez adresse et WhatsApp');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donne:d,recoit:r,montant:m,adresse_numero:a,whatsapp_client:wa};envoyerAlerte('echange',data);proposerSupport('echange',data,()=>afficherSucces('echange-status'));database.ref('commandes_echanges').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
-
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 </script>
 
 </body>
 </html>
-
-
-
-
-
