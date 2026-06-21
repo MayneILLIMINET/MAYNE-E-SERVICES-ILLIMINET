@@ -413,7 +413,9 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
   </div>
 
-  
+  <div id="messagerie-feed" style="margin-top:10px"></div>
+</div>
+
   </div>
 </div>
 
@@ -423,7 +425,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
-let _lock=false, isAppInventor = !!window.AppInventor, currentRecordingCid = null, database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
+let _lock=false,database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -618,7 +620,7 @@ function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!t
 function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(3).on('value',s=>{let h='';s.forEach(c=>{const v=c.val();h+=`• <b>${v.authorNom}</b>: ${v.texte}<br>`});const el=document.getElementById(`comments-${postId}`);if(el)el.innerHTML=h;});}
 
 function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{showAlert('Message envoyé à '+destNom);switchService('service-messagerie');setTimeout(()=>ouvrirConversation(convId,destNom),500);});});}
-function chargerMessagerie(){database.ref('conversations').on('value',snap=>{const feed=document.getElementById('messagerie-feed');if(!feed)return;let html='';let convs=[];snap.forEach(child=>{const convId=child.key;if(!convId.includes(currentUserId))return;const msgs=child.child('messages').val();if(!msgs)return;const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);convs.push({id:convId,last:arr[0],all:arr});});convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);convs.forEach(c=>{const parts=c.id.split('_');const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];let nom=c.last.senderId!==currentUserId?c.last.senderNom:'Utilisateur';c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom});const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}', \`${nom}\`)"><div class="chat-header"><div class="msg-avatar">${initiales}</div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;});feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';});}
+function chargerMessagerie(){database.ref('conversations').on('value',snap=>{const feed=document.getElementById('messagerie-feed');if(!feed)return;let html='';let convs=[];snap.forEach(child=>{const convId=child.key;if(!convId.includes(currentUserId))return;const msgs=child.child('messages').val();if(!msgs)return;const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);convs.push({id:convId,last:arr[0],all:arr});});convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);convs.forEach(c=>{const parts=c.id.split('_');const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];let nom=c.last.senderId!==currentUserId?c.last.senderNom:'Utilisateur';c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom});const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎤 Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}', \`${nom}\`)"><div class="chat-header"><div class="msg-avatar">${initiales}</div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;});feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';});}
 function ouvrirConversation(convId,nom){
   switchService('service-messagerie');
   const feed = document.getElementById('messagerie-feed');
@@ -638,7 +640,7 @@ function ouvrirConversation(convId,nom){
     <div class="chat-input-bar">
       <input type="file" id="file-input" accept="image/*" style="display:none" onchange="envoyerFichier('${convId}')">
       <button onclick="document.getElementById('file-input').click()" style="background:none;border:none;font-size:20px">📷</button>
-      <button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:20px;cursor:pointer;">🎙️ </button>
+      <button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:20px;cursor:pointer;">🎤</button>
       <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
       <button class="btn-submit" style="width:auto;padding:8px 16px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
     </div>
@@ -657,13 +659,7 @@ function ouvrirConversation(convId,nom){
       let contenu = v.texte || '';
       
       if(v.type === 'image') contenu = `<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;
-      if(v.type === 'audio') {
-  contenu = `<button onclick="if(window.AppInventor){window.AppInventor.setWebViewString('PLAY_AUDIO:${v.url}')}" 
-    style="padding:6px 10px;background:#0084ff;color:#fff;border:none;border-radius:6px;cursor:pointer">
-    ▶️ Écouter</button>`;
-}
-
-
+      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" type="audio/webm" style="width:200px; max-width:100%; height:40px;"></audio>`;
       
       htmlMessages += `
         <div class="chat-row" style="justify-content:${isMe ? 'flex-end' : 'flex-start'}">
@@ -678,34 +674,80 @@ function ouvrirConversation(convId,nom){
   });
 }
 
-let isRecording = false, mediaStream = null;
+let isRecording = false; 
+let mediaStream = null;
 
 function startRecord(cid) {
-  currentRecordingCid = cid;
-  if(window.AppInventor){
-    if(isRecording){
-      window.AppInventor.setWebViewString('STOP_RECORD');
-      isRecording=false;
-      document.getElementById('mic-btn').innerHTML='🎙️';
-    }else{
-      window.AppInventor.setWebViewString('START_RECORD:'+cid);
-      isRecording=true;
-      document.getElementById('mic-btn').innerHTML='⏸️';
-      showAlert('Enregistrement démarré - parle 3 secondes');
-    }
+  if (isRecording) {
+    stopRecord(cid);
     return;
   }
-  // SITE
-  if(!window.isSecureContext){ showAlert('Le micro nécessite HTTPS'); return; }
-  navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
-    // ... ton code ...
-  }).catch(e=>showAlert('Micro bloqué: '+e.message));
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showAlert('L\'accès au micro nécessite HTTPS.');
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    mediaStream = stream;
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      if (audioChunks.length === 0) return;
+
+      const b = new Blob(audioChunks, { type: 'audio/webm' });
+      const r = new FileReader();
+      
+      r.onload = e => {
+        database.ref(`conversations/${cid}/messages`).push({
+          senderId: currentUserId,
+          senderNom: document.getElementById('user-name').innerText,
+          type: 'audio',
+          url: e.target.result,
+          createdAt: Date.now()
+        });
+      };
+      r.readAsDataURL(b);
+      
+      isRecording = false;
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+
+      const micBtn = document.getElementById('mic-btn');
+      if (micBtn) {
+        micBtn.style.color = '';
+        micBtn.innerText = '🎤';
+      }
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    
+    const micBtn = document.getElementById('mic-btn');
+    if (micBtn) {
+      micBtn.style.color = 'red';
+      micBtn.innerText = '🛑';
+    }
+  }).catch(err => {
+    console.error(err);
+    showAlert('Micro non autorisé.');
+  });
 }
-function stopRecord(){ if(mediaRecorder) mediaRecorder.stop(); }
+
+function stopRecord(cid) {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") return;
+  mediaRecorder.stop();
+}
 function envoyerFichier(cid){const f=document.getElementById('file-input').files[0];if(!f)return;if(f.size>800000)return showAlert('Photo trop lourde >800Ko');const r=new FileReader();r.onload=e=>{database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:e.target.result,texte:'📷',createdAt:Date.now()});};r.readAsDataURL(f);}
 function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:t,createdAt:Date.now()});i.value='';}
 
-function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎙️ Vocal':last.texte});}});}
+function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎤 Vocal':last.texte});}});}
 
 function recharger1XBet(){const id=document.getElementById('xbet-id-joueur').value.trim();const m=Number(document.getElementById('xbet-montant').value);const wa=document.getElementById('xbet-whatsapp').value.trim();if(!id||m<100||currentUserSolde<m)return showAlert('Vérifiez ID, montant et solde');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'depot',id_joueur:id,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Dépôt',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function retrait1XBet(){const id=document.getElementById('xbet-retrait-id').value.trim();const m=Number(document.getElementById('xbet-retrait-montant').value);const wa=document.getElementById('xbet-retrait-whatsapp').value.trim();if(!id||m<=0)return showAlert('Remplissez tous les champs');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'retrait',id_joueur:id,montant:m,whatsapp_client:wa};envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
@@ -769,29 +811,11 @@ function demanderLivraison(){const v=document.getElementById('livraison-ville').
 function executerEchange(){const d=document.getElementById('echange-donne').value;const r=document.getElementById('echange-recoit').value;const m=Number(document.getElementById('echange-montant').value);const a=document.getElementById('echange-adresse').value.trim();const wa=document.getElementById('echange-whatsapp').value.trim();if(!a||!wa)return showAlert('Remplissez adresse et WhatsApp');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donne:d,recoit:r,montant:m,adresse_numero:a,whatsapp_client:wa};envoyerAlerte('echange',data);proposerSupport('echange',data,()=>afficherSucces('echange-status'));database.ref('commandes_echanges').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
 
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
-// PONT AVEC MIT APP INVENTOR
-setInterval(()=>{
-  if(!isAppInventor) return;
-  try{
-    const msg = window.AppInventor.getWebViewString();
-    if(msg && msg.startsWith('AUDIO_URL:')){
-      const [url, cid] = msg.substring(10).split('|');
-      database.ref(`conversations/${cid||currentRecordingCid}/messages`).push({
-        senderId: currentUserId,
-        senderNom: document.getElementById('user-name').innerText,
-        type: 'audio',
-        url: url,
-        createdAt: Date.now()
-      });
-      window.AppInventor.setWebViewString('');
-      isRecording = false;
-    }
-  }catch(e){}
-}, 500);
 </script>
 
 </body>
 </html>
+
 
 
 
