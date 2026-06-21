@@ -413,9 +413,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
   </div>
 
-  <div id="messagerie-feed" style="margin-top:10px"></div>
-</div>
-
+  
   </div>
 </div>
 
@@ -659,7 +657,7 @@ function ouvrirConversation(convId,nom){
       let contenu = v.texte || '';
       
       if(v.type === 'image') contenu = `<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;
-      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" style="width:200px">`; max-width:100%; height:40px;"></audio>`;
+      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" style="width:200px; max-width:100%; height:40px;"></audio>`;
       
       htmlMessages += `
         <div class="chat-row" style="justify-content:${isMe ? 'flex-end' : 'flex-start'}">
