@@ -657,7 +657,8 @@ function ouvrirConversation(convId,nom){
       let contenu = v.texte || '';
       
       if(v.type === 'image') contenu = `<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;
-      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" style="width:200px; max-width:100%; height:40px;"></audio>`;
+      if(v.type === 'audio') contenu = `<button onclick="window.AppInventor.setWebViewString('PLAY_AUDIO:${v.url}')" style="padding:5px; background:#0084ff; color:#fff; border-radius:5px;">▶️ Écouter le vocal</button>`;
+
       
       htmlMessages += `
         <div class="chat-row" style="justify-content:${isMe ? 'flex-end' : 'flex-start'}">
