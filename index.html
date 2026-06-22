@@ -438,6 +438,14 @@ window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='da
 
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
+async function uploadToCloudinary(base64Data){
+  const fd = new FormData();
+  fd.append('file', base64Data);
+  fd.append('upload_preset','mayne_vocaux');
+  const res = await fetch('https://api.cloudinary.com/v1_1/dkzkpvidk/auto/upload',{method:'POST',body:fd});
+  const data = await res.json();
+  return data.secure_url;
+}
 function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
@@ -696,23 +704,33 @@ function startRecord(cid) {
     mediaRecorder.ondataavailable = e => {
       if (e.data && e.data.size > 0) audioChunks.push(e.data);
     };
-
-    mediaRecorder.onstop = () => {
-      if (audioChunks.length === 0) return;
-
-      const b = new Blob(audioChunks, { type: 'audio/webm' });
-      const r = new FileReader();
-      
-      r.onload = e => {
-        database.ref(`conversations/${cid}/messages`).push({
-          senderId: currentUserId,
-          senderNom: document.getElementById('user-name').innerText,
-          type: 'audio',
-          url: e.target.result,
-          createdAt: Date.now()
-        });
-      };
-      r.readAsDataURL(b);
+mediaRecorder.onstop = () => {
+  if (audioChunks.length === 0) return;
+  const b = new Blob(audioChunks, { type: 'audio/webm' });
+  const r = new FileReader();
+  r.onload = async e => {
+    const base64 = e.target.result;
+    try {
+      const cloudUrl = await uploadToCloudinary(base64);
+      database.ref(`conversations/${cid}/messages`).push({
+        senderId: currentUserId,
+        senderNom: document.getElementById('user-name').innerText,
+        type: 'audio',
+        url: cloudUrl, // <--- maintenant c'est le lien Cloudinary
+        createdAt: Date.now()
+      });
+    } catch(err){
+      // si Cloudinary plante, on garde l'ancien système
+      database.ref(`conversations/${cid}/messages`).push({
+        senderId: currentUserId,
+        senderNom: document.getElementById('user-name').innerText,
+        type: 'audio',
+        url: base64,
+        createdAt: Date.now()
+      });
+    }
+  };
+  r.readAsDataURL(b);
       
       isRecording = false;
       if (mediaStream) {
@@ -815,6 +833,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
 
