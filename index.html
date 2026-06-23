@@ -444,13 +444,26 @@ async function uploadToCloudinary(base64Data){
     fd.append('file', base64Data);
     fd.append('upload_preset','mayneaudio');
     
-    const res = await fetch('https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload',{
+    const res = await fetch('https://api.cloudinary.com/v1_1/dkzpkvidk /auto/upload',{
       method:'POST',
       body:fd
     });
     
     const data = await res.json();
-    console.log('CLOUDINARY:', data); // regarde dans la console}}
+    console.log('CLOUDINARY:', data); // tu peux laisser pour debug
+    
+    if(data.secure_url){
+      return data.secure_url;
+    } else {
+      // si Cloudinary renvoie une erreur
+      throw new Error(data.error?.message || 'Upload échoué');
+    }
+  } catch(e){
+    console.error('Upload error:', e);
+    showAlert('❌ Erreur upload: '+e.message);
+    throw e; // on relance pour que le code appelant sache que ça a planté
+  }
+}
 function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
