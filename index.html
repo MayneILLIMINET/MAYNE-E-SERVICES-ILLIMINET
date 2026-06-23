@@ -429,13 +429,37 @@ function pickImage(){
     window.AppInventor.setWebViewString('PICK_IMAGE');
   }
 }
+function pickImageChat(){
+  if(window.AppInventor){
+    window.AppInventor.setWebViewString('PICK_CHAT');
+  }
+}
+
 setInterval(()=>{
   if(window.AppInventor){
     let data = window.AppInventor.getWebViewString();
-    if(data && data.startsWith('https://')){
+    if(!data) return;
+    
+    if(data.startsWith('https://')){
+      // Pour MARKET
       document.getElementById('img-name').innerText = '✅ Photo prête';
       window.currentImageUrl = data;
       window.AppInventor.setWebViewString('');
+    } else if(data.startsWith('CHAT_')){
+      // Pour MESSAGERIE
+      let url = data.replace('CHAT_','');
+      window.AppInventor.setWebViewString('');
+      // envoie direct dans le chat ouvert
+      if(window.currentConvId){
+        database.ref(`conversations/${window.currentConvId}/messages`).push({
+          senderId: currentUserId,
+          senderNom: document.getElementById('user-name').innerText,
+          type: 'image',
+          url: url,
+          texte: '📷',
+          createdAt: Date.now()
+        });
+      }
     }
   }
 },500);
@@ -667,7 +691,7 @@ function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("
 function chargerMessagerie(){database.ref('conversations').on('value',snap=>{const feed=document.getElementById('messagerie-feed');if(!feed)return;let html='';let convs=[];snap.forEach(child=>{const convId=child.key;if(!convId.includes(currentUserId))return;const msgs=child.child('messages').val();if(!msgs)return;const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);convs.push({id:convId,last:arr[0],all:arr});});convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);convs.forEach(c=>{const parts=c.id.split('_');const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];let nom=c.last.senderId!==currentUserId?c.last.senderNom:'Utilisateur';c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom});const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}','${nom.replace(/'/g,"\\'")}')">
 <div class="chat-header"><div class="msg-avatar">${initiales}</div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;});feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';});}
 function ouvrirConversation(convId,nom){
-  switchService('service-messagerie');
+  switchService('service-messagerie');window.currentConvId = convId;
   const feed = document.getElementById('messagerie-feed');
   
   
@@ -683,8 +707,7 @@ function ouvrirConversation(convId,nom){
     
     <!-- La barre d'input est fixe, elle ne bougera plus jamais, l'enregistrement est sécurisé -->
 <div class="chat-input-bar">
-<label for="file-input" style="font-size:24px;cursor:pointer;padding:5px">📷</label><input type="file" id="file-input" accept="image/*" style="opacity:0.01;width:1px;height:1px" onchange="envoyerFichier('${convId}')">
-
+  <label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
   <button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:22px">🎙️</button>
   <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
   <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
