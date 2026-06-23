@@ -450,20 +450,7 @@ async function uploadToCloudinary(base64Data){
     });
     
     const data = await res.json();
-    console.log('CLOUDINARY:', data); // regarde dans la console
-    
-    if(data.secure_url){
-      showAlert('✅ Upload OK: '+data.secure_url.substring(0,40)+'...');
-      return data.secure_url;
-    } else {
-      showAlert('❌ Erreur Cloudinary: '+(data.error?.message||'inconnue'));
-      throw new Error(data.error?.message);
-    }
-  } catch(e){
-    showAlert('❌ Fetch échoué: '+e.message);
-    throw e;
-  }
-}
+    console.log('CLOUDINARY:', data); // regarde dans la console}}
 function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
