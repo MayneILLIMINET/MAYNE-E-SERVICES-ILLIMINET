@@ -444,7 +444,7 @@ async function uploadToCloudinary(base64Data){
     fd.append('file', base64Data);
     fd.append('upload_preset','mayneaudio');
     
-    const res = await fetch('https://api.cloudinary.com/v1_1/dkzkpvidk/auto/upload',{
+    const res = await fetch('https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload',{
       method:'POST',
       body:fd
     });
