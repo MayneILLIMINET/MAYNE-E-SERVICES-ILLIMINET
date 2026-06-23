@@ -209,11 +209,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div id="service-market" class="sub-panel" style="display:none;">
       <h4>Market-place communautaire</h4>
       <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
-<label for="post-image" style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">
-  📷 Choisir une photo
-</label>
-<input type="file" id="post-image" accept="image/*" style="position:absolute;left:-9999px" onchange="document.getElementById('img-name').textContent = this.files[0]? '✅ '+this.files[0].name : 'Aucun'">
-<div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div>
+<label for="post-image" style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0">📷 Choisir une photo</label>
+<input type="file" id="post-image" accept="image/*" capture="environment" style="opacity:0.01;width:1px;height:1px;position:relative;z-index:1" onchange="...">
       
       <button class="btn-submit" style="background:#0000ff" onclick="publierPost()">Publier</button>
       <p id="market-status" class="status-msg"></p>
@@ -680,8 +677,7 @@ function ouvrirConversation(convId,nom){
     
     <!-- La barre d'input est fixe, elle ne bougera plus jamais, l'enregistrement est sécurisé -->
 <div class="chat-input-bar">
-<label for="file-input" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
-<input type="file" id="file-input" accept="image/*" style="position:absolute;left:-9999px" onchange="envoyerFichier('${convId}')">
+'<label for="file-input" style="font-size:24px;padding:5px">📷</label><input type="file" id="file-input" accept="image/*" style="opacity:0.01;width:1px;height:1px" onchange="envoyerFichier(\''+convId+'\')">’
 
   <button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:22px">🎙️</button>
   <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
