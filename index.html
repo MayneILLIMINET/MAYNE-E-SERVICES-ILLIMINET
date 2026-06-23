@@ -209,7 +209,12 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div id="service-market" class="sub-panel" style="display:none;">
       <h4>Market-place communautaire</h4>
       <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
-      <input type="file" id="post-image" accept="image/*" style="margin:6px 0;width:100%;background:#fff;padding:4px;border-radius:4px">
+<label style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">
+  📷 Choisir une photo
+  <input type="file" id="post-image" accept="image/*" style="display:none" onchange="document.getElementById('img-name').textContent = this.files[0]? '✅ '+this.files[0].name : 'Aucun'">
+</label>
+<div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div>
+      
       <button class="btn-submit" style="background:#0000ff" onclick="publierPost()">Publier</button>
       <p id="market-status" class="status-msg"></p>
       <div id="market-feed" style="margin-top:10px"></div>
@@ -662,15 +667,15 @@ function ouvrirConversation(convId,nom){
     <div class="chat-container" id="chat-scroll"></div>
     
     <!-- La barre d'input est fixe, elle ne bougera plus jamais, l'enregistrement est sécurisé -->
-    <div class="chat-input-bar">
-      <input type="file" id="file-input" accept="image/*" style="display:none" onchange="envoyerFichier('${convId}')">
-      <button onclick="document.getElementById('file-input').click()" style="background:none;border:none;font-size:20px">📷</button>
-      <button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:20px;cursor:pointer;">🎙️ </button>
-      <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
-      <button class="btn-submit" style="width:auto;padding:8px 16px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
-    </div>
-  `;
-
+<div class="chat-input-bar">
+  <label style="font-size:24px;cursor:pointer;padding:5px">
+    📷
+    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="envoyerFichier('${convId}')">
+  </label>
+  <button id="mic-btn" onclick="startRecord('${convId}')" style="background:none;border:none;font-size:22px">🎙️</button>
+  <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
+  <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
+</div> `;
   // 2. L'écouteur Firebase ne met à jour QUE la zone des messages
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value', s => {
     const scrollZone = document.getElementById('chat-scroll');
