@@ -425,30 +425,30 @@ function doConfirm(y){document.getElementById('custom-confirm').style.display='n
 function showInput(titre,cb){promptCallback=cb;document.getElementById('custom-prompt-msg').innerText=titre;document.getElementById('custom-prompt-input').value='';document.getElementById('custom-prompt').style.display='flex';setTimeout(()=>document.getElementById('custom-prompt-input').focus(),100);}
 function hidePrompt(ok){document.getElementById('custom-prompt').style.display='none';if(ok&&promptCallback){promptCallback(document.getElementById('custom-prompt-input').value.trim());}}
 function pickImage(){
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('PICK_IMAGE');
+  if(window.Kodular){
+    window.Kodular.setWebViewString('PICK_IMAGE');
   }
 }
 function pickImageChat(){
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('PICK_CHAT');
+  if(window.Kodular){
+    window.Kodular.setWebViewString('PICK_CHAT');
   }
 }
 
 setInterval(()=>{
-  if(window.AppInventor){
-    let data = window.AppInventor.getWebViewString();
+  if(window.Kodular){
+    let data = window.Kodular.getWebViewString();
     if(!data) return;
     
     if(data.startsWith('https://')){
       // Pour MARKET
-      document.getElementById('img-name').innerText = '✅ Photo prête';
+      document.getElementById('img-name').innerText = 'VOTRE IMAGE EST PRÊTE CLIQUEZ POUR PUBLIER 👇 ';
       window.currentImageUrl = data;
-      window.AppInventor.setWebViewString('');
+      window.Kodular.setWebViewString('');
     } else if(data.startsWith('CHAT_')){
       // Pour MESSAGERIE
       let url = data.replace('CHAT_','');
-      window.AppInventor.setWebViewString('');
+      window.Kodular.setWebViewString('');
       // envoie direct dans le chat ouvert
       if(window.currentConvId){
         database.ref(`conversations/${window.currentConvId}/messages`).push({
@@ -910,6 +910,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
 
