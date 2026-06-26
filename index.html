@@ -544,6 +544,21 @@ function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.en
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
 function switchService(id){document.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');document.getElementById(id).style.display='block';}
+function retourAccueil(){
+  if(currentUserId && document.getElementById('logged-in-zone').style.display!=='none'){
+    switchService('menu-principal');
+    return true; // on a géré le retour
+  }
+  return false; // pas connecté, laisse Kodular gérer
+}
+
+// piège le bouton retour du navigateur
+history.pushState(null, null, location.href);
+window.addEventListener('popstate', function(){
+  if(retourAccueil()){
+    history.pushState(null, null, location.href);
+  }
+});
 function toggleXbetMode(m){document.getElementById('tab-xbet-depot').classList.toggle('active',m==='depot');document.getElementById('tab-xbet-retrait').classList.toggle('active',m==='retrait');document.getElementById('xbet-depot-zone').style.display=m==='depot'?'block':'none';document.getElementById('xbet-retrait-zone').style.display=m==='retrait'?'block':'none';}
 
 function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
