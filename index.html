@@ -19,6 +19,23 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
+  authDomain: "mayneilliminetdb.firebaseapp.com",
+  databaseURL: "https://mayneilliminetdb-default-rtdb.firebaseio.com",
+  projectId: "mayneilliminetdb",
+  storageBucket: "mayneilliminetdb.appspot.com",
+  messagingSenderId: "904857888891",
+  appId: "1:904857888891:web:a89e339ea89de0340a5ade"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+// ton ID utilisateur (prends celui de ton app)
+const currentUser = localStorage.getItem('mayne_id') || 'u'+Date.now();
+</script>
 
 <style>
 body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
@@ -89,7 +106,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 <body>
 
 <div class="app-container">
-<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:8px;z-index:9999;background:#ffeb3b;color:#000;border:1px solid #fff;padding:5px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
+<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:8px;z-index:9999;background:#000;color:#000;border:1px solid #fff;padding:5px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.4);"></div>
 
 <div id="logged-out-zone">
@@ -713,7 +730,32 @@ function validerRetrait(){const m=Number(document.getElementById('retrait-montan
   document.getElementById('img-name').innerText = 'Aucun';
   afficherSucces('market-status');
 }
-function chargerFeed(){database.ref('posts').orderByChild('createdAt').limitToLast(30).on('value',snap=>{const feed=document.getElementById('market-feed');if(!feed)return;let html='';snap.forEach(child=>{const p=child.val();const id=child.key;const date=new Date(p.createdAt).toLocaleString('fr-FR');const img=p.image?`<img src="${p.image}" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin:4px 0" onclick="window.open('${p.image}')">`:'';html += `<div class="product-card" style="text-align:left;margin-bottom:8px;"><div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>${img}<div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div><div style="display:flex;gap:5px;margin-top:6px"><button class="inner-btn" onclick="commenterPost('${id}')">💬 Commenter</button><button class="inner-btn" onclick="ouvrirChat('${p.authorId}','${p.authorNom}')">✉️ Message</button></div><div id="comments-${id}" style="margin-top:6px;font-size:10px;color:#333"></div></div>`;});feed.innerHTML=html||'<div style="color:#666;text-align:center;padding:10px">Aucun post pour l’instant</div>';snap.forEach(c=>chargerComments(c.key));});}
+function chargerFeed(){
+  database.ref('posts').orderByChild('createdAt').limitToLast(30).on('value',snap=>{
+    const feed=document.getElementById('market-feed');
+    if(!feed)return;
+    let html='';
+    snap.forEach(child=>{
+      const p=child.val();
+      const id=child.key;
+      const date=new Date(p.createdAt).toLocaleString('fr-FR');
+      const img=p.image?`<img src="${p.image}" style="width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin:4px 0" onclick="window.open('${p.image}')">`:'';
+      html += `<div class="product-card" style="text-align:left;margin-bottom:8px;">
+        <div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>
+        ${img}
+        <div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <button class="inner-btn" onclick="toggleLike('${id}')">❤️ <span id="like-${id}">0</span></button>
+          <button class="inner-btn" onclick="commenterPost('${id}')">💬 Commenter</button>
+          <button class="inner-btn" onclick="ouvrirChat('${p.authorId}','${p.authorNom}')">✉️ Message</button>
+        </div>
+        <div id="comments-${id}" style="margin-top:6px;font-size:10px;color:#333"></div>
+      </div>`;
+    });
+    feed.innerHTML=html||'<div style="color:#666;text-align:center;padding:10px">Aucun post pour l’instant</div>';
+    snap.forEach(c=>{ chargerComments(c.key); listenLikes(c.key); });
+  });
+}
 function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!txt)return;database.ref(`comments/${postId}`).push().set({authorId:currentUserId,authorNom:document.getElementById('user-name').innerText,texte:txt,createdAt:Date.now()});});}
 function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(3).on('value',s=>{let h='';s.forEach(c=>{const v=c.val();h+=`• <b>${v.authorNom}</b>: ${v.texte}<br>`});const el=document.getElementById(`comments-${postId}`);if(el)el.innerHTML=h;});}
 
@@ -792,7 +834,18 @@ async function envoyerFichier(cid){
 function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:t,createdAt:Date.now()});i.value='';}
 
 function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎙️ Vocal':last.texte});}});}
-
+// ==== LIKES MAYNE ====
+function toggleLike(postId){
+  if(!currentUserId) return showAlert('Connecte-toi');
+  const ref = db.ref('likes/'+postId+'/'+currentUserId);
+  ref.get().then(s => s.exists() ? ref.remove() : ref.set(true));
+}
+function listenLikes(postId){
+  db.ref('likes/'+postId).on('value', snap => {
+    const el = document.getElementById('like-'+postId);
+    if(el) el.innerText = snap.numChildren();
+  });
+}
 function recharger1XBet(){const id=document.getElementById('xbet-id-joueur').value.trim();const m=Number(document.getElementById('xbet-montant').value);const wa=document.getElementById('xbet-whatsapp').value.trim();if(!id||m<100||currentUserSolde<m)return showAlert('Vérifiez ID, montant et solde');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'depot',id_joueur:id,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Dépôt',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function retrait1XBet(){const id=document.getElementById('xbet-retrait-id').value.trim();const m=Number(document.getElementById('xbet-retrait-montant').value);const wa=document.getElementById('xbet-retrait-whatsapp').value.trim();if(!id||m<=0)return showAlert('Remplissez tous les champs');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'retrait',id_joueur:id,montant:m,whatsapp_client:wa};envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
 
