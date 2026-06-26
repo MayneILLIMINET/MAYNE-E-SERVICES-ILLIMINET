@@ -476,14 +476,21 @@ function pickImageChat(){
 }
   }
 },500);
-
+let isRecording = false;
 function recordAudioChat(){
-  if(window.AppInventor){
+  if(!window.AppInventor) return;
+  
+  if(!isRecording){
+    // DÉMARRER
     window.AppInventor.setWebViewString('REC_AUDIO_' + window.currentConvId);
-    // FEEDBACK IMMÉDIAT
-    showAlert('🎙️ Enregistrement démarré... parle maintenant !');
-    document.getElementById('global-notif').innerText = '🔴 REC en cours';
-    document.getElementById('global-notif').style.display = 'block';
+    isRecording = true;
+    document.querySelector('[onclick="recordAudioChat()"]').innerHTML = '⏹️';
+    showAlert('🎙️ Enregistrement...');
+  } else {
+    // STOPPER
+    window.AppInventor.setWebViewString('STOP_AUDIO');
+    isRecording = false;
+    document.querySelector('[onclick="recordAudioChat()"]').innerHTML = '🎙️';
   }
 }
 function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
@@ -852,6 +859,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
 
