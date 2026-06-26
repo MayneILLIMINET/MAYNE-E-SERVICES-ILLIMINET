@@ -19,9 +19,8 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
+let db, database;
 const firebaseConfig = {
   apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
   authDomain: "mayneilliminetdb.firebaseapp.com",
@@ -31,12 +30,12 @@ const firebaseConfig = {
   messagingSenderId: "904857888891",
   appId: "1:904857888891:web:a89e339ea89de0340a5ade"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-// ton ID utilisateur (prends celui de ton app)
-const currentUser = localStorage.getItem('mayne_id') || 'u'+Date.now();
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+database = firebase.database();
+db = database; // pour que toggleLike et listenLikes marchent aussi
 </script>
-
 <style>
 body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
 .app-container{width:100%;max-width:450px;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#0000ff;border:2px solid #fff;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
@@ -434,7 +433,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
-let _lock=false,database=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
+let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -548,8 +547,6 @@ function switchService(id){document.querySelectorAll('.sub-panel').forEach(p=>p.
 function toggleXbetMode(m){document.getElementById('tab-xbet-depot').classList.toggle('active',m==='depot');document.getElementById('tab-xbet-retrait').classList.toggle('active',m==='retrait');document.getElementById('xbet-depot-zone').style.display=m==='depot'?'block':'none';document.getElementById('xbet-retrait-zone').style.display=m==='retrait'?'block':'none';}
 
 function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
-
-try{const c={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com"};firebase.initializeApp(c);database=firebase.database();}catch(e){}
 
 function executerConnexion(){
   const i = document.getElementById('login-id').value.trim();
