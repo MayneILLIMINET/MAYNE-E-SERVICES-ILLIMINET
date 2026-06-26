@@ -469,7 +469,11 @@ function pickImageChat(){
           createdAt: Date.now()
         });
       }
-    }
+    }else if(data === "REC_STOP"){
+  window.AppInventor.setWebViewString('');
+  document.getElementById('global-notif').style.display = 'none';
+  showAlert('✅ Vocal envoyé !');
+}
   }
 },500);
 
