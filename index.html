@@ -474,9 +474,12 @@ function pickImageChat(){
 },500);
 
 function recordAudioChat(){
-  // on envoie juste un signal à AppInventor avec l'ID de la conversation
   if(window.AppInventor){
     window.AppInventor.setWebViewString('REC_AUDIO_' + window.currentConvId);
+    // FEEDBACK IMMÉDIAT
+    showAlert('🎙️ Enregistrement démarré... parle maintenant !');
+    document.getElementById('global-notif').innerText = '🔴 REC en cours';
+    document.getElementById('global-notif').style.display = 'block';
   }
 }
 function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
