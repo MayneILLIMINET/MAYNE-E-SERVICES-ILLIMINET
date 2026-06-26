@@ -615,6 +615,16 @@ function executerConnexion(){
       chargerFeed();
       chargerMessagerie();
       activerNotifications();
+// présence
+const statusRef = database.ref('clients/'+currentUserId+'/status');
+database.ref('.info/connected').on('value', s => {
+  if(s.val()){
+    statusRef.set({online:true, last:Date.now()});
+    statusRef.onDisconnect().set({online:false, last:Date.now()});
+  }
+});
+      ecouterNotifLikes();
+      
     } else {
       showAlert('Numéro ou mot de passe incorrect');
     }
@@ -742,11 +752,12 @@ function chargerFeed(){
         ${img}
         <div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div>
         <div style="display:flex;gap:5px;margin-top:6px">
-          <button class="inner-btn" onclick="toggleLike('${id}')">❤️ <span id="like-${id}">0</span></button>
+<button class="inner-btn" id="btn-like-${id}" onclick="toggleLike('${id}')">❤️ <span id="like-${id}">0</span></button>
           <button class="inner-btn" onclick="commenterPost('${id}')">💬 Commenter</button>
           <button class="inner-btn" onclick="ouvrirChat('${p.authorId}','${p.authorNom}')">✉️ Message</button>
         </div>
         <div id="comments-${id}" style="margin-top:6px;font-size:10px;color:#333"></div>
+<div id="likers-${id}" style="font-size:11px;color:#00f;margin-top:4px;font-weight:bold"></div>
       </div>`;
     });
     feed.innerHTML=html||'<div style="color:#666;text-align:center;padding:10px">Aucun post pour l’instant</div>';
@@ -757,55 +768,111 @@ function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!t
 function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(3).on('value',s=>{let h='';s.forEach(c=>{const v=c.val();h+=`• <b>${v.authorNom}</b>: ${v.texte}<br>`});const el=document.getElementById(`comments-${postId}`);if(el)el.innerHTML=h;});}
 
 function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{showAlert('Message envoyé à '+destNom);switchService('service-messagerie');setTimeout(()=>ouvrirConversation(convId,destNom),500);});});}
-function chargerMessagerie(){database.ref('conversations').on('value',snap=>{const feed=document.getElementById('messagerie-feed');if(!feed)return;let html='';let convs=[];snap.forEach(child=>{const convId=child.key;if(!convId.includes(currentUserId))return;const msgs=child.child('messages').val();if(!msgs)return;const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);convs.push({id:convId,last:arr[0],all:arr});});convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);convs.forEach(c=>{const parts=c.id.split('_');const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];let nom=c.last.senderId!==currentUserId?c.last.senderNom:'Utilisateur';c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom});const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}','${nom.replace(/'/g,"\\'")}')">
-<div class="chat-header"><div class="msg-avatar">${initiales}</div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;});feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';});}
+function chargerMessagerie(){
+  database.ref('conversations').on('value',snap=>{
+    const feed=document.getElementById('messagerie-feed');
+    if(!feed)return;
+    let html=''; let convs=[];
+    snap.forEach(child=>{
+      const convId=child.key;
+      if(!convId.includes(currentUserId))return;
+      const msgs=child.child('messages').val();
+      if(!msgs)return;
+      const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);
+      convs.push({id:convId,last:arr[0],all:arr});
+    });
+    convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);
+    convs.forEach(c=>{
+      const parts=c.id.split('_');
+      const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];
+      let nom=c.last.senderId!==currentUserId?c.last.senderNom:'Utilisateur';
+      c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom});
+      const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+      const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;
+      const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}','${nom.replace(/'/g,"\\'")}')">
+        <div class="chat-header">
+          <div style="position:relative">
+            <div class="msg-avatar">${initiales}</div>
+            <span id="dot-${correspondantId}" style="position:absolute;bottom:0;right:8px;width:10px;height:10px;background:#999;border:2px solid #fff;border-radius:50%"></span>
+          </div>
+          <div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div>
+          <div class="chat-time">${heure}</div>
+        </div></div>`;
+      // présence
+      database.ref('clients/'+correspondantId+'/status').on('value', s=>{
+        const d = document.getElementById('dot-'+correspondantId);
+        if(d) d.style.background = s.val() && s.val().online? '#0f0' : '#999';
+      });
+    });
+    feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';
+  });
+}
 function ouvrirConversation(convId,nom){
-  switchService('service-messagerie');window.currentConvId = convId;
+  switchService('service-messagerie');
+  window.currentConvId = convId;
   const feed = document.getElementById('messagerie-feed');
-  
-  
-  // 1. On ne génère la structure globale QU'UNE SEULE FOIS
+  const parts = convId.split('_');
+  const otherId = parts[0]===currentUserId? parts[1] : parts[0];
+
+  // marquer comme vu
+  database.ref(`conversations/${convId}/messages`).on('child_added', m => {
+    const v = m.val();
+    if(v.senderId!== currentUserId &&!v.vu){
+      m.ref.update({vu:true, vuAt:Date.now()});
+    }
+  });
+
+  // structure
   feed.innerHTML = `
     <div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:-10px;z-index:10">
       <span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span>
-      <div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div>
-      ${nom}
+      <div style="position:relative">
+        <div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div>
+        <span id="online-dot" style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:#999;border:2px solid #075e54;border-radius:50%"></span>
+      </div>
+      <div>
+        <div>${nom}</div>
+        <div id="online-text" style="font-size:10px;font-weight:normal;opacity:.8">hors ligne</div>
+      </div>
     </div>
-    <!-- C'est cette zone uniquement qui va se recharger -->
     <div class="chat-container" id="chat-scroll"></div>
-    
-    <!-- La barre d'input est fixe, elle ne bougera plus jamais, l'enregistrement est sécurisé -->
-<div class="chat-input-bar">
-  <label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
-<label onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label>
-  <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
-  <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
-</div> `;
-  // 2. L'écouteur Firebase ne met à jour QUE la zone des messages
+    <div class="chat-input-bar">
+      <label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
+      <label onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label>
+      <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
+      <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
+    </div>`;
+
+  // présence
+  database.ref('clients/'+otherId+'/status').on('value', s=>{
+    const dot = document.getElementById('online-dot');
+    const txt = document.getElementById('online-text');
+    const on = s.val() && s.val().online;
+    if(dot) dot.style.background = on? '#0f0' : '#999';
+    if(txt) txt.innerText = on? 'en ligne' : 'vu récemment';
+  });
+
+  // messages
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value', s => {
     const scrollZone = document.getElementById('chat-scroll');
     if(!scrollZone) return;
-    
     let htmlMessages = '';
     s.forEach(m => {
       const v = m.val();
       const isMe = v.senderId === currentUserId;
       const heure = new Date(v.createdAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
       let contenu = v.texte || '';
-      
       if(v.type === 'image') contenu = `<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;
-      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" type="audio/webm" style="width:200px; max-width:100%; height:40px;"></audio>`;
-      
-      htmlMessages += `
-        <div class="chat-row" style="justify-content:${isMe ? 'flex-end' : 'flex-start'}">
-          ${!isMe ? `<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>` : ''}
-          <div class="msg-bubble ${isMe ? 'msg-right' : 'msg-left'}">${contenu}<span class="msg-time">${heure}</span></div>
-        </div>
-      `;
+      if(v.type === 'audio') contenu = `<audio controls src="${v.url}" style="width:200px;height:40px"></audio>`;
+     const tick = isMe? (v.vu? '<span style="color:#34b7f1"> ✓✓</span>' : '<span style="color:#999"> ✓</span>') : '';
+      htmlMessages += `<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">
+        ${!isMe?`<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>`:''}
+        <div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${contenu}<span class="msg-time">${heure}${tick}</span></div>
+      </div>`;
     });
-    
     scrollZone.innerHTML = htmlMessages;
-    setTimeout(() => { scrollZone.scrollTop = scrollZone.scrollHeight; }, 100);
+    setTimeout(()=>{scrollZone.scrollTop = scrollZone.scrollHeight;},100);
   });
 }
 async function envoyerFichier(cid){
@@ -828,19 +895,69 @@ async function envoyerFichier(cid){
   };
   r.readAsDataURL(f);
 }
-function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:t,createdAt:Date.now()});i.value='';}
+function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,createdAt:Date.now()});i.value='';}
 
 function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎙️ Vocal':last.texte});}});}
 // ==== LIKES MAYNE ====
 function toggleLike(postId){
   if(!currentUserId) return showAlert('Connecte-toi');
   const ref = db.ref('likes/'+postId+'/'+currentUserId);
-  ref.get().then(s => s.exists() ? ref.remove() : ref.set(true));
+  ref.get().then(s => {
+    if(s.exists()) ref.remove();
+    else ref.set({ nom: document.getElementById('user-name').innerText, at: Date.now() });
+  });
 }
 function listenLikes(postId){
-  db.ref('likes/'+postId).on('value', snap => {
-    const el = document.getElementById('like-'+postId);
-    if(el) el.innerText = snap.numChildren();
+  db.ref('likes/'+postId).on('value', async snap => {
+    const count = snap.numChildren();
+    const countEl = document.getElementById('like-'+postId);
+    const btn = document.getElementById('btn-like-'+postId);
+    const likersEl = document.getElementById('likers-'+postId);
+    
+    if(countEl) countEl.innerText = count;
+    if(btn) btn.style.background = snap.hasChild(currentUserId) ? '#ff0040' : '#000';
+    
+    if(likersEl){
+      if(count === 0){
+        likersEl.innerText = '';
+        likersEl.onclick = null;
+      } else {
+        // récupère tous les noms (même les anciens)
+        let noms = [];
+        let promises = [];
+        snap.forEach(c => {
+          const v = c.val();
+          if(v && v.nom) noms.push(v.nom);
+          else promises.push(database.ref('clients/'+c.key+'/nom').once('value').then(s => s.val() || c.key));
+        });
+        const anciens = await Promise.all(promises);
+        noms = noms.concat(anciens);
+        
+        // affichage court
+        const court = noms.slice(0,2).join(', ');
+        const reste = count > 2 ? ` et ${count-2} autre${count-2>1?'s':''}` : '';
+        likersEl.innerText = `❤️ ${count} j'aime${count>1?'s':''} · ${court}${reste}`;
+        likersEl.style.cursor = 'pointer';
+        
+        // clic = voir TOUTE la liste
+        likersEl.onclick = () => showAlert('Personnes qui ont aimé :\n\n' + noms.join('\n'));
+      }
+    }
+  });
+}
+function ecouterNotifLikes(){
+  database.ref('posts').orderByChild('authorId').equalTo(currentUserId).on('child_added', postSnap => {
+    const pid = postSnap.key;
+    db.ref('likes/'+pid).on('child_added', likeSnap => {
+      const v = likeSnap.val();
+      const liker = likeSnap.key;
+      if(liker === currentUserId) return; // pas toi
+      if(!v.at || v.at < Date.now() - 10000) return; // ignore les vieux likes au chargement
+      
+      if(Notification.permission === 'granted'){
+        new Notification('❤️', { body: (v.nom || 'Quelqu\'un') + ' a aimé ton post' });
+      }
+    });
   });
 }
 function recharger1XBet(){const id=document.getElementById('xbet-id-joueur').value.trim();const m=Number(document.getElementById('xbet-montant').value);const wa=document.getElementById('xbet-whatsapp').value.trim();if(!id||m<100||currentUserSolde<m)return showAlert('Vérifiez ID, montant et solde');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'depot',id_joueur:id,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Dépôt',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
