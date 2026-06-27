@@ -433,7 +433,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
-let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[];
+let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -492,21 +492,19 @@ function pickImageChat(){
 }
   }
 },500);
-let isRecording = false;
 function recordAudioChat(){
   if(!window.AppInventor) return;
   
   if(!isRecording){
-    // DÉMARRER
     window.AppInventor.setWebViewString('REC_AUDIO_' + window.currentConvId);
     isRecording = true;
     document.querySelector('[onclick="recordAudioChat()"]').innerHTML = '⏹️';
-    showAlert('🎙️ Enregistrement...');
+    database.ref(`conversations/${window.currentConvId}/recording/${currentUserId}`).set(true);
   } else {
-    // STOPPER
     window.AppInventor.setWebViewString('STOP_AUDIO');
     isRecording = false;
     document.querySelector('[onclick="recordAudioChat()"]').innerHTML = '🎙️';
+    database.ref(`conversations/${window.currentConvId}/recording/${currentUserId}`).set(false);
   }
 }
 function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
@@ -851,6 +849,7 @@ function ouvrirConversation(convId,nom){
         <div>${nom}</div>
         <div id="online-text" style="font-size:10px;font-weight:normal;opacity:.8">hors ligne</div>
 <div id="typing-indicator" style="font-size:10px;font-weight:normal;opacity:.8;color:#0f0;display:none">en train d'écrire...</div>
+<div id="recording-indicator" style="font-size:10px;font-weight:normal;opacity:.8;color:#ff9800;display:none">enregistrement...</div>
       </div>
     </div>
     <div class="chat-container" id="chat-scroll"></div>
@@ -878,6 +877,20 @@ function ouvrirConversation(convId,nom){
     s.forEach(ch=>{ if(ch.key!==currentUserId && ch.val()===true) ecrit=true; });
     ind.style.display = ecrit? 'block':'none';
     if(onl) onl.style.display = ecrit? 'none':'block';
+  });
+  // recording indicator
+  database.ref(`conversations/${convId}/recording`).on('value', s=>{
+    const rec = document.getElementById('recording-indicator');
+    const typ = document.getElementById('typing-indicator');
+    const onl = document.getElementById('online-text');
+    if(!rec) return;
+    let enregistre = false;
+    s.forEach(ch=>{ if(ch.key!==currentUserId && ch.val()===true) enregistre=true; });
+    rec.style.display = enregistre? 'block':'none';
+    if(enregistre){
+      if(typ) typ.style.display = 'none';
+      if(onl) onl.style.display = 'none';
+    }
   });
   // messages
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value', s => {
