@@ -849,13 +849,14 @@ function ouvrirConversation(convId,nom){
       <div>
         <div>${nom}</div>
         <div id="online-text" style="font-size:10px;font-weight:normal;opacity:.8">hors ligne</div>
+<div id="typing-indicator" style="font-size:10px;font-weight:normal;opacity:.8;color:#0f0;display:none">en train d'écrire...</div>
       </div>
     </div>
     <div class="chat-container" id="chat-scroll"></div>
     <div class="chat-input-bar">
       <label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
       <label onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label>
-      <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
+      <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" oninput="jeTape('${convId}')" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
       <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
     </div>`;
 
@@ -865,9 +866,18 @@ function ouvrirConversation(convId,nom){
     const txt = document.getElementById('online-text');
     const on = s.val() && s.val().online;
     if(dot) dot.style.background = on? '#0f0' : '#999';
-    if(txt) txt.innerText = on? 'en ligne' : 'vu récemment';
+    if(txt) txt.innerText = on? 'en ligne' : 'innactif ';
   });
-
+  // typing indicator
+  database.ref(`conversations/${convId}/typing`).on('value', s=>{
+    const ind = document.getElementById('typing-indicator');
+    const onl = document.getElementById('online-text');
+    if(!ind) return;
+    let ecrit = false;
+    s.forEach(ch=>{ if(ch.key!==currentUserId && ch.val()===true) ecrit=true; });
+    ind.style.display = ecrit? 'block':'none';
+    if(onl) onl.style.display = ecrit? 'none':'block';
+  });
   // messages
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value', s => {
     const scrollZone = document.getElementById('chat-scroll');
@@ -910,8 +920,21 @@ async function envoyerFichier(cid){
   };
   r.readAsDataURL(f);
 }
-function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,createdAt:Date.now()});i.value='';}
-
+function envoyerDirect(cid){
+  const i=document.getElementById('msg-input');
+  const t=i.value.trim();
+  if(!t) return;
+  database.ref(`conversations/${cid}/messages`).push({
+    senderId:currentUserId,
+    senderNom:document.getElementById('user-name').innerText,
+    type:'text',
+    vu:false,
+    texte:t,
+    createdAt:Date.now()
+  });
+  i.value='';
+  database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
+}
 function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎙️ Vocal':last.texte});}});}
 // ==== LIKES MAYNE ====
 function toggleLike(postId){
