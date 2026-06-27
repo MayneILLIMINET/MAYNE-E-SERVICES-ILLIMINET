@@ -935,6 +935,17 @@ function envoyerDirect(cid){
   i.value='';
   database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
 }
+let typingTimeout;
+function jeTape(convId){
+  if(!currentUserId) return;
+  database.ref(`conversations/${convId}/typing/${currentUserId}`).set(true);
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(()=>{
+    database.ref(`conversations/${convId}/typing/${currentUserId}`).set(false);
+  },1500);
+}
+
+// écoute typing (à mettre dans ouvrirConversation, juste après le listener de présence)
 function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎙️ Vocal':last.texte});}});}
 // ==== LIKES MAYNE ====
 function toggleLike(postId){
