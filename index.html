@@ -825,6 +825,7 @@ function chargerMessagerie(){
 }
 function ouvrirConversation(convId,nom){
   switchService('service-messagerie');
+  database.ref('conversations').off(); // <-- AJOUTE ÇA
   window.currentConvId = convId;
   const feed = document.getElementById('messagerie-feed');
   const parts = convId.split('_');
