@@ -432,7 +432,28 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 <div id="custom-prompt" class="modal-overlay"><div class="modal-box"><div id="custom-prompt-msg" class="modal-msg"></div><input id="custom-prompt-input" class="input-field" style="margin:12px 0;text-align:left"><div class="modal-btns"><button class="modal-btn btn-no" onclick="hidePrompt(false)">Annuler</button><button class="modal-btn btn-yes" onclick="hidePrompt(true)">OK</button></div></div></div>
 
 <script>
-const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec';
+const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; 
+async function envoyerPushOneSignal(userId, title, message){
+  const snap = await firebase.database().ref(`clients/${userId}/onesignal_id`).once('value');
+  const playerId = snap.val();
+  if(!playerId) return;
+  const cfg = await firebase.database().ref('config/onesignal').once('value');
+  const conf = cfg.val();
+  if(!conf) return;
+  fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + conf.key,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      app_id: conf.appId,
+      include_player_ids: [playerId],
+      headings: {fr: title},
+      contents: {fr: message}
+    })
+  });
+}
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
@@ -637,7 +658,13 @@ database.ref('.info/connected').on('value', s => {
   }
 });
       ecouterNotifLikes();
-      
+setTimeout(() => {
+  const playerId = window.AppInventor?.getWebViewString();
+  if (playerId && playerId.length > 20 && !playerId.startsWith('http') && !playerId.startsWith('CHAT_') && !playerId.startsWith('AUDIO')) {
+    firebase.database().ref('clients/' + currentUserId + '/onesignal_id').set(playerId);
+    if(window.AppInventor) window.AppInventor.setWebViewString('');
+  }
+}, 2500);ecouterNotifLikes();
     } else {
       showAlert('Numéro ou mot de passe incorrect');
     }
@@ -777,7 +804,14 @@ function chargerFeed(){
     snap.forEach(c=>{ chargerComments(c.key); listenLikes(c.key); });
   });
 }
-function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!txt)return;database.ref(`comments/${postId}`).push().set({authorId:currentUserId,authorNom:document.getElementById('user-name').innerText,texte:txt,createdAt:Date.now()});});}
+function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!txt)return;database.ref(`comments/${postId}`).push().set({authorId:currentUserId,authorNom:document.getElementById('user-name').innerText,texte:txt,createdAt:Date.now()}).then(()=>{
+  database.ref(`posts/${postId}/authorId`).once('value').then(p=>{
+    const authorId = p.val();
+    if(authorId!== currentUserId){
+      envoyerPushOneSignal(authorId, "Nouveau commentaire", document.getElementById('user-name').innerText + ": " + txt);
+    }
+  });
+});});}
 function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(3).on('value',s=>{let h='';s.forEach(c=>{const v=c.val();h+=`• <b>${v.authorNom}</b>: ${v.texte}<br>`});const el=document.getElementById(`comments-${postId}`);if(el)el.innerHTML=h;});}
 
 function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{showAlert('Message envoyé à '+destNom);switchService('service-messagerie');setTimeout(()=>ouvrirConversation(convId,destNom),500);});});}
@@ -945,6 +979,10 @@ function envoyerDirect(cid){
     vu:false,
     texte:t,
     createdAt:Date.now()
+  }).then(()=>{
+    const parts = cid.split('_');
+    const destId = parts[0]===currentUserId? parts[1] : parts[0];
+    envoyerPushOneSignal(destId, "Nouveau message", document.getElementById('user-name').innerText + ": " + t);
   });
   i.value='';
   database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
@@ -966,8 +1004,18 @@ function toggleLike(postId){
   if(!currentUserId) return showAlert('Connecte-toi');
   const ref = db.ref('likes/'+postId+'/'+currentUserId);
   ref.get().then(s => {
-    if(s.exists()) ref.remove();
-    else ref.set({ nom: document.getElementById('user-name').innerText, at: Date.now() });
+    if(s.exists()){
+      ref.remove();
+    } else {
+      ref.set({ nom: document.getElementById('user-name').innerText, at: Date.now() });
+      // ENVOI NOTIF
+      database.ref(`posts/${postId}/authorId`).once('value').then(p=>{
+        const authorId = p.val();
+        if(authorId!== currentUserId){
+          envoyerPushOneSignal(authorId, "Nouveau like ❤️", document.getElementById('user-name').innerText + " a aimé ta publication");
+        }
+      });
+    }
   });
 }
 function listenLikes(postId){
