@@ -433,20 +433,20 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 // --- NOTIFICATIONS ONESIGNAL ---
-const ONESIGNAL_URL = 'https://script.google.com/macros/s/AKfycbxsrzbK_-r72pwMrkrOHiQJPUlZ0grzN2PYl4b9U2DtRBSWqxbvY2GypkawR0R9EJSx/exec';
+const ONESIGNAL_URL = 'https://script.google.com/macros/s/AKfycbxgCqb4q0GoMuowtTDoQknkgOU17WUC2OTFYV_FZ_CCq7zQ2cS0UxknvjjIdg5tNm3A/exec';
 
-async function envoyerPushOneSignal(userId, title, message){
+async function envoyerPushOneSignal(playerId, titre, message) {
+  if (!playerId) return console.log('Pas de playerId');
+  console.log('PUSH vers', playerId);
   try {
-    const snap = await firebase.database().ref(`clients/${userId}/onesignal_id`).once('value');
-    const playerId = snap.val();
-    if(!playerId) return console.log('Pas de playerId pour', userId);
-    
     await fetch(ONESIGNAL_URL, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ playerId, title, message })
+      mode: 'no-cors', // <--- LA CLÉ
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId, title: titre, message })
     });
-  } catch(e){ console.error('Push error', e); }
+    console.log('fetch envoyé');
+  } catch(e) { console.error('push error', e); }
 }
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
