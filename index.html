@@ -435,18 +435,14 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 // --- NOTIFICATIONS ONESIGNAL ---
 const ONESIGNAL_URL = 'https://script.google.com/macros/s/AKfycbxgCqb4q0GoMuowtTDoQknkgOU17WUC2OTFYV_FZ_CCq7zQ2cS0UxknvjjIdg5tNm3A/exec';
 
-async function envoyerPushOneSignal(playerId, titre, message) {
-  if (!playerId) return console.log('Pas de playerId');
-  console.log('PUSH vers', playerId);
-  try {
-    await fetch(ONESIGNAL_URL, {
-      method: 'POST',
-      mode: 'no-cors', // <--- LA CLÉ
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ playerId, title: titre, message })
-    });
-    console.log('fetch envoyé');
-  } catch(e) { console.error('push error', e); }
+function envoyerPushOneSignal(playerId, titre, message){
+  if(!playerId) return;
+  const data = JSON.stringify({playerId:playerId, title:titre, message:message});
+  // envoie à Kodular
+  if(window.AppInventor){
+    window.AppInventor.setWebViewString('PUSH|'+data);
+  }
+  console.log('Push demandé à Kodular', data);
 }
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
