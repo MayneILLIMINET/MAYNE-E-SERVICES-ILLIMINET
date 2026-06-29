@@ -432,33 +432,21 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 <div id="custom-prompt" class="modal-overlay"><div class="modal-box"><div id="custom-prompt-msg" class="modal-msg"></div><input id="custom-prompt-input" class="input-field" style="margin:12px 0;text-align:left"><div class="modal-btns"><button class="modal-btn btn-no" onclick="hidePrompt(false)">Annuler</button><button class="modal-btn btn-yes" onclick="hidePrompt(true)">OK</button></div></div></div>
 
 <script>
-const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; 
+// --- NOTIFICATIONS ONESIGNAL ---
+const ONESIGNAL_URL = 'https://script.google.com/macros/s/AKfycbz2SGRFOIoOWK2QsrhPrJxNK88-BvU/exec';
+
 async function envoyerPushOneSignal(userId, title, message){
   try {
     const snap = await firebase.database().ref(`clients/${userId}/onesignal_id`).once('value');
     const playerId = snap.val();
-    if(!playerId) return;
-    const cfg = await firebase.database().ref('config/onesignal').once('value');
-    const conf = cfg.val();
-    if(!conf || !conf.key) return;
+    if(!playerId) return console.log('Pas de playerId pour', userId);
     
-    // OneSignal v2 utilise Bearer, v1 utilise Basic
-    const auth = conf.key.startsWith('os_v2') ? 'Bearer ' + conf.key : 'Basic ' + conf.key;
-    
-    fetch('https://onesignal.com/api/v1/notifications', {
+    await fetch(ONESIGNAL_URL, {
       method: 'POST',
-      headers: {
-        'Authorization': auth,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        app_id: conf.appId,
-        include_player_ids: [playerId],
-        headings: {en: title, fr: title},
-        contents: {en: message, fr: message}
-      })
-    }).catch(e=>console.log('Push error',e));
-  } catch(e){}
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ playerId, title, message })
+    });
+  } catch(e){ console.error('Push error', e); }
 }
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
