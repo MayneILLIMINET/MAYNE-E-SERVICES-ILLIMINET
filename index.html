@@ -827,14 +827,32 @@ function chargerFeed(){
     snap.forEach(c=>{ chargerComments(c.key); listenLikes(c.key); });
   });
 }
-function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!txt)return;database.ref(`comments/${postId}`).push().set({authorId:currentUserId,authorNom:document.getElementById('user-name').innerText,texte:txt,createdAt:Date.now()}).then(()=>{
-  database.ref(`posts/${postId}/authorId`).once('value').then(p=>{
-    const authorId = p.val();
-    if(authorId!== currentUserId){
-      envoyerNotificationPushOneSignal(authorId, "💬 Nouveau commentaire", `${document.getElementById('user-name').innerText} a commenté : "${txt}"`, postData.image || "");
-    }
+function commenterPost(postId){
+  showInput('Ton commentaire :', function(txt){
+    if(!txt) return;
+    database.ref(`comments/${postId}`).push().set({
+      authorId: currentUserId,
+      authorNom: document.getElementById('user-name').innerText,
+      texte: txt,
+      createdAt: Date.now()
+    }).then(() => {
+      database.ref(`posts/${postId}`).once('value').then(snap => {
+        const postData = snap.val();
+        if(!postData) return;
+        
+        // COLLAGE DIRECT ICI
+        if(postData.authorId !== currentUserId){
+          envoyerNotificationPushOneSignal(
+            postData.authorId, 
+            "💬 Nouveau commentaire", 
+            `${document.getElementById('user-name').innerText} a commenté : "${txt}"`, 
+            postData.image || ""
+          );
+        }
+      });
+    });
   });
-});});}
+}
 
 function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(3).on('value',s=>{let h='';s.forEach(c=>{const v=c.val();h+=`• <b>${v.authorNom}</b>: ${v.texte}<br>`});const el=document.getElementById(`comments-${postId}`);if(el)el.innerHTML=h;});}
 
@@ -1005,7 +1023,15 @@ function envoyerDirect(cid){
     createdAt:Date.now()
   }).then(()=>{
     const parts = cid.split('_');
-    const destId = parts[0]===currentUserId? parts[1] : parts[0];envoyerNotificationPushOneSignal(destId, "💬 Nouveau message", `${document.getElementById('user-name').innerText} : ${t}`);
+    const destId = parts[0]===currentUserId? parts[1] : parts[0];
+    
+    // COLLAGE DIRECT ICI
+    envoyerNotificationPushOneSignal(
+      destId, 
+      "💬 Nouveau message", 
+      `${document.getElementById('user-name').innerText} : ${t}`
+    );
+  });
   i.value='';
   database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
 }
@@ -1029,12 +1055,21 @@ function toggleLike(postId){
     if(s.exists()){
       ref.remove();
     } else {
-      ref.set({ nom: document.getElementById('user-name').innerText, at: Date.now() });
-      // ENVOI NOTIF
-      database.ref(`posts/${postId}/authorId`).once('value').then(p=>{
-        const authorId = p.val();
-        if(authorId!== currentUserId){
-          envoyerNotificationPushOneSignal(authorId, "❤️ Nouveau j'aime", `${monNom} a aimé votre publication.`, postData.image || "");
+      const monNom = document.getElementById('user-name').innerText;
+      ref.set({ nom: monNom, at: Date.now() });
+      
+      database.ref(`posts/${postId}`).once('value').then(p=>{
+        const postData = p.val();
+        if(!postData) return;
+        
+        // COLLAGE DIRECT ICI
+        if(postData.authorId !== currentUserId){
+          envoyerNotificationPushOneSignal(
+            postData.authorId, 
+            "❤️ Nouveau j'aime", 
+            `${monNom} a aimé votre publication.`,
+            postData.image || ""
+          );
         }
       });
     }
