@@ -463,29 +463,27 @@ async function envoyerNotificationPushOneSignal(idDestinataire, titre, message, 
       payload.ios_attachments = { "id1": urlImageCloudinary };
     }
 
-   // Remplace ceci :
-fetch('https://onesignal.com', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Basic ' + conf.key,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(payload)
-});
+    // Envoi de la requête à OneSignal
+    fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + conf.key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => console.log("Succès OneSignal:", data))
+    .catch(error => console.error("Erreur API OneSignal:", error));
 
-// Par ceci :
-fetch('https://onesignal.com/api/v1/notifications', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Basic ' + conf.key,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(payload)
-})
-.then(response => response.json())
-.then(data => console.log("Succès OneSignal:", data))
-.catch(error => console.error("Erreur OneSignal:", error));
+  } catch (erreur) {
+    // VOICI LE BLOC CATCH QUI MANQUAIT ET QUI FAISAIT PLANTER LE SITE
+    console.error("Erreur générale dans l'envoi de la notification:", erreur);
+  } 
+}
+
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
+
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -622,93 +620,105 @@ function executerConnexion(){
   const pinSaisiHache = CryptoJS.MD5(p).toString();
 
   database.ref('clients/'+i).once('value').then(s=>{
-    // 2. Comparaison avec le PIN haché stocké dans Firebase
-    if(s.exists() && String(s.val().pin) === pinSaisiHache){
-      currentUserId = i;
+    if(s.exists()) {
+      const dbPin = String(s.val().pin);
       
-      // 3. Écoute en temps réel des données du client (Solde, Bonus, Épargne)
-      database.ref('clients/'+i).on('value', v=>{
-        const data = v.val() || {};
-        currentUserSolde = data.solde || 0;
-        const commission = data.commission || 0;
-        const recompense = data.recompense || 0;
-        currentUserRecompense = recompense; 
+      // 2. Comparaison avec le PIN haché OU le PIN en texte clair (pour la compatibilité des anciens comptes)
+      if(dbPin === pinSaisiHache || dbPin === p) {
+        currentUserId = i;
         
-        document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
-        document.getElementById('logged-out-zone').style.display = 'none';
-        document.getElementById('logged-in-zone').style.display = 'block';
-        document.getElementById('user-name').innerText = data.nom;
-        document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
-        document.getElementById('user-commission').innerText = commission.toLocaleString('fr-FR');
-        document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
-      });
+        // Optionnel mais recommandé : Mettre à jour l'ancien mot de passe en texte clair vers la version hachée
+        if(dbPin === p) {
+           database.ref('clients/'+i).update({ pin: pinSaisiHache });
+        }
+        
+        // 3. Écoute en temps réel des données du client (Solde, Bonus, Épargne)
+        database.ref('clients/'+i).on('value', v=>{
+          const data = v.val() || {};
+          currentUserSolde = data.solde || 0;
+          const commission = data.commission || 0;
+          const recompense = data.recompense || 0;
+          currentUserRecompense = recompense; 
+          
+          document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
+          document.getElementById('logged-out-zone').style.display = 'none';
+          document.getElementById('logged-in-zone').style.display = 'block';
+          document.getElementById('user-name').innerText = data.nom;
+          document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+          document.getElementById('user-commission').innerText = commission.toLocaleString('fr-FR');
+          document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
+        });
 
-      // 4. Chargement de tous tes historiques (Code original conservé)
-      const listen = (path, el, fmt) => {
-        database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value', sh => {
-          const hb = document.getElementById(el);
-          if(!hb) return;
-          if(sh.exists()){
-            let h = '';
-            sh.forEach(c => {
-              const v = c.val();
-              const statut = (v.statut || 'en cours').toLowerCase().trim();
-              let couleur = '#ffbb00';
-              if(statut.includes('valid')) couleur = '#28a745';
-              else if(statut.includes('annul')) couleur = '#dc3545';
-              h += `• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut || 'en cours'}</span><br>`;
-            });
-            hb.innerHTML = h;
-          } else {
-            hb.innerHTML = 'Aucun';
+        // 4. Chargement de tous tes historiques
+        const listen = (path, el, fmt) => {
+          database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value', sh => {
+            const hb = document.getElementById(el);
+            if(!hb) return;
+            if(sh.exists()){
+              let h = '';
+              sh.forEach(c => {
+                const v = c.val();
+                const statut = (v.statut || 'en cours').toLowerCase().trim();
+                let couleur = '#ffbb00';
+                if(statut.includes('valid')) couleur = '#28a745';
+                else if(statut.includes('annul')) couleur = '#dc3545';
+                h += `• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut || 'en cours'}</span><br>`;
+              });
+              hb.innerHTML = h;
+            } else {
+              hb.innerHTML = 'Aucun';
+            }
+          });
+        };
+
+        listen('commandes_marketplace', 'market-historique', v => `${v.produit} (${v.total}F)`);
+        listen('commandes_depots', 'depot-historique', v => `${v.montant}F ${v.reseau}`);
+        listen('commandes_retraits', 'retrait-historique', v => `${v.montant}F vers ${v.numero_reception}`);
+        listen('commandes_1xbet', 'xbet-historique', v => `${v.type || v.action} ${v.montant}F`);
+        listen('commandes_factures', 'facture-historique', v => `${v.type || v.fournisseur} ${v.montant}F`);
+        listen('commandes_forfaits', 'forfait-historique', v => `${v.motif} ${v.montant}F`);
+        listen('commandes_immobilier', 'immo-historique', v => `${v.ville} ${v.montant || v.montant_visite}F`);
+        listen('commandes_epargne', 'epargne-historique', v => `${v.compteur} ${v.montant}F`);
+        listen('commandes_livraison', 'livraison-historique', v => `${v.ville} ${v.montant || v.montant_course}F`);
+        listen('commandes_echanges', 'echange-historique', v => `${v.donne}→${v.recoit} ${v.montant}`);
+        listen('commandes_p2p_p2m', 'p2p-historique', v => `${v.montant}F vers ${v.numero_receveur || v.numero}`);
+        
+        chargerFeed();
+        chargerMessagerie();
+        activerNotifications();
+        
+        // présence
+        const statusRef = database.ref('clients/'+currentUserId+'/status');
+        database.ref('.info/connected').on('value', s => {
+          if(s.val()){
+            statusRef.set({online:true, last:Date.now()});
+            statusRef.onDisconnect().set({online:false, last:Date.now()});
           }
         });
-      };
-
-      listen('commandes_marketplace', 'market-historique', v => `${v.produit} (${v.total}F)`);
-      listen('commandes_depots', 'depot-historique', v => `${v.montant}F ${v.reseau}`);
-      listen('commandes_retraits', 'retrait-historique', v => `${v.montant}F vers ${v.numero_reception}`);
-      listen('commandes_1xbet', 'xbet-historique', v => `${v.type || v.action} ${v.montant}F`);
-      listen('commandes_factures', 'facture-historique', v => `${v.type || v.fournisseur} ${v.montant}F`);
-      listen('commandes_forfaits', 'forfait-historique', v => `${v.motif} ${v.montant}F`);
-      listen('commandes_immobilier', 'immo-historique', v => `${v.ville} ${v.montant || v.montant_visite}F`);
-      listen('commandes_epargne', 'epargne-historique', v => `${v.compteur} ${v.montant}F`);
-      listen('commandes_livraison', 'livraison-historique', v => `${v.ville} ${v.montant || v.montant_course}F`);
-      listen('commandes_echanges', 'echange-historique', v => `${v.donne}→${v.recoit} ${v.montant}`);
-      listen('commandes_p2p_p2m', 'p2p-historique', v => `${v.montant}F vers ${v.numero_receveur || v.numero}`);
-      
-      chargerFeed();
-      chargerMessagerie();
-      activerNotifications();
-// présence
-const statusRef = database.ref('clients/'+currentUserId+'/status');
-database.ref('.info/connected').on('value', s => {
-  if(s.val()){
-    statusRef.set({online:true, last:Date.now()});
-    statusRef.onDisconnect().set({online:false, last:Date.now()});
-  }
-});
-      ecouterNotifLikes();
-setTimeout(() => {
-  const rawString = window.AppInventor?.getWebViewString();
-  console.log("Texte reçu de l'APK :", rawString); 
-  
-  if (rawString && rawString.length > 20 && !rawString.startsWith('http') && !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
-    
-    // NOUVEAU : On nettoie le préfixe "PID_" si Kodular l'a ajouté
-    const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
-    
-    database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
-      .then(() => {
-        console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
-        if(window.AppInventor) window.AppInventor.setWebViewString('');
-      })
-      .catch((err) => {
-        console.error("Erreur d'écriture du token :", err);
-      });
-  }
-}, 5000);
-ecouterNotifLikes();
+        
+        ecouterNotifLikes();
+        
+        setTimeout(() => {
+          const rawString = window.AppInventor?.getWebViewString();
+          console.log("Texte reçu de l'APK :", rawString); 
+          
+          if (rawString && rawString.length > 20 && !rawString.startsWith('http') && !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
+            const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
+            
+            database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
+              .then(() => {
+                console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
+                if(window.AppInventor) window.AppInventor.setWebViewString('');
+              })
+              .catch((err) => {
+                console.error("Erreur d'écriture du token :", err);
+              });
+          }
+        }, 5000);
+        
+      } else {
+        showAlert('Numéro ou mot de passe incorrect');
+      }
     } else {
       showAlert('Numéro ou mot de passe incorrect');
     }
