@@ -463,20 +463,28 @@ async function envoyerNotificationPushOneSignal(idDestinataire, titre, message, 
       payload.ios_attachments = { "id1": urlImageCloudinary };
     }
 
-    // 4. Envoi direct à l'API officielle de OneSignal
-    fetch('https://onesignal.com', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + conf.key,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+   // Remplace ceci :
+fetch('https://onesignal.com', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Basic ' + conf.key,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(payload)
+});
 
-  } catch (error) {
-    console.error("Erreur d'envoi OneSignal:", error);
-  }
-}
+// Par ceci :
+fetch('https://onesignal.com/api/v1/notifications', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Basic ' + conf.key,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(payload)
+})
+.then(response => response.json())
+.then(data => console.log("Succès OneSignal:", data))
+.catch(error => console.error("Erreur OneSignal:", error));
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
@@ -682,16 +690,17 @@ database.ref('.info/connected').on('value', s => {
 });
       ecouterNotifLikes();
 setTimeout(() => {
-  const playerId = window.AppInventor?.getWebViewString();
-  console.log("Token reçu de l'APK :", playerId); // Pour le débogage
+  const rawString = window.AppInventor?.getWebViewString();
+  console.log("Texte reçu de l'APK :", rawString); 
   
-  // Validation stricte du format du PlayerID OneSignal
-  if (playerId && playerId.length > 20 && !playerId.startsWith('http') && !playerId.startsWith('CHAT_') && !playerId.startsWith('AUDIO')) {
+  if (rawString && rawString.length > 20 && !rawString.startsWith('http') && !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
     
-    // CORRECTION : .set() force l'écrasement complet de l'ancienne valeur en base de données
-    database.ref('clients/' + currentUserId + '/onesignal_id').set(playerId)
+    // NOUVEAU : On nettoie le préfixe "PID_" si Kodular l'a ajouté
+    const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
+    
+    database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
       .then(() => {
-        console.log("onesignal_id mis à jour avec succès dans Firebase !");
+        console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
         if(window.AppInventor) window.AppInventor.setWebViewString('');
       })
       .catch((err) => {
