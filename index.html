@@ -433,26 +433,49 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; 
-async function envoyerPushOneSignal(userId, title, message){
-  const snap = await firebase.database().ref(`clients/${userId}/onesignal_id`).once('value');
-  const playerId = snap.val();
-  if(!playerId) return;
-  const cfg = await firebase.database().ref('config/onesignal').once('value');
-  const conf = cfg.val();
-  if(!conf) return;
-  fetch('https://onesignal.com/api/v1/notifications', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Basic ' + conf.key,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
+async function envoyerNotificationPushOneSignal(idDestinataire, titre, message, urlImageCloudinary = "") {
+  if (!idDestinataire || idDestinataire === currentUserId) return;
+
+  try {
+    // 1. On va chercher le Token OneSignal du destinataire dans votre Firebase Realtime Database
+    const snap = await database.ref(`clients/${idDestinataire}/onesignal_id`).once('value');
+    const targetPlayerId = snap.val();
+    
+    // Si l'utilisateur n'a pas de Token enregistré (pas connecté sur l'app), on arrête
+    if (!targetPlayerId) return;
+
+    // 2. On récupère vos clés de configuration OneSignal stockées dans votre Firebase
+    const cfg = await database.ref('config/onesignal').once('value');
+    const conf = cfg.val();
+    if (!conf || !conf.key || !conf.appId) return;
+
+    // 3. Préparation du colis pour OneSignal
+    const payload = {
       app_id: conf.appId,
-      include_player_ids: [playerId],
-      headings: {fr: title},
-      contents: {fr: message}
-    })
-  });
+      include_player_ids: [targetPlayerId], // Cible l'appareil du destinataire
+      headings: { fr: titre },
+      contents: { fr: message }
+    };
+
+    // Si une image Cloudinary est fournie (Photo Chat ou Image Market), on l'ajoute à la Push
+    if (urlImageCloudinary && urlImageCloudinary.startsWith('http')) {
+      payload.big_picture = urlImageCloudinary;
+      payload.ios_attachments = { "id1": urlImageCloudinary };
+    }
+
+    // 4. Envoi direct à l'API officielle de OneSignal
+    fetch('https://onesignal.com', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + conf.key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+  } catch (error) {
+    console.error("Erreur d'envoi OneSignal:", error);
+  }
 }
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
@@ -808,10 +831,11 @@ function commenterPost(postId){showInput('Ton commentaire :',function(txt){if(!t
   database.ref(`posts/${postId}/authorId`).once('value').then(p=>{
     const authorId = p.val();
     if(authorId!== currentUserId){
-      envoyerPushOneSignal(authorId, "Nouveau commentaire", document.getElementById('user-name').innerText + ": " + txt);
+      envoyerNotificationPushOneSignal(authorId, "💬 Nouveau commentaire", `${document.getElementById('user-name').innerText} a commenté : "${txt}"`, postData.image || "");
     }
   });
 });});}
+
 function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(3).on('value',s=>{let h='';s.forEach(c=>{const v=c.val();h+=`• <b>${v.authorNom}</b>: ${v.texte}<br>`});const el=document.getElementById(`comments-${postId}`);if(el)el.innerHTML=h;});}
 
 function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{showAlert('Message envoyé à '+destNom);switchService('service-messagerie');setTimeout(()=>ouvrirConversation(convId,destNom),500);});});}
@@ -981,9 +1005,7 @@ function envoyerDirect(cid){
     createdAt:Date.now()
   }).then(()=>{
     const parts = cid.split('_');
-    const destId = parts[0]===currentUserId? parts[1] : parts[0];
-    envoyerPushOneSignal(destId, "Nouveau message", document.getElementById('user-name').innerText + ": " + t);
-  });
+    const destId = parts[0]===currentUserId? parts[1] : parts[0];envoyerNotificationPushOneSignal(destId, "💬 Nouveau message", `${document.getElementById('user-name').innerText} : ${t}`);
   i.value='';
   database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
 }
@@ -1012,7 +1034,7 @@ function toggleLike(postId){
       database.ref(`posts/${postId}/authorId`).once('value').then(p=>{
         const authorId = p.val();
         if(authorId!== currentUserId){
-          envoyerPushOneSignal(authorId, "Nouveau like ❤️", document.getElementById('user-name').innerText + " a aimé ta publication");
+          envoyerNotificationPushOneSignal(authorId, "❤️ Nouveau j'aime", `${monNom} a aimé votre publication.`, postData.image || "");
         }
       });
     }
@@ -1137,6 +1159,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
 
