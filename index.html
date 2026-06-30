@@ -103,8 +103,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 </style>
 </head>
 <body>
-<button onclick="window.AppInventor.setWebViewString('PUSH|{\"playerId\":\"8cd8a42b-e704-4feb-8931-f762af4dd174\",\"title\":\"TEST\",\"message\":\"depuis bouton\"}')" 
-style="position:fixed;top:5px;left:5px;z-index:99999;background:blue;color:white;padding:10px">TEST PUSH</button>
+
 <div class="app-container">
 <button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:8px;z-index:9999;background:#000;color:#000;border:1px solid #fff;padding:5px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.4);"></div>
@@ -437,13 +436,8 @@ style="position:fixed;top:5px;left:5px;z-index:99999;background:blue;color:white
 const ONESIGNAL_URL = 'https://script.google.com/macros/s/AKfycbxgCqb4q0GoMuowtTDoQknkgOU17WUC2OTFYV_FZ_CCq7zQ2cS0UxknvjjIdg5tNm3A/exec';
 
 function envoyerPushOneSignal(playerId, titre, message){
-  if(!playerId) return;
-  const data = JSON.stringify({playerId:playerId, title:titre, message:message});
-  // envoie à Kodular
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('PUSH|'+data);
-  }
-  console.log('Push demandé à Kodular', data);
+  const data = encodeURIComponent(JSON.stringify({playerId, title:titre, message}));
+  window.location.href = 'https://mayne.push/' + data;
 }
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
