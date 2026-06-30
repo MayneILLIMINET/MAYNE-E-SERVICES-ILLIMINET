@@ -683,11 +683,23 @@ database.ref('.info/connected').on('value', s => {
       ecouterNotifLikes();
 setTimeout(() => {
   const playerId = window.AppInventor?.getWebViewString();
+  console.log("Token reçu de l'APK :", playerId); // Pour le débogage
+  
+  // Validation stricte du format du PlayerID OneSignal
   if (playerId && playerId.length > 20 && !playerId.startsWith('http') && !playerId.startsWith('CHAT_') && !playerId.startsWith('AUDIO')) {
-    firebase.database().ref('clients/' + currentUserId + '/onesignal_id').set(playerId);
-    if(window.AppInventor) window.AppInventor.setWebViewString('');
+    
+    // CORRECTION : .set() force l'écrasement complet de l'ancienne valeur en base de données
+    database.ref('clients/' + currentUserId + '/onesignal_id').set(playerId)
+      .then(() => {
+        console.log("onesignal_id mis à jour avec succès dans Firebase !");
+        if(window.AppInventor) window.AppInventor.setWebViewString('');
+      })
+      .catch((err) => {
+        console.error("Erreur d'écriture du token :", err);
+      });
   }
-}, 2500);ecouterNotifLikes();
+}, 5000);
+ecouterNotifLikes();
     } else {
       showAlert('Numéro ou mot de passe incorrect');
     }
