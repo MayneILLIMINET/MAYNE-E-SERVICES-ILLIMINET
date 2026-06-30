@@ -436,8 +436,14 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 const ONESIGNAL_URL = 'https://script.google.com/macros/s/AKfycbxgCqb4q0GoMuowtTDoQknkgOU17WUC2OTFYV_FZ_CCq7zQ2cS0UxknvjjIdg5tNm3A/exec';
 
 function envoyerPushOneSignal(playerId, titre, message){
-  const data = encodeURIComponent(JSON.stringify({playerId, title:titre, message}));
-  window.location.href = 'https://mayne.push/' + data;
+  if(!playerId) return;
+  var payload = JSON.stringify({playerId:playerId, title:titre, message:message});
+  // Kodular utilise window.Kodular, pas window.Kodular
+  if(window.Kodular && window.Kodular.setWebViewString){
+    window.Kodular.setWebViewString('PUSH|' + payload);
+  } else if(window.Kodular){
+    window.Kodular.setWebViewString('PUSH|' + payload);
+  }
 }
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
