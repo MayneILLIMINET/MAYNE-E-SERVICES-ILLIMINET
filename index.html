@@ -1198,7 +1198,10 @@ function executerEchange(){const d=document.getElementById('echange-donne').valu
 
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 </script>
-
+<button onclick="activerNotifications()" 
+style="position:fixed;bottom:20px;right:20px;z-index:9999;background:gold;padding:10px;border-radius:8px;">
+🔔 Activer notifs
+</button>
 </body>
 </html>
 
