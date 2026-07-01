@@ -8,13 +8,29 @@
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1"; // l'appId seul, pas la clé REST
 
-function initOneSignalWeb(){
-  OneSignalDeferred.push(async function(OneSignal){
-    await OneSignal.init({ appId: ONESIGNAL_APP_ID, allowLocalhostAsSecureOrigin: true });
-    if(OneSignal.Notifications.permission!== 'granted'){
-      await OneSignal.Notifications.requestPermission();
-    }
+async function initOneSignalWeb(){
+  if(!window.OneSignal) return;
+  await OneSignal.init({
+    appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
+    serviceWorkerPath: "/MAYNE-E-SERVICI/OneSignalSDKWorker.js",
+    serviceWorkerParam: { scope: "/MAYNE-E-SERVICI/" },
+    allowLocalhostAsSecureOrigin: true
   });
+  // ne demande PAS tout seul, Chrome bloque
+  console.log("OneSignal prêt");
+}
+
+// à appeler APRÈS connexion, sur un clic
+async function activerNotifications(){
+  const perm = await OneSignal.Notifications.permission;
+  if(perm !== 'granted'){
+    await OneSignal.Notifications.requestPermission();
+  }
+  const id = await OneSignal.User.PushSubscription.id;
+  if(id && currentUserId){
+    database.ref(`clients/${currentUserId}/onesignal_id`).set(id);
+    console.log("onesignal_id sauvé:", id);
+  }
 }
 </script>
 
