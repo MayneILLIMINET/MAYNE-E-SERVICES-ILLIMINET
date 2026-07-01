@@ -3,6 +3,20 @@
 <head>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1"; // l'appId seul, pas la clé REST
+
+function initOneSignalWeb(){
+  OneSignalDeferred.push(async function(OneSignal){
+    await OneSignal.init({ appId: ONESIGNAL_APP_ID, allowLocalhostAsSecureOrigin: true });
+    if(OneSignal.Notifications.permission!== 'granted'){
+      await OneSignal.Notifications.requestPermission();
+    }
+  });
+}
+</script>
 
 <script>
 // Playables SDK v1.0.0
@@ -433,53 +447,15 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; 
-async function envoyerNotificationPushOneSignal(idDestinataire, titre, message, urlImageCloudinary = "") {
-  if (!idDestinataire || idDestinataire === currentUserId) return;
-
-  try {
-    // 1. On va chercher le Token OneSignal du destinataire dans votre Firebase Realtime Database
-    const snap = await database.ref(`clients/${idDestinataire}/onesignal_id`).once('value');
-    const targetPlayerId = snap.val();
-    
-    // Si l'utilisateur n'a pas de Token enregistré (pas connecté sur l'app), on arrête
-    if (!targetPlayerId) return;
-
-    // 2. On récupère vos clés de configuration OneSignal stockées dans votre Firebase
-    const cfg = await database.ref('config/onesignal').once('value');
-    const conf = cfg.val();
-    if (!conf || !conf.key || !conf.appId) return;
-
-    // 3. Préparation du colis pour OneSignal
-    const payload = {
-      app_id: conf.appId,
-      include_player_ids: [targetPlayerId], // Cible l'appareil du destinataire
-      headings: { fr: titre },
-      contents: { fr: message }
-    };
-
-    // Si une image Cloudinary est fournie (Photo Chat ou Image Market), on l'ajoute à la Push
-    if (urlImageCloudinary && urlImageCloudinary.startsWith('http')) {
-      payload.big_picture = urlImageCloudinary;
-      payload.ios_attachments = { "id1": urlImageCloudinary };
-    }
-
-    // Envoi de la requête à OneSignal
-    fetch('https://onesignal.com/api/v1/notifications', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + conf.key,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => console.log("Succès OneSignal:", data))
-    .catch(error => console.error("Erreur API OneSignal:", error));
-
-  } catch (erreur) {
-    // VOICI LE BLOC CATCH QUI MANQUAIT ET QUI FAISAIT PLANTER LE SITE
-    console.error("Erreur générale dans l'envoi de la notification:", erreur);
-  } 
+async function pushJS(destId, titre, message, imageUrl=""){
+  if(!destId || destId === currentUserId) return;
+  const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwqK_3E67VSiZWcqdKR9jswWrczb2_sCgITvYn485s5uihdZExClH5L8SkS_xpldhGJ/exec';
+  fetch(ONESIGNAL_WEBHOOK,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({destId, titre, message, imageUrl})
+  });
 }
 
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
@@ -558,7 +534,7 @@ function recordAudioChat(){
   }
 }
 function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
-window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='dark'){document.querySelector('.app-container').classList.add('dark-mode');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText='☀️';}});
+window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='dark'){document.querySelector('.app-container').classList.add('dark-mode');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText='☀️';}initOneSignalWeb();});
 
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
