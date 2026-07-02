@@ -10,7 +10,6 @@
     await OneSignal.init({
       appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
       serviceWorkerParam: { scope: '/MAYNE-E-SERVICES-ILLIMINET/' },
-      serviceWorkerPath: 'MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js',
       allowLocalhostAsSecureOrigin: true,
     });
     console.log('OneSignal prêt');
@@ -18,16 +17,21 @@
 
   const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
   
-  async function activerNotifications() {
-    await OneSignal.Notifications.requestPermission();
-    const permission = await OneSignal.Notifications.permission;
-    if (permission) {
-      await OneSignal.login("user_" + Date.now());
-      alert('✅ Notifications activées !');
-    } else {
-      alert('❌ Permission refusée');
-    }
+ async function activerNotifications() {
+  const OS = window.OneSignal; // <-- important
+  if (!OS) return alert('OneSignal pas encore prêt, recharge la page');
+  
+  console.log('Demande permission...');
+  const permission = await OS.Notifications.requestPermission();
+  
+  console.log('Permission:', permission);
+  if (permission) {
+    await OS.login("user_" + Date.now());
+    alert('✅ Notifications activées !');
+  } else {
+    alert('❌ Permission refusée - clique le cadenas en haut > Notifications > Autoriser');
   }
+} 
 </script>
 
 <script>
@@ -1079,7 +1083,6 @@ function jeTape(convId){
 }
 
 // écoute typing (à mettre dans ouvrirConversation, juste après le listener de présence)
-function activerNotifications(){if('Notification' in window && Notification.permission!=='granted') Notification.requestPermission();database.ref('conversations').on('child_changed',s=>{const id=s.key;if(!id.includes(currentUserId))return;const msgs=s.val().messages;if(!msgs)return;const last=Object.values(msgs).sort((a,b)=>b.createdAt-a.lastCreatedAt)[0]||Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt)[0];if(last&&last.senderId!==currentUserId&&Notification.permission==='granted'){new Notification(last.senderNom,{body:last.type==='image'?'📷 Photo':last.type==='audio'?'🎙️ Vocal':last.texte});}});}
 // ==== LIKES MAYNE ====
 function toggleLike(postId){
   if(!currentUserId) return showAlert('Connecte-toi');
