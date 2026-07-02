@@ -18,7 +18,7 @@
   const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
   
  async function activerNotifications() {
-  const OS = window.OneSignal; // <-- important
+  const OS = window.OneSignal;
   if (!OS) return alert('OneSignal pas encore prêt, recharge la page');
   
   console.log('Demande permission...');
@@ -26,12 +26,12 @@
   
   console.log('Permission:', permission);
   if (permission) {
-    await OS.login(currentUserId);
+    console.log('Permission OK');
     alert('✅ Notifications activées !');
   } else {
     alert('❌ Permission refusée - clique le cadenas en haut > Notifications > Autoriser');
   }
-} 
+}
 </script>
 
 <script>
@@ -620,6 +620,14 @@ function executerConnexion(){
       // 2. Comparaison avec le PIN haché OU le PIN en texte clair (pour la compatibilité des anciens comptes)
       if(dbPin === pinSaisiHache || dbPin === p) {
         currentUserId = i;
+// WEB : lie le numéro à OneSignal
+if (!window.AppInventor) {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.login(currentUserId);
+    console.log('OneSignal login:', currentUserId);
+  });
+}
         
         // Optionnel mais recommandé : Mettre à jour l'ancien mot de passe en texte clair vers la version hachée
         if(dbPin === p) {
@@ -690,25 +698,30 @@ function executerConnexion(){
           }
         });
         
-        ecouterNotifLikes();
-        
-        setTimeout(() => {
-          const rawString = window.AppInventor?.getWebViewString();
-          console.log("Texte reçu de l'APK :", rawString); 
-          
-          if (rawString && rawString.length > 20 && !rawString.startsWith('http') && !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
-            const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
-            
-            database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
-              .then(() => {
-                console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
-                if(window.AppInventor) window.AppInventor.setWebViewString('');
-              })
-              .catch((err) => {
-                console.error("Erreur d'écriture du token :", err);
-              });
-          }
-        }, 5000);
+       ecouterNotifLikes();
+
+setTimeout(() => {
+  // PROTÉGÉ : ne tourne QUE dans l'APK
+  if (!window.AppInventor) return;
+
+  const rawString = window.AppInventor.getWebViewString();
+  console.log("Texte reçu de l'APK :", rawString);
+
+  if (rawString && rawString.length > 20 && !rawString.startsWith('http') && 
+      !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
+    
+    const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
+
+    database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
+      .then(() => {
+        console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
+        window.AppInventor.setWebViewString("");
+      })
+      .catch((err) => {
+        console.error("Erreur d'écriture du token :", err);
+      });
+  }
+}, 5000);
         
       } else {
         showAlert('Numéro ou mot de passe incorrect');
