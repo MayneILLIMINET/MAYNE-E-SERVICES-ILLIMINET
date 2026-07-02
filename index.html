@@ -8,28 +8,35 @@
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1"; // l'appId seul, pas la clé REST
 
-async function initOneSignalWeb(){
-  if(!window.OneSignal) return;
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
   await OneSignal.init({
     appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
-    serviceWorkerPath: "/MAYNE-E-SERVICI/OneSignalSDKWorker.js",
-    serviceWorkerParam: { scope: "/MAYNE-E-SERVICI/" },
+    serviceWorkerPath: "/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js",
+    serviceWorkerParam: { scope: "/MAYNE-E-SERVICES-ILLIMINET/" },
     allowLocalhostAsSecureOrigin: true
   });
-  // ne demande PAS tout seul, Chrome bloque
   console.log("OneSignal prêt");
-}
+});
+
 
 // à appeler APRÈS connexion, sur un clic
 async function activerNotifications(){
-  const perm = await OneSignal.Notifications.permission;
-  if(perm !== 'granted'){
+  try {
+    console.log("clic notif");
+    if(!window.OneSignal){ alert("OneSignal pas chargé"); return; }
     await OneSignal.Notifications.requestPermission();
-  }
-  const id = await OneSignal.User.PushSubscription.id;
-  if(id && currentUserId){
-    database.ref(`clients/${currentUserId}/onesignal_id`).set(id);
-    console.log("onesignal_id sauvé:", id);
+    const id = await OneSignal.User.PushSubscription.id;
+    console.log("ID:", id);
+    if(id && currentUserId){
+      await database.ref(`clients/${currentUserId}/onesignal_id`).set(id);
+      alert("✅ Notifications activées ! ID sauvé");
+    } else {
+      alert("Pas d'ID - vérifie la permission");
+    }
+  } catch(e){
+    alert("Erreur: "+e.message);
+    console.error(e);
   }
 }
 </script>
@@ -69,7 +76,8 @@ db = database; // pour que toggleLike et listenLikes marchent aussi
 <style>
 body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
 .app-container{width:100%;max-width:450px;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#0000ff;border:2px solid #fff;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
-.header-actions{display:flex;justify-content:flex-end;gap:5px;margin-bottom:10px}
+.header-actions{display:flex;justify-content:flex-end;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.btn-action-top{padding:5px 6px;font-size:10px}
 .btn-action-top{background:#ffeb3b;color:#000;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
 .btn-action-top.retrait{background:#e67e22;color:#fff}
 .input-group{text-align:left;margin-bottom:8px}
@@ -160,9 +168,10 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <div id="logged-in-zone" style="display:none;">
   <div class="header-actions">
-    <button class="btn-action-top" onclick="switchService('solde-depot')">💵 DÉPÔT </button>
-    <button class="btn-action-top retrait" onclick="switchService('solde-retrait')">💰 RETIRER</button>
-  </div>
+  <button class="btn-action-top" onclick="activerNotifications()" style="background:#ffeb3b">🔔</button>
+  <button class="btn-action-top" onclick="switchService('solde-depot')">💵 DÉPÔT</button>
+  <button class="btn-action-top retrait" onclick="switchService('solde-retrait')">💰 RETIRER</button>
+</div>
   <div class="user-header">
     <button type="button" class="btn-logout" onclick="executerDeconnexion()">DÉCONNEXION</button>
     <div class="profile-line" id="user-name"><b>CHARGEMENT...</div>
@@ -550,7 +559,7 @@ function recordAudioChat(){
   }
 }
 function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
-window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='dark'){document.querySelector('.app-container').classList.add('dark-mode');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText='☀️';}initOneSignalWeb();});
+window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='dark'){document.querySelector('.app-container').classList.add('dark-mode');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText='☀️';};});
 
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
@@ -677,7 +686,7 @@ function executerConnexion(){
         
         chargerFeed();
         chargerMessagerie();
-        activerNotifications();
+     
         
         // présence
         const statusRef = database.ref('clients/'+currentUserId+'/status');
@@ -806,7 +815,19 @@ function selectionnerUserPourChat(client_id, client_nom) {
 function executerDeconnexion(){if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
 
 function envoyerInfosDepotWhatsApp(){const m=document.getElementById('depot-montant').value;const r=document.getElementById('depot-reseau').value;if(!r||!m||m<100)return showAlert('Choisissez un réseau et un montant minimum de 100F');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={reseau:r,montant:Number(m)};envoyerAlerte('depot',d);proposerSupport('depot',d,()=>afficherSucces('depot-status'));database.ref('commandes_depots').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
-function validerRetrait(){const m=Number(document.getElementById('retrait-montant').value);const n=document.getElementById('retrait-numero').value.trim();const r=document.getElementById('retrait-reseau').value;if(!m||!n||currentUserSolde<m)return showAlert('Solde insuffisant ou informations invalides');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={montant:m,numero_reception:n,reseau:r};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('retrait',d);proposerSupport('retrait',d,()=>afficherSucces('retrait-status'));database.ref('commandes_retraits').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cous'});});}
+function validerRetrait(){
+  const m=Number(document.getElementById('retrait-montant').value);
+  const n=document.getElementById('retrait-numero').value.trim();
+  const r=document.getElementById('retrait-reseau').value;
+  if(!m||!n||currentUserSolde<m)return showAlert('Solde insuffisant ou informations invalides');
+  if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);
+  const d={montant:m,numero_reception:n,reseau:r};
+  database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{
+    envoyerAlerte('retrait',d);
+    proposerSupport('retrait',d,()=>afficherSucces('retrait-status'));
+    database.ref('commandes_retraits').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});
+  });
+}
   async function publierPost(){
   const texte = document.getElementById('post-texte').value.trim();
   if(!texte && !window.currentImageUrl) return showAlert('Ajoute texte ou photo');
@@ -1214,10 +1235,7 @@ function executerEchange(){const d=document.getElementById('echange-donne').valu
 
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 </script>
-<button onclick="activerNotifications()" 
-style="position:fixed;bottom:20px;right:20px;z-index:9999;background:gold;padding:10px;border-radius:8px;">
-🔔 Activer notifs
-</button>
+
 </body>
 </html>
 
