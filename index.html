@@ -879,12 +879,7 @@ function commenterPost(postId){
         
         // COLLAGE DIRECT ICI
         if(postData.authorId !== currentUserId){
-          envoyerNotificationPushOneSignal(
-            postData.authorId, 
-            "💬 Nouveau commentaire", 
-            `${document.getElementById('user-name').innerText} a commenté : "${txt}"`, 
-            postData.image || ""
-          );
+          pushJS(postData.authorId, "💬 Commentaire", `${document.getElementById('user-name').innerText} : "${txt}"`);
         }
       });
     });
@@ -1063,11 +1058,7 @@ function envoyerDirect(cid){
     const destId = parts[0]===currentUserId? parts[1] : parts[0];
     
     // COLLAGE DIRECT ICI
-    envoyerNotificationPushOneSignal(
-      destId, 
-      "💬 Nouveau message", 
-      `${document.getElementById('user-name').innerText} : ${t}`
-    );
+    pushJS(destId, "💬 Nouveau message", `${document.getElementById('user-name').innerText} : ${t}`);
   });
   i.value='';
   database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
@@ -1100,12 +1091,7 @@ function toggleLike(postId){
         
         // COLLAGE DIRECT ICI
         if(postData.authorId !== currentUserId){
-          envoyerNotificationPushOneSignal(
-            postData.authorId, 
-            "❤️ Nouveau j'aime", 
-            `${monNom} a aimé votre publication.`,
-            postData.image || ""
-          );
+          pushJS(postData.authorId, "❤️ Nouveau j'aime", `${monNom} a aimé ta publication`);
         }
       });
     }
@@ -1230,6 +1216,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
 
