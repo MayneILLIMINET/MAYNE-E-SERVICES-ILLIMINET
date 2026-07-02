@@ -5,40 +5,29 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1"; // l'appId seul, pas la clé REST
-
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
-  await OneSignal.init({
-    appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
-    serviceWorkerPath: "/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js",
-    serviceWorkerParam: { scope: "/MAYNE-E-SERVICES-ILLIMINET/" },
-    allowLocalhostAsSecureOrigin: true
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
+      serviceWorkerParam: { scope: '/MAYNE-E-SERVICES-ILLIMINET/' },
+      serviceWorkerPath: 'MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js',
+      allowLocalhostAsSecureOrigin: true,
+    });
+    console.log('OneSignal prêt');
   });
-  console.log("OneSignal prêt");
-});
 
-
-// à appeler APRÈS connexion, sur un clic
-async function activerNotifications(){
-  try {
-    console.log("clic notif");
-    if(!window.OneSignal){ alert("OneSignal pas chargé"); return; }
+  const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
+  
+  async function activerNotifications() {
     await OneSignal.Notifications.requestPermission();
-    const id = await OneSignal.User.PushSubscription.id;
-    console.log("ID:", id);
-    if(id && currentUserId){
-      await database.ref(`clients/${currentUserId}/onesignal_id`).set(id);
-      alert("✅ Notifications activées ! ID sauvé");
+    const permission = await OneSignal.Notifications.permission;
+    if (permission) {
+      await OneSignal.login("user_" + Date.now());
+      alert('✅ Notifications activées !');
     } else {
-      alert("Pas d'ID - vérifie la permission");
+      alert('❌ Permission refusée');
     }
-  } catch(e){
-    alert("Erreur: "+e.message);
-    console.error(e);
   }
-}
 </script>
 
 <script>
