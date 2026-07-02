@@ -1,37 +1,53 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
-      serviceWorkerParam: { scope: '/MAYNE-E-SERVICES-ILLIMINET/' },
-      allowLocalhostAsSecureOrigin: true,
-    });
-    console.log('OneSignal prêt');
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
+    serviceWorkerParam: { scope: '/MAYNE-E-SERVICES-ILLIMINET/' },
+    serviceWorkerPath: 'OneSignalSDKWorker.js'
   });
-  const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
   
- async function activerNotifications() {
-  const OS = window.OneSignal; // <-- important
+  // FORCE le numéro
+  const savePhoneToOneSignal = async () => {
+    const u = JSON.parse(localStorage.getItem('mayne_current_user') || 'null');
+    if (u && u.phone) {
+      const phone = String(u.phone).replace(/\D/g,'');
+      try {
+        await OneSignal.login(phone);
+        await OneSignal.User.addTag("phone", phone);
+        console.log("OneSignal lié à", phone);
+      } catch(e) {}
+    }
+  };
+  
+  await savePhoneToOneSignal();
+  window.addEventListener('storage', savePhoneToOneSignal);
+  console.log('OneSignal prêt');
+});
+
+const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
+
+async function activerNotifications() {
+  const OS = window.OneSignal;
   if (!OS) return alert('OneSignal pas encore prêt, recharge la page');
-  
-  console.log('Demande permission...');
   const permission = await OS.Notifications.requestPermission();
-  
-  console.log('Permission:', permission);
   if (permission) {
-    await OS.login("user_" + Date.now());
     alert('✅ Notifications activées !');
+    // lie immédiatement après permission
+    const u = JSON.parse(localStorage.getItem('mayne_current_user') || 'null');
+    if (u && u.phone) await OS.login(String(u.phone).replace(/\D/g,''));
   } else {
-    alert('❌ Permission refusée - clique le cadenas en haut > Notifications > Autoriser');
+    alert('❌ Permission refusée');
   }
-} 
-</script>
+}
+</script> 
+
 <script>
 // Playables SDK v1.0.0
 (function(){'use strict';if(window.playablesSDK)return;var HANDLER_NAME='playablesGameEventHandler';var ANDROID_BRIDGE_NAME='_MetaPlayablesBridge';var RAF_FRAME_THRESHOLD=3;var gameReadySent=false;var firstInteractionSent=false;var errorSent=false;var frameCount=0;var originalRAF=window.requestAnimationFrame;function hasIOSBridge(){return!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers[HANDLER_NAME])}function hasAndroidBridge(){return!!(window[ANDROID_BRIDGE_NAME]&&typeof window[ANDROID_BRIDGE_NAME].postEvent==='function')}function isInIframe(){return!!(window.parent&&window.parent!==window)}function sendEvent(eventName,payload){var message={type:eventName,payload:payload||{},timestamp:Date.now()};if(hasIOSBridge()){try{window.webkit.messageHandlers[HANDLER_NAME].postMessage(message)}catch(e){}return}if(hasAndroidBridge()){try{var p=payload||{};p.__secureToken=window.__fbAndroidBridgeAuthToken||'';p.timestamp=message.timestamp;window[ANDROID_BRIDGE_NAME].postEvent(eventName,JSON.stringify(p))}catch(e){}return}if(isInIframe()){try{window.parent.postMessage(message,'*')}catch(e){}return}}function onFrame(){if(gameReadySent)return;frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()});return}originalRAF.call(window,onFrame)}if(originalRAF){window.requestAnimationFrame=function(callback){if(!gameReadySent){return originalRAF.call(window,function(timestamp){frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD&&!gameReadySent){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()})}callback(timestamp)})}return originalRAF.call(window,callback)}}function setupFirstInteractionDetection(){var events=['touchstart','mousedown','keydown'];function onFirstInteraction(){if(firstInteractionSent)return;firstInteractionSent=true;sendEvent('user_interaction_start',null);for(var i=0;i<events.length;i++){document.removeEventListener(events[i],onFirstInteraction,true)}}for(var i=0;i<events.length;i++){document.addEventListener(events[i],onFirstInteraction,true)}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setupFirstInteractionDetection)}else{setupFirstInteractionDetection()}window.addEventListener('error',function(event){if(errorSent)return;errorSent=true;sendEvent('error',{message:event.message||'Unknown error',source:event.filename||'',lineno:event.lineno||0,colno:event.colno||0,auto_captured:true})});window.addEventListener('unhandledrejection',function(event){if(errorSent)return;errorSent=true;var reason=event.reason;sendEvent('error',{message:(reason instanceof Error)?reason.message:String(reason),type:'unhandled_promise_rejection',auto_captured:true})});window.playablesSDK={complete:function(score){sendEvent('game_ended',{score:score,completed:true})},error:function(message){if(errorSent)return;errorSent=true;sendEvent('error',{message:message||'Unknown error',auto_captured:false})},sendEvent:function(eventName,payload){if(!eventName||typeof eventName!=='string')return;sendEvent(eventName,payload)}};if(originalRAF){originalRAF.call(window,onFrame)}})();
@@ -463,15 +479,20 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; 
-async function pushJS(destId, titre, message, imageUrl=""){
-  if(!destId || destId === currentUserId) return;
-  const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwqK_3E67VSiZWcqdKR9jswWrczb2_sCgITvYn485s5uihdZExClH5L8SkS_xpldhGJ/exec';
-  fetch(ONESIGNAL_WEBHOOK,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({destId, titre, message, imageUrl})
-  });
+
+const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwoTYC2pqYHiZrBR5NEd4rsnGy64j-B8wW52Q9Rlfhgad0KWVeBgF_wHxjT2oVzj47T/exec';
+
+async function pushJS(destId, titre, message, imageUrl=''){
+  if(!destId || destId===currentUserId) return;
+  try{
+    await fetch(ONESIGNAL_WEBHOOK,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({destId, titre, message, imageUrl})
+    });
+    console.log('Push envoyé à', destId);
+  }catch(e){ console.warn('Push fail', e); }
 }
 
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
@@ -617,7 +638,16 @@ function executerConnexion(){
       
       // 2. Comparaison avec le PIN haché OU le PIN en texte clair (pour la compatibilité des anciens comptes)
       if(dbPin === pinSaisiHache || dbPin === p) {
-        currentUserId = i;
+       currentUserId = i;
+// SAUVEGARDE pour OneSignal
+localStorage.setItem('mayne_current_user', JSON.stringify({phone: i}));
+if (!window.AppInventor) {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.login(currentUserId);
+    console.log('OneSignal login:', currentUserId);
+  });
+}
         
         // Optionnel mais recommandé : Mettre à jour l'ancien mot de passe en texte clair vers la version hachée
         if(dbPin === p) {
@@ -688,25 +718,30 @@ function executerConnexion(){
           }
         });
         
-        ecouterNotifLikes();
-        
-        setTimeout(() => {
-          const rawString = window.AppInventor?.getWebViewString();
-          console.log("Texte reçu de l'APK :", rawString); 
-          
-          if (rawString && rawString.length > 20 && !rawString.startsWith('http') && !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
-            const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
-            
-            database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
-              .then(() => {
-                console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
-                if(window.AppInventor) window.AppInventor.setWebViewString('');
-              })
-              .catch((err) => {
-                console.error("Erreur d'écriture du token :", err);
-              });
-          }
-        }, 5000);
+       ecouterNotifLikes();
+
+setTimeout(() => {
+  // PROTÉGÉ : ne tourne QUE dans l'APK
+  if (!window.AppInventor) return;
+
+  const rawString = window.AppInventor.getWebViewString();
+  console.log("Texte reçu de l'APK :", rawString);
+
+  if (rawString && rawString.length > 20 && !rawString.startsWith('http') && 
+      !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
+    
+    const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
+
+    database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
+      .then(() => {
+        console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
+        window.AppInventor.setWebViewString("");
+      })
+      .catch((err) => {
+        console.error("Erreur d'écriture du token :", err);
+      });
+  }
+}, 5000);
         
       } else {
         showAlert('Numéro ou mot de passe incorrect');
@@ -803,7 +838,7 @@ function selectionnerUserPourChat(client_id, client_nom) {
   });
 }
 
-function executerDeconnexion(){if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
+function executerDeconnexion(){if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';localStorage.removeItem('mayne_current_user');}
 
 function envoyerInfosDepotWhatsApp(){const m=document.getElementById('depot-montant').value;const r=document.getElementById('depot-reseau').value;if(!r||!m||m<100)return showAlert('Choisissez un réseau et un montant minimum de 100F');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={reseau:r,montant:Number(m)};envoyerAlerte('depot',d);proposerSupport('depot',d,()=>afficherSucces('depot-status'));database.ref('commandes_depots').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
 function validerRetrait(){
@@ -877,12 +912,7 @@ function commenterPost(postId){
         
         // COLLAGE DIRECT ICI
         if(postData.authorId !== currentUserId){
-          envoyerNotificationPushOneSignal(
-            postData.authorId, 
-            "💬 Nouveau commentaire", 
-            `${document.getElementById('user-name').innerText} a commenté : "${txt}"`, 
-            postData.image || ""
-          );
+          pushJS(postData.authorId, "💬 Commentaire", `${document.getElementById('user-name').innerText} : "${txt}"`);
         }
       });
     });
@@ -1061,11 +1091,7 @@ function envoyerDirect(cid){
     const destId = parts[0]===currentUserId? parts[1] : parts[0];
     
     // COLLAGE DIRECT ICI
-    envoyerNotificationPushOneSignal(
-      destId, 
-      "💬 Nouveau message", 
-      `${document.getElementById('user-name').innerText} : ${t}`
-    );
+    pushJS(destId, "💬 Nouveau message", `${document.getElementById('user-name').innerText} : ${t}`);
   });
   i.value='';
   database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
@@ -1098,12 +1124,7 @@ function toggleLike(postId){
         
         // COLLAGE DIRECT ICI
         if(postData.authorId !== currentUserId){
-          envoyerNotificationPushOneSignal(
-            postData.authorId, 
-            "❤️ Nouveau j'aime", 
-            `${monNom} a aimé votre publication.`,
-            postData.image || ""
-          );
+          pushJS(postData.authorId, "❤️ Nouveau j'aime", `${monNom} a aimé ta publication`);
         }
       });
     }
@@ -1228,6 +1249,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
+
 
 
 
