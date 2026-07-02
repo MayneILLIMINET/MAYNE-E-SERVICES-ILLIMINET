@@ -26,7 +26,7 @@
   
   console.log('Permission:', permission);
   if (permission) {
-    await OS.login("user_" + Date.now());
+    await OS.login(currentUserId);
     alert('✅ Notifications activées !');
   } else {
     alert('❌ Permission refusée - clique le cadenas en haut > Notifications > Autoriser');
