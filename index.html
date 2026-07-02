@@ -465,9 +465,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; 
-async function pushJS(destId, titre, message, imageUrl=""){
-  if(!destId || destId === currentUserId) return;
-  const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwoTYC2pqYHiZrBR5NEd4rsnGy64j-B8wW52Q9Rlfhgad0KWVeBgF_wHxjT2oVzj47T/exec';
+
+const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwoTYC2pqYHiZrBR5NEd4rsnGy64j-B8wW52Q9Rlfhgad0KWVeBgF_wHxjT2oVzj47T/exec';
 
 async function pushJS(destId, titre, message, imageUrl=''){
   if(!destId || destId===currentUserId) return;
