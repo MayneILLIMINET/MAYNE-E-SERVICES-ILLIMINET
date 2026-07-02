@@ -14,10 +14,11 @@
     });
     console.log('OneSignal prêt');
   });
-  const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
 
+  const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
+  
  async function activerNotifications() {
-  const OS = window.OneSignal;
+  const OS = window.OneSignal; // <-- important
   if (!OS) return alert('OneSignal pas encore prêt, recharge la page');
   
   console.log('Demande permission...');
@@ -25,12 +26,12 @@
   
   console.log('Permission:', permission);
   if (permission) {
-    console.log('Permission OK');
+    await OS.login("user_" + Date.now());
     alert('✅ Notifications activées !');
   } else {
     alert('❌ Permission refusée - clique le cadenas en haut > Notifications > Autoriser');
   }
-}
+} 
 </script>
 
 <script>
@@ -464,20 +465,15 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwCHR3n4sFKpvp0EWy9LU5SEhK6Jc_nPQ3ONIlioU_lrwyV0rFytuSvWMsjeoHx0FiN/exec'; 
-
-const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwoTYC2pqYHiZrBR5NEd4rsnGy64j-B8wW52Q9Rlfhgad0KWVeBgF_wHxjT2oVzj47T/exec';
-
-async function pushJS(destId, titre, message, imageUrl=''){
-  if(!destId || destId===currentUserId) return;
-  try{
-    await fetch(ONESIGNAL_WEBHOOK,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({destId, titre, message, imageUrl})
-    });
-    console.log('Push envoyé à', destId);
-  }catch(e){ console.warn('Push fail', e); }
+async function pushJS(destId, titre, message, imageUrl=""){
+  if(!destId || destId === currentUserId) return;
+  const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwqK_3E67VSiZWcqdKR9jswWrczb2_sCgITvYn485s5uihdZExClH5L8SkS_xpldhGJ/exec';
+  fetch(ONESIGNAL_WEBHOOK,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({destId, titre, message, imageUrl})
+  });
 }
 
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
@@ -624,14 +620,6 @@ function executerConnexion(){
       // 2. Comparaison avec le PIN haché OU le PIN en texte clair (pour la compatibilité des anciens comptes)
       if(dbPin === pinSaisiHache || dbPin === p) {
         currentUserId = i;
-// WEB : lie le numéro à OneSignal
-if (!window.AppInventor) {
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.login(currentUserId);
-    console.log('OneSignal login:', currentUserId);
-  });
-}
         
         // Optionnel mais recommandé : Mettre à jour l'ancien mot de passe en texte clair vers la version hachée
         if(dbPin === p) {
@@ -702,30 +690,25 @@ if (!window.AppInventor) {
           }
         });
         
-       ecouterNotifLikes();
-
-setTimeout(() => {
-  // PROTÉGÉ : ne tourne QUE dans l'APK
-  if (!window.AppInventor) return;
-
-  const rawString = window.AppInventor.getWebViewString();
-  console.log("Texte reçu de l'APK :", rawString);
-
-  if (rawString && rawString.length > 20 && !rawString.startsWith('http') && 
-      !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
-    
-    const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
-
-    database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
-      .then(() => {
-        console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
-        window.AppInventor.setWebViewString("");
-      })
-      .catch((err) => {
-        console.error("Erreur d'écriture du token :", err);
-      });
-  }
-}, 5000);
+        ecouterNotifLikes();
+        
+        setTimeout(() => {
+          const rawString = window.AppInventor?.getWebViewString();
+          console.log("Texte reçu de l'APK :", rawString); 
+          
+          if (rawString && rawString.length > 20 && !rawString.startsWith('http') && !rawString.startsWith('CHAT_') && !rawString.startsWith('AUDIO')) {
+            const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
+            
+            database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
+              .then(() => {
+                console.log("onesignal_id mis à jour avec succès dans Firebase :", finalPlayerId);
+                if(window.AppInventor) window.AppInventor.setWebViewString('');
+              })
+              .catch((err) => {
+                console.error("Erreur d'écriture du token :", err);
+              });
+          }
+        }, 5000);
         
       } else {
         showAlert('Numéro ou mot de passe incorrect');
@@ -896,7 +879,12 @@ function commenterPost(postId){
         
         // COLLAGE DIRECT ICI
         if(postData.authorId !== currentUserId){
-          pushJS(postData.authorId, "💬 Commentaire", `${document.getElementById('user-name').innerText} : "${txt}"`);
+          envoyerNotificationPushOneSignal(
+            postData.authorId, 
+            "💬 Nouveau commentaire", 
+            `${document.getElementById('user-name').innerText} a commenté : "${txt}"`, 
+            postData.image || ""
+          );
         }
       });
     });
@@ -1075,7 +1063,11 @@ function envoyerDirect(cid){
     const destId = parts[0]===currentUserId? parts[1] : parts[0];
     
     // COLLAGE DIRECT ICI
-    pushJS(destId, "💬 Nouveau message", `${document.getElementById('user-name').innerText} : ${t}`);
+    envoyerNotificationPushOneSignal(
+      destId, 
+      "💬 Nouveau message", 
+      `${document.getElementById('user-name').innerText} : ${t}`
+    );
   });
   i.value='';
   database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);
@@ -1108,7 +1100,12 @@ function toggleLike(postId){
         
         // COLLAGE DIRECT ICI
         if(postData.authorId !== currentUserId){
-          pushJS(postData.authorId, "❤️ Nouveau j'aime", `${monNom} a aimé ta publication`);
+          envoyerNotificationPushOneSignal(
+            postData.authorId, 
+            "❤️ Nouveau j'aime", 
+            `${monNom} a aimé votre publication.`,
+            postData.image || ""
+          );
         }
       });
     }
@@ -1233,7 +1230,6 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
 </body>
 </html>
-
 
 
 
