@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-if (!window.AppInventor) { 
+if (!window.AppInventor) { // ← UNIQUEMENT sur le web
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
@@ -25,7 +25,7 @@ if (!window.AppInventor) {
     }
     console.log('OneSignal prêt (web)');
   });
-} 
+} // ← cette accolade ferme le if
 
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
 
@@ -628,38 +628,31 @@ function executerConnexion(){
   const p = document.getElementById('login-pin').value.trim();
   if(!i || !p) return;
 
-  // 1. Hachage du PIN saisi pour la comparaison
   const pinSaisiHache = CryptoJS.MD5(p).toString();
 
   database.ref('clients/'+i).once('value').then(s=>{
     if(s.exists()) {
       const dbPin = String(s.val().pin);
       
-      // 2. Comparaison avec le PIN haché OU le PIN en texte clair (pour la compatibilité des anciens comptes)
       if(dbPin === pinSaisiHache || dbPin === p) {
        currentUserId = i;
-localStorage.setItem('mayne_current_user', JSON.stringify({phone: i}));
+       localStorage.setItem('mayne_current_user', JSON.stringify({phone: i}));
 
-// WEB
-if (!window.AppInventor) {
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.login(currentUserId);
-    await OneSignal.User.addTag("phone", currentUserId);
-  });
-}
+       if (!window.AppInventor) {
+         window.OneSignalDeferred.push(async function(OneSignal) {
+           await OneSignal.login(currentUserId);
+           await OneSignal.User.addTag("phone", currentUserId);
+         });
+       }
 
-// APK
-if (window.AppInventor) {
-  window.AppInventor.setWebViewString('USER_'+currentUserId);
-  // Kodular va renvoyer le PID automatiquement via ton bloc "Push Subscription State Changed"
-}
+       if (window.AppInventor) {
+         window.AppInventor.setWebViewString('USER_'+currentUserId);
+       }
         
-        // Optionnel mais recommandé : Mettre à jour l'ancien mot de passe en texte clair vers la version hachée
         if(dbPin === p) {
            database.ref('clients/'+i).update({ pin: pinSaisiHache });
         }
         
-        // 3. Écoute en temps réel des données du client (Solde, Bonus, Épargne)
         database.ref('clients/'+i).on('value', v=>{
           const data = v.val() || {};
           currentUserSolde = data.solde || 0;
@@ -676,8 +669,8 @@ if (window.AppInventor) {
           document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
         });
 
-        // 4. Chargement de tous tes historiques
-        const listen = (path, el, fmt) => {
+        // ... tes listen() historiques …
+const listen = (path, el, fmt) => {
           database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value', sh => {
             const hb = document.getElementById(el);
             if(!hb) return;
@@ -709,12 +702,10 @@ if (window.AppInventor) {
         listen('commandes_livraison', 'livraison-historique', v => `${v.ville} ${v.montant || v.montant_course}F`);
         listen('commandes_echanges', 'echange-historique', v => `${v.donne}→${v.recoit} ${v.montant}`);
         listen('commandes_p2p_p2m', 'p2p-historique', v => `${v.montant}F vers ${v.numero_receveur || v.numero}`);
-        
+
         chargerFeed();
         chargerMessagerie();
      
-        
-        // présence
         const statusRef = database.ref('clients/'+currentUserId+'/status');
         database.ref('.info/connected').on('value', s => {
           if(s.val()){
@@ -724,37 +715,29 @@ if (window.AppInventor) {
         });
         
        ecouterNotifLikes();
-remplace TON setTimeout par ça
-window.pidInterval = setInterval(() => {
-  if (!window.AppInventor || !currentUserId) return;
-  const raw = window.AppInventor.getWebViewString();
-  if (!raw) return;
 
-  // 1. Seulement les PID, rien d'autre
-  if (raw.startsWith('PID_')) {
-    const pid = raw.replace('PID_', '');
-    if (pid.length > 20 && pid !== window.lastPidSauve) {
-      window.lastPidSauve = pid;
-      database.ref('clients/' + currentUserId + '/onesignal_id').set(pid)
-        .then(() => console.log("PID sauvé:", pid));
-    }
-    window.AppInventor.setWebViewString(""); // vide toujours
-  }
-  // 2. Ignore tout le reste (REC_AUDIO, CHAT_, etc.)
-}, 1000);
+       // --- PID OneSignal APK UNIQUEMENT ---
+       if (window.AppInventor) {
+         window.pidInterval = setInterval(() => {
+           if (!currentUserId) return;
+           const raw = window.AppInventor.getWebViewString();
+           if (!raw) return;
+
+           if (raw.startsWith('PID_')) {
+             const pid = raw.replace('PID_', '');
+             if (pid.length > 20 && pid !== window.lastPidSauve) {
+               window.lastPidSauve = pid;
+               database.ref('clients/' + currentUserId + '/onesignal_id').set(pid)
+                 .then(() => console.log("PID sauvé:", pid));
+             }
+             window.AppInventor.setWebViewString("");
+           }
+         }, 1000);
+       }
         
       } else {
         showAlert('Numéro ou mot de passe incorrect');
       }
-    } else {
-      showAlert('Numéro ou mot de passe incorrect');
-    }
-  }).catch(error => {
-    console.error("Erreur de connexion:", error);
-    showAlert("Une erreur est survenue lors de la connexion.");
-  });
-};
-        
     } else {
       showAlert('Numéro ou mot de passe incorrect');
     }
