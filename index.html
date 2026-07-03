@@ -5,16 +5,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
-  await OneSignal.init({
-    appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
-    serviceWorkerParam: { scope: '/MAYNE-E-SERVICES-ILLIMINET/' },
-    serviceWorkerPath: 'OneSignalSDKWorker.js'
-  });
-  
-  // FORCE le numéro
-  const savePhoneToOneSignal = async () => {
+if (!window.AppInventor) { // ← UNIQUEMENT sur le web
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",
+      serviceWorkerParam: { scope: '/MAYNE-E-SERVICES-ILLIMINET/' },
+      serviceWorkerPath: 'OneSignalSDKWorker.js'
+    });
+    
     const u = JSON.parse(localStorage.getItem('mayne_current_user') || 'null');
     if (u && u.phone) {
       const phone = String(u.phone).replace(/\D/g,'');
@@ -24,29 +23,29 @@ OneSignalDeferred.push(async function(OneSignal) {
         console.log("OneSignal lié à", phone);
       } catch(e) {}
     }
-  };
-  
-  await savePhoneToOneSignal();
-  window.addEventListener('storage', savePhoneToOneSignal);
-  console.log('OneSignal prêt');
-});
+    console.log('OneSignal prêt (web)');
+  });
+} // ← cette accolade ferme le if
 
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
 
 async function activerNotifications() {
+  if (window.AppInventor) {
+    alert('✅ Notifications APK actives (via l’application)');
+    return;
+  }
   const OS = window.OneSignal;
-  if (!OS) return alert('OneSignal pas encore prêt, recharge la page');
+  if (!OS) return alert('OneSignal charge... réessaie dans 3s');
   const permission = await OS.Notifications.requestPermission();
   if (permission) {
     alert('✅ Notifications activées !');
-    // lie immédiatement après permission
     const u = JSON.parse(localStorage.getItem('mayne_current_user') || 'null');
     if (u && u.phone) await OS.login(String(u.phone).replace(/\D/g,''));
   } else {
     alert('❌ Permission refusée');
   }
 }
-</script> 
+</script>
 
 <script>
 // Playables SDK v1.0.0
