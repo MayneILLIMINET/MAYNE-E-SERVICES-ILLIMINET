@@ -715,42 +715,29 @@ const listen = (path, el, fmt) => {
         });
         
        ecouterNotifLikes();
-
-       // --- PID OneSignal APK UNIQUEMENT ---
-       // après avoir vérifié le mot de passe et défini currentUserId
-currentUserId = numero;
-
-// --- ENVOIE USER_ à Kodular ---
-if (window.AppInventor) {
-  window.AppInventor.setWebViewString('USER_' + currentUserId);
-}
-
-// --- PID OneSignal APK UNIQUEMENT ---
 if (window.AppInventor) {
   window.lastPidSauve = null;
-  clearInterval(window.pidInterval); // évite doublon si reconnexion
+  clearInterval(window.pidInterval);
   window.pidInterval = setInterval(() => {
-    if (!currentUserId) return;
-    const raw = window.AppInventor.getWebViewString();
-    if (!raw) return;
+    try {
+      const raw = window.AppInventor.getWebViewString() || '';
+      if (!raw.startsWith('PID_')) return;
 
-    if (raw.startsWith('PID_')) {
       const parts = raw.split('_');
       const pid = parts[1];
-      const phone = parts[2] || currentUserId;
+      const phone = parts[2]; // le téléphone vient de Kodular
 
-      if (pid && pid.length > 20 && pid!== window.lastPidSauve) {
+      if (pid && phone && pid!== window.lastPidSauve) {
         window.lastPidSauve = pid;
         database.ref('clients/' + phone + '/onesignal_id').set(pid)
-         .then(() => console.log("PID sauvé:", pid, "pour", phone));
+         .then(() => console.log('✅ onesignal_id sauvé pour', phone))
+         .catch(e => console.error('Firebase set error:', e));
       }
-      window.AppInventor.setWebViewString("");
-    }
-  }, 1000);
+      window.AppInventor.setWebViewString(''); // vide après lecture
+    } catch(e) {}
+  }, 800);
 }
 
-afficherInterfacePrincipale();
-       
       } else {
         showAlert('Numéro ou mot de passe incorrect');
       }
