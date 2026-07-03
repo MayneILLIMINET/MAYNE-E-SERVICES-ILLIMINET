@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-if (!window.AppInventor) { // ← UNIQUEMENT sur le web
+if (!window.AppInventor) {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
@@ -25,7 +25,7 @@ if (!window.AppInventor) { // ← UNIQUEMENT sur le web
     }
     console.log('OneSignal prêt (web)');
   });
-} // ← cette accolade ferme le if
+}
 
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
 
