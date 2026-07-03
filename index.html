@@ -820,10 +820,7 @@ function selectionnerUserPourChat(client_id, client_nom) {
   ouvrirChat(client_id, client_nom);
 }
 
-        // ... ton code actuel pour charger le profil, les soldes, etc.
-
-
-      function executerInscription(){
+     function executerInscription(){
   const n = document.getElementById('reg-name').value.trim();
   const i = document.getElementById('reg-id').value.trim();
   const p = document.getElementById('reg-pin').value.trim();
@@ -831,21 +828,30 @@ function selectionnerUserPourChat(client_id, client_nom) {
   if(!n || !i || !p) return showAlert('Remplissez tous les champs');
   if(p.length !== 6) return showAlert('Le mot de passe doit contenir 6 chiffres');
 
-  // Hachage du PIN avant enregistrement
+  // --- GARDE-FOU : on nettoie et on valide le téléphone ---
+  const phone = i.replace(/\D/g,''); // garde que les chiffres
+  if (!/^\d{8,15}$/.test(phone)) {
+    console.error("Téléphone invalide, on n'enregistre pas:", i);
+    return showAlert('Numéro invalide. Ex: 0166302734');
+  }
+
+  // Hachage du PIN
   const pinHache = CryptoJS.MD5(p).toString();
 
-  database.ref('clients/'+i).set({
+  // --- on utilise TOUJOURS phone comme clé ---
+  database.ref('clients/'+ phone).set({
     nom: n,
-    pin: pinHache, // Enregistre la version masquée/hachée
+    pin: pinHache,
     solde: 0,
     commission: 0,
     recompense: 0
   }).then(()=>{
     showAlert('Compte créé avec succès!');
+    if(window.AppInventor) window.AppInventor.setWebViewString("OK_"+phone);
     afficherFormulaireConnexion();
-    document.getElementById('login-id').value = i;
+    document.getElementById('login-id').value = phone;
   });
-}
+} 
 
 function executerDeconnexion(){
 if(window.pidInterval) clearInterval(window.pidInterval);
