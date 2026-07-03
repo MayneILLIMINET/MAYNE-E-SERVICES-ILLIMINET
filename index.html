@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-if (!window.AppInventor) { // ← UNIQUEMENT sur le web
+if (!window.AppInventor) { 
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
@@ -25,7 +25,7 @@ if (!window.AppInventor) { // ← UNIQUEMENT sur le web
     }
     console.log('OneSignal prêt (web)');
   });
-} // ← cette accolade ferme le if
+} 
 
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
 
@@ -717,24 +717,40 @@ const listen = (path, el, fmt) => {
        ecouterNotifLikes();
 
        // --- PID OneSignal APK UNIQUEMENT ---
-       if (window.AppInventor) {
-         window.pidInterval = setInterval(() => {
-           if (!currentUserId) return;
-           const raw = window.AppInventor.getWebViewString();
-           if (!raw) return;
+       // après avoir vérifié le mot de passe et défini currentUserId
+currentUserId = numero;
 
-           if (raw.startsWith('PID_')) {
-             const pid = raw.replace('PID_', '');
-             if (pid.length > 20 && pid !== window.lastPidSauve) {
-               window.lastPidSauve = pid;
-               database.ref('clients/' + currentUserId + '/onesignal_id').set(pid)
-                 .then(() => console.log("PID sauvé:", pid));
-             }
-             window.AppInventor.setWebViewString("");
-           }
-         }, 1000);
-       }
-        
+// --- ENVOIE USER_ à Kodular ---
+if (window.AppInventor) {
+  window.AppInventor.setWebViewString('USER_' + currentUserId);
+}
+
+// --- PID OneSignal APK UNIQUEMENT ---
+if (window.AppInventor) {
+  window.lastPidSauve = null;
+  clearInterval(window.pidInterval); // évite doublon si reconnexion
+  window.pidInterval = setInterval(() => {
+    if (!currentUserId) return;
+    const raw = window.AppInventor.getWebViewString();
+    if (!raw) return;
+
+    if (raw.startsWith('PID_')) {
+      const parts = raw.split('_');
+      const pid = parts[1];
+      const phone = parts[2] || currentUserId;
+
+      if (pid && pid.length > 20 && pid!== window.lastPidSauve) {
+        window.lastPidSauve = pid;
+        database.ref('clients/' + phone + '/onesignal_id').set(pid)
+         .then(() => console.log("PID sauvé:", pid, "pour", phone));
+      }
+      window.AppInventor.setWebViewString("");
+    }
+  }, 1000);
+}
+
+afficherInterfacePrincipale();
+       
       } else {
         showAlert('Numéro ou mot de passe incorrect');
       }
