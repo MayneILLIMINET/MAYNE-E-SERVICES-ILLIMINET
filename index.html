@@ -25,7 +25,7 @@ if (!window.AppInventor) { // ← UNIQUEMENT sur le web
     }
     console.log('OneSignal prêt (web)');
   });
-}
+} // ← cette accolade ferme le if
 
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
 
@@ -724,42 +724,37 @@ if (window.AppInventor) {
         });
         
        ecouterNotifLikes();
-
-// remplace TON setTimeout par ça
+remplace TON setTimeout par ça
 window.pidInterval = setInterval(() => {
   if (!window.AppInventor || !currentUserId) return;
+  const raw = window.AppInventor.getWebViewString();
+  if (!raw) return;
 
-  const rawString = window.AppInventor.getWebViewString();
-  if (!rawString) return;
-
-  console.log("Texte reçu APK:", rawString);
-
-  if (rawString.length > 20 && 
-      !rawString.startsWith('http') && 
-      !rawString.startsWith('CHAT_') && 
-      !rawString.startsWith('AUDIO') &&
-      !rawString.startsWith('USER_')) {
-    
-    const finalPlayerId = rawString.startsWith('PID_') ? rawString.replace('PID_', '') : rawString;
-
-    // garde-fou : n'écrit qu'une fois
-    if (finalPlayerId !== window.lastPidSauve) {
-      window.lastPidSauve = finalPlayerId;
-      database.ref('clients/' + currentUserId + '/onesignal_id').set(finalPlayerId)
-        .then(() => {
-          console.log("onesignal_id sauvé:", finalPlayerId);
-          window.AppInventor.setWebViewString("");
-        });
-    } else {
-      // déjà sauvé, on vide quand même pour éviter boucle
-      window.AppInventor.setWebViewString("");
+  // 1. Seulement les PID, rien d'autre
+  if (raw.startsWith('PID_')) {
+    const pid = raw.replace('PID_', '');
+    if (pid.length > 20 && pid !== window.lastPidSauve) {
+      window.lastPidSauve = pid;
+      database.ref('clients/' + currentUserId + '/onesignal_id').set(pid)
+        .then(() => console.log("PID sauvé:", pid));
     }
+    window.AppInventor.setWebViewString(""); // vide toujours
   }
+  // 2. Ignore tout le reste (REC_AUDIO, CHAT_, etc.)
 }, 1000);
         
       } else {
         showAlert('Numéro ou mot de passe incorrect');
       }
+    } else {
+      showAlert('Numéro ou mot de passe incorrect');
+    }
+  }).catch(error => {
+    console.error("Erreur de connexion:", error);
+    showAlert("Une erreur est survenue lors de la connexion.");
+  });
+};
+        
     } else {
       showAlert('Numéro ou mot de passe incorrect');
     }
