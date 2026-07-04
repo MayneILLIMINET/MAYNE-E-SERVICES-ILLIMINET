@@ -25,7 +25,7 @@ if (!window.AppInventor) {
     }
     console.log('OneSignal prêt (web)');
   });
-}
+} 
 
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
 
@@ -607,12 +607,12 @@ function switchService(id){document.querySelectorAll('.sub-panel').forEach(p=>p.
 function retourAccueil(){
   if(currentUserId && document.getElementById('logged-in-zone').style.display!=='none'){
     switchService('menu-principal');
-    return true; 
+    return true; // on a géré le retour
   }
-  return false; 
+  return false; // pas connecté, laisse Kodular gérer
 }
 
-
+// piège le bouton retour du navigateur
 history.pushState(null, null, location.href);
 window.addEventListener('popstate', function(){
   if(retourAccueil()){
@@ -669,7 +669,7 @@ function executerConnexion(){
           document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
         });
 
-        
+        // ... tes listen() historiques …
 const listen = (path, el, fmt) => {
           database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value', sh => {
             const hb = document.getElementById(el);
