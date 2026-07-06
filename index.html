@@ -875,68 +875,21 @@ function validerRetrait(){
   afficherSucces('market-status');
 }
 function chargerFeed(){
-  const feed = document.getElementById('market-feed');
-  if(!feed) return;
-  feed.innerHTML = ''; // on vide une fois
-
-  const postsRef = database.ref('posts').orderByChild('createdAt').limitToLast(50);
-  
-  // enlève les anciens listeners si tu recharges
-  postsRef.off();
-
-  // ★ NOUVEAU POST = on l'ajoute EN HAUT instantanément
-  postsRef.on('child_added', snap => {
-    const p = snap.val();
-    const id = snap.key;
-    if(document.getElementById('post-'+id)) return; // évite doublon
-
-    const date = new Date(p.createdAt).toLocaleString('fr-FR');
-   const img = p.image ? `<img src="${p.image}" style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:6px;margin:4px 0;cursor:pointer;display:block" onclick="return ouvrirImage('${p.image}')">` : '';
-    
-    const div = document.createElement('div');
-    div.id = 'post-'+id;
-    div.className = 'product-card';
-    div.style.cssText = 'text-align:left;margin-bottom:8px;';
-    div.innerHTML = `
-      <div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>
-      ${img}
-      <div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div>
-      <div style="display:flex;gap:5px;margin-top:6px">
-        <button class="inner-btn" id="btn-like-${id}" onclick="toggleLike('${id}')">❤️ <span id="like-${id}">0</span></button>
-        <button class="inner-btn" onclick="commenterPost('${id}')">💬 Commenter</button>
-        <button class="inner-btn" onclick="ouvrirChat('${p.authorId}','${p.authorNom}')">✉️ Message</button>
-      </div>
-      <div id="comments-${id}" style="margin-top:6px;font-size:10px;color:#333"></div>
-      <div id="likers-${id}" style="font-size:11px;color:#00f;margin-top:4px;font-weight:bold"></div>
-    `;
-    
-    // ★ LA CLÉ FACEBOOK : prepend = ajoute en HAUT
+  const feed=document.getElementById('market-feed'); if(!feed) return;
+  feed.innerHTML='';
+  database.ref('posts').orderByChild('createdAt').limitToLast(50).on('child_added',snap=>{
+    const p=snap.val(), id=snap.key;
+    if(document.getElementById('post-'+id)) return;
+    const date=new Date(p.createdAt).toLocaleString('fr-FR');
+    const img=p.image?`<img src="${p.image}" style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:6px;margin:4px 0;cursor:pointer;display:block" onclick="ouvrirImage('${p.image}');return false;">`:'';
+    const div=document.createElement('div');
+    div.id='post-'+id; div.className='product-card';
+    div.innerHTML=`<div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>${img}<div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div>`;
     feed.prepend(div);
-
-    // charge likes/comments pour ce post
-    chargerComments(id);
-    listenLikes(id);
-  });
-
-  // si un post est modifié
-  postsRef.on('child_changed', snap => {
-    const el = document.getElementById('post-'+snap.key);
-    if(el) el.querySelector('.product-title').innerText = snap.val().texte || '';
-  });
-
-  // si supprimé
-  postsRef.on('child_removed', snap => {
-    const el = document.getElementById('post-'+snap.key);
-    if(el) el.remove();
   });
 }
 function ouvrirImage(url){
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('VIEW_'+url);
-  } else {
-    document.getElementById('img-viewer-pic').src = url;
-    document.getElementById('img-viewer').style.display = 'flex';
-  }
+  if(window.AppInventor){ window.AppInventor.setWebViewString('VIEW_'+url); }
   return false;
 }
 function commenterPost(postId){
