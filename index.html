@@ -511,16 +511,7 @@ function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-co
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
 function showInput(titre,cb){promptCallback=cb;document.getElementById('custom-prompt-msg').innerText=titre;document.getElementById('custom-prompt-input').value='';document.getElementById('custom-prompt').style.display='flex';setTimeout(()=>document.getElementById('custom-prompt-input').focus(),100);}
 function hidePrompt(ok){document.getElementById('custom-prompt').style.display='none';if(ok&&promptCallback){promptCallback(document.getElementById('custom-prompt-input').value.trim());}}
-function pickImage(){
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('PICK_IMAGE');
-  }
-}
-function pickImageChat(){
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('PICK_CHAT');
-  }
-}setInterval(()=>{
+setInterval(()=>{
   if(window.AppInventor){
     let data = window.AppInventor.getWebViewString();
     if(!data) return;
@@ -579,18 +570,21 @@ function recordAudioChat(){
   }
 }
 function choisirPhotoMarket(){
-  if(window.AppInventor){
-    pickImage(); // APK → Kodular
-  } else {
-    document.getElementById('file-market').click(); // Web → galerie
-  }
+  // 1) essaie Kodular en direct, sans passer par pickImage()
+  try{
+    window.AppInventor.setWebViewString('PICK_IMAGE');
+    return;
+  }catch(e){}
+  // 2) sinon web
+  document.getElementById('file-market').click();
 }
+
 function choisirPhotoChat(){
-  if(window.AppInventor){
-    pickImageChat();
-  } else {
-    document.getElementById('file-chat').click();
-  }
+  try{
+    window.AppInventor.setWebViewString('PICK_CHAT');
+    return;
+  }catch(e){}
+  document.getElementById('file-chat').click();
 }
 function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
 window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='dark'){document.querySelector('.app-container').classList.add('dark-mode');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText='☀️';};});
