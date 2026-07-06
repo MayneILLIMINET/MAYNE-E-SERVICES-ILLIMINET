@@ -278,7 +278,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div id="service-market" class="sub-panel" style="display:none;">
       <h4>Market-place communautaire</h4>
       <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
-<label onclick="pickImage()" style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label>
+<input type="file" id="file-market" accept="image/*" style="display:none" onchange="uploadMarketFile(this)">
+<label for="file-market" onclick="if(window.AppInventor){pickImage();return false}" style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label>
 <div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div>
       
       <button class="btn-submit" style="background:#0000ff" onclick="publierPost()">Publier</button>
@@ -606,6 +607,34 @@ async function uploadToCloudinary(base64Data){
     showAlert('❌ Erreur upload: '+e.message);
     throw e;
   }
+}
+async function uploadMarketFile(input){
+  const f = input.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const url = await uploadToCloudinary(e.target.result);
+    window.currentImageUrl = url;
+    document.getElementById('img-name').innerText = '✅ Photo prête';
+  };
+  reader.readAsDataURL(f);
+}
+async function uploadChatFile(input){
+  const f = input.files[0];
+  if(!f ||!window.currentConvId) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const url = await uploadToCloudinary(e.target.result);
+    database.ref(`conversations/${window.currentConvId}/messages`).push({
+      senderId: currentUserId,
+      senderNom: document.getElementById('user-name').innerText,
+      type: 'image',
+      url: url,
+      texte: '📷',
+      createdAt: Date.now()
+    });
+  };
+  reader.readAsDataURL(f);
 }
 function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 
@@ -1047,7 +1076,8 @@ function ouvrirConversation(convId,nom){
     </div>
     <div class="chat-container" id="chat-scroll"></div>
     <div class="chat-input-bar">
-      <label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
+      <input type="file" id="file-chat" accept="image/*" style="display:none" onchange="uploadChatFile(this)">
+<label for="file-chat" onclick="if(window.AppInventor){pickImageChat();return false}" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
       <label onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label>
       <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" oninput="jeTape('${convId}')" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
       <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
@@ -1098,15 +1128,9 @@ let contenu = v.texte || '';
 if(v.type === 'image'){
   const thumb = v.url.includes('/upload/')? v.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/') : v.url;
   const safeUrl = v.url.replace(/'/g,"\\'");
-  contenu = `<img src="${thumb}" style="max-width:200px;border-radius:12px;cursor:pointer;display:block" onclick="ouvrirImage('${safeUrl}');return false;">`;
-}
-if(v.type === 'audio'){
-  const safeAudio = v.url.replace(/'/g,"\\'");
-  contenu = `<div class="audio-wrap">
-    <button onclick="var a=this.nextElementSibling.nextElementSibling;var w=this.nextElementSibling;a.paused?(a.play(),this.innerText='⏸',w.classList.add('playing')):(a.pause(),this.innerText='▶',w.classList.remove('playing'))" style="background:#0084ff;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:14px">▶</button>
-    <div class="wave"><span></span><span></span><span></span></div>
-    <audio src="${safeAudio}" preload="metadata" onloadedmetadata="this.parentNode.querySelector('.dur').innerText=formatTime(this.duration)" onended="this.previousElementSibling.classList.remove('playing');this.parentNode.querySelector('button').innerText='▶'"></audio>
-    <span class="dur" style="font-size:11px;color:#555;min-width:30px">00:00</span>
+  // PAS de chargement auto — juste un placeholder
+  contenu = `<div onclick="this.innerHTML='<img src=\\'${thumb}\\' style=\\'max-width:200px;border-radius:12px;display:block;cursor:pointer\\' onclick=\\'ouvrirImage(\\'${safeUrl}\\');return false;\\'>';this.style.padding='0';this.style.background='transparent'" style="max-width:200px;background:#ddd;border-radius:12px;padding:30px 10px;text-align:center;cursor:pointer;color:#333">
+    📷<br><span style="font-size:12px">Charger l'image</span>
   </div>`;
 }
 if(v.type === 'video'){
@@ -1115,6 +1139,16 @@ if(v.type === 'video'){
   contenu = `<div style="position:relative;max-width:200px;border-radius:12px;overflow:hidden;cursor:pointer" onclick="var v=this.querySelector('video');v.paused?v.play():v.pause()">
     <video src="${safeVid}" poster="${thumb}" style="width:100%;display:block;border-radius:12px" preload="metadata"></video>
     <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.55);color:#fff;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;pointer-events:none">▶</div>
+  </div>`;
+}
+if(v.type === 'audio'){
+  const safeAudio = v.url.replace(/'/g,"\\'");
+  // audio SANS src au départ = 0 Ko téléchargé
+  contenu = `<div class="audio-wrap">
+    <button onclick="var w=this.parentNode;var a=w.querySelector('audio');var wave=w.querySelector('.wave');if(!a.src){a.src='${safeAudio}';a.load();w.querySelector('.dur').innerText='...'};a.paused?(a.play(),this.innerText='⏸',wave.classList.add('playing')):(a.pause(),this.innerText='▶',wave.classList.remove('playing'))" style="background:#0084ff;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:14px">▶</button>
+    <div class="wave"><span></span><span></span><span></span></div>
+    <audio preload="none" onloadedmetadata="this.parentNode.querySelector('.dur').innerText=formatTime(this.duration)" onended="this.parentNode.querySelector('.wave').classList.remove('playing');this.parentNode.querySelector('button').innerText='▶'"></audio>
+    <span class="dur" style="font-size:11px;color:#555;min-width:45px">Télécharger</span>
   </div>`;
 }
 const tick = isMe? (v.vu? '<span style="color:#34b7f1"> ✓✓</span>' : '<span style="color:#999"> ✓</span>') : '';
