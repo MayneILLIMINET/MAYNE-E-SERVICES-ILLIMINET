@@ -875,24 +875,29 @@ function validerRetrait(){
   afficherSucces('market-status');
 }
 function chargerFeed(){
-  const feed=document.getElementById('market-feed'); if(!feed) return;
+  const feed=document.getElementById('market-feed');
+  if(!feed) return;
   feed.innerHTML='';
+  database.ref('posts').orderByChild('createdAt').limitToLast(50).off();
   database.ref('posts').orderByChild('createdAt').limitToLast(50).on('child_added',snap=>{
     const p=snap.val(), id=snap.key;
     if(document.getElementById('post-'+id)) return;
     const date=new Date(p.createdAt).toLocaleString('fr-FR');
-    const img=p.image?`<img src="${p.image}" style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:6px;margin:4px 0;cursor:pointer;display:block" onclick="ouvrirImage('${p.image}');return false;">`:'';
+    const img = p.image ? `<img src="${p.image}" style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:6px;margin:4px 0;cursor:pointer;display:block" onclick="ouvrirImage('${p.image}');return false;">` : '';
     const div=document.createElement('div');
-    div.id='post-'+id; div.className='product-card';
-    div.innerHTML=`<div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>${img}<div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div>`;
+    div.id='post-'+id;
+    div.className='product-card';
+    div.innerHTML = `<div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>${img}<div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div>`;
     feed.prepend(div);
   });
 }
+
 function ouvrirImage(url){
-  if(window.AppInventor){ window.AppInventor.setWebViewString('VIEW_'+url); }
+  if(window.AppInventor){
+    window.AppInventor.setWebViewString('VIEW_'+url);
+  }
   return false;
-}
-function commenterPost(postId){
+}function commenterPost(postId){
   showInput('Ton commentaire :', function(txt){
     if(!txt) return;
     database.ref(`comments/${postId}`).push().set({
