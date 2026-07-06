@@ -278,8 +278,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <div id="service-market" class="sub-panel" style="display:none;">
       <h4>Market-place communautaire</h4>
       <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
-<input type="file" id="file-market" accept="image/*" style="display:none" onchange="uploadMarketFile(this)">
-<label for="file-market" onclick="if(window.AppInventor){pickImage();return false}" style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label>
+<input type="file" id="file-market" accept="image/*" style="position:absolute;left:-9999px" onchange="uploadMarketFile(this)">
+<button type="button" onclick="choisirPhotoMarket()" style="display:block;width:100%;background:#fff;color:#000;padding:10px;border-radius:6px;font-weight:bold;margin:6px 0;cursor:pointer;border:none">📷 Choisir une photo</button>
 <div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div>
       
       <button class="btn-submit" style="background:#0000ff" onclick="publierPost()">Publier</button>
@@ -576,6 +576,20 @@ function recordAudioChat(){
     isRecording = false;
     document.querySelector('[onclick="recordAudioChat()"]').innerHTML = '🎙️';
     database.ref(`conversations/${window.currentConvId}/recording/${currentUserId}`).set(false);
+  }
+}
+function choisirPhotoMarket(){
+  if(window.AppInventor){
+    pickImage(); // APK → Kodular
+  } else {
+    document.getElementById('file-market').click(); // Web → galerie
+  }
+}
+function choisirPhotoChat(){
+  if(window.AppInventor){
+    pickImageChat();
+  } else {
+    document.getElementById('file-chat').click();
   }
 }
 function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
@@ -1076,8 +1090,8 @@ function ouvrirConversation(convId,nom){
     </div>
     <div class="chat-container" id="chat-scroll"></div>
     <div class="chat-input-bar">
-      <input type="file" id="file-chat" accept="image/*" style="display:none" onchange="uploadChatFile(this)">
-<label for="file-chat" onclick="if(window.AppInventor){pickImageChat();return false}" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
+      <input type="file" id="file-chat" accept="image/*" style="position:absolute;left:-9999px" onchange="uploadChatFile(this)">
+<button type="button" onclick="choisirPhotoChat()" style="background:none;border:none;font-size:24px;cursor:pointer;padding:5px">📷</button>
       <label onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label>
       <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" oninput="jeTape('${convId}')" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
       <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
