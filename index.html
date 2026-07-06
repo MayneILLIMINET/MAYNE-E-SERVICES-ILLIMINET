@@ -879,7 +879,7 @@ function chargerFeed(){
   if(!feed) return;
   feed.innerHTML = '';
 
-  const postsRef = database.ref('posts').orderByChild('createdAt').limitToLast(50);
+  const postsRef = database.ref('posts').orderByChild('createdAt').limitToLast(20);
   postsRef.off(); // évite les doublons
 
   postsRef.on('child_added', snap => {
@@ -927,10 +927,15 @@ function chargerFeed(){
 }
 
 function ouvrirImage(url){
+  // ★ réduit l'image à 1000px max pour Kodular
+  let small = url;
+  if(url.includes('cloudinary.com') && url.includes('/upload/')){
+    small = url.replace('/upload/', '/upload/w_1000,q_auto,f_auto/');
+  }
   if(window.AppInventor){
-    window.AppInventor.setWebViewString('VIEW_'+url);
+    window.AppInventor.setWebViewString('VIEW_'+small);
   } else {
-    document.getElementById('img-viewer-pic').src = url;
+    document.getElementById('img-viewer-pic').src = small;
     document.getElementById('img-viewer').style.display = 'flex';
   }
   return false;
