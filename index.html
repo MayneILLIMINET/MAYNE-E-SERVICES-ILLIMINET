@@ -891,7 +891,7 @@ function chargerFeed(){
     if(document.getElementById('post-'+id)) return; // évite doublon
 
     const date = new Date(p.createdAt).toLocaleString('fr-FR');
-    const img = p.image ? `<img src="${p.image}" style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:6px;margin:4px 0;cursor:pointer;display:block" onclick="ouvrirImage('${p.image}')">` : '';
+   const img = p.image ? `<img src="${p.image}" style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:6px;margin:4px 0;cursor:pointer;display:block" onclick="return ouvrirImage('${p.image}')">` : '';
     
     const div = document.createElement('div');
     div.id = 'post-'+id;
@@ -932,13 +932,12 @@ function chargerFeed(){
 }
 function ouvrirImage(url){
   if(window.AppInventor){
-    // dans l'APK, ouvre dans le viewer intégré
     window.AppInventor.setWebViewString('VIEW_'+url);
   } else {
-    // sur le web, lightbox
     document.getElementById('img-viewer-pic').src = url;
     document.getElementById('img-viewer').style.display = 'flex';
   }
+  return false;
 }
 function commenterPost(postId){
   showInput('Ton commentaire :', function(txt){
@@ -1086,7 +1085,7 @@ function ouvrirConversation(convId,nom){
       const isMe = v.senderId === currentUserId;
       const heure = new Date(v.createdAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
       let contenu = v.texte || '';
-      if(v.type === 'image') contenu = `<img src="${v.url}" style="max-width:200px;border-radius:8px" onclick="window.open('${v.url}')">`;
+      if(v.type === 'image') contenu = `<img src="${v.url}" style="max-width:200px;border-radius:8px;cursor:pointer" onclick="return ouvrirImage('${v.url}')">`;
       if(v.type === 'audio') contenu = `<audio controls src="${v.url}" style="width:200px;height:40px"></audio>`;
      const tick = isMe? (v.vu? '<span style="color:#34b7f1"> ✓✓</span>' : '<span style="color:#999"> ✓</span>') : '';
       htmlMessages += `<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">
