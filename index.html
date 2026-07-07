@@ -887,6 +887,39 @@ function chargerFeed(){
   const feed = document.getElementById('market-feed');
   if(!feed) return;
   feed.innerHTML = '';
+// lance le chargement progressif pour chaque image
+document.querySelectorAll('.img-box').forEach(box => {
+  const url = box.dataset.url;
+  const id = box.dataset.id;
+  fetch(url).then(r => {
+    const total = +r.headers.get('content-length') || 0;
+    let loaded = 0;
+    const reader = r.body.getReader();
+    return new ReadableStream({
+      start(ctrl){
+        function pump(){
+          reader.read().then(({done, value})=>{
+            if(done){ ctrl.close(); return; }
+            loaded += value.length;
+            if(total) box.textContent = 'Chargement ' + Math.round(loaded/total*100) + '%';
+            ctrl.enqueue(value);
+            pump();
+          });
+        }
+        pump();
+      }
+    });
+  }).then(stream => new Response(stream))
+    .then(res => res.blob())
+    .then(blob => {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(blob);
+      img.style.width = '100%';
+      img.style.borderRadius = '6px';
+      img.style.display = 'block';
+      box.replaceWith(img);
+    });
+});
 
   const postsRef = database.ref('posts').orderByChild('createdAt').limitToLast(20);
   postsRef.off(); // évite les doublons
@@ -901,40 +934,10 @@ function chargerFeed(){
     const safeImg = (p.image || '').replace(/'/g,"\\'");
     
     const thumb = p.image ? p.image.replace('/upload/', '/upload/w_800,q_auto,f_auto/') : '';
-
 const img = p.image ? `
-<div id="loader-${p.id}" style="background:#000;width:100%;height:300px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;margin:4px 0;">
+<div class="img-box" data-url="${thumb}" data-id="${p.id}" style="background:#000;width:100%;height:280px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;margin:4px 0;">
   Chargement 0%
-</div>
-<img id="img-${p.id}" style="display:none;width:100%;border-radius:6px;" onload="document.getElementById('loader-${p.id}').style.display='none';this.style.display='block';">
-<script>
-  (function(){
-    const url='${thumb}';
-    const loader=document.getElementById('loader-${p.id}');
-    const img=document.getElementById('img-${p.id}');
-    fetch(url).then(r=>{
-      const total=+r.headers.get('content-length')||0;
-      let loaded=0;
-      const reader=r.body.getReader();
-      return new ReadableStream({
-        start(c){
-          function read(){
-            reader.read().then(({done,value})=>{
-              if(done){c.close();return;}
-              loaded+=value.length;
-              if(total) loader.innerHTML='Chargement '+Math.round(loaded/total*100)+'%';
-              c.enqueue(value);
-              read();
-            });
-          }
-          read();
-        }
-      });
-    }).then(s=>new Response(s)).then(r=>r.blob()).then(b=>{
-      img.src=URL.createObjectURL(b);
-    });
-  })();
-</script>` : '';
+</div>` : '';
     
     const div = document.createElement('div');
     div.id = 'post-'+id;
