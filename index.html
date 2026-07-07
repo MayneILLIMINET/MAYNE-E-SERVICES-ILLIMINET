@@ -279,7 +279,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
       <h4>Market-place communautaire</h4>
       <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
 <label onclick="pickImage()" style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label>
-<div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div>
+<div id="boxUpload" style="display:none;background:#000;color:#fff;text-align:center;padding:10px;border-radius:6px;margin:6px 0;">Envoi 0%</div>
+<div id="txtAucun" style="text-align:center;color:#fff;">Aucun</div>
       
       <button class="btn-submit" style="background:#0000ff" onclick="publierPost()">Publier</button>
       <p id="market-status" class="status-msg"></p>
@@ -880,46 +881,15 @@ function validerRetrait(){
   await database.ref('posts').push().set(post);
   document.getElementById('post-texte').value = '';
   window.currentImageUrl = null;
-  document.getElementById('img-name').innerText = 'Aucun';
+  document.getElementById('txtAucun').innerText = 'Aucun';
+document.getElementById('txtAucun').style.display = 'block';
+document.getElementById('boxUpload').style.display = 'none';
   afficherSucces('market-status');
 }
 function chargerFeed(){
   const feed = document.getElementById('market-feed');
   if(!feed) return;
   feed.innerHTML = '';
-// lance le chargement progressif pour chaque image
-document.querySelectorAll('.img-box').forEach(box => {
-  const url = box.dataset.url;
-  const id = box.dataset.id;
-  fetch(url).then(r => {
-    const total = +r.headers.get('content-length') || 0;
-    let loaded = 0;
-    const reader = r.body.getReader();
-    return new ReadableStream({
-      start(ctrl){
-        function pump(){
-          reader.read().then(({done, value})=>{
-            if(done){ ctrl.close(); return; }
-            loaded += value.length;
-            if(total) box.textContent = 'Chargement ' + Math.round(loaded/total*100) + '%';
-            ctrl.enqueue(value);
-            pump();
-          });
-        }
-        pump();
-      }
-    });
-  }).then(stream => new Response(stream))
-    .then(res => res.blob())
-    .then(blob => {
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(blob);
-      img.style.width = '100%';
-      img.style.borderRadius = '6px';
-      img.style.display = 'block';
-      box.replaceWith(img);
-    });
-});
 
   const postsRef = database.ref('posts').orderByChild('createdAt').limitToLast(20);
   postsRef.off(); // évite les doublons
@@ -934,10 +904,7 @@ document.querySelectorAll('.img-box').forEach(box => {
     const safeImg = (p.image || '').replace(/'/g,"\\'");
     
     const thumb = p.image ? p.image.replace('/upload/', '/upload/w_800,q_auto,f_auto/') : '';
-const img = p.image ? `
-<div class="img-box" data-url="${thumb}" data-id="${p.id}" style="background:#000;width:100%;height:280px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;margin:4px 0;">
-  Chargement 0%
-</div>` : '';
+const img = p.image ? `<img src="${thumb}" loading="lazy" style="width:100%;height:auto;max-height:500px;object-fit:cover;border-radius:6px;margin:4px 0;">` : '';
     
     const div = document.createElement('div');
     div.id = 'post-'+id;
@@ -1358,11 +1325,44 @@ function retirerEpargne(){
 function demanderLivraison(){const v=document.getElementById('livraison-ville').value;const m=Number(document.getElementById('livraison-montant').value);const wa=document.getElementById('livraison-whatsapp').value.trim();if(!wa||m<500||currentUserSolde<m)return showAlert('Minimum 500F et solde suffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={ville:v,montant_course:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('livraison',d);proposerSupport('livraison',d,()=>afficherSucces('livraison-status'));database.ref('commandes_livraison').push().set({...d,client_id:currentUserId,montant:m,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function executerEchange(){const d=document.getElementById('echange-donne').value;const r=document.getElementById('echange-recoit').value;const m=Number(document.getElementById('echange-montant').value);const a=document.getElementById('echange-adresse').value.trim();const wa=document.getElementById('echange-whatsapp').value.trim();if(!a||!wa)return showAlert('Remplissez adresse et WhatsApp');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donne:d,recoit:r,montant:m,adresse_numero:a,whatsapp_client:wa};envoyerAlerte('echange',data);proposerSupport('echange',data,()=>afficherSucces('echange-status'));database.ref('commandes_echanges').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
 
+
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 </script>
 <div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'">
   <img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px">
 </div>
+<script>
+(function(){
+  const box = document.getElementById('boxUpload');
+  const txt = document.getElementById('txtAucun');
+  if(!box || !txt) return;
+
+  setInterval(()=>{
+    try{
+      const v = window.AppInventor && window.AppInventor.getWebViewString ? window.AppInventor.getWebViewString() : '';
+      if(v && v.startsWith('START_UPLOAD|')){
+        txt.style.display = 'none';
+        box.style.display = 'block';
+        let p = 0;
+        const t = setInterval(()=>{
+          p += 10;
+          box.textContent = 'Envoi '+p+'%';
+          if(p >= 100){
+            clearInterval(t);
+            box.textContent = 'Prêt';
+            setTimeout(()=>{
+              box.style.display = 'none';
+              txt.style.display = 'block';
+              txt.textContent = 'Photo prête';
+            }, 700);
+          }
+        }, 180);
+        window.AppInventor.setWebViewString(''); // reset
+      }
+    }catch(e){}
+  }, 300);
+})();
+</script>
 </body>
 </html>
 
