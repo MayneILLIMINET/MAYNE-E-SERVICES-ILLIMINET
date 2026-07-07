@@ -900,7 +900,8 @@ function chargerFeed(){
     const safeNom = (p.authorNom || '').replace(/'/g,"\\'");
     const safeImg = (p.image || '').replace(/'/g,"\\'");
     
-    const img = p.image ? `<img src="${p.image}" style="width:100%;height:auto;max-height:500px;object-fit:contain;border-radius:6px;margin:4px 0;cursor:pointer;display:block" onclick="ouvrirImage('${safeImg}');return false;">` : '';
+    const thumb = p.image ? p.image.replace('/upload/', '/upload/w_800,q_auto,f_auto/') : '';
+const img = p.image ? `<img src="${thumb}" loading="lazy" style="width:100%;height:auto;max-height:500px;object-fit:cover;border-radius:6px;margin:4px 0;">` : '';
     
     const div = document.createElement('div');
     div.id = 'post-'+id;
