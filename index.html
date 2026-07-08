@@ -158,6 +158,27 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
 .wave span:nth-child(3){animation-delay:.3s}
 .wave span:nth-child(4){animation-delay:.45s}
 @keyframes wave{0%,100%{height:5px}50%{height:16px}
+/* --- BOUTONS BLOQUÉS TEMPORAIREMENT --- */
+.tab-btn[onclick="switchService('service-livraison')"],
+.tab-btn[onclick="switchService('service-immo')"] {
+  opacity: 0.45 !important;
+  background: #2b2b2b !important;
+  color: #888 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto !important; /* on garde le clic pour afficher l'alerte */
+  position: relative;
+}
+
+/* petit cadenas en haut à droite */
+.tab-btn[onclick="switchService('service-livraison')"]::after,
+.tab-btn[onclick="switchService('service-immo')"]::after {
+  content: "🔒";
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  font-size: 11px;
+  opacity: 0.8;
+}
 </style>
 </head>
 <body>
@@ -684,7 +705,22 @@ function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.en
 
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
-function switchService(id){document.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');document.getElementById(id).style.display='block';}
+
+function switchService(id){
+  
+  const servicesBloques = ['service-livraison','service-immo'];
+  if(servicesBloques.includes(id)){
+    showAlert('🚧 Service bientôt disponible');
+    return;
+  }
+  
+  
+  document.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');
+  const cible = document.getElementById(id);
+  if(cible) cible.style.display='block';
+  
+  window.scrollTo(0,0);
+}
 function retourAccueil(){
   if(currentUserId && document.getElementById('logged-in-zone').style.display!=='none'){
     switchService('menu-principal');
@@ -1406,6 +1442,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 <div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'">
   <img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px">
 </div>
+
 <footer style="background:#111; color:#aaa; padding:30px 16px; text-align:center; font-size:14px; margin-top:50px;">
   <div style="margin-bottom:10px;">
     <strong style="color:#fff; font-size:16px;">MAYNE SERVICE </strong> © 2026 — Tous droits réservés
