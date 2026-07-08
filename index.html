@@ -64,6 +64,7 @@ async function activerNotifications() {
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 let db, database;
+self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
 const firebaseConfig = {
   apiKey: "AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",
   authDomain: "mayneilliminetdb.firebaseapp.com",
@@ -75,6 +76,11 @@ const firebaseConfig = {
 };
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
+}
+// BYPASS App Check pour debug
+if (typeof firebase.appCheck === 'function') {
+  firebase.appCheck().setTokenAutoRefreshEnabled(false);
+  console.log('AppCheck désactivé localement');
 }
 database = firebase.database();
 db = database; 
@@ -1376,7 +1382,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
   <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">
     MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>
     Cotonou, Bénin — contact : mayneactifer@gmail.com — +229 0159415617<br>
-     juin 2023
+    Lancé en juin 2023
   </div>
 </footer>
 </body>
