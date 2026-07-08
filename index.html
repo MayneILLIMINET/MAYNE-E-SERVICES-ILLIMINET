@@ -195,8 +195,11 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
   <div class="user-header">
     <button type="button" class="btn-logout" onclick="executerDeconnexion()">DÉCONNEXION</button>
     <div class="profile-line" id="user-name"><b>CHARGEMENT...</div>
-    <div style="font-size:10px;color:#e0e0e0;"><b>SOLDE :</div>
-    <div class="solde-val"><span id="user-balance"><b>0</span> F</div>
+   <div style="font-size:10px;color:#e0e0e0;display:flex;justify-content:space-between;align-items:center">
+  <b>SOLDE :</b>
+  <span onclick="toggleSolde()" style="cursor:pointer;font-size:30px;padding:0 60px">👁️</span>
+</div>
+<div class="solde-val"><span id="user-balance"><b>0</span> F</div>
     <div style="font-size:10px;color:#e0e0e0;margin-top:4px;"><b>BONUS :</div>
     <div class="solde-val" style="color:#ffeb3b"><span id="user-commission"><b>0</span> F</div><div style="font-size:10px;color:#fff;"><b>SOLDE EPARGNE :</div>
   <div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div></div> <!-- fin user-header -->
@@ -533,7 +536,7 @@ setInterval(()=>{
     
     if(data.startsWith('https://')){
       // MARKET
-      document.getElementById('img-name').innerText = 'VOTRE IMAGE EST PRÊTE 🎞️ CLIQUEZ POUR PUBLIER 👇 ';
+      document.getElementById('img-name').innerText = 'VOTRE IMAGE EST PRÊTE ⬆️CLIQUEZ POUR PUBLIER 👇 ';
       window.currentImageUrl = data;
       window.AppInventor.setWebViewString('');
     } else if(data.startsWith('CHAT_')){
@@ -621,7 +624,39 @@ function toggleTheme(){
     document.querySelectorAll('.tab-btn').forEach(b=> b.style.background = '');
   }
 }
+let soldeMasque = localStorage.getItem('mayne_hide_solde') === 'true';
 
+function toggleSolde(){
+  soldeMasque = !soldeMasque;
+  localStorage.setItem('mayne_hide_solde', soldeMasque);
+  appliquerMasqueSolde();
+}
+
+function appliquerMasqueSolde(){
+  const elements = ['user-balance','user-commission','user-recompense'];
+  elements.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    
+    if(soldeMasque){
+      // sauvegarde la vraie valeur
+      if(!el.dataset.vrai) el.dataset.vrai = el.innerText;
+      el.innerText = '••••••';
+    } else {
+      // restaure
+      if(el.dataset.vrai) el.innerText = el.dataset.vrai;
+    }
+  });
+  
+  // change l'icône
+  const icone = document.querySelector('[onclick="toggleSolde()"]');
+  if(icone) icone.innerText = soldeMasque ? '👀' : '👁️';
+}
+
+// Applique au chargement
+window.addEventListener('load', ()=>{
+  setTimeout(appliquerMasqueSolde, 500);
+});
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
 async function uploadToCloudinary(base64Data){
@@ -714,7 +749,14 @@ function executerConnexion(){
           document.getElementById('logged-out-zone').style.display = 'none';
           document.getElementById('logged-in-zone').style.display = 'block';
           document.getElementById('user-name').innerText = data.nom;
-          document.getElementById('user-balance').innerText = currentUserSolde.toLocaleString('fr-FR');
+          const majSolde = (id, valeur)=>{
+  const el = document.getElementById(id);
+  el.dataset.vrai = valeur.toLocaleString('fr-FR');
+  el.innerText = soldeMasque ? '••••••' : el.dataset.vrai;
+};
+majSolde('user-balance', currentUserSolde);
+majSolde('user-commission', commission);
+majSolde('user-recompense', recompense);
           document.getElementById('user-commission').innerText = commission.toLocaleString('fr-FR');
           document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
         });
@@ -1387,6 +1429,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 </footer>
 </body>
 </html>
+
 
 
 
