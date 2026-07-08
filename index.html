@@ -578,8 +578,43 @@ function recordAudioChat(){
     database.ref(`conversations/${window.currentConvId}/recording/${currentUserId}`).set(false);
   }
 }
-function toggleTheme(){const app=document.querySelector('.app-container');app.classList.toggle('dark-mode');const isDark=app.classList.contains('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText=isDark?'☀️':'🌙';}
-window.addEventListener('load',()=>{if(localStorage.getItem('mayne_theme')==='dark'){document.querySelector('.app-container').classList.add('dark-mode');const btn=document.getElementById('theme-toggle');if(btn)btn.innerText='☀️';};});
+function toggleTheme(){
+  const app = document.querySelector('.app-container');
+  const btn = document.getElementById('theme-toggle');
+  const isDark = !app.classList.contains('dark-mode');
+  
+  app.classList.toggle('dark-mode');
+  localStorage.setItem('mayne_theme', isDark ? 'dark' : 'light');
+  btn.innerText = isDark ? '☀️' : '🌙';
+
+  if(isDark){
+    // MODE SOMBRE = GRIS/NOIR
+    app.style.background = '#121212';
+    app.style.borderColor = '#333';
+    document.body.style.background = '#000';
+    
+    // tous les panels deviennent gris foncé
+    document.querySelectorAll('.service-panel, .sub-panel, .user-header').forEach(el=>{
+      el.style.background = '#1e1e1e';
+      el.style.color = '#fff';
+    });
+    // boutons bleus -> gris
+    document.querySelectorAll('.tab-btn').forEach(b=>{
+      if(!b.classList.contains('btn-home')) b.style.background = '#2a2a2a';
+    });
+  } else {
+    // MODE CLAIR = BLEU ORIGINAL
+    app.style.background = '#0000ff';
+    app.style.borderColor = '#fff';
+    document.body.style.background = '#f0f0f0';
+    
+    document.querySelectorAll('.service-panel, .sub-panel, .user-header').forEach(el=>{
+      el.style.background = '';
+      el.style.color = '';
+    });
+    document.querySelectorAll('.tab-btn').forEach(b=> b.style.background = '');
+  }
+}
 
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
@@ -1327,8 +1362,26 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 <div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'">
   <img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px">
 </div>
+<footer style="background:#111; color:#aaa; padding:30px 16px; text-align:center; font-size:14px; margin-top:50px;">
+  <div style="margin-bottom:10px;">
+    <strong style="color:#fff; font-size:16px;">MAYNE SERVICE </strong> © 2026 — Tous droits réservés
+  </div>
+  
+  <div style="margin:12px 0;">
+    <a href="about.html" style="color:#aaa; margin:0 12px; text-decoration:none;">À propos</a>
+    <a href="contact.html" style="color:#aaa; margin:0 12px; text-decoration:none;">Contact</a>
+    <a href="privacy.html" style="color:#aaa; margin:0 12px; text-decoration:none;">Confidentialité</a>
+  </div>
+
+  <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">
+    MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>
+    Cotonou, Bénin — contact : mayneactifer@gmail.com — +229 0159415617<br>
+     juin 2023
+  </div>
+</footer>
 </body>
 </html>
+
 
 
 
