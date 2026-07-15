@@ -1453,7 +1453,8 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
     <a href="contact.html" target="_self" style="color:#aaa; margin:0 12px; text-decoration:none;">Contact</a>
     <a href="privacy.html" target="_self" style="color:#aaa; margin:0 12px; text-decoration:none;">Confidentialité</a>
     <a href="conditions.html" target="_self" style="color:#aaa; margin:0 12px; text-decoration:none;">Conditions d'utilisation</a>
-    <a href="updates.html" target="_self" style="color:#aaa;margin:0 12px;text-decoration:none;">Mises à jour</a>
+    
+<a href="#" onclick="let u='updates.html?nocache='+Date.now(); if(window.AppInventor){window.AppInventor.setWebViewString('APK_URL')}else{location.href=u} return false;">Mises à jour</a>
   </div>
 
   <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">
