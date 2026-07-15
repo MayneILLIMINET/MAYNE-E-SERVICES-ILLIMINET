@@ -197,13 +197,14 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <button type="button" class="btn-submit" onclick="executerConnexion()">Se connecter</button>
     <button type="button" class="btn-link" onclick="afficherFormulaireInscription()">Créer un compte</button>
   </div>
-  <div id="register-interface" style="display:none;">
+ <div id="register-interface" style="display:none;">
     <h3 style="margin-top:0;margin-bottom:15px;">BIENVENUE SUR MAYNE ILLIMINET</h3>
     <div class="input-group"><label class="input-label">Nom et Prénom :</label><input type="text" id="reg-name" class="input-field" placeholder="Ex: PAD MAT"></div>
     <div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="reg-id" class="input-field"></div>
+    <div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field" placeholder="Ex: jean@gmail.com"></div>
     <div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
     <button type="button" class="btn-submit" style="background-color:#00bcd4!important;" onclick="executerInscription()">Valider</button>
-    <button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
+<button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
   </div>
 </div>
 
@@ -932,37 +933,55 @@ function selectionnerUserPourChat(client_id, client_nom) {
   ouvrirChat(client_id, client_nom);
 }
 
-    function executerInscription() {
+   function emailToKey(email){
+  return email.toLowerCase().replace(/\./g, ','); 
+}
+
+function executerInscription() {
   const n = document.getElementById('reg-name').value.trim();
   const i = document.getElementById('reg-id').value.trim();
+  const e = document.getElementById('reg-email') ? document.getElementById('reg-email').value.trim().toLowerCase() : "";
   const p = document.getElementById('reg-pin').value.trim();
 
-  if (!n || !i || !p) return showAlert('Remplissez tous les champs');
+  if (!n || !i || !e || !p) return showAlert('Remplissez tous les champs');
   if (p.length !== 6) return showAlert('Le mot de passe doit contenir 6 chiffres');
+  if (e.indexOf('@') === -1) return showAlert('Email invalide');
 
   const phone = i.replace(/\D/g, '');
-  if (!/^\d{8,15}$/.test(phone)) {
-    console.error('Telephone invalide:', i);
-    return showAlert('Numero invalide. Ex: 0166302734');
-  }
+  if (!/^\d{8,15}$/.test(phone)) return showAlert('Numero invalide. Ex: 0166302734');
 
+  const emailKey = e.replace(/\./g, ','); // Firebase n'aime pas le .
   const pinHache = CryptoJS.MD5(p).toString();
 
-  database.ref('clients/' + phone).set({
-    nom: n,
-    pin: pinHache,
-    solde: 0,
-    commission: 0,
-    recompense: 0
-  }).then(() => {
-    showAlert('Compte cree avec succes!');
-    if (window.AppInventor) {
-      window.AppInventor.setWebViewString('OK_' + phone);
+  database.ref('clients/' + phone).once('value').then(snapPhone => {
+    if(snapPhone.exists()){
+      showAlert('Ce numéro a déjà un compte');
+      return;
     }
-    afficherFormulaireConnexion();
-    document.getElementById('login-id').value = phone;
+    database.ref('emails_index/' + emailKey).once('value').then(snapEmail => {
+      if(snapEmail.exists()){
+        showAlert('Cet e-mail est déjà utilisé par un autre client');
+        return;
+      }
+      // Création
+      database.ref('clients/' + phone).set({
+        nom: n,
+        email: e,
+        pin: pinHache,
+        solde: 0,
+        commission: 0,
+        recompense: 0
+      }).then(() => {
+        database.ref('emails_index/' + emailKey).set(phone).then(() => {
+          showAlert('Compte cree avec succes!');
+          if (window.AppInventor) window.AppInventor.setWebViewString('OK_' + phone);
+          afficherFormulaireConnexion();
+          document.getElementById('login-id').value = phone;
+        });
+      });
+    });
   });
-} 
+}
 
 function executerDeconnexion(){
 if(window.pidInterval) clearInterval(window.pidInterval);
@@ -1464,6 +1483,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 </footer>
 </body>
 </html>
+
 
 
 
