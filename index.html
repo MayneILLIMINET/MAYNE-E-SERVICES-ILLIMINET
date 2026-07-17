@@ -530,6 +530,60 @@ const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzoM5bqwSZm83
 
 const OTP_URL = 'https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
 let tempPhone = '', tempEmail = '';
+// TinyDB équivalent JS + TIMER SESSION
+const TinyDB = {
+  put: (k,v) => localStorage.setItem('mayne_'+k, JSON.stringify(v)),
+  get: (k, def=null) => { try{const v=localStorage.getItem('mayne_'+k); return v?JSON.parse(v):def;}catch{return def;} }
+};
+let sessionTimer = null;
+
+function demarrerTimerSession(){
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(()=>{
+    TinyDB.put('current_user_last', Date.now());
+  }, 60000); // garde vivant chaque minute
+}
+
+function tryAutoLogin(){
+  const saved = TinyDB.get('current_user') || JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  if(!saved || !saved.phone) return;
+  const last = TinyDB.get('current_user_last') || Date.now();
+  if(Date.now() - last > 7*24*60*60*1000){ // expire après 7 jours
+    executerDeconnexion(); return;
+  }
+  // Connexion automatique même si page rafraîchie ou internet coupé
+  currentUserId = saved.phone;
+  chargerSessionDepuisFirebase(saved.phone);
+}
+
+function chargerSessionDepuisFirebase(phone){
+  database.ref('clients/'+phone).on('value', v=>{
+    const data = v.val() || {};
+    currentUserSolde = data.solde || 0;
+    currentUserRecompense = data.recompense || 0;
+    document.getElementById('logged-out-zone').style.display='none';
+    document.getElementById('logged-in-zone').style.display='block';
+    document.getElementById('user-name').innerText = data.nom || phone;
+    // met à jour soldes...
+    const majSolde = (id, valeur)=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.dataset.vrai = valeur.toLocaleString('fr-FR');
+      el.innerText = soldeMasque ? '••••••' : el.dataset.vrai;
+    };
+    majSolde('user-balance', currentUserSolde);
+    majSolde('user-commission', data.commission||0);
+    majSolde('user-recompense', currentUserRecompense);
+    // cache offline
+    TinyDB.put('cache_'+phone, data);
+  });
+  chargerFeed(); chargerMessagerie(); demarrerTimerSession();
+}
+
+window.addEventListener('load', ()=>{
+  setTimeout(tryAutoLogin, 500);
+  setTimeout(appliquerMasqueSolde, 500);
+});
 
 async function pushJS(destId, titre, message, imageUrl=''){
   if(!destId || destId===currentUserId) return;
@@ -681,11 +735,9 @@ function appliquerMasqueSolde(){
     }
   });
   const icone = document.querySelector('[onclick="toggleSolde()"]');
-  if(icone) icone.innerText = soldeMasque ? '👀' : '👁️';
+  if(icone) icone.innerText = soldeMasque ? '👀' : '👀';
 }
-window.addEventListener('load', ()=>{
-  setTimeout(appliquerMasqueSolde, 500);
-});
+
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
 async function uploadToCloudinary(base64Data){
@@ -766,12 +818,13 @@ function executerConnexion(){
             if(dbPin === pinSaisiHache || dbPin === p) {
        const data = s.val();
        if(data.email_verified === false){
-         tempPhone=i; tempEmail=data.email;
-         document.getElementById('verify-email-affiche').innerText=data.email;
+         tempPhone=i; tempEmail=data.email;         document.getElementById('verify-email-affiche').innerText=data.email;
          envoyerCodeEmail(data.email);
          return showAlert('Vérifie ton email d\'abord');
        }
        currentUserId = i;
+       TinyDB.put('current_user', {phone: i, pinHash: pinSaisiHache});
+       TinyDB.put('current_user_last', Date.now());
        localStorage.setItem('mayne_current_user', JSON.stringify({phone: i}));
 
        if (!window.AppInventor) {
@@ -1012,6 +1065,9 @@ function verifierCodeEmail(){
 }
 
 function executerDeconnexion(){
+TinyDB.put('current_user', null);
+localStorage.removeItem('mayne_current_user');
+clearInterval(sessionTimer);
 if(window.pidInterval) clearInterval(window.pidInterval);
 if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';localStorage.removeItem('mayne_current_user');}
 
