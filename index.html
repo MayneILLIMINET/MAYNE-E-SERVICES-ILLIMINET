@@ -206,6 +206,14 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
     <button type="button" class="btn-submit" style="background-color:#00bcd4!important;" onclick="executerInscription()">Valider</button>
 <button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
   </div>
+<div id="verify-interface" style="display:none;">
+  <h3 style="color:#ffeb3b">VÉRIFIE TON EMAIL</h3>
+  <div style="color:#fff;font-size:13px;margin-bottom:10px;">Code envoyé à <b id="verify-email-affiche"></b></div>
+  <div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres"></div>
+  <button type="button" class="btn-submit" onclick="verifierCodeEmail()">Vérifier</button>
+  <button type="button" class="btn-link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button>
+</div>
+
 </div>
 
 <div id="logged-in-zone" style="display:none;">
@@ -520,6 +528,9 @@ const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-
 
 const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 
+const OTP_URL = 'https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
+let tempPhone = '', tempEmail = '';
+
 async function pushJS(destId, titre, message, imageUrl=''){
   if(!destId || destId===currentUserId) return;
   try{
@@ -704,8 +715,8 @@ async function uploadToCloudinary(base64Data){
 }
 function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 
-function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
-function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
+function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
+function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
 
 function switchService(id){
   
@@ -752,7 +763,14 @@ function executerConnexion(){
     if(s.exists()) {
       const dbPin = String(s.val().pin);
       
-      if(dbPin === pinSaisiHache || dbPin === p) {
+            if(dbPin === pinSaisiHache || dbPin === p) {
+       const data = s.val();
+       if(data.email_verified === false){
+         tempPhone=i; tempEmail=data.email;
+         document.getElementById('verify-email-affiche').innerText=data.email;
+         envoyerCodeEmail(data.email);
+         return showAlert('Vérifie ton email d\'abord');
+       }
        currentUserId = i;
        localStorage.setItem('mayne_current_user', JSON.stringify({phone: i}));
 
@@ -937,49 +955,59 @@ function selectionnerUserPourChat(client_id, client_nom) {
   return email.toLowerCase().replace(/\./g, ','); 
 }
 
-function executerInscription() {
-  const n = document.getElementById('reg-name').value.trim();
-  const i = document.getElementById('reg-id').value.trim();
-  const e = document.getElementById('reg-email') ? document.getElementById('reg-email').value.trim().toLowerCase() : "";
-  const p = document.getElementById('reg-pin').value.trim();
+function executerInscription(){
+  const n=document.getElementById('reg-name').value.trim();
+  const i=document.getElementById('reg-id').value.trim();
+  const e=document.getElementById('reg-email').value.trim().toLowerCase();
+  const p=document.getElementById('reg-pin').value.trim();
+  if(!n||!i||!e||!p) return showAlert('Remplis tout');
+  const phone=i.replace(/\D/g,'');
+  const emailKey=e.replace(/\./g,',');
+  const pinHache=CryptoJS.MD5(p).toString();
 
-  if (!n || !i || !e || !p) return showAlert('Remplissez tous les champs');
-  if (p.length !== 6) return showAlert('Le mot de passe doit contenir 6 chiffres');
-  if (e.indexOf('@') === -1) return showAlert('Email invalide');
-
-  const phone = i.replace(/\D/g, '');
-  if (!/^\d{8,15}$/.test(phone)) return showAlert('Numero invalide. Ex: 0166302734');
-
-  const emailKey = e.replace(/\./g, ','); // Firebase n'aime pas le .
-  const pinHache = CryptoJS.MD5(p).toString();
-
-  database.ref('clients/' + phone).once('value').then(snapPhone => {
-    if(snapPhone.exists()){
-      showAlert('Ce numéro a déjà un compte');
-      return;
-    }
-    database.ref('emails_index/' + emailKey).once('value').then(snapEmail => {
-      if(snapEmail.exists()){
-        showAlert('Cet e-mail est déjà utilisé par un autre client');
-        return;
-      }
-      // Création
-      database.ref('clients/' + phone).set({
-        nom: n,
-        email: e,
-        pin: pinHache,
-        solde: 0,
-        commission: 0,
-        recompense: 0
-      }).then(() => {
-        database.ref('emails_index/' + emailKey).set(phone).then(() => {
-          showAlert('Compte cree avec succes!');
-          if (window.AppInventor) window.AppInventor.setWebViewString('OK_' + phone);
-          afficherFormulaireConnexion();
-          document.getElementById('login-id').value = phone;
+  database.ref('clients/'+phone).once('value').then(s=>{
+    if(s.exists()) return showAlert('Numéro déjà utilisé');
+    database.ref('emails_index/'+emailKey).once('value').then(se=>{
+      if(se.exists()) return showAlert('Email déjà utilisé');
+      database.ref('clients/'+phone).set({nom:n,email:e,pin:pinHache,solde:0,commission:0,recompense:0,email_verified:false})
+      .then(()=>{
+        database.ref('emails_index/'+emailKey).set(phone).then(()=>{
+          tempPhone=phone; tempEmail=e;
+          document.getElementById('verify-email-affiche').innerText=e;
+          envoyerCodeEmail(e);
         });
       });
     });
+  });
+}
+
+function envoyerCodeEmail(email, isResend=false){
+  const mail = email || tempEmail;
+  fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+  .then(r=>r.text()).then(t=>{
+    if(t.includes('sent')){
+      document.getElementById('login-interface').style.display='none';
+      document.getElementById('register-interface').style.display='none';
+      document.getElementById('verify-interface').style.display='block';
+      if(!isResend) showAlert('Code envoyé à '+mail);
+      else showAlert('Code renvoyé !');
+    } else if(t.includes('email_exists')) showAlert('Email déjà utilisé');
+  });
+}
+
+function verifierCodeEmail(){
+  const code=document.getElementById('verify-code').value.trim();
+  if(!code) return;
+  fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+  .then(r=>r.text()).then(t=>{
+    if(t.includes('ok')){
+      database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{
+        showAlert('Email vérifié ! Connecte-toi');
+        document.getElementById('verify-interface').style.display='none';
+        document.getElementById('login-interface').style.display='block';
+        document.getElementById('login-id').value=tempPhone;
+      });
+    } else showAlert('Code incorrect ou expiré');
   });
 }
 
@@ -1477,7 +1505,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 
   <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">
     MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>
-    Cotonou, Bénin — contact : mayneactifer@gmail.com — +229 0159415617<br>
+    Cotonou, Bénin — contact : mayneactifer@gmail.com <br>
     Lancé en juin 2023
   </div>
 </footer>
