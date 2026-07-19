@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Retrait 1xBet - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
+const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
+.head{padding:16px;display:flex;align-items:center;gap:12px}
+.back{width:44px;height:44px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
+.card{margin:10px 16px;background:#fff;border-radius:20px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.label{font-size:12px;font-weight:800;margin-top:14px;display:block}
+.input,.select{width:100%;padding:14px;border:1px solid #ddd;border-radius:14px;margin-top:6px;font-size:14px}
+.especes{display:none;margin-top:10px;background:#fdf0b0;border-radius:14px;padding:12px}
+.especes.show{display:block}
+.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;margin-top:20px;cursor:pointer}
+.notif{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#0f3d2e;color:#fff;padding:12px 18px;border-radius:10px;display:none;z-index:999}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#fdf6ec;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
+.bnav{border:none;background:none;color:#888;font-size:11px}
+.bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;padding:8px 14px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="head"><div class="back" onclick="location.href='index.html'">‹</div><b>Retrait 1xBet</b></div>
+
+<div class="card">
+<label class="label">1. VOTRE ID 1XBET</label>
+<input id="idjoueur" class="input" placeholder="">
+
+<label class="label">2. MONTANT A RETIRER</label>
+<input id="montant" type="number" class="input" placeholder="">
+
+<label class="label">3. MÉTHODE</label>
+<select id="methode" class="select" onchange="toggleEspeces()">
+<option value="">Choisir méthode</option>
+<option value="ESPECES">ESPÈCES</option>
+<option value="MTN">MTN MoMo</option>
+<option value="MOOV">Moov Money</option>
+<option value="CELTIS">Celtis</option>
+</select>
+
+<div class="especes" id="boxEspeces">
+<label class="label" style="margin-top:0">Ville: ENTREZ CODE-1XBET-REÇU ICI ⬇️ </label>
+<input id="ville" class="input" value="">
+<label class="label">Rue</label>
+<input id="rue" class="input" value="AB-CALAVI Secrétaire de Dieu">
+</div>
+
+<label class="label">4. Votre Nom</label>
+<input id="code" class="input" placeholder="">
+
+<button class="btn" onclick="validerRetrait1xbet()">Valider</button>
+</div>
+</div>
+
+<div class="notif" id="notif"></div>
+<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 Accueil</button><button class="bnav active"> 1xBet Retrait</button><button class="bnav" onclick="location.href='compte.html'">👤</button></div>
+
+<script>
+let currentUserId=null;
+let _lock=false;
+function showN(t){const e=document.getElementById('notif');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',4000);}
+
+function init(){
+const saved=JSON.parse(localStorage.getItem('mayne_current_user')||localStorage.getItem('mayne_current_user')||'null') || JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+const raw=localStorage.getItem('mayne_current_user');
+if(!raw){location.href='index.html';return;}
+try{const u=JSON.parse(raw);currentUserId=u.phone||u; }catch{currentUserId=raw;}
+}
+function toggleEspeces(){
+document.getElementById('boxEspeces').classList.toggle('show', document.getElementById('methode').value==='ESPECES');
+}
+function envoyerAlerte(service,data){
+try{
+const payload={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:currentUserId})};
+fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),keepalive:true});
+}catch(e){}
+}
+function proposerSupport(service,data){
+let details='';for(const[k,v]of Object.entries(data))details+=`${k}: ${v}\n`;
+const txt=`🔔 RETRAIT 1XBET\n👤 CLIENT: ${currentUserId}\n${details}`;
+setTimeout(()=>{window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');},500);
+}
+
+function validerRetrait1xbet(){
+const idj=document.getElementById('idjoueur').value.trim();
+const mont=Number(document.getElementById('montant').value);
+const meth=document.getElementById('methode').value;
+const ville=document.getElementById('ville').value.trim();
+const rue=document.getElementById('rue').value.trim();
+const code=document.getElementById('code').value.trim();
+
+if(!idj||!mont||!meth||!code) return alert('Remplis les champs 1 à 4');
+if(meth==='ESPECES'&&(!ville||!rue)) return alert('Ville et Rue requis pour ESPECES');
+if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
+
+const d={
+action:'retrait',
+id_joueur:idj,
+montant:mont,
+methode:meth,
+ville: meth==='ESPECES'?ville:'',
+rue: meth==='ESPECES'?rue:'',
+code_retrait:code,
+whatsapp_client: currentUserId
+};
+
+// 1. Webhook Google (ton ancien système)
+envoyerAlerte('1xbet',d);
+
+// 2. Push OneSignal vers toi (admin) via ton webhook OneSignal
+try{
+fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:'admin',titre:'Nouveau retrait 1xBet',message:`${idj} - ${mont}F - ${meth} - Code:${code}`,imageUrl:''})});
+}catch(e){}
+
+// 3. Firebase
+database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours'}).then(()=>{
+showN('✅ Demande envoyée');
+proposerSupport('1xbet',d);
+setTimeout(()=>location.href='transactions.html',1500);
+});
+}
+window.onload=init;
+</script>
+</body>
+</html>
+
