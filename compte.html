@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mon Compte - MAYNE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
+.top{text-align:center;padding:20px 16px 10px}
+.avatar-wrap{width:90px;height:90px;margin:0 auto;position:relative}
+.avatar{width:90px;height:90px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;font-size:40px;color:#666}
+.star{position:absolute;bottom:0;right:0;width:28px;height:28px;background:#ffe04a;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fdf6ec}
+.list{padding:10px 16px}
+.item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f0e9d8;cursor:pointer}
+.icon{width:42px;height:42px;background:#e8f3df;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
+.item b{display:block;font-size:14px}
+.item span{font-size:11px;color:#999}
+.arrow{margin-left:auto;color:#bbb}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#fdf6ec;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
+.bnav{border:none;background:none;font-size:11px;color:#888}
+.bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;padding:8px 16px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top">
+<h2>Mon Compte</h2>
+<div class="avatar-wrap" style="margin-top:16px"><div class="avatar" id="av">👤</div><div class="star">★</div></div>
+<b id="name" style="display:block;margin-top:10px;font-size:18px">Ayizan Marius</b>
+<span id="email" style="color:#999;font-size:13px">topalmaynetpl13@gmail.com</span>
+</div>
+
+<div class="list">
+<div class="item" onclick="alert('Profil')"><div class="icon">👤</div><div><b>Information sur le compte</b><span>Information sur votre profil</span></div><div class="arrow">›</div></div>
+<div class="item"><div class="icon">🔢</div><div><b>Verrouillage par PIN</b><span>Application sécurisée avec code PIN</span></div><div class="arrow">›</div></div>
+<div class="item"><div class="icon">🔒</div><div><b>Connexion et sécurité</b><span>Protégez votre compte</span></div><div class="arrow">›</div></div>
+<div class="item"><div class="icon">🌐</div><div><b>Langue</b><span>Changez la langue de votre appli</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="location.href='parrainage.html'"><div class="icon">🪙</div><div><b>Compte de parrainage</b><span>Suivez vos gains de parrainage</span></div><div class="arrow">›</div></div>
+<div class="item"><div class="icon">🎧</div><div><b>Aide & assistance</b><span>Vous avez besoin d'aide?</span></div><div class="arrow">›</div></div>
+<div class="item"><div class="icon">⭐</div><div><b>Noter Paykko</b><span>Partagez votre avis</span></div><div class="arrow">›</div></div>
+<div class="item"><div class="icon">ℹ️</div><div><b>À propos</b><span>Accéder au site web de MAYNE</span></div><div class="arrow">›</div></div>
+<div class="item" style="color:#c0392b"><div class="icon" style="background:#fde2e2">⛔</div><div><b>Désactiver le compte</b><span>Supprimer définitivement votre compte</span></div><div class="arrow">›</div></div>
+</div>
+</div>
+
+<div class="bottom">
+<button class="bnav" onclick="location.href='index.html'">🏠</button>
+<button class="bnav" onclick="location.href='epargne.html'">⭐</button>
+<button class="bnav">↕</button>
+<button class="bnav active">👤 Compte</button>
+</div>
+
+<script>
+const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+if(u){
+document.getElementById('name').textContent=u.nom||'Ayizan Marius';
+document.getElementById('email').textContent=u.email||u.phone;
+document.getElementById('av').textContent=(u.nom||'A')[0].toUpperCase();
+}
+</script>
+</body>
+</html>
