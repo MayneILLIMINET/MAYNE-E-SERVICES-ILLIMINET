@@ -52,14 +52,14 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 </select>
 
 <div class="especes" id="boxEspeces">
-<label class="label" style="margin-top:0">Ville: ENTREZ CODE-1XBET-REÇU ICI ⬇️ </label>
-<input id="ville" class="input" value="">
-<label class="label">Rue</label>
-<input id="rue" class="input" value="AB-CALAVI Secrétaire de Dieu">
+<label class="label" style="margin-top:0">Ville</label>
+<input id="ville" class="input" value="AB-CALAVI SECRETAIRE DE DIEU">
+<label class="label">Rue:CODE 1XBET REÇU</label>
+<input id="rue" class="input" value="">
 </div>
 
-<label class="label">4. RE-CONFIRMEZ CODE 1XBET-REÇU</label>
-<input id="Reference" class="input" placeholder="">
+<label class="label">4. Reconfirmer code-1xbet</label>
+<input id="code" class="input" placeholder="">
 
 <button class="btn" onclick="validerRetrait1xbet()">Valider</button>
 </div>
@@ -85,7 +85,7 @@ document.getElementById('boxEspeces').classList.toggle('show', document.getEleme
 function envoyerAlerte(service,data){
 try{
 const payload={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:currentUserId})};
-fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload),keepalive:true});
+fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),keepalive:true});
 }catch(e){}
 }
 function proposerSupport(service,data){
@@ -107,14 +107,14 @@ if(meth==='ESPECES'&&(!ville||!rue)) return alert('Ville et Rue requis pour ESPE
 if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
 
 const d={
-action:'retrait',
-id_joueur:idj,
-montant:mont,
-methode:meth,
-ville: meth==='ESPECES'?ville:'',
-rue: meth==='ESPECES'?rue:'',
-code_retrait:code,
-whatsapp_client: currentUserId
+  action:'retrait',
+  id_joueur:idj,
+  montant:mont,
+  methode:meth,
+  rue: rue,
+  code_retrait: ville, // ville contient ton code d'après ton label
+  nom: code,
+  whatsapp_client: currentUserId
 };
 
 // 1. Webhook Google (ton ancien système)
@@ -122,7 +122,7 @@ envoyerAlerte('1xbet',d);
 
 // 2. Push OneSignal vers toi (admin) via ton webhook OneSignal
 try{
-fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:'admin',titre:'Nouveau retrait 1xBet',message:`${idj} - ${mont}F - ${meth} - Code:${code}`,imageUrl:''})});
+fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({destId:'admin',titre:'Nouveau retrait 1xBet',message:`${idj} - ${mont}F - Rue:${data} -  ${meth} - Code:${code}`,imageUrl:''})});
 }catch(e){}
 
 // 3. Firebase
@@ -136,4 +136,3 @@ window.onload=init;
 </script>
 </body>
 </html>
-
