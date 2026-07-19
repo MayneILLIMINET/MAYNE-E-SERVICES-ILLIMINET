@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Transactions - MAYNE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
+.head{padding:18px 16px;display:flex;justify-content:space-between;align-items:center}
+.tabs{display:flex;gap:8px;padding:0 16px}
+.tab{padding:8px 16px;border-radius:100px;background:#fff;font-size:13px;font-weight:600;border:1px solid #eee;cursor:pointer}
+.tab.active{background:#0f3d2e;color:#d6f78c;border-color:#0f3d2e}
+.list{padding:16px}
+.item{background:#fff;border-radius:14px;padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.left{display:flex;gap:10px;align-items:center}
+.ico{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.in{background:#e8f5d8;color:#0f3d2e} .out{background:#fde2e2;color:#c0392b}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#fdf6ec;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
+.bnav{border:none;background:none;font-size:11px;color:#888;cursor:pointer}
+.bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;padding:8px 16px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="head"><b style="font-size:20px">Transactions</b><div style="width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center">•••</div></div>
+<div class="tabs"><div class="tab active" onclick="filter('all',this)">Toutes</div><div class="tab" onclick="filter('in',this)">Entrées</div><div class="tab" onclick="filter('out',this)">Sorties</div></div>
+<div class="list" id="list"><div style="background:#fff;border-radius:16px;padding:30px;text-align:center;color:#888">Chargement...</div></div>
+</div>
+<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠</button><button class="bnav" onclick="location.href='epargne.html'">⭐</button><button class="bnav active">↕ Transac</button><button class="bnav" onclick="location.href='compte.html'">👤</button></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+const db=firebase.database();
+const uid=JSON.parse(localStorage.getItem('mayne_current_user')||'null')?.phone;
+let all=[];
+function init(){
+if(!uid){location.href='index.html';return;}
+db.ref('epargne/'+uid).limitToLast(50).on('value',s=>{
+all=[]; s.forEach(c=>{let v=c.val(); all.push(v);});
+all.reverse();
+render('all');
+});
+}
+function render(type){
+const cont=document.getElementById('list');
+let data=all;
+if(type=='in') data=all.filter(x=>x.montant>0);
+if(type=='out') data=all.filter(x=>x.montant<0);
+if(!data.length){cont.innerHTML='<div style="background:#fff;border-radius:16px;padding:40px;text-align:center"><div style="font-size:40px">↻</div><b>Aucune transaction</b></div>';return;}
+cont.innerHTML=data.map(v=>`
+<div class="item">
+<div class="left"><div class="ico ${v.montant>0?'in':'out'}">${v.montant>0?'↓':'↑'}</div><div><b style="font-size:14px">${v.type||'Épargne'} ${v.compteur||''}</b><br><small style="color:#999;font-size:11px">${v.date||''} • ${v.statut||''}</small></div></div>
+<div style="text-align:right"><b style="color:${v.montant>0?'#0a7a42':'#c0392b'}">${v.montant>0?'+':''}${v.montant} XOF</b></div>
+</div>`).join('');
+}
+function filter(t,el){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');render(t);}
+window.onload=init;
+</script>
+</body>
+</html>
