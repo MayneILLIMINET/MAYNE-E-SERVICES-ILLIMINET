@@ -43,8 +43,9 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <div class="kyc" id="kyc"><div><b>Vérification d'identité</b><br><span style="font-size:11px">Retrait après KYC validé</span></div><button style="background:#fff;border:none;border-radius:100px;padding:8px 14px;font-weight:700" onclick="location.href='kyc.html'">Vérifier</button></div>
 <div class="list"><h3>Historique d'épargne</h3><div id="histo"><div style="background:#fff;border-radius:16px;padding:24px;text-align:center">Aucun historique pour le moment</div></div></div>
 </div>
-<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 Accueil</button><button class="bnav active">⭐ Épargne</button><button class="bnav">↕</button><button class="bnav"
-onclick="location.href='compte.html'">👤 Compte</button></div>
+<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 Accueil</button><button class="bnav active">⭐ Épargne</button><button class="bnav">↕</button>
+<button class="bnav"
+onclick="location.href='compte.html'">👤 Compte</button>
 
 <div class="modal" id="mnew"><div class="sheet"><h3>Nouvelle épargne</h3><select id="compteur" class="input"><option>Mensuel +2%</option><option>Annuel +5%</option><option>Fermé +7%</option></select><input id="montant" type="number" placeholder="Montant" class="input"><input id="wa" placeholder="WhatsApp" class="input"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800" onclick="placer()">Confirmer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 <div class="modal" id="mret"><div class="sheet"><h3>Retrait</h3><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Demander</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
