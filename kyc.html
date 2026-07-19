@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KYC - MAYNE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:20px}
+.head{display:flex;justify-content:space-between;align-items:center;padding:18px 16px}
+.head b{font-size:20px}
+.close{width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.illu{width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:160px;background:radial-gradient(circle,#e8f5d8 0%, transparent 70%)}
+.step{padding:20px 16px}
+.step h1{font-size:28px;text-align:center;margin:10px 0}
+.step p{color:#888;text-align:center;font-size:14px;line-height:1.5}
+.input{width:100%;padding:15px;border:1px solid #ddd;border-radius:14px;margin-top:14px;font-size:15px;background:#fff}
+.label{font-size:12px;font-weight:700;margin-top:16px;display:block}
+.label span{color:red}
+.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:18px;font-weight:800;font-size:16px;margin-top:24px}
+.hidden{display:none}
+.card-green{background:#5ec48c;width:120px;height:80px;border-radius:14px;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center;font-size:50px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="head"><div style="width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center" onclick="history.back()">‹</div><b id="title">Vérifier mon compte</b><div class="close" onclick="location.href='epargne.html'">✕</div></div>
+
+<!-- ETAPE 1 -->
+<div class="step" id="s1">
+<div class="illu">🪪</div>
+<h1>Vérification d'identité</h1>
+<p>Avant de pouvoir retirer vos fonds, nous devons vérifier votre identité. Cette procédure, appelée KYC, est une obligation légale pour assurer la sécurité de vos transactions.</p>
+<button class="btn" onclick="go(2)">Continuer</button>
+</div>
+
+<!-- ETAPE 2 -->
+<div class="step hidden" id="s2">
+<h1 style="text-align:left;font-size:26px">Vérification d'identité</h1>
+<p style="text-align:left">Vérifiez que vos informations d'identités correspondent à votre pièce d'identité.</p>
+<label class="label">Nom <span>*</span></label><input id="nom" class="input" placeholder="Ayizan">
+<label class="label">Prénom <span>*</span></label><input id="prenom" class="input" placeholder="Marius">
+<label class="label">Date de naissance <span>*</span></label><input id="dob" type="date" class="input" value="2000-01-18">
+<label class="label">Genre <span>*</span></label><select id="genre" class="input"><option>Masculin</option><option>Féminin</option></select>
+<label class="label">Pays <span>*</span></label><select id="pays" class="input"><option>Benin</option><option>Togo</option><option>Nigeria</option><option>Côte d'Ivoire</option></select>
+<button class="btn" onclick="go(3)">Suivant</button>
+</div>
+
+<!-- ETAPE 3 -->
+<div class="step hidden" id="s3">
+<div class="illu">🪪</div>
+<h1>Prenez une photo de votre carte d'identité</h1>
+<p>Assurez-vous que votre carte est lisible et bien éclairée. Pas de photocopies.</p>
+<input type="file" id="file" accept="image/*" class="input">
+<button class="btn" onclick="validerKYC()">Continuer</button>
+</div>
+
+<div class="step hidden" id="s4" style="text-align:center;padding-top:60px">
+<div style="font-size:80px">✅</div>
+<h1>Demande envoyée!</h1>
+<p>Votre vérification est en cours. Vous serez notifié dans 24h.</p>
+<button class="btn" onclick="location.href='epargne.html'">Retour à l'épargne</button>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+const db=firebase.database();
+let uid=JSON.parse(localStorage.getItem('mayne_current_user')||'null')?.phone;
+function go(n){
+document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden'));
+document.getElementById('s'+n).classList.remove('hidden');
+if(n==2)document.getElementById('title').textContent="Vérification d'identité";
+}
+function validerKYC(){
+const data={nom:nom.value,prenom:prenom.value,dob:dob.value,genre:genre.value,pays:pays.value,statut:'en_attente',date:new Date().toISOString()};
+if(!uid)return alert('Reconnectez-vous');
+db.ref('clients/'+uid+'/kyc').set(data).then(()=>go(4));
+}
+</script>
+</body>
+</html>
