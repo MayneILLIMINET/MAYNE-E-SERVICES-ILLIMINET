@@ -331,7 +331,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#f0f0f0;min-he
       <h4>Service 1XBET</h4>
       <div class="inner-toggle">
         <button class="inner-btn active" id="tab-xbet-depot" onclick="toggleXbetMode('depot')">Dépôt</button>
-        <button class="inner-btn" id="tab-xbet-retrait" onclick="toggleXbetMode('retrait')">Retrait</button>
+        <button class="inner-btn" id="tab-xbet-retrait" onclick="location.href='retrait1xbet.html'">Retrait</button>
       </div>
       <div id="xbet-depot-zone">
         <div class="input-group"><input type="text" id="xbet-id-joueur" class="input-field dark-field" placeholder="ID Joueur (Dépôt)"></div>
@@ -800,7 +800,16 @@ window.addEventListener('popstate', function(){
     history.pushState(null, null, location.href);
   }
 });
-function toggleXbetMode(m){document.getElementById('tab-xbet-depot').classList.toggle('active',m==='depot');document.getElementById('tab-xbet-retrait').classList.toggle('active',m==='retrait');document.getElementById('xbet-depot-zone').style.display=m==='depot'?'block':'none';document.getElementById('xbet-retrait-zone').style.display=m==='retrait'?'block':'none';}
+function toggleXbetMode(m){
+  if(m==='retrait'){
+    window.location.href='retrait1xbet.html';
+    return;
+  }
+  document.getElementById('tab-xbet-depot').classList.toggle('active',true);
+  document.getElementById('tab-xbet-retrait').classList.toggle('active',false);
+  document.getElementById('xbet-depot-zone').style.display='block';
+  document.getElementById('xbet-retrait-zone').style.display='none';
+}
 
 function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
 
@@ -1567,6 +1576,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 </footer>
 </body>
 </html>
+
 
 
 
