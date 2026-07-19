@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notifications - MAYNE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec}
+.head{padding:16px;display:flex;align-items:center;justify-content:space-between}
+.back{width:44px;height:44px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer}
+.notif{display:flex;gap:12px;padding:16px;border-bottom:1px solid #f0e9d8}
+.ico{width:52px;height:52px;background:#d6f78c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="head"><div class="back" onclick="history.back()">‹</div><b style="font-size:20px">Notifications</b><div class="back">•••</div></div>
+<div id="notif-list">
+<div class="notif">
+<div class="ico">☺</div>
+<div style="flex:1"><div style="display:flex;justify-content:space-between"><b>Bienvenu sur MAYNE !</b><small style="color:#999">11 juil. <span style="color:red">●</span></small></div><p style="font-size:14px;margin-top:4px">Bienvenue sur MAYNE! Votre compte a été créé avec succès.</p></div>
+</div>
+</div>
+</div>
+<script>
+const uid=JSON.parse(localStorage.getItem('mayne_current_user')||'null')?.phone;
+if(uid){
+const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+firebase.database().ref('notifications/'+uid).on('value',s=>{
+if(!s.exists())return;
+const c=document.getElementById('notif-list');
+let h='';
+s.forEach(ch=>{
+const v=ch.val();
+h+=`<div class="notif"><div class="ico">🔔</div><div style="flex:1"><div style="display:flex;justify-content:space-between"><b>${v.titre}</b><small>${v.date||''}</small></div><p style="font-size:14px;margin-top:4px">${v.message}</p></div></div>`;
+});
+if(h) c.innerHTML+=h;
+});
+}
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</body>
+</html>
