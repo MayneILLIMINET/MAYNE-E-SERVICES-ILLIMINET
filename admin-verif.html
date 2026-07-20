@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin - Vérif Comptes</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};firebase.initializeApp(firebaseConfig);const db=firebase.database();</script>
+<style>body{font-family:system-ui;background:#f5f5f5;padding:16px} .card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)} .btn{border:none;padding:8px 14px;border-radius:20px;font-weight:700;cursor:pointer} .ok{background:#0f3d2e;color:#d6f78c} .no{background:#eee} </style>
+</head><body>
+<h2>Comptes à vérifier</h2>
+<div id="list">Chargement...</div>
+<script>
+db.ref('users').on('value', snap=>{
+  const list=document.getElementById('list'); list.innerHTML='';
+  snap.forEach(child=>{
+    const u=child.val(); const key=child.key;
+    const div=document.createElement('div'); div.className='card';
+    div.innerHTML=`<b>${u.nom||''} ${u.prenom||''}</b> - ${u.phone}<br>
+    Email: ${u.email||'-'} | Sexe: ${u.sexe||'-'}<br>
+    CNI: <b>${u.cni||'Non fourni'}</b><br>
+    Statut: ${u.verifie?'✅ Vérifié':'❌ Non vérifié'}<br><br>
+    <button class="btn ok" onclick="verif('${key}',true)">Vérifier</button>
+    <button class="btn no" onclick="verif('${key}',false)">Retirer vérif</button>
+    <a href="https://wa.me/${u.phone}" target="_blank" style="margin-left:10px">WhatsApp</a>`;
+    list.appendChild(div);
+  });
+});
+function verif(key,val){ db.ref('users/'+key).update({verifie:val}).then(()=>alert(val?'Compte vérifié':'Vérif retirée')); }
+</script>
+</body></html>
