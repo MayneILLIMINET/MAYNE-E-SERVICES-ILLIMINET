@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Déverrouiller - MAYNE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.app{max-width:430px;width:100%;text-align:center;padding:30px 20px}
+.dots{display:flex;gap:16px;justify-content:center;margin:20px 0}
+.d{width:18px;height:18px;border-radius:50%;border:2px solid #0f3d2e}
+.d.fill{background:#0f3d2e}
+.num{width:72px;height:72px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.06)}
+.num:active{background:#0f3d2e;color:#fff}
+.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+</style>
+</head>
+<body>
+<div class="app" id="box">
+<h2>Entre ton code PIN</h2>
+<div class="dots"><div class="d" id="d0"></div><div class="d" id="d1"></div><div class="d" id="d2"></div><div class="d" id="d3"></div></div>
+<p id="err" style="color:#c0392b;font-size:13px;height:18px"></p>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;justify-items:center;margin-top:20px">
+<div class="num" onclick="tap(1)">1</div><div class="num" onclick="tap(2)">2</div><div class="num" onclick="tap(3)">3</div>
+<div class="num" onclick="tap(4)">4</div><div class="num" onclick="tap(5)">5</div><div class="num" onclick="tap(6)">6</div>
+<div class="num" onclick="tap(7)">7</div><div class="num" onclick="tap(8)">8</div><div class="num" onclick="tap(9)">9</div>
+<div style="width:72px"></div><div class="num" onclick="tap(0)">0</div><div class="num" onclick="del()">⌫</div>
+</div>
+<p style="margin-top:30px;font-size:12px;color:#888" onclick="if(confirm('Réinitialiser PIN ? Tu devras te reconnecter')){localStorage.clear();location.href='index.html'}">Oublié ? Réinitialiser</p>
+</div>
+<script>
+let pin=''; const real=localStorage.getItem('mayne_pin')||'0000';
+function tap(n){ if(pin.length<4){pin+=n; draw(); if(pin.length===4) check();} }
+function del(){ pin=pin.slice(0,-1); draw(); }
+function draw(){ for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('fill', i<pin.length); }
+function check(){
+  if(pin===real){ sessionStorage.setItem('mayne_unlocked','1'); location.href='index.html'; }
+  else { document.getElementById('err').textContent='Code incorrect'; document.getElementById('box').classList.add('shake'); setTimeout(()=>{document.getElementById('box').classList.remove('shake'); pin=''; draw();},400); }
+}
+</script>
+</body>
+</html>
