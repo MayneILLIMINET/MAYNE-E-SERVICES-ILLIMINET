@@ -47,10 +47,10 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 </div>
 
 <div class="bottom">
-<button class="bnav" onclick="location.href='index.html'">🏠</button>
-<button class="bnav" onclick="location.href='epargne.html'">⭐</button>
+<button class="bnav" onclick="location.href='index.html'">RETOUR À L'ACCUEIL🏠</button>
+<button class="bnav" onclick="location.href='epargne.html'">MON ÉPARGNE⭐</button>
 <button class="bnav">↕</button>
-<button class="bnav active">👤 Compte</button>
+<button class="bnav active">MES INFOS👤</button>
 </div>
 <script>
 // ajoute ça en bas avec ton autre script
@@ -59,7 +59,7 @@ document.getElementById('pinStatus').textContent = localStorage.getItem('mayne_p
 <script>
 const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
 if(u){
-document.getElementById('name').textContent=u.nom||'Ayizan Marius';
+document.getElementById('name').textContent=u.nom||'Nom et prénom';
 document.getElementById('email').textContent=u.email||u.phone;
 document.getElementById('av').textContent=(u.nom||'A')[0].toUpperCase();
 }
