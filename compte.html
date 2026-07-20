@@ -34,7 +34,8 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 
 <div class="list">
 <div class="item" onclick="location.href='info-compte.html'"><div class="icon">👤</div><div><b>Information sur le compte</b><span>Information sur votre profil</span></div><div class="arrow">›</div></div>
-<div class="item"><div class="icon">🔢</div><div><b>Verrouillage par PIN</b><span>Application sécurisée avec code PIN</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="location.href='pin-setup.html'"><div class="icon">🔢</div><div><b>Verrouillage par PIN</b><span id="pinStatus">Chargement...</span></div><div class="arrow">›</div></div>
+
 <div class="item"><div class="icon">🔒</div><div><b>Connexion et sécurité</b><span>Protégez votre compte</span></div><div class="arrow">›</div></div>
 <div class="item"><div class="icon">🌐</div><div><b>Langue</b><span>Changez la langue de votre appli</span></div><div class="arrow">›</div></div>
 <div class="item" onclick="location.href='parrainage.html'"><div class="icon">🪙</div><div><b>Compte de parrainage</b><span>Suivez vos gains de parrainage</span></div><div class="arrow">›</div></div>
@@ -51,7 +52,10 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <button class="bnav">↕</button>
 <button class="bnav active">👤 Compte</button>
 </div>
-
+<script>
+// ajoute ça en bas avec ton autre script
+document.getElementById('pinStatus').textContent = localStorage.getItem('mayne_pin_enabled')==='true' ? 'Activé • Code à 4 chiffres' : 'Désactivé';
+</script>
 <script>
 const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
 if(u){
