@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIN - MAYNE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec}
+.head{padding:16px;display:flex;align-items:center;gap:12px}
+.back{width:44px;height:44px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
+.card{margin:12px 16px;background:#fff;border-radius:20px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.row{display:flex;justify-content:space-between;align-items:center}
+.switch{width:52px;height:30px;background:#ddd;border-radius:20px;position:relative;cursor:pointer;transition:.2s}
+.switch.on{background:#0f3d2e}
+.dot{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}
+.switch.on .dot{left:24px}
+.dots{display:flex;gap:14px;justify-content:center;margin:20px 0}
+.d{width:16px;height:16px;border-radius:50%;border:2px solid #0f3d2e}
+.d.fill{background:#0f3d2e}
+.num{width:70px;height:70px;border-radius:50%;background:#fff;border:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;cursor:pointer}
+.num:active{background:#0f3d2e;color:#fff}
+.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;margin-top:20px}
+.input{letter-spacing:12px;text-align:center;font-size:20px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="head"><div class="back" onclick="location.href='compte.html'">‹</div><b>Verrouillage par PIN</b></div>
+
+<div class="card">
+<div class="row"><div><b>Activer le PIN</b><br><span style="font-size:11px;color:#999">Demander un code à l'ouverture</span></div><div class="switch" id="sw" onclick="toggle()"><div class="dot"></div></div></div>
+</div>
+
+<div class="card" id="setupBox" style="display:none">
+<h4 id="title" style="text-align:center">Définir un code à 4 chiffres</h4>
+<div class="dots"><div class="d" id="d0"></div><div class="d" id="d1"></div><div class="d" id="d2"></div><div class="d" id="d3"></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center;margin-top:10px">
+<div class="num" onclick="tap(1)">1</div><div class="num" onclick="tap(2)">2</div><div class="num" onclick="tap(3)">3</div>
+<div class="num" onclick="tap(4)">4</div><div class="num" onclick="tap(5)">5</div><div class="num" onclick="tap(6)">6</div>
+<div class="num" onclick="tap(7)">7</div><div class="num" onclick="tap(8)">8</div><div class="num" onclick="tap(9)">9</div>
+<div class="num" style="background:transparent;border:none"></div><div class="num" onclick="tap(0)">0</div><div class="num" onclick="del()">⌫</div>
+</div>
+<p id="msg" style="text-align:center;color:#c0392b;font-size:12px;margin-top:12px"></p>
+</div>
+</div>
+
+<script>
+let pin='', step='new', firstPin='', enabled = localStorage.getItem('mayne_pin_enabled')==='true';
+const sw=document.getElementById('sw');
+function refreshSwitch(){ sw.classList.toggle('on', enabled); document.getElementById('setupBox').style.display = enabled ? 'block' : 'none'; if(enabled && !localStorage.getItem('mayne_pin')){ step='new'; firstPin=''; document.getElementById('title').textContent='Définir un code à 4 chiffres'; } }
+function toggle(){
+  if(enabled){
+    if(confirm('Désactiver le verrouillage PIN ?')){ enabled=false; localStorage.setItem('mayne_pin_enabled','false'); refreshSwitch(); }
+  } else { enabled=true; localStorage.setItem('mayne_pin_enabled','true'); refreshSwitch(); }
+}
+function tap(n){
+  if(pin.length<4){ pin+=n; draw(); }
+  if(pin.length===4){
+    if(step==='new'){ firstPin=pin; pin=''; step='confirm'; document.getElementById('title').textContent='Confirme ton code'; document.getElementById('msg').textContent=''; draw(); }
+    else { 
+      if(pin===firstPin){ localStorage.setItem('mayne_pin', pin); document.getElementById('msg').style.color='#2e7d32'; document.getElementById('msg').textContent='✅ Code enregistré'; setTimeout(()=>location.href='compte.html',800); }
+      else { document.getElementById('msg').textContent='❌ Les codes ne correspondent pas'; pin=''; firstPin=''; step='new'; document.getElementById('title').textContent='Définir un code à 4 chiffres'; draw(); }
+    }
+  }
+}
+function del(){ pin=pin.slice(0,-1); draw(); }
+function draw(){ for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('fill', i<pin.length); }
+refreshSwitch(); draw();
+</script>
+</body>
+</html>
