@@ -50,39 +50,106 @@ onclick="location.href='compte.html'">👤Compte</button></div>
 <div class="modal" id="mnew"><div class="sheet"><h3>Nouvelle épargne</h3><select id="compteur" class="input"><option>Mensuel +2%</option><option>Annuel +5%</option><option>Fermé +7%</option></select><input id="montant" type="number" placeholder="Montant" class="input"><input id="wa" placeholder="WhatsApp" class="input"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800" onclick="placer()">Confirmer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 <div class="modal" id="mret"><div class="sheet"><h3>Retrait</h3><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Demander</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
-let uid,solde=0,vis=true;
+let uid, soldePrincipal=0, soldeEpargne=0, commission=0, vis=true;
+
 function init(){
   const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u){location.href='index.html';return;}
-  uid=u.phone;
-  document.getElementById('uname').textContent=u.nom||'Ayizan Marius';
+  uid=u.phone.replace(/[^0-9]/g,'');
+  document.getElementById('uname').textContent=u.nom||'Client';
   document.getElementById('uemail').textContent=u.email||u.phone;
+  
   db.ref('clients/'+uid).on('value',s=>{
-    const d=s.val()||{}; solde=(+d.solde||0)+(+d.recompense||0);
-    document.getElementById('solde').textContent=vis?solde.toFixed(2)+' XOF':'••••••';
-    document.getElementById('com').textContent=(d.commission||0)+' XOF';
-    document.getElementById('rec').textContent=(d.recompense||0)+' XOF';
+    const d=s.val()||{};
+    soldePrincipal = +d.solde||0;
+    soldeEpargne = +d.solde_epargne||0;
+    commission = +d.commission||0;
+
+    document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'••••••';
+    document.getElementById('rec').textContent=soldeEpargne.toFixed(2)+' XOF';
+    document.getElementById('com').textContent=commission.toFixed(2)+' XOF';
+
+    // cache KYC si vérifié
+    if(d.verifie) document.getElementById('kyc').style.display='none';
   });
-  db.ref('epargne/'+uid).limitToLast(20).on('value',s=>{
+
+  db.ref('epargne/'+uid).limitToLast(30).on('value',s=>{
     const c=document.getElementById('histo');
-    if(!s.exists())return;
-    let h=''; s.forEach(ch=>{const v=ch.val(); h+=`<div class=item><div><b>${v.type} ${v.compteur||''}</b><br><small>${v.date}</small></div><b>${v.montant} XOF</b></div>`});
+    if(!s.exists()){ c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center">Aucun historique</div>'; return;}
+    let h=''; 
+    s.forEach(ch=>{
+      const v=ch.val();
+      const isNeg = v.montant < 0;
+      h=`<div class=item><div><b>${v.type} ${v.compteur||''}</b><br><small>${v.date} ${v.bonus?`• Bonus ${v.bonus} XOF`:''}</small></div><b style="color:${isNeg?'#c0392b':'#0f3d2e'}">${v.montant} XOF</b></div>`+h;
+    });
     c.innerHTML=h;
   });
 }
-function toggleSolde(){vis=!vis; document.getElementById('solde').textContent=vis?solde.toFixed(2)+' XOF':'••••••';}
+
+function toggleSolde(){vis=!vis; document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'••••••';}
 function openN(){document.getElementById('mnew').classList.add('show')}
 function openR(){document.getElementById('mret').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
-function placer(){const cp=compteur.value, mt=+montant.value, wa=document.getElementById('wa').value; if(!mt)return alert('Montant'); const bonus=cp.includes('Mensuel')?mt*0.02:cp.includes('Annuel')?mt*0.05:mt*0.07; db.ref('epargne/'+uid).push().set({type:'Placement',compteur:cp,montant:mt,whatsapp:wa,date:new Date().toLocaleDateString()}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>{const c=s.val()||{}; return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,recompense:(+c.recompense||0)+bonus})}).then(()=>{alert('Placé +'+bonus); closeM()});}
-function retirer(){const mt=+rmont.value, wa=rwa.value; db.ref('epargne/'+uid).push().set({type:'Retrait',montant:-mt,whatsapp:wa,date:new Date().toLocaleDateString()}).then(()=>{alert('Demande envoyée'); closeM()});}
+
+function placer(){
+  const cp=document.getElementById('compteur').value;
+  const mt=Number(document.getElementById('montant').value);
+  const wa=document.getElementById('wa').value.trim();
+  if(!mt || mt<=0) return alert('Entre un montant');
+  if(mt > soldePrincipal) return alert('Solde principal insuffisant. Tu as '+soldePrincipal+' XOF');
+
+  const taux = cp.includes('Mensuel')?0.02:cp.includes('Annuel')?0.05:0.07;
+  const bonus = Math.round(mt*taux);
+
+  db.ref('clients/'+uid).once('value').then(s=>{
+    const c=s.val()||{};
+    const newSolde = (+c.solde||0) - mt;
+    const newEpargne = (+c.solde_epargne||0) + mt;
+    const newCom = (+c.commission||0) + bonus;
+    
+    return db.ref('clients/'+uid).update({
+      solde: newSolde,
+      solde_epargne: newEpargne,
+      commission: newCom
+    }).then(()=>{
+      return db.ref('epargne/'+uid).push().set({
+        type:'Placement',
+        compteur:cp,
+        montant: mt,
+        bonus: bonus,
+        whatsapp: wa,
+        date: new Date().toLocaleString('fr-FR'),
+        statut: 'actif'
+      });
+    });
+  }).then(()=>{ alert('✅ Placé : '+mt+' XOF + '+bonus+' XOF bonus'); closeM(); document.getElementById('montant').value=''; });
+}
+
+function retirer(){
+  const mt=Number(document.getElementById('rmont').value);
+  const wa=document.getElementById('rwa').value.trim();
+  if(!mt || mt<=0) return alert('Montant invalide');
+  if(mt > soldeEpargne) return alert('Solde épargne insuffisant. Tu as '+soldeEpargne+' XOF');
+
+  db.ref('clients/'+uid).once('value').then(s=>{
+    const c=s.val()||{};
+    return db.ref('clients/'+uid).update({
+      solde: (+c.solde||0) + mt,
+      solde_epargne: (+c.solde_epargne||0) - mt
+    }).then(()=>{
+      return db.ref('epargne/'+uid).push().set({
+        type:'Retrait Epargne',
+        montant: -mt,
+        whatsapp: wa,
+        date: new Date().toLocaleString('fr-FR'),
+        statut: 'en cours'
+      });
+    });
+  }).then(()=>{ alert('Demande de retrait envoyée vers ton solde principal'); closeM(); });
+}
 window.onload=init;
 </script>
-</body>
-</html>
