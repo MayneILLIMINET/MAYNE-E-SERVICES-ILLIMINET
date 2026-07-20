@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Infos Compte - MAYNE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
+.head{padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:#fdf6ec;z-index:2}
+.back{width:44px;height:44px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
+.card{margin:10px 16px;background:#fff;border-radius:20px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.label{font-size:11px;font-weight:800;color:#888;margin-top:14px;display:block;text-transform:uppercase}
+.input,.select{width:100%;padding:14px;border:1px solid #ddd;border-radius:14px;margin-top:6px;font-size:14px;background:#fff}
+.badge{display:inline-flex;padding:6px 12px;border-radius:100px;font-size:12px;font-weight:700;margin-top:6px}
+.badge.ok{background:#e8f5e9;color:#2e7d32}
+.badge.no{background:#fdecea;color:#c0392b}
+.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;margin-top:24px;cursor:pointer}
+.notif{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#0f3d2e;color:#fff;padding:12px 18px;border-radius:10px;display:none;z-index:999}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="head"><div class="back" onclick="location.href='compte.html'">‹</div><b>Information sur le compte</b></div>
+
+<div class="card">
+<label class="label">Nom</label>
+<input id="nom" class="input" placeholder="Nom">
+
+<label class="label">Prénom</label>
+<input id="prenom" class="input" placeholder="Prénom">
+
+<label class="label">Numéro WhatsApp</label>
+<input id="phone" class="input" placeholder="229...">
+
+<label class="label">Email</label>
+<input id="email" class="input" placeholder="email@gmail.com">
+
+<label class="label">Sexe</label>
+<select id="sexe" class="select">
+<option value="">Choisir</option>
+<option value="Homme">Homme</option>
+<option value="Femme">Femme</option>
+</select>
+
+<label class="label">Numéro Carte d'Identité / CIP</label>
+<input id="cni" class="input" placeholder="N° CNI">
+
+<label class="label">Statut du compte</label>
+<div id="statut"></div>
+
+<button class="btn" onclick="saveInfos()">Enregistrer</button>
+</div>
+</div>
+<div class="notif" id="notif"></div>
+
+<script>
+function showN(t){const e=document.getElementById('notif');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',3000);}
+
+let currentUser = JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
+
+function load(){
+  document.getElementById('nom').value = currentUser.nom || '';
+  document.getElementById('prenom').value = currentUser.prenom || '';
+  document.getElementById('phone').value = currentUser.phone || '';
+  document.getElementById('email').value = currentUser.email || '';
+  document.getElementById('sexe').value = currentUser.sexe || '';
+  document.getElementById('cni').value = currentUser.cni || '';
+
+  const isVerif = currentUser.verifie === true;
+  const hasCni = (currentUser.cni||'').length >= 5;
+  let html = '';
+  if(isVerif){
+    html = '<span class="badge ok">✅ Vérifié</span>';
+  } else if(hasCni){
+    html = '<span class="badge no" style="background:#fff8e1;color:#f57f17">⏳ En attente de vérification</span>';
+  } else {
+    html = '<span class="badge no">❌ Non vérifié</span>';
+  }
+  document.getElementById('statut').innerHTML = html;
+}
+
+function saveInfos(){
+  currentUser.nom = document.getElementById('nom').value.trim();
+  currentUser.prenom = document.getElementById('prenom').value.trim();
+  currentUser.phone = document.getElementById('phone').value.trim();
+  currentUser.email = document.getElementById('email').value.trim();
+  currentUser.sexe = document.getElementById('sexe').value;
+  currentUser.cni = document.getElementById('cni').value.trim();
+  
+  // si il a rempli CNI, on passe en attente (tu valideras manuellement dans Firebase après)
+  if(currentUser.cni) currentUser.verifie = false;
+
+  localStorage.setItem('mayne_current_user', JSON.stringify(currentUser));
+  // Optionnel: envoyer aussi dans Firebase
+  // firebase.database().ref('users/'+currentUser.phone).update(currentUser);
+  
+  showN('✅ Infos enregistrées');
+  setTimeout(load, 500);
+}
+
+window.onload = load;
+</script>
+</body>
+</html>
