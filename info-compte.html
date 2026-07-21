@@ -13,24 +13,24 @@ const database = firebase.database();
 </script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#fdf6ec;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
-.head{padding:16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:#fdf6ec;z-index:2}
-.back{width:44px;height:44px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
-.card{margin:10px 16px;background:#fff;border-radius:20px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
-.label{font-size:11px;font-weight:800;color:#888;margin-top:14px;display:block;text-transform:uppercase}
-.input,.select{width:100%;padding:14px;border:1px solid #ddd;border-radius:14px;margin-top:6px;font-size:14px;background:#fff}
+body{background:#fcb;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#aaaa;padding-bottom:90px}
+.head{padding:16px;color:#fff;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:#500;z-index:2}
+.back{width:44px;height:44px;background:#aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
+.card{margin:10px 16px;background:#000;border-radius:20px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.label{font-size:11px;font-weight:800;color:#aaa;margin-top:14px;display:block;text-transform:uppercase}
+.input,.select{width:100%;color:#fff;padding:14px;border:1px solid #fff;border-radius:14px;margin-top:6px;font-size:14px;background:#aaaa}
 .badge{display:inline-flex;padding:6px 12px;border-radius:100px;font-size:12px;font-weight:700;margin-top:6px}
 .badge.ok{background:#e8f5e9;color:#2e7d32}
 .badge.wait{background:#fff8e1;color:#f57f17}
 .badge.no{background:#fdecea;color:#c0392b}
-.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;margin-top:24px;cursor:pointer}
-.notif{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#0f3d2e;color:#fff;padding:12px 18px;border-radius:10px;display:none;z-index:999}
+.btn{width:100%;background:#ff5000;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;margin-top:24px;cursor:pointer}
+.notif{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#ff5000;color:#fff;padding:12px 18px;border-radius:10px;display:none;z-index:999}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="head"><div class="back" onclick="location.href='compte.html'">‹</div><b>Information sur le compte</b></div>
+<div class="head"><div class="back" onclick="location.href='compte.html'">🔙</div><b>Information sur le compte</b></div>
 <div class="card">
 <label class="label">Nom</label><input id="nom" class="input">
 <label class="label">Prénom</label><input id="prenom" class="input">
