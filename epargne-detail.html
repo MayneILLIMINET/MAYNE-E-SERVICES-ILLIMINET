@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mayne - Détail</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px}
+.card{margin:12px 16px;background:#0f3d2e;border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden}
+.card::after{content:'';position:absolute;right:-30px;top:-30px;width:180px;height:180px;background:rgba(255,255,255,.05);border-radius:50%}
+.mont{font-size:42px;font-weight:900;text-align:center;margin:6px 0}
+.subcard{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px;margin-top:-28px;position:relative;z-index:2}
+.white{background:#fff;border-radius:16px;padding:14px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.btns{display:flex;gap:12px;padding:0 16px;margin-top:-10px;position:relative;z-index:3}
+.btn{flex:1;border:none;border-radius:100px;padding:14px;font-weight:800;cursor:pointer}
+.btnW{background:#fff;color:#0f3d2e}
+.btnG{background:#d6f78c;color:#0f3d2e}
+.timer{margin:16px;background:#fff;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.tours{display:flex;gap:12px;overflow:auto;padding:0 16px 10px}
+.tour{min-width:200px;background:#fff;border:1px solid #eee;border-radius:16px;padding:12px}
+.tour.active{border-color:#0f3d2e}
+.badge{display:inline-block;background:#a8e6a0;color:#000;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px}
+.input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><div style="display:flex;align-items:center;gap:12px"><div onclick="location.href='epargne.html'" style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer">‹</div><b id="nomTop">Mayne</b></div><div style="width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center">⚙️</div></div>
+
+<div class="card">
+<div style="text-align:center;color:#a8c0b6;font-size:13px">Montant collecté <span onclick="toggle()" style="cursor:pointer">👁️</span></div>
+<div class="mont" id="collecte">0.0 XOF</div>
+<div style="display:flex;justify-content:space-between;margin-top:12px;border-top:1px solid rgba(255,255,255,.15);padding-top:12px;font-size:13px">
+<div style="text-align:center;flex:1">Jours restants<br><b style="font-size:22px" id="jours">5</b></div>
+<div style="width:1px;background:rgba(255,255,255,.2)"></div>
+<div style="text-align:center;flex:1">Date<br><b style="font-size:18px" id="dateFin">25/07/2026</b></div>
+</div>
+</div>
+
+<div class="btns"><button class="btn btnW" onclick="openRet()">↓ Retirer</button><button class="btn btnG" onclick="openDep()">↑ Dépôt</button></div>
+
+<div class="subcard">
+<div class="white"><div style="width:32px;height:32px;background:#e6f6ee;border-radius:50%;display:flex;align-items:center;justify-content:center">📅</div><div style="color:#6abf9a;font-size:12px;margin-top:8px">Fréquence</div><b id="freq">Quotidien</b></div>
+<div class="white"><div style="width:32px;height:32px;background:#e6f6ee;border-radius:50%;display:flex;align-items:center;justify-content:center">💵</div><div style="color:#6abf9a;font-size:12px;margin-top:8px">Contribution</div><b id="contrib">2000.0 XOF</b></div>
+</div>
+
+<div class="timer"><div style="width:44px;height:44px;background:#d6f78c;border-radius:12px;display:flex;align-items:center;justify-content:center">⏳</div><div><b>Prochain dépôt dans :</b><br><span id="countdown">0 j : 3 h : 2 min : 4 sec</span></div></div>
+
+<h3 style="padding:16px 16px 8px">Tours à venir</h3><p style="padding:0 16px 10px;color:#888;font-size:12px;text-align:center">(Effectuez un dépôt à l'avance pour les tours à venir)</p>
+<div class="tours" id="tours"></div>
+
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center"><h3>Historique</h3><span style="color:#0f3d2e;text-decoration:underline;cursor:pointer" onclick="location.href='epargne.html'">Voir tout</span></div>
+<div id="histo" style="padding:0 16px"><div style="background:#fff;border-radius:16px;padding:30px;text-align:center"><div style="font-size:24px">↕️</div><b style="color:#0f3d2e">Aucune Transaction</b></div></div>
+</div>
+
+<div class="modal" id="mDep"><div class="sheet"><h3>↑ Dépôt - <span id="dNom"></span></h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="deposer()">Confirmer dépôt</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
+<div class="modal" id="mRet"><div class="sheet"><h3>↓ Retirer</h3><input id="rMont" type="number" class="input" placeholder="Montant"><p id="penalInfo" style="font-size:12px;color:#e74c3c;display:none">Bloquée : 5% de pénalité sera appliquée si avant échéance</p><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirerDetail()">Retirer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
+
+<script>
+const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+const db=firebase.database();
+let uid, eid, data, soldeP=0, soldeE=0, vis=true, timer;
+
+function init(){
+  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  if(!u){location.href='index.html';return;}
+  uid=(u.phone||'').replace(/[^0-9]/g,'');
+  const params=new URLSearchParams(location.search); eid=params.get('id');
+  if(!eid){location.href='epargne.html';return;}
+  db.ref('clients/'+uid).on('value',s=>{const d=s.val()||{}; soldeP=+d.solde||0; soldeE=+d.solde_epargne||0;});
+  db.ref('epargne/'+uid+'/'+eid).on('value',s=>{
+    if(!s.exists()) return;
+    data=s.val(); render();
+  });
+  db.ref('epargne/'+uid+'/'+eid).child('transactions').limitToLast(20).on('value',s=>{
+    const c=document.getElementById('histo');
+    if(!s.exists()){c.innerHTML='<div style="background:#fff;border-radius:16px;padding:30px;text-align:center"><div style="font-size:24px">↕️</div><b>Aucune Transaction</b></div>';return;}
+    let h=''; s.forEach(ch=>{const v=ch.val(); h=`<div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between"><div><b>${v.type}</b><br><small>${v.date}</small></div><b>${v.montant} XOF</b></div>`+h;});
+    c.innerHTML=h;
+  });
+}
+function render(){
+  document.getElementById('nomTop').textContent=data.nom||'Mayne';
+  document.getElementById('dNom').textContent=data.nom||'Mayne';
+  document.getElementById('collecte').textContent=vis?(+data.montantCollecte||+data.montant||0).toFixed(1)+' XOF':'••••••';
+  document.getElementById('freq').textContent=data.frequence||'Quotidien';
+  document.getElementById('contrib').textContent=(+data.montant||2000).toFixed(1)+' XOF';
+  document.getElementById('dateFin').textContent=data.echeance||'25/07/2026';
+  // jours restants
+  const fin=new Date((data.echeance||'25/07/2026').split('/').reverse().join('-'));
+  const diff=Math.ceil((fin - new Date())/86400000); document.getElementById('jours').textContent= isNaN(diff)?data.joursRestants||5 : diff>0?diff:0;
+  if(data.bloque) document.getElementById('penalInfo').style.display='block';
+  // tours
+  const obj=+data.objectif||0; const contrib=+data.montant||2000; const tours= data.tours|| (obj?Math.ceil(obj/contrib):5);
+  const collecte=+data.montantCollecte||+data.montant||0; const payes=Math.floor(collecte/contrib);
+  let html=''; for(let i=1;i<=tours;i++){
+    const isPaye=i<=payes; html+=`<div class="tour ${isPaye?'active':''}"><div style="display:flex;justify-content:space-between;align-items:center"><div style="width:32px;height:32px;background:${isPaye?'#0f3d2e':'#a8e6a0'};color:${isPaye?'#fff':'#000'};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800">${String(i).padStart(2,'0')}</div>${!isPaye&&i>1?'<span class="badge">Avance</span>':''}</div><div style="margin-top:10px">Tour ${String(i).padStart(2,'0')}</div><b>${contrib.toFixed(1)} XOF</b></div>`;
+  }
+  document.getElementById('tours').innerHTML=html;
+  startCountdown();
+}
+function startCountdown(){
+  clearInterval(timer);
+  let interval=24*3600; if((data.frequence||'').includes('semaine')) interval*=7; if((data.frequence||'').includes('mois')) interval*=30;
+  let next=Date.now()+interval*1000;
+  timer=setInterval(()=>{
+    const diff=next-Date.now();
+    if(diff<=0){document.getElementById('countdown').textContent='Dépôt dû maintenant'; return;}
+    const j=Math.floor(diff/86400000), h=Math.floor(diff%86400000/3600000), m=Math.floor(diff%3600000/60000), s=Math.floor(diff%60000/1000);
+    document.getElementById('countdown').textContent=`${j} j : ${h} h : ${m} min : ${s} sec`;
+  },1000);
+}
+function toggle(){vis=!vis; document.getElementById('collecte').textContent=vis?(+data.montantCollecte||+data.montant||0).toFixed(1)+' XOF':'••••••';}
+function openDep(){document.getElementById('mDep').classList.add('show')}
+function openRet(){document.getElementById('mRet').classList.add('show')}
+function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
+function deposer(){
+  const mt=Number(document.getElementById('dMont').value); if(!mt) return alert('Montant');
+  if(mt>soldeP) return alert('Solde principal insuffisant: '+soldeP);
+  db.ref('clients/'+uid).once('value').then(s=>{
+    const c=s.val()||{};
+    return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt, solde_epargne:(+c.solde_epargne||0)+mt});
+  }).then(()=>{
+    const newCollecte=(+data.montantCollecte||+data.montant||0)+mt;
+    return db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte});
+  }).then(()=>db.ref('epargne/'+uid+'/'+eid+'/transactions').push().set({type:'Dépôt',montant:mt,date:new Date().toLocaleString('fr-FR')}))
+  .then(()=>{alert('Dépôt '+mt+' XOF ajouté'); closeM();});
+}
+function retirerDetail(){
+  const mt=Number(document.getElementById('rMont').value); if(!mt) return alert('Montant');
+  if(mt>(+data.montantCollecte||0)) return alert('Collecte insuffisante');
+  let finalMt=mt, pen=0;
+  if(data.bloque){ const fin=new Date((data.echeance||'').split('/').reverse().join('-')); if(fin>new Date()){ pen=Math.round(mt*0.05); finalMt=mt-pen; if(!confirm('Bloquée - 5% pénalité = '+pen+' XOF. Continuer?')) return; } }
+  db.ref('clients/'+uid).once('value').then(s=>{
+    const c=s.val()||{};
+    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt, solde_epargne:(+c.solde_epargne||0)-mt, commission:(+c.commission||0)+pen});
+  }).then(()=>{
+    const newCollecte=(+data.montantCollecte||0)-mt;
+    return db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte});
+  }).then(()=>db.ref('epargne/'+uid+'/'+eid+'/transactions').push().set({type:'Retrait',montant:-mt,penalite:pen,date:new Date().toLocaleString('fr-FR')}))
+  .then(()=>{alert('Retrait '+finalMt+' XOF (pénalité '+pen+')'); closeM();});
+}
+window.onload=init;
+</script>
+</body>
+</html>
