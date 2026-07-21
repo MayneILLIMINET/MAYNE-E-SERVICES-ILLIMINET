@@ -7,121 +7,130 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#ff5000;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;padding-bottom:90px;background:#aaa;min-height:100vh}
+body{background:#fdf6ec;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;padding-bottom:90px;background:#fdf6ec;min-height:100vh}
 .top{display:flex;justify-content:space-between;align-items:center;padding:16px}
 .avatar{width:44px;height:44px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-weight:800}
-.card{margin:12px 16px;background:#000;border-radius:22px;padding:18px;color:#fff}
-.montant{font-size:15px;font-weight:800;margin:10px 0}
-.sub{font-size:20px;color:#fff;display:flex;gap:20px;margin-bottom:20px}
-.btn{width:100%;background:#fdc;border:none;border-radius:100px;padding:14px;font-weight:800;color:#0f3d2e}
+.card{margin:12px 16px;background:#0f3d2e;border-radius:22px;padding:18px;color:#fff}
+.montant{font-size:38px;font-weight:800;margin:10px 0}
+.sub{font-size:11px;color:#a8c0b6;display:flex;gap:16px;margin-bottom:14px}
+.btn{width:100%;background:#d6f78c;border:none;border-radius:100px;padding:14px;font-weight:800;color:#0f3d2e}
 .pills{display:flex;gap:10px;padding:10px 16px}
-.pill{flex:1;background:#fcb;border-radius:100px;padding:12px;text-align:center;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.06);cursor:pointer}
-.kyc{margin:12px 16px;background:#ff5000;border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center}
+.pill{flex:1;background:#fff;border-radius:100px;padding:12px;text-align:center;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.06);cursor:pointer}
+.kyc{margin:12px 16px;background:#fdeeb0;border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center}
 .list{padding:16px}
-.item{background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.05)}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
-.bnav{border:none;background:000;font-size:11px;color:#888;cursor:pointer}
-.bnav.active{background:#000;color:#fcb;border-radius:100px;padding:8px 16px;font-weight:700}
-.modal{position:fixed;inset:0;background:fcb(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.item{background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#fdf6ec;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
+.bnav{border:none;background:none;font-size:11px;color:#888;cursor:pointer}
+.bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;padding:8px 16px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.show{display:flex}
-.sheet{background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px}
-.input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
+.sheet{background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px;max-height:92vh;overflow:auto}
+.input{width:100%;padding:13px;border:1px solid #ddd;border-radius:12px;margin:6px 0}
+.opt{border:1px solid #eee;border-radius:16px;padding:14px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#fff}
+.opt.active{border-color:#0f3d2e;background:#f0faf5}
+.chip{border:1px solid #eee;border-radius:100px;padding:8px 14px;background:#fff;font-size:13px}
+.chip.active{background:#0f3d2e;color:#fff}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="top">
-<div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">🔔</button></div>
-</div>
-<div class="card">
-<div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">👁️</span></div>
-<div class="montant" id="solde">0.00 XOF</div>
-<div class="sub"><div>Commission<br><b id="com">0 XOF</b></div><div>Solde_Epargne<br><b id="rec">0 XOF</b></div></div>
-<button class="btn" onclick="openR()">Retirer de l'argent ↓</button>
-</div>
+<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">🔔</button></div></div>
+<div class="card"><div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">👁️</span></div><div class="montant" id="solde">0.00 XOF</div><div class="sub"><div>Commission<br><b id="com">0 XOF</b></div><div>Solde_Epargne<br><b id="rec">0 XOF</b></div></div><button class="btn" onclick="openR()">Retirer de l'argent ↓</button></div>
 <div class="pills"><div class="pill" onclick="openN()">＋ Nouvelle épargne</div><div class="pill" onclick="document.querySelector('.list').scrollIntoView({behavior:'smooth'})">◍ Mes épargnes</div></div>
-<div class="kyc" id="kyc"><div><b>Vérification d'identité</b><br><span style="font-size:11px">Retrait après KYC validé</span></div><button style="background:#fcb;border:none;border-radius:100px;padding:8px 14px;font-weight:700" onclick="location.href='kyc.html'">Vérifier</button></div>
+<div class="kyc" id="kyc"><div><b>Vérification d'identité</b><br><span style="font-size:11px">Retrait après KYC validé</span></div><button style="background:#fff;border:none;border-radius:100px;padding:8px 14px;font-weight:700" onclick="location.href='kyc.html'">Vérifier</button></div>
 <div class="list"><h3>Historique d'épargne</h3><div id="histo"></div></div>
 </div>
 <div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 Accueil</button><button class="bnav active">⭐ Épargne</button><button class="bnav">↕</button><button class="bnav" onclick="location.href='compte.html'">👤Compte</button></div>
 
-<div class="modal" id="mnew"><div class="sheet"><h3>Nouvelle épargne</h3><select id="compteur" class="input"><option>Mensuel +2%</option><option>Annuel +5%</option><option>Fermé +7%</option></select><input id="montant" type="number" placeholder="Montant" class="input"><input id="wa" placeholder="WhatsApp" class="input"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800" onclick="placer()">Confirmer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
+<!-- CREATION TYPE PAYKKO -->
+<div class="modal" id="mnew"><div class="sheet">
+<div id="step0"><div style="text-align:center;padding:10px"><div style="font-size:50px">🐷</div><h2>Créer une tontine</h2><p style="color:#888">Choisissez le type de tontine que vous souhaitez créer</p></div>
+<div class="opt" onclick="choisirType('groupe')"><div style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48px;background:#e6f6ee;border-radius:50%;display:flex;align-items:center;justify-content:center">👥</div><div><b>Tontine de groupe</b><br><small style="color:#888">Épargnez ensemble et recevez à tour de rôle</small></div></div><div>›</div></div>
+<div class="opt" onclick="choisirType('perso')"><div style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48px;background:#f5f6c8;border-radius:50%;display:flex;align-items:center;justify-content:center">👤</div><div><b>Épargne personnelle</b><br><small style="color:#888">Fixez un objectif et épargnez à votre rythme</small></div></div><div>›</div></div>
+</div>
+
+<div id="step1" style="display:none"><h3>Créer une épargne personnelle</h3><div style="height:6px;background:#eee;border-radius:10px;margin:10px 0"><div style="width:33%;height:100%;background:#6abf9a;border-radius:10px"></div></div><h2>Étape 1/3</h2><h3>Comment va s'appeler votre épargne?</h3><input id="nomEp" class="input" placeholder="mayne" value="Mayne"><p style="margin:10px 0;font-weight:700">Choisissez une icône</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'🚗')">🚗</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🍟')">🍟</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'⚽')">⚽</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🎸')">🎸</div></div><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800;margin-top:20px" onclick="goStep(2)">Continuer</button></div>
+
+<div id="step2" style="display:none"><h3>Fréquence</h3><div style="height:6px;background:#eee;border-radius:10px;margin:10px 0"><div style="width:66%;height:100%;background:#6abf9a;border-radius:10px"></div></div><div class="opt active" onclick="setRythme(this,'A mon rythme')"><div><b>A mon rythme</b><br><small>Économisez à votre propre rythme, sans engagement jusqu'à atteindre votre objectif</small></div><div>◉</div></div><div class="opt" onclick="setRythme(this,'A une date précise')"><div><b>A une date précise</b><br><small>Vous économisez une certaine somme jusqu'à atteindre votre objectif à une date définie</small></div><div>○</div></div><h3 style="margin-top:14px">Quel montant souhaitez-vous atteindre?</h3><div style="font-size:36px;color:#ccc;text-align:center;margin:20px 0" id="objLabel">0.00 XOF</div><input id="objectif" type="number" class="input" placeholder="10000" oninput="objLabel.textContent=(this.value||0)+' XOF'"><div style="display:flex;gap:8px"><button class="chip" onclick="objectif.value=10000;objLabel.textContent='10000 XOF'">10000 XOF</button><button class="chip" onclick="objectif.value=20000;objLabel.textContent='20000 XOF'">20000 XOF</button><button class="chip" onclick="objectif.value=30000;objLabel.textContent='30000 XOF'">30000 XOF</button></div><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800;margin-top:20px" onclick="goStep(3)">Continuer</button></div>
+
+<div id="step3" style="display:none"><h3>Fréquence</h3><div style="height:6px;background:#eee;border-radius:10px;margin:10px 0"><div style="width:100%;height:100%;background:#0f3d2e;border-radius:10px"></div></div><h2>Étape 3/3</h2><h3>à quelle fréquence Souhaitez vous déposer de l'argent?</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>○</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>○</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>○</span></div><div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center" class="opt"><div><b>Bloquer la tontine</b><br><small>Vous pouvez bloquer le retrait de la tontine</small></div><input type="checkbox" id="bloque" style="width:44px;height:26px" onchange="if(this.checked)document.getElementById('mbloc').classList.add('show')"></div><p style="margin-top:12px"><b>Définissez un montant à verser</b></p><input id="montant" type="number" class="input" placeholder="Premier dépôt ex: 2000"><input id="wa" class="input" placeholder="WhatsApp"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800" onclick="placerLegal()">Créer la tontine</button></div>
+</div></div>
+
+<div class="modal" id="mbloc"><div class="sheet" style="text-align:center;border-radius:20px"><div style="width:40px;height:4px;background:#ddd;border-radius:10px;margin:0 auto 10px"></div><h2 style="color:#e74c3c">Attention!</h2><p style="margin:18px 0;line-height:1.5">Votre épargne sera bloquée jusqu'à la date calculée. Si vous retirez avant cette date, une pénalité de 5% sera appliquée.</p><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;padding:16px" onclick="document.getElementById('mbloc').classList.remove('show');document.getElementById('bloque').checked=true">Activer le blocage</button><button class="input" style="background:#ffe9e9;color:#e74c3c;border-radius:100px" onclick="document.getElementById('mbloc').classList.remove('show');document.getElementById('bloque').checked=false">Ne pas bloquer</button></div></div>
+
 <div class="modal" id="mret"><div class="sheet"><h3>Retrait</h3><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Demander</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
-let uid, soldePrincipal=0, soldeEpargne=0, commission=0, vis=true;
+let uid, soldePrincipal=0, soldeEpargne=0, vis=true;
+let icon='🚗', rythme='A mon rythme', frequence='Par mois';
 
 function init(){
   const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u){location.href='index.html';return;}
   uid=(u.phone||'').replace(/[^0-9]/g,'');
-  document.getElementById('wa').value=u.phone||'';
-  document.getElementById('rwa').value=u.phone||'';
-
-  // Affiche direct ce qu'on a en local
-  const fullNameLocal = ((u.prenom||'')+' '+(u.nom||'')).trim() || u.nom || u.prenom || 'Client';
+  document.getElementById('wa').value=u.phone||''; document.getElementById('rwa').value=u.phone||'';
+  const fullNameLocal=((u.prenom||'')+' '+(u.nom||'')).trim()||u.nom||u.prenom||'Client';
   document.getElementById('uname').textContent=fullNameLocal;
   document.getElementById('uemail').textContent=u.email||u.phone||'';
   document.getElementById('av').textContent=(fullNameLocal[0]||'A').toUpperCase();
-
   db.ref('clients/'+uid).on('value',s=>{
-    const d=s.val()||{};
-    soldePrincipal = +d.solde||0;
-    soldeEpargne = +d.solde_epargne||0;
-    commission = +d.commission||0;
-
-    // ✅ On met à jour le nom depuis Firebase aussi (au cas où local est vide)
-    const fullNameFB = ((d.prenom||'')+' '+(d.nom||'')).trim() || d.nom || d.prenom || fullNameLocal;
-    if(fullNameFB && fullNameFB!== 'Client'){
-      document.getElementById('uname').textContent=fullNameFB;
-      document.getElementById('av').textContent=fullNameFB[0].toUpperCase();
-      // on resync le local
-      const updated = {...u, nom: d.nom||u.nom, prenom: d.prenom||u.prenom, email: d.email||u.email};
-      localStorage.setItem('mayne_current_user', JSON.stringify(updated));
-    }
-    if(d.email) document.getElementById('uemail').textContent=d.email;
-
+    const d=s.val()||{}; soldePrincipal=+d.solde||0; soldeEpargne=+d.solde_epargne||0;
     document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'••••••';
     document.getElementById('rec').textContent=soldeEpargne.toFixed(2)+' XOF';
-    document.getElementById('com').textContent=commission.toFixed(2)+' XOF';
+    document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';
+    const fb=((d.prenom||'')+' '+(d.nom||'')).trim(); if(fb){document.getElementById('uname').textContent=fb; document.getElementById('av').textContent=fb[0].toUpperCase();}
     if(d.verifie) document.getElementById('kyc').style.display='none';
   });
-
   db.ref('epargne/'+uid).limitToLast(30).on('value',s=>{
     const c=document.getElementById('histo');
-    if(!s.exists()){ c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center">Aucun historique pour le moment</div>'; return;}
-    let h=''; s.forEach(ch=>{const v=ch.val(); const neg=v.montant<0; h=`<div class=item><div><b>${v.type} ${v.compteur||''}</b><br><small>${v.date}${v.bonus?` • Bonus ${v.bonus}`:''}</small></div><b style="color:${neg?'#c0392b':'#0f3d2e'}">${v.montant} XOF</b></div>`+h;});
+    if(!s.exists()){c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center">Aucun historique</div>';return;}
+    let h=''; s.forEach(ch=>{const v=ch.val(); const neg=v.montant<0; h=`<div class=item><div><b>${v.icon||'💰'} ${v.nom||v.type}</b><br><small>${v.date} • ${v.frequence||''} ${v.bloque?'• Bloquée 5%':''}</small></div><b style="color:${neg?'#c0392b':'#0f3d2e'}">${v.montant} XOF</b></div>`+h;});
     c.innerHTML=h;
   });
 }
 function toggleSolde(){vis=!vis; document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'••••••';}
-function openN(){document.getElementById('mnew').classList.add('show')}
+function openN(){document.getElementById('mnew').classList.add('show'); goStep(0);}
 function openR(){document.getElementById('mret').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
-function placer(){
-  const cp=compteur.value, mt=Number(montant.value), wa=document.getElementById('wa').value.trim();
-  if(!mt) return alert('Montant');
-  if(mt>soldePrincipal) return alert('Solde principal insuffisant: '+soldePrincipal+' XOF');
-  const bonus=Math.round(mt*(cp.includes('Mensuel')?0.02:cp.includes('Annuel')?0.05:0.07));
+function goStep(n){['step0','step1','step2','step3'].forEach((id,i)=>{document.getElementById(id).style.display=i===n?'block':'none';}); if(n===0)document.getElementById('mnew').classList.add('show');}
+function choisirType(t){ if(t==='perso') goStep(1); else alert('Tontine de groupe bientôt'); }
+function pickIcon(el,i){icon=i; el.parentNode.querySelectorAll('.opt').forEach(o=>o.classList.remove('active')); el.classList.add('active');}
+function setRythme(el,r){rythme=r; el.parentNode.parentNode.querySelectorAll('.opt').forEach(o=>{o.classList.remove('active'); o.lastElementChild.textContent='○';}); el.classList.add('active'); el.lastElementChild.textContent='◉';}
+function setFreq(el,f){frequence=f; el.parentNode.querySelectorAll('.opt').forEach(o=>{o.classList.remove('active'); o.lastElementChild.textContent='○';}); el.classList.add('active'); el.lastElementChild.textContent='○'; el.lastElementChild.textContent='◉';}
+
+function placerLegal(){
+  const nom=document.getElementById('nomEp').value.trim()||'Mayne';
+  const obj=Number(document.getElementById('objectif').value)||0;
+  const mt=Number(document.getElementById('montant').value);
+  const wa=document.getElementById('wa').value.trim();
+  const bloque=document.getElementById('bloque').checked;
+  if(!mt) return alert('Montant premier dépôt');
+  if(mt>soldePrincipal) return alert('Solde principal insuffisant: '+soldePrincipal);
+  const tours= obj>0? Math.ceil(obj/mt) : 5;
+  const days= frequence==='Par jour'?tours:frequence==='Par semaine'?tours*7:tours*30;
+  const echeance=new Date(); echeance.setDate(echeance.getDate()+days);
   db.ref('clients/'+uid).once('value').then(s=>{
     const c=s.val()||{};
-    return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt, solde_epargne:(+c.solde_epargne||0)+mt, commission:(+c.commission||0)+bonus});
-  }).then(()=>db.ref('epargne/'+uid).push().set({type:'Placement',compteur:cp,montant:mt,bonus:bonus,whatsapp:wa,date:new Date().toLocaleString('fr-FR'),statut:'actif'}))
- .then(()=>{alert('Placé '+mt+' + bonus '+bonus); closeM(); montant.value='';});
+    return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt, solde_epargne:(+c.solde_epargne||0)+mt});
+  }).then(()=>db.ref('epargne/'+uid).push().set({type:'Epargne personnelle',nom:nom,icon:icon,objectif:obj,montant:mt,rythme:rythme,frequence:frequence,bloque:bloque,echeance:echeance.toLocaleDateString('fr-FR'),joursRestants:days,tours:tours,date:new Date().toLocaleString('fr-FR'),statut:'actif'}))
+.then(()=>{alert('✅ Tontine "'+nom+'" créée : '+mt+' XOF - Échéance '+echeance.toLocaleDateString()); closeM(); document.getElementById('montant').value='';});
 }
 function retirer(){
-  const mt=Number(rmont.value), wa=rwa.value.trim();
+  const mt=Number(rmont.value); const wa=rwa.value.trim();
   if(!mt) return alert('Montant');
   if(mt>soldeEpargne) return alert('Epargne insuffisante: '+soldeEpargne);
+  let finalMt=mt, penalite=0;
+  // Si bloqué avant date -> 5%
+  if(document.getElementById('bloque').checked){ if(confirm('Épargne bloquée : 5% de pénalité?')){penalite=Math.round(mt*0.05); finalMt=mt-penalite;} }
   db.ref('clients/'+uid).once('value').then(s=>{
     const c=s.val()||{};
-    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt, solde_epargne:(+c.solde_epargne||0)-mt});
-  }).then(()=>db.ref('epargne/'+uid).push().set({type:'Retrait Epargne',montant:-mt,whatsapp:wa,date:new Date().toLocaleString('fr-FR'),statut:'en cours'}))
- .then(()=>{alert('Retrait envoyé vers solde principal'); closeM();});
+    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt, solde_epargne:(+c.solde_epargne||0)-mt, commission:(+c.commission||0)+penalite});
+  }).then(()=>db.ref('epargne/'+uid).push().set({type:'Retrait',nom:'Retrait',montant:-mt,penalite:penalite,whatsapp:wa,date:new Date().toLocaleString('fr-FR'),statut:'en cours'}))
+.then(()=>{alert('Retrait '+finalMt+' XOF (pénalité '+penalite+') envoyé vers Principal'); closeM();});
 }
 window.onload=init;
 </script>
