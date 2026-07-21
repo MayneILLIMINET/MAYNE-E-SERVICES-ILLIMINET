@@ -88,7 +88,7 @@ function init(){
   db.ref('epargne/'+uid).limitToLast(30).on('value',s=>{
     const c=document.getElementById('histo');
     if(!s.exists()){c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center">Aucun historique</div>';return;}
-    let h=''; s.forEach(ch=>{const v=ch.val(); const neg=v.montant<0; h=`<div class=item><div><b>${v.icon||'💰'} ${v.nom||v.type}</b><br><small>${v.date} • ${v.frequence||''} ${v.bloque?'• Bloquée 5%':''}</small></div><b style="color:${neg?'#c0392b':'#0f3d2e'}">${v.montant} XOF</b></div>`+h;});
+    let h=''; s.forEach(ch=>{const v=ch.val(); const key=ch.key; const neg=v.montant<0; h=`<div class=item onclick="location.href='epargne-detail.html?id=${key}'"><div><b>${v.icon||'💰'} ${v.nom||v.type}</b><br><small>${v.date} • ${v.frequence||''} ${v.bloque?'• Bloquée 5%':''}</small></div><b style="color:${neg?'#c0392b':'#0f3d2e'}">${v.montant} XOF</b></div>`+h;});
     c.innerHTML=h;
   });
 }
