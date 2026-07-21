@@ -59,17 +59,32 @@ function init(){
   const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u){location.href='index.html';return;}
   uid=(u.phone||'').replace(/[^0-9]/g,'');
-  document.getElementById('uname').textContent=u.nom||'Client';
-  document.getElementById('uemail').textContent=u.email||u.phone;
   document.getElementById('wa').value=u.phone||'';
   document.getElementById('rwa').value=u.phone||'';
-  document.getElementById('av').textContent=(u.nom||'A')[0].toUpperCase();
+
+  // Affiche direct ce qu'on a en local
+  const fullNameLocal = ((u.prenom||'')+' '+(u.nom||'')).trim() || u.nom || u.prenom || 'Client';
+  document.getElementById('uname').textContent=fullNameLocal;
+  document.getElementById('uemail').textContent=u.email||u.phone||'';
+  document.getElementById('av').textContent=(fullNameLocal[0]||'A').toUpperCase();
 
   db.ref('clients/'+uid).on('value',s=>{
     const d=s.val()||{};
     soldePrincipal = +d.solde||0;
     soldeEpargne = +d.solde_epargne||0;
     commission = +d.commission||0;
+
+    // ✅ On met à jour le nom depuis Firebase aussi (au cas où local est vide)
+    const fullNameFB = ((d.prenom||'')+' '+(d.nom||'')).trim() || d.nom || d.prenom || fullNameLocal;
+    if(fullNameFB && fullNameFB!== 'Client'){
+      document.getElementById('uname').textContent=fullNameFB;
+      document.getElementById('av').textContent=fullNameFB[0].toUpperCase();
+      // on resync le local
+      const updated = {...u, nom: d.nom||u.nom, prenom: d.prenom||u.prenom, email: d.email||u.email};
+      localStorage.setItem('mayne_current_user', JSON.stringify(updated));
+    }
+    if(d.email) document.getElementById('uemail').textContent=d.email;
+
     document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'••••••';
     document.getElementById('rec').textContent=soldeEpargne.toFixed(2)+' XOF';
     document.getElementById('com').textContent=commission.toFixed(2)+' XOF';
