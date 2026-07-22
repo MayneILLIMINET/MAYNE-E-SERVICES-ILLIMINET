@@ -23,6 +23,7 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 .tour{min-width:170px;background:#fff;border:1px solid #eee;border-radius:16px;padding:12px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.show{display:flex}
+#mAlert,#mConfirm{z-index:30}
 .sheet{background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px}
 .input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
 </style>
@@ -30,7 +31,6 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <body>
 <div class="app">
 <div class="top"><div style="display:flex;align-items:center;gap:10px"><div onclick="location.href='epargne.html'" style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer">‹</div><b id="nomTop">Mayne</b></div><div>⚙️</div></div>
-
 <div class="card">
 <div style="text-align:center;color:#a8c0b6;font-size:13px">Montant collecté <span onclick="toggle()" style="cursor:pointer">👁️</span></div>
 <div class="mont" id="collecte">0.0 XOF</div>
@@ -40,16 +40,12 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <div style="text-align:center;flex:1">Date<br><b id="dateFin">25/07/2026</b></div>
 </div>
 </div>
-
 <div class="btns"><button class="btn btnW" onclick="openRet()">↓ Retirer</button><button class="btn btnG" onclick="openDep()">↑ Dépôt</button></div>
-
 <div class="subcard">
 <div class="white"><small style="color:#6abf9a">Fréquence</small><br><b id="freq">Par mois</b></div>
 <div class="white"><small style="color:#6abf9a">Contribution</small><br><b id="contrib">2000 XOF</b></div>
 </div>
-
 <div class="timer"><div style="width:44px;height:44px;background:#d6f78c;border-radius:12px;display:flex;align-items:center;justify-content:center">⏳</div><div><b>Prochain dépôt dans :</b><br><span id="countdown">Chargement...</span></div></div>
-
 <h3 style="padding:16px 16px 8px">Tours à venir</h3>
 <div class="tours" id="tours"></div>
 </div>
@@ -57,122 +53,42 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <div class="modal" id="mConfirm"><div class="sheet" style="text-align:center"><p id="confirmTxt"></p><div style="display:flex;gap:10px"><button class="input" style="background:#eee;flex:1;border-radius:100px" onclick="closeM()">Annuler</button><button class="input" style="background:#0f3d2e;color:#fff;flex:1;border-radius:100px" id="confirmOk">Continuer</button></div></div></div>
 <div class="modal" id="mDep"><div class="sheet"><h3>Dépôt</h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="deposer()">Confirmer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 <div class="modal" id="mRet"><div class="sheet"><h3>Retrait</h3><input id="rMont" type="number" class="input" placeholder="Montant"><p id="penal" style="font-size:12px;color:#e74c3c;display:none">Bloquée : 5% pénalité si avant échéance</p><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Retirer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
-
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
-let uid, eid, data, soldeP=0, vis=true, timer=null, targetTime=null;
-
-function getIntervalSec(freq){
-  const f=(freq||'').toLowerCase();
-  if(f.includes('jour') || f.includes('quotidien')) return 86400;
-  if(f.includes('semaine')) return 7*86400;
-  if(f.includes('mois')) return 30*86400;
-  return 86400;
-}
-
+let uid,eid,data,vis=true,timer=null,targetTime=null;
+function getIntervalSec(freq){const f=(freq||'').toLowerCase();if(f.includes('jour')||f.includes('quotidien'))return 86400;if(f.includes('semaine'))return 7*86400;if(f.includes('mois'))return 30*86400;return 86400;}
 function init(){
-  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!u){location.href='index.html';return;}
-  uid=(u.phone||'').replace(/[^0-9]/g,'');
-  eid=new URLSearchParams(location.search).get('id');
-  if(!eid){document.getElementById('countdown').textContent='ID manquant - ouvre depuis epargne.html'; return;}
-  db.ref('clients/'+uid).on('value',s=>{ soldeP=+((s.val()||{}).solde||0); });
+  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!u){location.href='index.html';return;}
+  uid=(u.phone||'').replace(/[^0-9]/g,'');eid=new URLSearchParams(location.search).get('id');
+  if(!eid){document.getElementById('countdown').textContent='ID manquant - ouvre depuis epargne.html';return;}
   db.ref('epargne/'+uid+'/'+eid).on('value',s=>{
-    if(!s.exists()) return;
-    data=s.val();
+    if(!s.exists())return;data=s.val();
     document.getElementById('nomTop').textContent=data.nom||'Mayne';
     document.getElementById('collecte').textContent=vis?((+data.montantCollecte||+data.montant||0)+' XOF'):'••••••';
     document.getElementById('freq').textContent=data.frequence||'Par mois';
     document.getElementById('contrib').textContent=(+data.montant||2000)+' XOF';
     document.getElementById('dateFin').textContent=data.echeance||'25/07/2026';
-    document.getElementById('jours').textContent=data.joursRestants||5;
-    if(data.bloque) document.getElementById('penal').style.display='block';
+    document.getElementById('jours').textContent=Math.round(data.joursRestants||5);
+    if(data.bloque)document.getElementById('penal').style.display='block';
     renderTours();
-    // FIX TIMER : on fixe une seule fois la date cible
     const interval=getIntervalSec(data.frequence);
-    if(data.prochainDepot){
-      targetTime=new Date(data.prochainDepot);
-    } else {
-      targetTime=new Date(Date.now()+interval*1000);
-      // on sauvegarde pour que ça continue même si tu fermes l'app
-      db.ref('epargne/'+uid+'/'+eid).update({prochainDepot:targetTime.toISOString()});
-    }
+    if(data.prochainDepot){targetTime=new Date(data.prochainDepot);}else{targetTime=new Date(Date.now()+interval*1000);db.ref('epargne/'+uid+'/'+eid).update({prochainDepot:targetTime.toISOString()});}
     startCountdown();
   });
 }
-
-function renderTours(){
-  const contrib=+data.montant||2000;
-  const obj=+data.objectif||contrib*5;
-  const tours=Math.max(1, Math.ceil(obj/contrib));
-  const collecte=+data.montantCollecte||contrib;
-  const payes=Math.floor(collecte/contrib);
-  let h='';
-  for(let i=1;i<=tours;i++){
-    h+=`<div class="tour"><div style="display:flex;justify-content:space-between"><b style="background:${i<=payes?'#0f3d2e':'#d6f78c'};color:${i<=payes?'#fff':'#000'};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">${String(i).padStart(2,'0')}</b>${i>payes?'<span style="background:#a8e6a0;border-radius:100px;padding:4px 10px;font-size:11px">Avance</span>':''}</div><div style="margin-top:8px">Tour ${i}</div><b>${contrib} XOF</b></div>`;
-  }
-  document.getElementById('tours').innerHTML=h;
-}
-
-function startCountdown(){
-  clearInterval(timer);
-  timer=setInterval(()=>{
-    if(!targetTime) return;
-    const diff=targetTime - new Date();
-    if(diff<=0){
-      document.getElementById('countdown').textContent='Dépôt dû maintenant';
-      return;
-    }
-    const j=Math.floor(diff/86400000);
-    const h=Math.floor((diff%86400000)/3600000);
-    const m=Math.floor((diff%3600000)/60000);
-    const s=Math.floor((diff%60000)/1000);
-    document.getElementById('countdown').textContent=`${j} j : ${h} h : ${m} min : ${s} sec`;
-  },1000);
-}
-
-function toggle(){vis=!vis; document.getElementById('collecte').textContent=vis?((+data.montantCollecte||+data.montant||0)+' XOF'):'••••••';}
+function renderTours(){const contrib=+data.montant||2000;const obj=+data.objectif||contrib*5;const tours=Math.max(1,Math.ceil(obj/contrib));const collecte=+data.montantCollecte||contrib;const payes=Math.floor(collecte/contrib);let h='';for(let i=1;i<=tours;i++){h+=`<div class="tour"><div style="display:flex;justify-content:space-between"><b style="background:${i<=payes?'#0f3d2e':'#d6f78c'};color:${i<=payes?'#fff':'#000'};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">${String(i).padStart(2,'0')}</b>${i>payes?'<span style="background:#a8e6a0;border-radius:100px;padding:4px 10px;font-size:11px">Avance</span>':''}</div><div style="margin-top:8px">Tour ${i}</div><b>${contrib} XOF</b></div>`;}document.getElementById('tours').innerHTML=h;}
+function startCountdown(){clearInterval(timer);timer=setInterval(()=>{if(!targetTime)return;const diff=targetTime-new Date();if(diff<=0){document.getElementById('countdown').textContent='Dépôt dû maintenant';return;}const j=Math.floor(diff/86400000);const h=Math.floor((diff%86400000)/3600000);const m=Math.floor((diff%3600000)/60000);const s=Math.floor((diff%60000)/1000);document.getElementById('countdown').textContent=`${j} j : ${h} h : ${m} min : ${s} sec`;},1000);}
+function toggle(){vis=!vis;document.getElementById('collecte').textContent=vis?((+data.montantCollecte||+data.montant||0)+' XOF'):'••••••';}
 function openDep(){document.getElementById('mDep').classList.add('show')}
 function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
-function showAlert(t){document.getElementById('alertTxt').textContent=t;document.getElementById('mAlert').classList.add('show');}
-function showConfirm(t,cb){document.getElementById('confirmTxt').textContent=t;document.getElementById('mConfirm').classList.add('show');document.getElementById('confirmOk').onclick=()=>{closeM();cb();};}
-
-function deposer(){
-  const mt=Number(document.getElementById('dMont').value);
-  if(!mt) return showAlert('Entre le montant');
-  const contrib=+data.montant||1000; const interval=getIntervalSec(data.frequence);
-  const joursAEnlever=(mt/contrib)*(interval/86400);
-  const newCollecte=(+data.montantCollecte||0)+mt;
-  const newJours=Math.max(0,(+data.joursRestants||0)-joursAEnlever);
-  const newProchain=new Date(Date.now()+interval*1000).toISOString();
-  db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:newJours,prochainDepot:newProchain}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>{return db.ref('clients/'+uid).update({solde_epargne:(+s.val().solde_epargne||0)+mt})}).then(()=>closeM());
-}
-
-function retirer(){
-  const mt=Number(document.getElementById('rMont').value);
-  if(!mt) return showAlert('Entre le montant');
-  if(mt>(+data.montantCollecte||0)) return showAlert('Collecte insuffisante : '+data.montantCollecte+' XOF');
-  let penalty=0, finalMt=mt;
-  if(data.bloque){
-    const fin=new Date((data.echeance||'').split('/').reverse().join('-'));
-    if(!isNaN(fin)&&fin>new Date()){
-      penalty=Math.round(mt*0.05); finalMt=mt-penalty;
-      return showConfirm(`Compte bloqué : pénalité 5% = ${penalty}F. Tu vas recevoir ${finalMt}F. Continuer ?`,()=>{doRetrait(mt,finalMt,penalty)});
-    }
-  }
-  doRetrait(mt,finalMt,penalty);
-}
-
-function doRetrait(mt,finalMt,penalty){
-  const contrib=+data.montant||1000; const interval=getIntervalSec(data.frequence);
-  const joursARajouter=(mt/contrib)*(interval/86400);
-  const newCollecte=Math.max(0,(+data.montantCollecte||0)-mt);
-  const newJours=(+data.joursRestants||0)+joursARajouter;
-  db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:newJours}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>{const c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt),commission:(+c.commission||0)+penalty})}).then(()=>closeM());
-}
+function showAlert(t){closeM();document.getElementById('alertTxt').textContent=t;document.getElementById('mAlert').classList.add('show');}
+function showConfirm(t,cb){closeM();document.getElementById('confirmTxt').textContent=t;document.getElementById('mConfirm').classList.add('show');document.getElementById('confirmOk').onclick=()=>{closeM();cb();};}
+function deposer(){const mt=Number(document.getElementById('dMont').value);if(!mt)return showAlert('Entre le montant');const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);const newCollecte=(+data.montantCollecte||0)+mt;const newJours=Math.max(0,(+data.joursRestants||0)-(mt/contrib)*(interval/86400));const newProchain=new Date(Date.now()+interval*1000).toISOString();db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:newJours,prochainDepot:newProchain}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>db.ref('clients/'+uid).update({solde_epargne:(+s.val().solde_epargne||0)+mt})).then(()=>closeM());}
+function retirer(){const mt=Number(document.getElementById('rMont').value);if(!mt)return showAlert('Entre le montant');if(mt>(+data.montantCollecte||0))return showAlert('Collecte insuffisante : '+data.montantCollecte+' XOF');let penalty=0,finalMt=mt;if(data.bloque){const fin=new Date((data.echeance||'').split('/').reverse().join('-'));if(!isNaN(fin)&&fin>new Date()){penalty=Math.round(mt*0.05);finalMt=mt-penalty;return showConfirm(`Compte bloqué : pénalité 5% = ${penalty}F. Tu vas recevoir ${finalMt}F. Continuer ?`,()=>doRetrait(mt,finalMt,penalty));}}doRetrait(mt,finalMt,penalty);}
+function doRetrait(mt,finalMt,penalty){const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);const newCollecte=Math.max(0,(+data.montantCollecte||0)-mt);const newJours=(+data.joursRestants||0)+(mt/contrib)*(interval/86400);db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours)}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>{const c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt),commission:(+c.commission||0)+penalty})}).then(()=>closeM());}
 window.onload=init;
 </script>
 </body>
