@@ -73,7 +73,7 @@ function getIntervalSec(freq){
 }
 
 function init(){
-  const u=JSON.parse(localStorage.getItem('actifer_current_user')||'null');
+  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u){location.href='index.html';return;}
   uid=(u.phone||'').replace(/[^0-9]/g,'');
   eid=new URLSearchParams(location.search).get('id');
