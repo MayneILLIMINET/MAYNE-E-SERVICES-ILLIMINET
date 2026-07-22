@@ -53,7 +53,8 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <h3 style="padding:16px 16px 8px">Tours à venir</h3>
 <div class="tours" id="tours"></div>
 </div>
-
+<div class="modal" id="mAlert"><div class="sheet" style="text-align:center"><p id="alertTxt"></p><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="closeM()">OK</button></div></div>
+<div class="modal" id="mConfirm"><div class="sheet" style="text-align:center"><p id="confirmTxt"></p><div style="display:flex;gap:10px"><button class="input" style="background:#eee;flex:1;border-radius:100px" onclick="closeM()">Annuler</button><button class="input" style="background:#0f3d2e;color:#fff;flex:1;border-radius:100px" id="confirmOk">Continuer</button></div></div></div>
 <div class="modal" id="mDep"><div class="sheet"><h3>Dépôt</h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="deposer()">Confirmer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 <div class="modal" id="mRet"><div class="sheet"><h3>Retrait</h3><input id="rMont" type="number" class="input" placeholder="Montant"><p id="penal" style="font-size:12px;color:#e74c3c;display:none">Bloquée : 5% pénalité si avant échéance</p><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Retirer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 
@@ -65,10 +66,10 @@ let uid, eid, data, soldeP=0, vis=true, timer=null, targetTime=null;
 
 function getIntervalSec(freq){
   const f=(freq||'').toLowerCase();
-  if(f.includes('jour') || f.includes('quotidien')) return 24*3600;
-  if(f.includes('semaine')) return 7*24*3600;
-  if(f.includes('mois')) return 30*24*3600;
-  return 24*3600;
+  if(f.includes('jour') || f.includes('quotidien')) return 86400;
+  if(f.includes('semaine')) return 7*86400;
+  if(f.includes('mois')) return 30*86400;
+  return 86400;
 }
 
 function init(){
@@ -137,46 +138,42 @@ function openDep(){document.getElementById('mDep').classList.add('show')}
 function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
 
-function deposer(){
-  const mt=Number(document.getElementById('dMont').value); 
-  if(!mt) return alert('Montant');
-  
-  const interval=getIntervalSec(data.frequence); 
-  const joursAEnlever = interval/86400; 
-  const newCollecte = (+data.montantCollecte||0) + mt;
-  const newJours = Math.max(0, (+data.joursRestants||0) - joursAEnlever);
-  const newProchain = new Date(Date.now()+interval*1000).toISOString();
+function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
+function showAlert(t){document.getElementById('alertTxt').textContent=t;document.getElementById('mAlert').classList.add('show');}
+function showConfirm(t,cb){document.getElementById('confirmTxt').textContent=t;document.getElementById('mConfirm').classList.add('show');document.getElementById('confirmOk').onclick=()=>{closeM();cb();};}
 
-  db.ref('epargne/'+uid+'/'+eid).update({
-    montantCollecte:newCollecte,
-    joursRestants:newJours,
-    prochainDepot:newProchain
-  }).then(()=>{
-    // on met à jour aussi solde_epargne global
-    return db.ref('clients/'+uid).once('value');
-  }).then(s=>{
-    const c=s.val()||{};
-    return db.ref('clients/'+uid).update({solde_epargne:(+c.solde_epargne||0)+mt});
-  }).then(()=>{closeM();});
+function deposer(){
+  const mt=Number(document.getElementById('dMont').value);
+  if(!mt) return showAlert('Entre le montant');
+  const contrib=+data.montant||1000; const interval=getIntervalSec(data.frequence);
+  const joursAEnlever=(mt/contrib)*(interval/86400);
+  const newCollecte=(+data.montantCollecte||0)+mt;
+  const newJours=Math.max(0,(+data.joursRestants||0)-joursAEnlever);
+  const newProchain=new Date(Date.now()+interval*1000).toISOString();
+  db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:newJours,prochainDepot:newProchain}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>{return db.ref('clients/'+uid).update({solde_epargne:(+s.val().solde_epargne||0)+mt})}).then(()=>closeM());
 }
 
 function retirer(){
-  const mt=Number(document.getElementById('rMont').value); if(!mt) return alert('Montant');
-  let finalMt=mt, pen=0;
-  if(data.bloque){ pen=Math.round(mt*0.05); finalMt=mt-pen; if(!confirm('Pénalité 5% = '+pen+'F')) return; }
-  const interval=getIntervalSec(data.frequence);
-  const joursARajouter = interval/86400;
-  const newCollecte = Math.max(0,(+data.montantCollecte||0)-mt);
-  const newJours = (+data.joursRestants||0)+joursARajouter;
-  
-  db.ref('epargne/'+uid+'/'+eid).update({
-    montantCollecte:newCollecte,
-    joursRestants:newJours
-  }).then(()=>db.ref('clients/'+uid).once('value'))
-  .then(s=>{
-    const c=s.val()||{};
-    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt, solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
-  }).then(()=>closeM());
+  const mt=Number(document.getElementById('rMont').value);
+  if(!mt) return showAlert('Entre le montant');
+  if(mt>(+data.montantCollecte||0)) return showAlert('Collecte insuffisante : '+data.montantCollecte+' XOF');
+  let penalty=0, finalMt=mt;
+  if(data.bloque){
+    const fin=new Date((data.echeance||'').split('/').reverse().join('-'));
+    if(!isNaN(fin)&&fin>new Date()){
+      penalty=Math.round(mt*0.05); finalMt=mt-penalty;
+      return showConfirm(`Compte bloqué : pénalité 5% = ${penalty}F. Tu vas recevoir ${finalMt}F. Continuer ?`,()=>{doRetrait(mt,finalMt,penalty)});
+    }
+  }
+  doRetrait(mt,finalMt,penalty);
+}
+
+function doRetrait(mt,finalMt,penalty){
+  const contrib=+data.montant||1000; const interval=getIntervalSec(data.frequence);
+  const joursARajouter=(mt/contrib)*(interval/86400);
+  const newCollecte=Math.max(0,(+data.montantCollecte||0)-mt);
+  const newJours=(+data.joursRestants||0)+joursARajouter;
+  db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:newJours}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>{const c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt),commission:(+c.commission||0)+penalty})}).then(()=>closeM());
 }
 window.onload=init;
 </script>
