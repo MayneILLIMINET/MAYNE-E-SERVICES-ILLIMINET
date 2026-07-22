@@ -95,12 +95,12 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .app-container{width:100%;max-width:100%;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#500;border:2px solid #fff;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
 .header-actions{display:flex;justify-content:flex-end;gap:4px;margin-bottom:10px;flex-wrap:wrap}
 .btn-action-top{padding:5px 6px;font-size:10px}
-.btn-action-top{background:#500;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
-.btn-action-top.retrait{background:#500;color:#fff}
+.btn-action-top{background:#aaaa;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
+.btn-action-top.retrait{background:#aaaa;color:#fff}
 .input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
 .input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
-.dark-field{background:#000!important;color:#fff!important;border:2px solid #fff!important}
+.dark-field{background:#c00!important;color:#fff!important;border:2px solid #fff!important}
 .btn-submit{width:100%;background:#500;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
 .btn-link{background:#500;border:none;color:#fff;text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;display:inline-block}
 .user-header{background:#500;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}
@@ -189,7 +189,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <body>
 
 <div class="app-container">
-<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:8px;z-index:9999;background:#500;color:#000;border:1px solid #fff;padding:5px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
+<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:8px;z-index:9999;background:#aaaa;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.4);"></div>
 
 <div id="logged-out-zone">
@@ -223,7 +223,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 
 <div id="logged-in-zone" style="display:none;">
   <div class="header-actions">
-  <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#500">Profil👤</button>
+  <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#aaaa">Profil👤</button>
   <button class="btn-action-top" onclick="switchService('solde-depot')">📥Recharger</button>
   <button class="btn-action-top retrait" onclick="switchService('solde-retrait')">📤RETIRER</button>
 </div>
@@ -261,12 +261,11 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
   <div class="service-panel">
     <div id="menu-principal" class="sub-panel">
       <h4 style="color:#fff;border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
-      <p style="font-size:12px;text-align:justify;margin-bottom:15px;line-height:1.4;color:#fff;">Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
-      <div style="background:#fff;color:#000;padding:8px;border-radius:6px;margin:10px 0;text-align:left;font-size:11px;line-height:1.4;border:1px solid #00f;">
-        <b style="color:#f5000;">À PROPOS DE MAYNE E-SERVICES</b><br>Mayne E-Services est votre guichet digital 100% béninois pour toutes vos opérations du quotidien.
+      <p style="font-size:12px;text-align:justify;margin-bottom:15px;line-height:1.4;color:#aaa;">Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
+      <div ;"></b><br>
       </div>
       <div class="about-section">
-        <center><b style="color:#000;">NOS PARTENAIRES</b></center>
+        <center><b style="color:#fff;">NOS PARTENAIRES</b></center>
         <div class="partners-container">
           <div class="partner-logo partner-mtn">MTN</div>
           <div class="partner-logo partner-moov">MOOV</div>
@@ -279,7 +278,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
     </div>
 
     <div id="solde-depot" class="sub-panel" style="display:none;">
-      <h4>Faites un dépôt</h4>
+      <h4 style="color:#fff;">FAITES UN DEPOT</h4>
       <div class="input-group">
         <select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()">
           <option value="">-- Réseau --</option>
@@ -292,7 +291,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
         <input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()">
       </div>
       <div id="zone-code-marchand" style="display:none;margin-bottom:10px;">
-        <label class="input-label" style="color:#000;">Code à lancer sur votre mobile :</label>
+        <label class="input-label" style="color:#fff;">Code à lancer sur votre mobile :</label>
         <div id="code-marchand-affiche" class="info-block-code"></div>
       </div>
       <button type="button" class="btn-submit" style="background-color:#4CAF50!important;" onclick="envoyerInfosDepotWhatsApp()">Je Confirme Avoir Validé le Dépôt</button>
@@ -322,10 +321,10 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
     <div id="service-market" class="sub-panel" style="display:none;">
       <h4>Market-place communautaire</h4>
       <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
-<label onclick="pickImage()" style="display:block;background:#fff;color:#000;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label>
+<label onclick="pickImage()" style="display:block;background:#aaaa;color:#fff;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label>
 <div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div>
       
-      <button class="btn-submit" style="background:#0000ff" onclick="publierPost()">Publier</button>
+      <button class="btn-submit" style="background:#ff5000" onclick="publierPost()">Publier</button>
       <p id="market-status" class="status-msg"></p>
       <div id="market-feed" style="margin-top:10px"></div>
       <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;margin-top:15px;">MES ACHATS MARKET</div>
@@ -774,7 +773,7 @@ function appliquerMasqueSolde(){
 }
 
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
-function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
+function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
 async function uploadToCloudinary(base64Data){
   try {
     const fd = new FormData();
