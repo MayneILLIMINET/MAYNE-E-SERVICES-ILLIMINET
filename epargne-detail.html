@@ -138,25 +138,45 @@ function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
 
 function deposer(){
-  const mt=Number(document.getElementById('dMont').value); if(!mt) return alert('Montant');
-  if(mt>soldeP) return alert('Solde principal insuffisant: '+soldeP);
-  const interval=getIntervalSec(data.frequence);
-  const newTarget=new Date(Date.now()+interval*1000);
-  db.ref('clients/'+uid).once('value').then(s=>{
-    const c=s.val()||{}; return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt, solde_epargne:(+c.solde_epargne||0)+mt});
-  }).then(()=>db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:(+data.montantCollecte||0)+mt, prochainDepot:newTarget.toISOString()}))
-  .then(()=>{alert('Dépôt ok'); closeM();});
+  const mt=Number(document.getElementById('dMont').value); 
+  if(!mt) return alert('Montant');
+  
+  const interval=getIntervalSec(data.frequence); 
+  const joursAEnlever = interval/86400; 
+  const newCollecte = (+data.montantCollecte||0) + mt;
+  const newJours = Math.max(0, (+data.joursRestants||0) - joursAEnlever);
+  const newProchain = new Date(Date.now()+interval*1000).toISOString();
+
+  db.ref('epargne/'+uid+'/'+eid).update({
+    montantCollecte:newCollecte,
+    joursRestants:newJours,
+    prochainDepot:newProchain
+  }).then(()=>{
+    // on met à jour aussi solde_epargne global
+    return db.ref('clients/'+uid).once('value');
+  }).then(s=>{
+    const c=s.val()||{};
+    return db.ref('clients/'+uid).update({solde_epargne:(+c.solde_epargne||0)+mt});
+  }).then(()=>{closeM();});
 }
 
 function retirer(){
   const mt=Number(document.getElementById('rMont').value); if(!mt) return alert('Montant');
   let finalMt=mt, pen=0;
-  if(data.bloque){ pen=Math.round(mt*0.05); finalMt=mt-pen; if(!confirm('Pénalité 5% = '+pen+' XOF, tu reçois '+finalMt+' ?')) return; }
-  if(mt>(+data.montantCollecte||0)) return alert('Collecte insuffisante');
-  db.ref('clients/'+uid).once('value').then(s=>{
-    const c=s.val()||{}; return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt, solde_epargne:(+c.solde_epargne||0)-mt, commission:(+c.commission||0)+pen});
-  }).then(()=>db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:(+data.montantCollecte||0)-mt}))
-  .then(()=>{alert('Retrait '+finalMt); closeM();});
+  if(data.bloque){ pen=Math.round(mt*0.05); finalMt=mt-pen; if(!confirm('Pénalité 5% = '+pen+'F')) return; }
+  const interval=getIntervalSec(data.frequence);
+  const joursARajouter = interval/86400;
+  const newCollecte = Math.max(0,(+data.montantCollecte||0)-mt);
+  const newJours = (+data.joursRestants||0)+joursARajouter;
+  
+  db.ref('epargne/'+uid+'/'+eid).update({
+    montantCollecte:newCollecte,
+    joursRestants:newJours
+  }).then(()=>db.ref('clients/'+uid).once('value'))
+  .then(s=>{
+    const c=s.val()||{};
+    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt, solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
+  }).then(()=>closeM());
 }
 window.onload=init;
 </script>
