@@ -21,7 +21,6 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 .timer{margin:16px;background:#fff;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center}
 .tours{display:flex;gap:12px;overflow:auto;padding:0 16px 10px}
 .tour{min-width:170px;background:#fff;border:1px solid #eee;border-radius:16px;padding:12px}
-.badge{background:#a8e6a0;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.show{display:flex}
 .sheet{background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px}
@@ -45,16 +44,14 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <div class="btns"><button class="btn btnW" onclick="openRet()">↓ Retirer</button><button class="btn btnG" onclick="openDep()">↑ Dépôt</button></div>
 
 <div class="subcard">
-<div class="white"><div>📅</div><small style="color:#6abf9a">Fréquence</small><br><b id="freq">Par mois</b></div>
-<div class="white"><div>💵</div><small style="color:#6abf9a">Contribution</small><br><b id="contrib">2000 XOF</b></div>
+<div class="white"><small style="color:#6abf9a">Fréquence</small><br><b id="freq">Par mois</b></div>
+<div class="white"><small style="color:#6abf9a">Contribution</small><br><b id="contrib">2000 XOF</b></div>
 </div>
 
-<div class="timer"><div style="width:44px;height:44px;background:#d6f78c;border-radius:12px;display:flex;align-items:center;justify-content:center">⏳</div><div><b>Prochain dépôt dans :</b><br><span id="countdown">0 j : 3 h : 2 min : 0 sec</span></div></div>
+<div class="timer"><div style="width:44px;height:44px;background:#d6f78c;border-radius:12px;display:flex;align-items:center;justify-content:center">⏳</div><div><b>Prochain dépôt dans :</b><br><span id="countdown">Chargement...</span></div></div>
 
 <h3 style="padding:16px 16px 8px">Tours à venir</h3>
 <div class="tours" id="tours"></div>
-
-<div style="padding:16px"><h3>Historique</h3><div id="histo" style="margin-top:10px;background:#fff;border-radius:12px;padding:20px;text-align:center">Aucune Transaction</div></div>
 </div>
 
 <div class="modal" id="mDep"><div class="sheet"><h3>Dépôt</h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="deposer()">Confirmer</button><button class="input" style="background:#eee;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
@@ -64,19 +61,25 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
-let uid, eid, data, soldeP=0, vis=true, timer;
+let uid, eid, data, soldeP=0, vis=true, timer=null, targetTime=null;
+
+function getIntervalSec(freq){
+  const f=(freq||'').toLowerCase();
+  if(f.includes('jour') || f.includes('quotidien')) return 24*3600;
+  if(f.includes('semaine')) return 7*24*3600;
+  if(f.includes('mois')) return 30*24*3600;
+  return 24*3600;
+}
 
 function init(){
   const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u){location.href='index.html';return;}
   uid=(u.phone||'').replace(/[^0-9]/g,'');
   eid=new URLSearchParams(location.search).get('id');
-  if(!eid){alert('ID manquant'); location.href='epargne.html';return;}
-  
+  if(!eid){document.getElementById('countdown').textContent='ID manquant - ouvre depuis epargne.html'; return;}
   db.ref('clients/'+uid).on('value',s=>{ soldeP=+((s.val()||{}).solde||0); });
-  
   db.ref('epargne/'+uid+'/'+eid).on('value',s=>{
-    if(!s.exists()){document.getElementById('nomTop').textContent='Introuvable'; return;}
+    if(!s.exists()) return;
     data=s.val();
     document.getElementById('nomTop').textContent=data.nom||'Mayne';
     document.getElementById('collecte').textContent=vis?((+data.montantCollecte||+data.montant||0)+' XOF'):'••••••';
@@ -86,9 +89,19 @@ function init(){
     document.getElementById('jours').textContent=data.joursRestants||5;
     if(data.bloque) document.getElementById('penal').style.display='block';
     renderTours();
+    // FIX TIMER : on fixe une seule fois la date cible
+    const interval=getIntervalSec(data.frequence);
+    if(data.prochainDepot){
+      targetTime=new Date(data.prochainDepot);
+    } else {
+      targetTime=new Date(Date.now()+interval*1000);
+      // on sauvegarde pour que ça continue même si tu fermes l'app
+      db.ref('epargne/'+uid+'/'+eid).update({prochainDepot:targetTime.toISOString()});
+    }
     startCountdown();
   });
 }
+
 function renderTours(){
   const contrib=+data.montant||2000;
   const obj=+data.objectif||contrib*5;
@@ -97,33 +110,44 @@ function renderTours(){
   const payes=Math.floor(collecte/contrib);
   let h='';
   for(let i=1;i<=tours;i++){
-    h+=`<div class="tour"><div style="display:flex;justify-content:space-between"><b style="background:${i<=payes?'#0f3d2e':'#d6f78c'};color:${i<=payes?'#fff':'#000'};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">${String(i).padStart(2,'0')}</b>${i>payes?'<span class=badge>Avance</span>':''}</div><div style="margin-top:8px">Tour ${i}</div><b>${contrib} XOF</b></div>`;
+    h+=`<div class="tour"><div style="display:flex;justify-content:space-between"><b style="background:${i<=payes?'#0f3d2e':'#d6f78c'};color:${i<=payes?'#fff':'#000'};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">${String(i).padStart(2,'0')}</b>${i>payes?'<span style="background:#a8e6a0;border-radius:100px;padding:4px 10px;font-size:11px">Avance</span>':''}</div><div style="margin-top:8px">Tour ${i}</div><b>${contrib} XOF</b></div>`;
   }
   document.getElementById('tours').innerHTML=h;
 }
+
 function startCountdown(){
   clearInterval(timer);
   timer=setInterval(()=>{
-    // simple countdown 3h2m qui tourne comme ta capture
-    const now=new Date();
-    const next=new Date(now.getTime()+ (3*3600+2*60)*1000);
-    const diff=next-now;
-    const h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
-    document.getElementById('countdown').textContent=`0 j : ${h} h : ${m} min : ${s} sec`;
+    if(!targetTime) return;
+    const diff=targetTime - new Date();
+    if(diff<=0){
+      document.getElementById('countdown').textContent='Dépôt dû maintenant';
+      return;
+    }
+    const j=Math.floor(diff/86400000);
+    const h=Math.floor((diff%86400000)/3600000);
+    const m=Math.floor((diff%3600000)/60000);
+    const s=Math.floor((diff%60000)/1000);
+    document.getElementById('countdown').textContent=`${j} j : ${h} h : ${m} min : ${s} sec`;
   },1000);
 }
+
 function toggle(){vis=!vis; document.getElementById('collecte').textContent=vis?((+data.montantCollecte||+data.montant||0)+' XOF'):'••••••';}
 function openDep(){document.getElementById('mDep').classList.add('show')}
 function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
+
 function deposer(){
   const mt=Number(document.getElementById('dMont').value); if(!mt) return alert('Montant');
   if(mt>soldeP) return alert('Solde principal insuffisant: '+soldeP);
+  const interval=getIntervalSec(data.frequence);
+  const newTarget=new Date(Date.now()+interval*1000);
   db.ref('clients/'+uid).once('value').then(s=>{
     const c=s.val()||{}; return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt, solde_epargne:(+c.solde_epargne||0)+mt});
-  }).then(()=>db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:(+data.montantCollecte||0)+mt}))
+  }).then(()=>db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:(+data.montantCollecte||0)+mt, prochainDepot:newTarget.toISOString()}))
   .then(()=>{alert('Dépôt ok'); closeM();});
 }
+
 function retirer(){
   const mt=Number(document.getElementById('rMont').value); if(!mt) return alert('Montant');
   let finalMt=mt, pen=0;
