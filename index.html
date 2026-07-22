@@ -560,6 +560,35 @@ function tryAutoLogin(){
   currentUserId = saved.phone;
   chargerSessionDepuisFirebase(saved.phone);
 }
+function chargerHistoriques(){
+  const listen=(path,el,fmt)=>{
+    database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{
+      const hb=document.getElementById(el); if(!hb) return;
+      if(sh.exists()){
+        let h=''; sh.forEach(c=>{
+          const v=c.val(); 
+          const statut=(v.statut||'en cours').toLowerCase().trim();
+          let couleur='#ffbb00'; 
+          if(statut.includes('valid')) couleur='#28a745'; 
+          else if(statut.includes('annul')) couleur='#dc3545';
+          h+=`• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold">${v.statut||'en cours'}</span><br>`;
+        }); hb.innerHTML=h;
+      } else { hb.innerHTML='Aucun'; }
+    });
+  };
+  listen('commandes_marketplace','market-historique',v=>`${v.produit} (${v.total}F)`);
+  listen('commandes_depots','depot-historique',v=>`${v.montant}F ${v.reseau}`);
+  listen('commandes_retraits','retrait-historique',v=>`${v.montant}F vers ${v.numero_reception}`);
+  listen('commandes_1xbet','xbet-historique',v=>`${v.type||v.action} ${v.montant}F`);
+  listen('commandes_factures','facture-historique',v=>`${v.type||v.fournisseur} ${v.montant}F`);
+  listen('commandes_forfaits','forfait-historique',v=>`${v.motif} ${v.montant}F`);
+  listen('commandes_immobilier','immo-historique',v=>`${v.ville} ${v.montant||v.montant_visite}F`);
+  listen('commandes_epargne','epargne-historique',v=>`${v.compteur} ${v.montant}F`);
+  listen('commandes_livraison','livraison-historique',v=>`${v.ville} ${v.montant||v.montant_course}F`);
+  listen('commandes_echanges','echange-historique',v=>`${v.donne}→${v.recoit} ${v.montant}`);
+  listen('commandes_p2p_p2m','p2p-historique',v=>`${v.montant}F vers ${v.numero_receveur||v.numero}`);
+}
+
 
 function chargerSessionDepuisFirebase(phone){
   database.ref('clients/'+phone).on('value', v=>{
@@ -583,6 +612,7 @@ function chargerSessionDepuisFirebase(phone){
     TinyDB.put('cache_'+phone, data);
   });
   chargerFeed(); chargerMessagerie(); demarrerTimerSession();
+chargerHistoriques();
 }
 
 window.addEventListener('load', ()=>{
@@ -879,42 +909,11 @@ majSolde('user-recompense', recompense);
           document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
         });
 
-        // ... tes listen() historiques …
-const listen = (path, el, fmt) => {
-          database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value', sh => {
-            const hb = document.getElementById(el);
-            if(!hb) return;
-            if(sh.exists()){
-              let h = '';
-              sh.forEach(c => {
-                const v = c.val();
-                const statut = (v.statut || 'en cours').toLowerCase().trim();
-                let couleur = '#ffbb00';
-                if(statut.includes('valid')) couleur = '#28a745';
-                else if(statut.includes('annul')) couleur = '#dc3545';
-                h += `• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold;display:inline-block">${v.statut || 'en cours'}</span><br>`;
-              });
-              hb.innerHTML = h;
-            } else {
-              hb.innerHTML = 'Aucun';
-            }
-          });
-        };
-
-        listen('commandes_marketplace', 'market-historique', v => `${v.produit} (${v.total}F)`);
-        listen('commandes_depots', 'depot-historique', v => `${v.montant}F ${v.reseau}`);
-        listen('commandes_retraits', 'retrait-historique', v => `${v.montant}F vers ${v.numero_reception}`);
-        listen('commandes_1xbet', 'xbet-historique', v => `${v.type || v.action} ${v.montant}F`);
-        listen('commandes_factures', 'facture-historique', v => `${v.type || v.fournisseur} ${v.montant}F`);
-        listen('commandes_forfaits', 'forfait-historique', v => `${v.motif} ${v.montant}F`);
-        listen('commandes_immobilier', 'immo-historique', v => `${v.ville} ${v.montant || v.montant_visite}F`);
-        listen('commandes_epargne', 'epargne-historique', v => `${v.compteur} ${v.montant}F`);
-        listen('commandes_livraison', 'livraison-historique', v => `${v.ville} ${v.montant || v.montant_course}F`);
-        listen('commandes_echanges', 'echange-historique', v => `${v.donne}→${v.recoit} ${v.montant}`);
-        listen('commandes_p2p_p2m', 'p2p-historique', v => `${v.montant}F vers ${v.numero_receveur || v.numero}`);
+        
 
         chargerFeed();
         chargerMessagerie();
+        chargerHistoriques();
      
         const statusRef = database.ref('clients/'+currentUserId+'/status');
         database.ref('.info/connected').on('value', s => {
@@ -1574,13 +1573,14 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
   </div>
 
   <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">
-    ACTIFER-MGAP — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>
+    MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>
     Cotonou, Bénin — contact : mayneactifer@gmail.com <br>
     Lancé en juin 2023
   </div>
 </footer>
 </body>
 </html>
+
 
 
 
