@@ -137,8 +137,6 @@ function toggle(){vis=!vis; document.getElementById('collecte').textContent=vis?
 function openDep(){document.getElementById('mDep').classList.add('show')}
 function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
-
-function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
 function showAlert(t){document.getElementById('alertTxt').textContent=t;document.getElementById('mAlert').classList.add('show');}
 function showConfirm(t,cb){document.getElementById('confirmTxt').textContent=t;document.getElementById('mConfirm').classList.add('show');document.getElementById('confirmOk').onclick=()=>{closeM();cb();};}
 
