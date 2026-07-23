@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>if(localStorage.getItem('mayne_pin_enabled')==='true' && !sessionStorage.getItem('mayne_unlocked')){location.href='lock.html';}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+if (!window.AppInventor) {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'OneSignalSDKWorker.js'});
+    const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(u&&u.phone){try{await OneSignal.login(String(u.phone).replace(/\D/g,''));}catch(e){}}
+  });
+}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Dépôt - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const database=firebase.database(); const db=database;
+</script>
+<style>
+body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
+.app-container{width:100%;max-width:430px;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#1e1e1e;border:2px solid #fff;border-radius:10px;color:#fff;box-sizing:border-box;text-align:center;position:relative}
+.input-group{text-align:left;margin-bottom:8px}
+.input-label{display:block;font-size:12px;color:#aaaa;margin-bottom:4px;font-weight:bold}
+.input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
+.dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
+.btn-submit{width:100%;background:#500;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
+.user-header{background:#aaaa;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}
+.profile-line{font-size:14px;font-weight:bold;margin-bottom:2px;width:65%}
+.solde-val{font-size:18px;font-weight:bold;color:#0f0}
+.btn-logout{position:absolute;top:1px;right:8px;background:#500;color:#fff;border:4px solid #aaa;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
+.service-panel{background:#1e1e1e;color:#fff;padding:10px;border-radius:6px;text-align:left}
+.status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center;color:#006400}
+.history-box{background:#1e1e1e;color:#fff;font-family:monospace;padding:6px;border-radius:4px;max-height:140px;overflow-y:auto;font-size:10px;margin-top:5px}
+.info-block-code{background:#aaaa;padding:6px;border-radius:4px;border:3px solid #ff5000;font-size:14px;font-family:monospace;word-break:break-all;margin-top:5px;color:#fff;font-weight:bold;text-align:center}
+.nb-box{background:#1e1e1e;color:#fff;padding:10px;border-radius:8px;font-size:11px;line-height:1.4;margin-top:12px;text-align:left;border-left:4px solid #ff5000}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
+.modal-box{background:#ff5000;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
+.modal-msg{font-size:15px;margin-bottom:18px}
+.modal-btns{display:flex;gap:8px}
+.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
+.btn-yes{background:#2b8a3e;color:#fff}
+.btn-no{background:#ddd;color:#000}
+</style>
+</head>
+<body>
+<div class="app-container">
+<div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;"></div>
+<div class="user-header">
+<button type="button" class="btn-logout" onclick="location.href='index.html'">← ACCUEIL</button>
+<div class="profile-line" id="user-name">CHARGEMENT...</div>
+<div style="font-size:10px;color:#e0e0e0;display:flex;justify-content:space-between;align-items:center"><b>SOLDE :</b><span onclick="toggleSolde()" style="cursor:pointer;font-size:20px">👁️</span></div>
+<div class="solde-val"><span id="user-balance">0</span> F</div>
+</div>
+<div class="service-panel">
+<h4 style="color:#fff;border-bottom:2px solid #fff;padding-bottom:5px;margin-bottom:10px">FAIRE UN DÉPÔT</h4>
+<div class="input-group"><select id="depot-reseau" class="select-field dark-field"    onchange="updateCodeMarchand()"><option value="">-- Réseau --</option><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div>
+<div class="input-group"><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()"></div>
+<div id="zone-code-marchand" style="display:none;margin-bottom:10px;"><label class="input-label" style="color:#fff;">Code à lancer sur votre mobile :</label><div id="code-marchand-affiche" class="info-block-code"></div></div>
+
+<!-- NOUVEAUX CHAMPS -->
+<div class="input-group"><label class="input-label">Numéro envoyeur (celui qui fait le dépôt) :</label><input type="text" id="depot-numero-envoyeur" class="input-field dark-field" placeholder="Ex: 0197000000"></div>
+<div class="input-group"><label class="input-label">ID de la transaction (reçu par SMS PSP) :</label><input type="text" id="depot-id-transaction" class="input-field dark-field" placeholder="Ex: 17228877884"></div>
+
+<button type="button" class="btn-submit" style="background:#4CAF50!important;" onclick="envoyerInfosDepot()">Je Confirme Avoir Validé le Dépôt</button>
+<p id="depot-status" class="status-msg"></p>
+
+<div class="nb-box">
+<b>NB:</b> Hormis les services des réseaux locaux, les recharges 1xbet sont facturées à <b>1%</b>. Ces frais sont facturés directement par les PSP et supportés par le client.<br><br>
+<b>2)</b> Avant toute confirmation, vérifiez toujours si le nom commercial est bien <b>MAYNE SERVICE</b>.
+</div>
+
+<div style="color:#fff;font-weight:bold;text-align:center;font-size:14px;margin-top:15px">MES DÉPÔTS</div>
+<div id="depot-historique" class="history-box">Aucun dépôt</div>
+</div>
+</div>
+<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
+<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
+<script>
+const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
+let currentUserId=null,confirmCallback=null,_lock=false;
+let soldeMasque=localStorage.getItem('mayne_hide_solde')==='true';
+const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,def=null)=>{try{const v=localStorage.getItem('mayne_'+k);return v?JSON.parse(v):def;}catch{return def;}}};
+function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
+function hideAlert(){document.getElementById('custom-alert').style.display='none';}
+function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
+function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
+function toggleSolde(){soldeMasque=!soldeMasque;localStorage.setItem('mayne_hide_solde',soldeMasque);const el=document.getElementById('user-balance');if(soldeMasque){if(!el.dataset.vrai) el.dataset.vrai=el.innerText; el.innerText='••••••';}else{if(el.dataset.vrai) el.innerText=el.dataset.vrai;}}
+function envoyerAlerte(s,d){try{const p={service:s,id:Date.now(),data:Object.assign({},d,{client_id:currentUserId,client_nom:document.getElementById('user-name').innerText,telephone_compte:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(p)});}catch(e){}}
+function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';}}
+function proposerSupport(s,d,cb){let det='';for(const[k,v]of Object.entries(d)){det+=`${k}: ${v}\n`;}const txt=`🔔 URGENT\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${det}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
+function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
+function init(){let saved=null;try{saved=JSON.parse(localStorage.getItem('mayne_current_user')||'null')||TinyDB.get('current_user');}catch{} if(!saved||!saved.phone){location.href='index.html';return;} currentUserId=(saved.phone||'').replace(/[^0-9]/g,''); database.ref('clients/'+currentUserId).on('value',v=>{const d=v.val()||{}; document.getElementById('user-name').innerText=d.nom||currentUserId; const el=document.getElementById('user-balance'); el.dataset.vrai=(d.solde||0).toLocaleString('fr-FR'); el.innerText=soldeMasque?'••••••':el.dataset.vrai;}); database.ref('commandes_depots').orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{const hb=document.getElementById('depot-historique'); if(!sh.exists()){hb.innerHTML='Aucun dépôt';return;} let h=''; sh.forEach(c=>{const v=c.val(); const statut=(v.statut||'en cours').toLowerCase(); let coul='#ffbb00'; if(statut.includes('valid')) coul='#28a745'; else if(statut.includes('annul')) coul='#dc3545'; h+=`• ${v.montant}F ${v.reseau} | ${v.numero_envoyeur||''} | ID:${v.id_transaction||''} - ${v.date} - <span style="background:${coul};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${v.statut}</span><br>`;}); hb.innerHTML=h;});}
+function envoyerInfosDepot(){
+  const m=document.getElementById('depot-montant').value;
+  const r=document.getElementById('depot-reseau').value;
+  const numEnv=document.getElementById('depot-numero-envoyeur').value.trim();
+  const idTx=document.getElementById('depot-id-transaction').value.trim();
+  if(!r||!m||m<100)return showAlert('Choisissez un réseau et un montant minimum de 100F');
+  if(!numEnv) return showAlert('Entre le numéro envoyeur');
+  if(!idTx) return showAlert('Entre l\'ID de la transaction PSP');
+  if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);
+  const d={reseau:r,montant:Number(m),numero_envoyeur:numEnv,id_transaction:idTx};
+  envoyerAlerte('depot',d);
+  proposerSupport('depot',d,()=>afficherSucces('depot-status'));
+  database.ref('commandes_depots').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
+}
+window.onload=init;
+</script>
+</body>
+</html>
