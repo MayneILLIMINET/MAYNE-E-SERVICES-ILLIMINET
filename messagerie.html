@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>if(localStorage.getItem('mayne_pin_enabled')==='true' &&!sessionStorage.getItem('mayne_unlocked')){location.href='lock.html';}</script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+if (!window.AppInventor) {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'OneSignalSDKWorker.js'});
+    const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(u&&u.phone){try{await OneSignal.login(String(u.phone).replace(/\D/g,''));}catch(e){}}
+  });
+}
+</script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Messagerie - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const database=firebase.database(); const db=database;
+const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+</script>
+<style>
+body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
+.app-container{width:100%;max-width:430px;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#500;border:2px solid #fff;border-radius:10px;color:#fff;box-sizing:border-box;text-align:center;position:relative}
+.user-header{background:#500;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}
+.btn-logout{position:absolute;top:1px;right:8px;background:#500;color:#fff;border:4px solid #aaa;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
+.input-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
+.dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
+.chat-card{background:#500;border-radius:12px;padding:0;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.2);cursor:pointer}
+.chat-header{display:flex;align-items:center;padding:10px;background:#aaaa}
+.msg-avatar{width:42px;height:42px;border-radius:50%;background:#0084ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:15px;margin-right:10px;flex-shrink:0}
+.chat-preview{flex:1;text-align:left;min-width:0}
+.chat-name{font-weight:bold;font-size:15px;color:#fff;margin-bottom:2px}
+.chat-last{font-size:13px;color:#00f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-time{font-size:12px;color:#00f;margin-left:8px;flex-shrink:0}
+.chat-container{height:55vh;overflow-y:auto;background:#e5ddd5;padding:10px;display:flex;flex-direction:column}
+.msg-bubble{max-width:75%;padding:8px 12px;margin:2px 0;border-radius:8px;font-size:14px;line-height:1.4;position:relative;word-wrap:break-word;box-shadow:0 1px 0.5px rgba(0,0,0,.13)}
+.msg-left{background:#fff;color:#000;border-top-left-radius:0;align-self:flex-start}
+.msg-right{background:#dcf8c6;color:#000;border-top-right-radius:0;align-self:flex-end}
+.msg-time{font-size:11px;color:#667781;margin-left:6px;float:right;margin-top:2px}
+.chat-row{display:flex;margin:3px 0;align-items:flex-end}
+.chat-input-bar{display:flex;gap:6px;padding:8px;background:#f0f0f0;align-items:center;border-radius:0 0 10px 10px}
+.audio-wrap{display:flex;align-items:center;gap:8px;max-width:220px}
+.wave{display:flex;gap:2px;align-items:end;height:18px}.wave span{width:3px;height:5px;background:#0084ff;border-radius:2px;animation:wave 1s infinite ease-in-out;animation-play-state:paused}.wave.playing span{animation-play-state:running}@keyframes wave{0%,100%{height:5px}50%{height:16px}}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
+.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
+.modal-msg{font-size:15px;margin-bottom:18px}.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}.btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#ddd;color:#000}
+</style>
+</head>
+<body>
+<div class="app-container">
+<div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;"></div>
+
+<div class="user-header">
+<button class="btn-logout" onclick="location.href='index.html'">← ACCUEIL</button>
+<div id="user-name" style="font-weight:bold">CHARGEMENT...</div>
+<div style="font-size:11px;color:#ffeb3b">MESSAGERIE WHATSAPP PRO</div>
+</div>
+
+<div style="background:rgba(255,255,255,0.1);padding:10px;border-radius:6px;margin-bottom:10px;text-align:left">
+<label style="font-size:12px;font-weight:bold">Rechercher un utilisateur :</label>
+<input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Nom ou Numéro..." oninput="rechercherUtilisateur()">
+<div id="resultats-recherche" style="margin-top:5px;max-height:150px;overflow-y:auto;background:#fff;border-radius:4px;display:none;"></div>
+</div>
+
+<div id="messagerie-feed" style="margin-top:10px;text-align:left"></div>
+
+</div>
+
+<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="document.getElementById('custom-alert').style.display='none'">OK</button></div></div>
+<div id="custom-prompt" class="modal-overlay"><div class="modal-box"><div id="custom-prompt-msg" class="modal-msg"></div><input id="custom-prompt-input" class="input-field" style="margin:12px 0;text-align:left"><div style="display:flex;gap:8px"><button class="modal-btn btn-no" onclick="document.getElementById('custom-prompt').style.display='none'">Annuler</button><button class="modal-btn btn-yes" onclick="hidePrompt(true)">OK</button></div></div></div>
+<div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'"><img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px"></div>
+
+<script>
+let currentUserId=null,promptCallback=null,isRecording=false,typingTimeout=null;
+function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
+function showInput(t,cb){promptCallback=cb;document.getElementById('custom-prompt-msg').innerText=t;document.getElementById('custom-prompt-input').value='';document.getElementById('custom-prompt').style.display='flex';setTimeout(()=>document.getElementById('custom-prompt-input').focus(),100);}
+function hidePrompt(ok){document.getElementById('custom-prompt').style.display='none';if(ok&&promptCallback)promptCallback(document.getElementById('custom-prompt-input').value.trim());}
+function formatTime(s){const m=Math.floor(s/60).toString().padStart(2,'0');const sec=Math.floor(s%60).toString().padStart(2,'0');return m+':'+sec}
+async function pushJS(destId,titre,message,imageUrl=''){if(!destId||destId===currentUserId)return;try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId,titre,message,imageUrl})});}catch(e){}}
+
+function pickImageChat(){if(window.AppInventor){window.AppInventor.setWebViewString('PICK_CHAT');}}
+function recordAudioChat(){if(!window.AppInventor)return;if(!isRecording){window.AppInventor.setWebViewString('REC_AUDIO_'+window.currentConvId);isRecording=true;document.getElementById('btn-rec').innerHTML='⏹️';database.ref(`conversations/${window.currentConvId}/recording/${currentUserId}`).set(true);}else{window.AppInventor.setWebViewString('STOP_AUDIO');isRecording=false;document.getElementById('btn-rec').innerHTML='🎙️';database.ref(`conversations/${window.currentConvId}/recording/${currentUserId}`).set(false);}}
+
+// Reception AppInventor image/audio
+setInterval(()=>{if(window.AppInventor){let data=window.AppInventor.getWebViewString();if(!data)return;if(data.startsWith('CHAT_')){let url=data.replace('CHAT_','');window.AppInventor.setWebViewString('');if(window.currentConvId){database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,texte:'📷',createdAt:Date.now()});}}else if(data.startsWith('AUDIO_URL_')){let url=data.replace('AUDIO_URL_','');window.AppInventor.setWebViewString('');if(window.currentConvId){database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now()});}}else if(data==="REC_STOP"){window.AppInventor.setWebViewString('');isRecording=false;let b=document.getElementById('btn-rec');if(b)b.innerHTML='🎙️';}}},500);
+
+function rechercherUtilisateur(){
+  const query=document.getElementById('recherche-user-input').value.trim().toLowerCase();
+  const zone=document.getElementById('resultats-recherche');
+  if(!query){zone.style.display='none';zone.innerHTML='';return;}
+  database.ref('clients').once('value').then(snap=>{
+    let html='',count=0;
+    snap.forEach(child=>{
+      const cid=child.key; const d=child.val(); const nom=d.nom||d.client_nom||'';
+      if(cid===currentUserId)return;
+      if(nom.toLowerCase().includes(query)||cid.includes(query)){
+        count++; html+=`<div style="padding:10px;color:#000;border-bottom:1px solid #eee;text-align:left;cursor:pointer;font-weight:bold;font-size:13px;" onclick="selectionnerUserPourChat('${cid}','${nom.replace(/'/g,"\\'")}')">👤 ${nom} <span style="font-size:11px;color:#666">(${cid})</span></div>`;
+      }
+    });
+    if(count>0){zone.innerHTML=html;zone.style.display='block';}else{zone.innerHTML='<div style="padding:10px;color:#666;font-size:12px;">Aucun utilisateur</div>';zone.style.display='block';}
+  });
+}
+function selectionnerUserPourChat(cid,nom){document.getElementById('recherche-user-input').value='';document.getElementById('resultats-recherche').style.display='none';ouvrirChat(cid,nom);}
+function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{setTimeout(()=>ouvrirConversation(convId,destNom),300);});});}
+
+function chargerMessagerie(){
+  database.ref('conversations').on('value',snap=>{
+    const feed=document.getElementById('messagerie-feed'); if(!feed)return; let html='',convs=[];
+    snap.forEach(child=>{
+      const convId=child.key; if(!convId.includes(currentUserId))return;
+      const msgs=child.child('messages').val(); if(!msgs)return;
+      const arr=Object.values(msgs).sort((a,b)=>b.createdAt-a.createdAt);
+      convs.push({id:convId,last:arr[0],all:arr});
+    });
+    convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);
+    convs.forEach(c=>{
+      const parts=c.id.split('_'); const correspondantId=parts[0]===currentUserId?parts[1]:parts[0];
+      let nom=c.last.senderNom||'Utilisateur'; c.all.forEach(m=>{if(m.senderId!==currentUserId)nom=m.senderNom;});
+      const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+      const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;
+      const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}','${nom.replace(/'/g,"\\'")}')"><div class="chat-header"><div style="position:relative"><div class="msg-avatar">${initiales}</div><span id="dot-${correspondantId}" style="position:absolute;bottom:0;right:8px;width:10px;height:10px;background:#999;border:2px solid #fff;border-radius:50%"></span></div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;
+      database.ref('clients/'+correspondantId+'/status').on('value',s=>{const d=document.getElementById('dot-'+correspondantId);if(d)d.style.background=s.val()&&s.val().online?'#0f0':'#999';});
+    });
+    feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Recherchez un utilisateur en haut</span></div>';
+  });
+}
+
+function ouvrirConversation(convId,nom){
+  window.currentConvId=convId;
+  const feed=document.getElementById('messagerie-feed');
+  const parts=convId.split('_'); const otherId=parts[0]===currentUserId?parts[1]:parts[0];
+  database.ref(`conversations/${convId}/messages`).on('child_added',m=>{const v=m.val();if(v.senderId!==currentUserId&&!v.vu){m.ref.update({vu:true,vuAt:Date.now()});}});
+  feed.innerHTML=`<div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10"><span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span><div style="position:relative"><div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div><span id="online-dot" style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:#999;border:2px solid #075e54;border-radius:50%"></span></div><div><div>${nom}</div><div id="online-text" style="font-size:10px;font-weight:normal;opacity:.8">hors ligne</div><div id="typing-indicator" style="font-size:10px;color:#0f0;display:none">en train d'écrire...</div><div id="recording-indicator" style="font-size:10px;color:#ff9800;display:none">enregistrement...</div></div></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label><label id="btn-rec" onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label><input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" oninput="jeTape('${convId}')" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')"><button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button></div>`;
+  database.ref('clients/'+otherId+'/status').on('value',s=>{const dot=document.getElementById('online-dot');const txt=document.getElementById('online-text');const on=s.val()&&s.val().online;if(dot)dot.style.background=on?'#0f0':'#999';if(txt)txt.innerText=on?'en ligne':'hors ligne';});
+  database.ref(`conversations/${convId}/typing`).on('value',s=>{const ind=document.getElementById('typing-indicator');const onl=document.getElementById('online-text');if(!ind)return;let ecrit=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val()===true)ecrit=true;});ind.style.display=ecrit?'block':'none';if(onl)onl.style.display=ecrit?'none':'block';});
+  database.ref(`conversations/${convId}/recording`).on('value',s=>{const rec=document.getElementById('recording-indicator');const typ=document.getElementById('typing-indicator');const onl=document.getElementById('online-text');if(!rec)return;let enr=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val()===true)enr=true;});rec.style.display=enr?'block':'none';if(enr){if(typ)typ.style.display='none';if(onl)onl.style.display='none';}});
+  database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value',s=>{
+    const scroll=document.getElementById('chat-scroll');if(!scroll)return;let html='';
+    s.forEach(m=>{
+      const v=m.val();const isMe=v.senderId===currentUserId;const heure=new Date(v.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      let contenu=v.texte||'';
+      if(v.type==='image'){const thumb=v.url.includes('/upload/')?v.url.replace('/upload/','/upload/w_300,q_auto,f_auto/'):v.url;const safe=v.url.replace(/'/g,"\\'");contenu=`<div onclick="this.innerHTML='<img src=\\'${thumb}\\' style=\\'max-width:200px;border-radius:12px;display:block;cursor:pointer\\' onclick=\\'ouvrirImage(\\'${safe}\\');return false;\\'>';this.style.padding='0';this.style.background='transparent'" style="max-width:200px;background:#ddd;border-radius:12px;padding:30px 10px;text-align:center;cursor:pointer;color:#333">📷<br><span style="font-size:12px">Charger</span></div>`;}
+      if(v.type==='audio'){const safeA=v.url.replace(/'/g,"\\'");contenu=`<div class="audio-wrap"><button onclick="var w=this.parentNode;var a=w.querySelector('audio');var wave=w.querySelector('.wave');if(!a.src){a.src='${safeA}';a.load();w.querySelector('.dur').innerText='...'};a.paused?(a.play(),this.innerText='⏸',wave.classList.add('playing')):(a.pause(),this.innerText='▶',wave.classList.remove('playing'))" style="background:#0084ff;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:14px">▶</button><div class="wave"><span></span><span></span></div><audio preload="none" onloadedmetadata="this.parentNode.querySelector('.dur').innerText=formatTime(this.duration)" onended="this.parentNode.querySelector('.wave').classList.remove('playing');this.parentNode.querySelector('button').innerText='▶'"></audio><span class="dur" style="font-size:11px;color:#555;min-width:45px">Audio</span></div>`;}
+      const tick=isMe?(v.vu?'<span style="color:#34b7f1"> ✓✓</span>':'<span style="color:#999"> ✓</span>'):'';
+      html+=`<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">${!isMe?`<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>`:''}<div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${contenu}<span class="msg-time">${heure}${tick}</span></div></div>`;
+    });
+    scroll.innerHTML=html;setTimeout(()=>{scroll.scrollTop=scroll.scrollHeight;},100);
+  });
+}
+function ouvrirImage(url){let small=url;if(url.includes('cloudinary.com')&&url.includes('/upload/'))small=url.replace('/upload/','/upload/w_1000,q_auto,f_auto/');if(window.AppInventor){window.AppInventor.setWebViewString('VIEW_'+small);}else{document.getElementById('img-viewer-pic').src=small;document.getElementById('img-viewer').style.display='flex';}return false;}
+function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,createdAt:Date.now()}).then(()=>{const parts=cid.split('_');const destId=parts[0]===currentUserId?parts[1]:parts[0];pushJS(destId,"💬 Nouveau message",`${document.getElementById('user-name').innerText} : ${t}`);});i.value='';database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);}
+function jeTape(convId){if(!currentUserId)return;database.ref(`conversations/${convId}/typing/${currentUserId}`).set(true);clearTimeout(typingTimeout);typingTimeout=setTimeout(()=>{database.ref(`conversations/${convId}/typing/${currentUserId}`).set(false);},1500);}
+
+function init(){
+  let saved=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(!saved){location.href='index.html';return;}
+  currentUserId=saved.phone.replace(/[^0-9]/g,'');
+  database.ref('clients/'+currentUserId).once('value').then(v=>{const d=v.val()||{};document.getElementById('user-name').innerText=d.nom||currentUserId;});
+  chargerMessagerie();
+  // presence
+  const statusRef=database.ref('clients/'+currentUserId+'/status');
+  database.ref('.info/connected').on('value',s=>{if(s.val()){statusRef.set({online:true,last:Date.now()});statusRef.onDisconnect().set({online:false,last:Date.now()});}});
+}
+window.onload=init;
+</script>
+</body>
+</html>
