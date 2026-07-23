@@ -40,6 +40,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center;color:#006400}
 .history-box{background:#1e1e1e;color:#fff;font-family:monospace;padding:6px;border-radius:4px;max-height:130px;overflow-y:auto;font-size:10px;margin-top:5px}
 .nb-box{background:#1e1e1e;color:#fff;padding:10px;border-radius:8px;font-size:11px;line-height:1.4;margin-top:12px;text-align:left;border-left:4px solid #03a}
+.nb-box-red{background:#300;color:#ffeb3b;padding:10px;border-radius:8px;font-size:11px;line-height:1.4;margin-bottom:12px;text-align:left;border-left:4px solid #ff0000}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
 .modal-box{background:#ff5000;color:#000;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
 .modal-msg{font-size:15px;margin-bottom:18px}
@@ -62,6 +63,10 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div class="service-panel">
 <h4 style="color:#fff;border-bottom:2px solid #fff;padding-bottom:5px;margin-bottom:10px">SERVICE 1XBET</h4>
 
+<div class="nb-box-red">
+<b>NB RETRAIT:</b> VEILLEZ VOUS RENDRE SUR VOTRE COMPTE 1XBET ET ALLER DANS LA SECTION RETRAIT : choisissez moyen = <b>Espèce</b>, VILLE: <b>ABOMEY-CALAVI</b>, RUE: <b>SECRÉTAIRE DE DIEU</b>. Un code 1xbet sera généré sur votre demande. Copiez et revenez coller ici dans votre formulaire.
+</div>
+
 <div class="inner-toggle">
 <button class="inner-btn active" id="tab-xbet-depot" onclick="toggleXbetMode('depot')">Dépôt</button>
 <button class="inner-btn" id="tab-xbet-retrait" onclick="toggleXbetMode('retrait')">Retrait</button>
@@ -77,6 +82,11 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div id="xbet-retrait-zone" style="display:none">
 <div class="input-group"><label class="input-label">ID Joueur 1xBet (Retrait)</label><input type="text" id="xbet-retrait-id" class="input-field dark-field" placeholder="Ex: 12345678"></div>
 <div class="input-group"><label class="input-label">Montant</label><input type="number" id="xbet-retrait-montant" class="input-field dark-field" placeholder="Montant"></div>
+
+<div class="input-group"><label class="input-label">Méthode</label><select id="xbet-methode" class="select-field dark-field"><option value="ESPECES">ESPÈCES</option></select></div>
+<div class="input-group"><label class="input-label">NUMÉRO BÉNÉFICIAIRE (FACULTATIF)</label><input type="text" id="xbet-num-benef" class="input-field dark-field" placeholder="Facultatif - ex: 22997000000"></div>
+<div class="input-group"><label class="input-label">CODE 1XBET REÇU *</label><input type="text" id="xbet-code-recu" class="input-field dark-field" placeholder="Collez le code généré par 1xBet"></div>
+
 <div class="input-group"><label class="input-label">Votre WhatsApp</label><input type="text" id="xbet-retrait-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
 <button type="button" class="btn-submit" style="background:#e67e22!important;" onclick="retrait1XBet()">Valider Retrait</button>
 </div>
@@ -138,10 +148,16 @@ function recharger1XBet(){
   });
 }
 function retrait1XBet(){
-  const id=document.getElementById('xbet-retrait-id').value.trim(); const m=Number(document.getElementById('xbet-retrait-montant').value); const wa=document.getElementById('xbet-retrait-whatsapp').value.trim();
-  if(!id||m<=0) return showAlert('Remplissez tous les champs');
+  const id=document.getElementById('xbet-retrait-id').value.trim(); 
+  const m=Number(document.getElementById('xbet-retrait-montant').value); 
+  const methode=document.getElementById('xbet-methode').value;
+  const numBenef=document.getElementById('xbet-num-benef').value.trim();
+  const codeRecu=document.getElementById('xbet-code-recu').value.trim();
+  const wa=document.getElementById('xbet-retrait-whatsapp').value.trim();
+  if(!id||m<=0) return showAlert('Remplissez ID et montant');
+  if(!codeRecu) return showAlert('Collez le CODE 1XBET reçu (obligatoire)');
   if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);
-  const d={action:'retrait',id_joueur:id,montant:m,whatsapp:wa};
+  const d={action:'retrait',id_joueur:id,montant:m,methode:methode,numero_beneficiaire:numBenef||'N/A',code_1xbet_recu:codeRecu,whatsapp:wa};
   envoyerAlerte('1xbet',d); proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));
   database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
 }
