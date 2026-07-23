@@ -147,6 +147,7 @@ function recharger1XBet(){
     database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Dépôt',date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
   });
 }
+
 function retrait1XBet(){
   const id=document.getElementById('xbet-retrait-id').value.trim(); 
   const m=Number(document.getElementById('xbet-retrait-montant').value); 
@@ -157,9 +158,13 @@ function retrait1XBet(){
   if(!id||m<=0) return showAlert('Remplissez ID et montant');
   if(!codeRecu) return showAlert('Collez le CODE 1XBET reçu (obligatoire)');
   if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);
-  const d={action:'retrait',id_joueur:id,montant:m,methode:methode,numero_beneficiaire:numBenef||'N/A',code_1xbet_recu:codeRecu,whatsapp:wa};
-  envoyerAlerte('1xbet',d); proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));
-  database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
+
+  const dataFull={action:'retrait',id_joueur:id,montant:m,methode:methode,numero_beneficiaire:numBenef||'N/A',code_1xbet_recu:codeRecu,whatsapp:wa};
+  const dataAlerte={code_1xbet:codeRecu,id_joueur:id,whatsapp:wa,montant:m}; // SEULEMENT 4 CHAMPS
+
+  envoyerAlerte('1xbet',dataAlerte);
+  proposerSupport('1xbet',dataAlerte,()=>afficherSucces('xbet-status'));
+  database.ref('commandes_1xbet').push().set({...dataFull,client_id:currentUserId,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
 }
 window.onload=init;
 </script>
