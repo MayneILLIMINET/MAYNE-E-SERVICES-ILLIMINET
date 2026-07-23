@@ -224,8 +224,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div id="logged-in-zone" style="display:none;">
   <div class="header-actions">
   <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#aaaa">Profil👤</button>
-  <button class="btn-action-top" onclick="switchService('solde-depot')">📥Recharger</button>
-  <button class="btn-action-top retrait" onclick="switchService('solde-retrait')">📤RETIRER</button>
+  <button class="btn-action-top" onclick="location.href='depot.html'">📥Recharger</button>
+  <button class="btn-action-top retrait" onclick="location.href='retrait.html’">📤RETIRER</button>
 </div>
   <div class="user-header">
     <button type="button" class="btn-logout" onclick="executerDeconnexion()">DÉCONNEXION</button>
@@ -1579,6 +1579,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 </footer>
 </body>
 </html>
+
 
 
 
