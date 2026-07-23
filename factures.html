@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Factures - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const database=firebase.database();</script>
+<style>body{margin:0;padding:5px;font-family:Arial;background:#aaaa;display:flex;justify-content:center}.app-container{width:100%;max-width:430px;background:#1e1e1e;border:2px solid #fff;border-radius:10px;color:#fff;padding:12px}.input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;background:#aaaa;color:#fff;text-align:center;font-weight:bold;margin-bottom:8px}.dark-field{background:#1e1e1e!important;border:2px solid #fff!important}.btn-submit{width:100%;background:#008000;color:#fff;border:5px solid #aaaa;padding:10px;font-weight:bold;border-radius:4px;margin-top:5px}.user-header{background:#aaaa;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}.history-box{background:#1e1e1e;color:#fff;font-family:monospace;padding:6px;border-radius:4px;max-height:140px;overflow-y:auto;font-size:10px;margin-top:5px}.status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center}.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px}.modal-box{background:#500;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}.modal-msg{font-size:15px;margin-bottom:18px}.modal-btns{display:flex;gap:8px}.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}.btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#ddd;color:#000}</style>
+</head><body><div class="app-container">
+<div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;"></div>
+<div class="user-header"><button style="position:absolute;top:1px;right:8px;background:#500;color:#fff;border:4px solid #aaa;padding:5px 10px;font-size:8px;border-radius:10px" onclick="location.href='index.html'">← ACCUEIL</button><div id="user-name">CHARGEMENT...</div><div>SOLDE: <span id="user-balance">0</span> F</div></div>
+<div style="background:#aaaa;padding:10px;border-radius:6px">
+<h4 style="border-bottom:2px solid #fff;padding-bottom:5px">FACTURES PRO</h4>
+
+<label>Type Facture :</label>
+<select id="facture-type" class="select-field dark-field">
+<option value="SBEE">SBEE</option><option value="SONEB">SONEB</option>
+<option value="CANAL+">CANAL+</option><option value="STARTIMES">STARTIMES</option>
+<option value="INTERNET">INTERNET / WIFI</option>
+</select>
+
+<label>Numéro Compteur / Abonné :</label>
+<input type="text" id="facture-numero" class="input-field dark-field" placeholder="Numéro">
+
+<label>Montant :</label>
+<input type="number" id="facture-montant" class="input-field dark-field" placeholder="Montant">
+
+<label>Votre WhatsApp :</label>
+<input type="text" id="facture-whatsapp" class="input-field dark-field" placeholder="WhatsApp">
+
+<button class="btn-submit" onclick="payerFacture()">Payer Facture</button>
+<p id="facture-status" class="status-msg"></p>
+<div style="font-weight:bold;text-align:center;margin-top:10px">MES FACTURES</div><div id="facture-historique" class="history-box">Aucun</div>
+</div></div>
+
+<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="document.getElementById('custom-alert').style.display='none'">OK</button></div></div>
+<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
+
+<script>
+const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
+let currentUserId=null,currentUserSolde=0,_lock=false,confirmCallback=null;
+function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
+function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
+function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
+function envoyerAlerte(s,d){fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({service:s,id:Date.now(),data:Object.assign({},d,{client_id:currentUserId,client_nom:document.getElementById('user-name').innerText})})});}
+function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='👏✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);document.getElementById(id).innerText=m;document.getElementById(id).style.display='block';}
+function proposerSupport(s,d,cb){let det='';for(const[k,v]of Object.entries(d)){det+=`${k}: ${v}\n`;}const txt=`🔔 FACTURE\nSERVICE:${s}\nCLIENT:${document.getElementById('user-name').innerText}\n${det}`;showConfirm('Contacter le personnel sur WhatsApp?',y=>{if(y)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
+
+function init(){
+  let saved=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(!saved){location.href='index.html';return;}
+  currentUserId=saved.phone.replace(/[^0-9]/g,'');
+  database.ref('clients/'+currentUserId).on('value',v=>{const d=v.val()||{}; currentUserSolde=d.solde||0; document.getElementById('user-name').innerText=d.nom||currentUserId; document.getElementById('user-balance').innerText=(d.solde||0).toLocaleString('fr-FR');});
+  database.ref('commandes_factures').orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{const hb=document.getElementById('facture-historique'); if(!sh.exists()){hb.innerHTML='Aucun';return;} let h=''; sh.forEach(c=>{const v=c.val(); const st=(v.statut||'en cours').toLowerCase(); let coul='#ffbb00'; if(st.includes('valid')) coul='#28a745'; else if(st.includes('annul')) coul='#dc3545'; h+=`• ${v.type_facture} ${v.montant}F - ${v.numero} - ${v.date} - <span style="background:${coul};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold">${v.statut}</span><br>`;}); hb.innerHTML=h;});
+}
+function payerFacture(){
+  const type=document.getElementById('facture-type').value;
+  const num=document.getElementById('facture-numero').value.trim();
+  const m=Number(document.getElementById('facture-montant').value);
+  const wa=document.getElementById('facture-whatsapp').value.trim();
+  if(!num||!m) return showAlert('Remplis numéro et montant');
+  if(currentUserSolde < m) return showAlert('Solde insuffisant');
+  if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
+  const dataFull={type_facture:type,numero:num,montant:m,whatsapp:wa};
+  const dataAlerte={type_facture:type,numero:num,montant:m,whatsapp:wa};
+  database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{
+    envoyerAlerte('factures',dataAlerte);
+    proposerSupport('factures',dataAlerte,()=>afficherSucces('facture-status'));
+    database.ref('commandes_factures').push().set({...dataFull,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
+  });
+}
+window.onload=init;
+</script></body></html>
