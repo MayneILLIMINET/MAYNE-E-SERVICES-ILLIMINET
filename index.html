@@ -100,7 +100,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
 .input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
-.dark-field{background:#c00!important;color:#fff!important;border:2px solid #fff!important}
+.dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
 .btn-submit{width:100%;background:#500;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
 .btn-link{background:#500;border:none;color:#fff;text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;display:inline-block}
 .user-header{background:#500;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}
@@ -112,7 +112,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .tab-btn.btn-home{grid-column:span 2;background:#aaaa;color:#fff;font-size:12px}
 .tab-btn.btn-full{grid-column:span 2;background:#500}
 .service-panel{background:#500;color:#fff;padding:10px;border-radius:6px;text-align:left}
-.sub-panel h4{margin:0 0 8px 0;color:#000;border-bottom:2px solid #000;padding-bottom:3px;font-size:14px;text-transform:uppercase}
+.sub-panel h4{margin:0 0 8px 0;color:#fff;border-bottom:2px solid #fff;padding-bottom:3px;font-size:14px;text-transform:uppercase}
 .inner-toggle{display:flex;gap:4px;margin-bottom:10px}
 .inner-btn{flex:1;padding:8px;font-size:11px;font-weight:bold;background:#500;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;}
 .inner-btn.active{background:#aaaa}
@@ -128,10 +128,10 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center;color:#006400}
 .product-card{background:#aaaa;border:4px solid #fff;border-radius:6px;padding:8px;color:#fff}
 .product-title{font-weight:bold;font-size:13px;margin:5px 0}
-.history-box{background:#000;color:#fff;font-family:monospace;padding:6px;border-radius:4px;max-height:80px;overflow-y:auto;font-size:10px;margin-top:5px}
+.history-box{background:#500;max-width:80%;text-align:right;border:4px solid#aaaa;color:#fff;font-family:monospace;padding:6px;border-radius:4px;max-height:80px;overflow-y:auto;font-size:10px;margin-top:5px}
 .info-block-code{background:#aaaa;padding:6px;border-radius:4px;border:1px solid #000;font-size:11px;font-family:monospace;word-break:break-all;margin-top:5px;color:#c0392b;font-weight:bold;text-align:center}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
-.modal-box{background:#ff5000;color:#000;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
+.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
 .modal-msg{font-size:15px;margin-bottom:18px}
 .modal-btns{display:flex;gap:8px}
 .modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
@@ -1558,17 +1558,17 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
   <img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px">
 </div>
 
-<footer style="background:#111; color:#aaa; padding:30px 16px; text-align:center; font-size:14px; margin-top:50px;">
+<footer style="background:#500; color:#aaaa; padding:30px 16px; text-align:center; font-size:14px; margin-top:50px;">
   <div style="margin-bottom:10px;">
-    <strong style="color:#fff; font-size:16px;">MAYNE SERVICE</strong> © 2026 — Tous droits réservés
+    <strong style="color:#aaaa; font-size:16px;">MAYNE SERVICE</strong> © 2023 — Tous droits réservés
   </div>
   
   <div style="margin:12px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
-    <a href="about.html" target="_self" style="color:#aaa; margin:0 12px; text-decoration:none;">À propos</a>
-    <a href="contact.html" target="_self" style="color:#aaa; margin:0 12px; text-decoration:none;">Contact</a>
-    <a href="privacy.html" target="_self" style="color:#aaa; margin:0 12px; text-decoration:none;">Confidentialité</a>
-    <a href="conditions.html" target="_self" style="color:#aaa; margin:0 12px; text-decoration:none;">Conditions d'utilisation</a>
-   <a href="#" onclick="let base=location.href.substring(0,location.href.lastIndexOf('/')+1); let u=base+'updates.html?nocache='+Date.now(); if(window.AppInventor){window.AppInventor.setWebViewString('FORCE:'+u)}else{location.href=u} return false;" style="color:#aaa; margin:0 12px; text-decoration:none;">Mises à jour</a>
+    <a href="about.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">À propos</a>
+    <a href="contact.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Contact</a>
+    <a href="privacy.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Confidentialité</a>
+    <a href="conditions.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Conditions d'utilisation</a>
+   <a href="#" onclick="let base=location.href.substring(0,location.href.lastIndexOf('/')+1); let u=base+'updates.html?nocache='+Date.now(); if(window.AppInventor){window.AppInventor.setWebViewString('FORCE:'+u)}else{location.href=u} return false;" style="color:#ff5000; margin:0 12px; text-decoration:none;">Mises à jour</a>
   </div>
 
   <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">
