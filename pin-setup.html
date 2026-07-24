@@ -1,72 +1,57 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PIN - MAYNE</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Verrouillage PIN</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const database=firebase.database();
+</script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#aaaa;color:#fff;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#500}
-.head{padding:16px;display:flex;align-items:center;gap:12px}
-.back{width:44px;height:44px;background:#aaaa;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
-.card{margin:12px 16px;background:#1e1e1e;border-radius:20px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
-.row{display:flex;justify-content:space-between;align-items:center}
-.switch{width:52px;height:30px;background:#ddd;border-radius:20px;position:relative;cursor:pointer;transition:.2s}
-.switch.on{background:#0f3d2e}
-.dot{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}
-.switch.on .dot{left:24px}
-.dots{display:flex;gap:14px;justify-content:center;margin:20px 0}
-.d{width:16px;height:16px;border-radius:50%;border:2px solid #0f3d2e}
-.d.fill{background:#aaaa}
-.num{width:70px;height:70px;border-radius:50%;background:#aaaa;border:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;cursor:pointer}
-.num:active{background:#0f3d2e;color:#000}
-.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;margin-top:20px}
-.input{letter-spacing:12px;text-align:center;font-size:20px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}html,body{height:100dvh;overflow:hidden}body{background:#111;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;height:100dvh;background:#4b0000;border:2px solid #fff;border-radius:10px;display:flex;flex-direction:column;color:#fff}
+.head{padding:14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.2)}
+.back{width:36px;height:36px;background:#fff;color:#4b0000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.card{margin:12px 16px;background:rgba(255,255,255,.08);border-radius:16px;padding:16px}
+.switch{width:52px;height:30px;background:#555;border-radius:20px;position:relative;cursor:pointer}.switch.on{background:#0f0}.dot{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}.switch.on.dot{left:24px}
+.dots{display:flex;gap:14px;justify-content:center;margin:22px 0}.d{width:16px;height:16px;border-radius:50%;border:2px solid #eacbc3}.d.fill{background:#eacbc3}
+.num{width:70px;height:70px;border-radius:50%;background:#eacbc3;color:#4b0000;border:1px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;cursor:pointer}
+.num:active{background:#4b0000;color:#fff}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:99999;padding:15px}
+.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:14px;max-width:340px;width:100%;border:2px solid #fff;text-align:center}
+.input-field{width:100%;padding:12px;border-radius:8px;border:2px solid #fff;background:#2a3942;color:#fff;margin:8px 0;text-align:center;font-weight:bold}
+.btn-yes{background:#ff5000;color:#fff;border:none;padding:11px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px}
+.btn-no{background:#ddd;color:#000;border:none;padding:11px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="head"><div class="back" onclick="location.href='compte.html'">‹↩️</div><b>Verrouillage par PIN</b></div>
-
-<div class="card">
-<div class="row"><div><b>Activer le PIN</b><br><span style="font-size:11px;color:#999">Demander un code à l'ouverture</span></div><div class="switch" id="sw" onclick="toggle()"><div class="dot"></div></div></div>
+<div class="head"><div class="back" onclick="location.href='securite.html'">←</div><b>Verrouillage par PIN</b></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>Activer le PIN 4 chiffres</b><br><span style="font-size:11px;color:#c9a8a0">Demande à l'ouverture</span></div><div class="switch" id="sw" onclick="toggle()"><div class="dot"></div></div></div></div>
+<div class="card" id="setupBox" style="display:none"><h4 id="title" style="text-align:center">Définir code à 4 chiffres</h4><div class="dots"><div class="d" id="d0"></div><div class="d" id="d1"></div><div class="d" id="d2"></div><div class="d" id="d3"></div></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center"><div class="num" onclick="tap(1)">1</div><div class="num" onclick="tap(2)">2</div><div class="num" onclick="tap(3)">3</div><div class="num" onclick="tap(4)">4</div><div class="num" onclick="tap(5)">5</div><div class="num" onclick="tap(6)">6</div><div class="num" onclick="tap(7)">7</div><div class="num" onclick="tap(8)">8</div><div class="num" onclick="tap(9)">9</div><div></div><div class="num" onclick="tap(0)">0</div><div class="num" onclick="del()">⌫</div></div><p id="msg" style="text-align:center;font-size:12px;margin-top:12px"></p><div style="text-align:center;margin-top:10px;color:#ffcc80;font-size:12px;text-decoration:underline;cursor:pointer" onclick="openForgot4()">Code 4 chiffres oublié?</div></div>
 </div>
 
-<div class="card" id="setupBox" style="display:none">
-<h4 id="title" style="text-align:center">Définir un code à 4 chiffres</h4>
-<div class="dots"><div class="d" id="d0"></div><div class="d" id="d1"></div><div class="d" id="d2"></div><div class="d" id="d3"></div></div>
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center;margin-top:10px">
-<div class="num" onclick="tap(1)">1</div><div class="num" onclick="tap(2)">2</div><div class="num" onclick="tap(3)">3</div>
-<div class="num" onclick="tap(4)">4</div><div class="num" onclick="tap(5)">5</div><div class="num" onclick="tap(6)">6</div>
-<div class="num" onclick="tap(7)">7</div><div class="num" onclick="tap(8)">8</div><div class="num" onclick="tap(9)">9</div>
-<div class="num" style="background:transparent;border:none"></div><div class="num" onclick="tap(0)">0</div><div class="num" onclick="del()">⌫</div>
-</div>
-<p id="msg" style="text-align:center;color:#c0392b;font-size:12px;margin-top:12px"></p>
-</div>
-</div>
+<div id="modal-forgot4" class="modal-overlay"><div class="modal-box"><h3>Réinitialiser PIN 4 chiffres</h3><p style="font-size:12px;color:#aaa">Entre ton mot de passe 6 chiffres pour prouver que c'est toi</p><input id="pw6" type="password" maxlength="6" class="input-field" placeholder="Mot de passe 6 chiffres"><button class="btn-yes" onclick="verifyPw6()">Vérifier</button><button class="btn-no" onclick="closeModals()">Annuler</button></div></div>
+<div id="modal-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="btn-yes" onclick="closeModals()">OK</button></div></div>
 
 <script>
-let pin='', step='new', firstPin='', enabled = localStorage.getItem('mayne_pin_enabled')==='true';
+let pin='',step='new',firstPin='',enabled=localStorage.getItem('mayne_pin_enabled')==='true',currentUserId=null,currentData=null;
+function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('modal-alert').style.display='flex';}
+function closeModals(){document.querySelectorAll('.modal-overlay').forEach(e=>e.style.display='none');}
+function openForgot4(){document.getElementById('modal-forgot4').style.display='flex';}
 const sw=document.getElementById('sw');
-function refreshSwitch(){ sw.classList.toggle('on', enabled); document.getElementById('setupBox').style.display = enabled ? 'block' : 'none'; if(enabled && !localStorage.getItem('mayne_pin')){ step='new'; firstPin=''; document.getElementById('title').textContent='Définir un code à 4 chiffres'; } }
-function toggle(){
-  if(enabled){
-    if(confirm('Désactiver le verrouillage PIN ?')){ enabled=false; localStorage.setItem('mayne_pin_enabled','false'); refreshSwitch(); }
-  } else { enabled=true; localStorage.setItem('mayne_pin_enabled','true'); refreshSwitch(); }
-}
-function tap(n){
-  if(pin.length<4){ pin+=n; draw(); }
-  if(pin.length===4){
-    if(step==='new'){ firstPin=pin; pin=''; step='confirm'; document.getElementById('title').textContent='Confirme ton code'; document.getElementById('msg').textContent=''; draw(); }
-    else { 
-      if(pin===firstPin){ localStorage.setItem('mayne_pin', pin); document.getElementById('msg').style.color='#2e7d32'; document.getElementById('msg').textContent='✅ Code enregistré'; setTimeout(()=>location.href='compte.html',800); }
-      else { document.getElementById('msg').textContent='❌ Les codes ne correspondent pas'; pin=''; firstPin=''; step='new'; document.getElementById('title').textContent='Définir un code à 4 chiffres'; draw(); }
-    }
-  }
-}
-function del(){ pin=pin.slice(0,-1); draw(); }
-function draw(){ for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('fill', i<pin.length); }
-refreshSwitch(); draw();
+function refreshSwitch(){sw.classList.toggle('on',enabled);document.getElementById('setupBox').style.display=enabled?'block':'none';if(enabled&&!localStorage.getItem('mayne_pin')){step='new';firstPin='';document.getElementById('title').textContent='Définir code à 4 chiffres';}}
+function toggle(){if(enabled){if(confirm('Désactiver PIN 4 chiffres?')){enabled=false;localStorage.setItem('mayne_pin_enabled','false');localStorage.removeItem('mayne_pin');sessionStorage.removeItem('mayne_unlocked');refreshSwitch();}}else{enabled=true;localStorage.setItem('mayne_pin_enabled','true');refreshSwitch();}}
+function tap(n){if(pin.length<4){pin+=n;draw();}if(pin.length===4){if(step==='new'){firstPin=pin;pin='';step='confirm';document.getElementById('title').textContent='Confirme ton code';draw();}else{if(pin===firstPin){localStorage.setItem('mayne_pin',pin);document.getElementById('msg').style.color='#0f0';document.getElementById('msg').textContent='✅ Code 4 chiffres enregistré';setTimeout(()=>location.href='securite.html',800);}else{document.getElementById('msg').textContent='❌ Différent';pin='';firstPin='';step='new';document.getElementById('title').textContent='Définir code à 4 chiffres';draw();}}}}
+function del(){pin=pin.slice(0,-1);draw();}
+function draw(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('fill',i<pin.length);}
+async function verifyPw6(){const pw=document.getElementById('pw6').value.trim();if(pw.length!==6)return showAlert('6 chiffres');const h=CryptoJS.MD5(pw).toString();if(currentData&&currentData.pin!==h&&currentData.pin!==pw)return showAlert('Mot de passe 6 chiffres incorrect');localStorage.removeItem('mayne_pin');pin='';firstPin='';step='new';document.getElementById('title').textContent='Définir nouveau code 4 chiffres';closeModals();showAlert('✅ Tu peux redéfinir ton code 4 chiffres');draw();}
+function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{currentData=v.val()||{}});}
+init();refreshSwitch();draw();
 </script>
 </body>
 </html>
