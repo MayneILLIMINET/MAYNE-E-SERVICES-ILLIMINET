@@ -42,7 +42,7 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 </head>
 <body>
 <div class="app">
-<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">NOTIF🔔</button></div></div>
+<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">NOTIF🔔</button></div></div>
 <div class="card"><div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">👁️</span></div><div class="montant" id="solde">0.00 XOF</div><div class="sub"><div style="color:#fe3a">BONUS<br><b id="com">0 XOF</b></div><div style="color:#4CAF50FF"><b>Solde_Epargne<br><b id="rec">0 XOF</b></div></div><button class="btn" onclick="openR()">Retirer de l'argent ↓</button></div>
 <div class="pills"><div class="pill" onclick="openN()">+ Nouvelle épargne</div><div class="pill" onclick="document.querySelector('.list').scrollIntoView({behavior:'smooth'})">Mes épargnes</div></div>
 <div class="kyc" id="kyc"><div><b>Verification d'identite</b><br><span style="font-size:11px">Retrait apres KYC valide</span></div><button style="background:#aaaa;border:none;border-radius:100px;padding:8px 14px;font-weight:700" onclick="location.href='kyc.html'">Verifier</button></div>
@@ -58,14 +58,12 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 <div class="opt" onclick="choisirType('perso')"><div><b>Epargne personnelle</b><br><small>Fixez un objectif</small></div><div>></div></div>
 <button class="input" style="background:#333" onclick="closeM()">Annuler</button>
 </div>
-
 <div id="step1" style="display:none">
 <div class="navrow"><button class="navbtn" onclick="goStep(0)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div>
 <h3>Epargne personnelle</h3><input id="nomEp" class="input" placeholder="MOTO" value="MOTO"><p style="margin:10px 0;font-weight:700">Icone</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'📱')">📱</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'👔')">👔</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'💻')">💻</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🏍️')">🏍️</div></div>
 <button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(2)">Continuer</button>
 <button class="input" style="background:#333;border-radius:100px" onclick="goStep(0)">Retour</button>
 </div>
-
 <div id="step2" style="display:none">
 <div class="navrow"><button class="navbtn" onclick="goStep(1)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div>
 <h3>Type epargne</h3>
@@ -80,7 +78,6 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 <button class="input" style="background:#ff5000;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(3)">Continuer</button>
 <button class="input" style="background:#333;border-radius:100px" onclick="goStep(1)">Retour</button>
 </div>
-
 <div id="step3" style="display:none">
 <div class="navrow"><button class="navbtn" onclick="goStep(2)">Retour</button><button class="navbtn" onclick="closeM()">X Fermer</button></div>
 <h3>Frequence</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>O</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>O</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>O</span></div>
@@ -91,9 +88,7 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 <button class="input" style="background:#000;border:1px solid #fff;border-radius:100px" onclick="closeM()">Annuler</button>
 </div>
 </div></div>
-
 <div class="modal" id="mret" onclick="if(event.target===this)closeM()"><div class="sheet"><div class="navrow"><span>Retrait</span><button class="navbtn" onclick="closeM()">X</button></div><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Demander</button><button class="input" style="background:#333;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
-
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
 <div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Non</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui</button></div></div></div>
 
@@ -108,15 +103,37 @@ function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;do
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-function init(){
-  var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!u){location.href='index.html';return;}
-  uid=(u.phone||'').replace(/[^0-9]/g,'');
-  document.getElementById('wa').value=u.phone||''; document.getElementById('rwa').value=u.phone||'';
+
+function displayUser(u){
+  if(!u) return;
   var full=((u.prenom||'')+' '+(u.nom||'')).trim()||u.nom||'Client';
   document.getElementById('uname').textContent=full;
   document.getElementById('uemail').textContent=u.email||u.phone||'';
   document.getElementById('av').textContent=(full[0]||'A').toUpperCase();
+  document.getElementById('wa').value=u.phone||'';
+  document.getElementById('rwa').value=u.phone||'';
+}
+
+async function chargerInfosCompte(){
+  var u = JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  if(!u ||!u.phone){location.href='index.html';return null;}
+  var phoneKey = u.phone.replace(/[^0-9]/g,'');
+  displayUser(u);
+  try{
+    var snapClient = await db.ref('clients/'+phoneKey).once('value');
+    var dataClient = snapClient.val()||{};
+    var snapUser = await db.ref('users/'+phoneKey).once('value');
+    var dataUser = snapUser.val()||{};
+    var merged = Object.assign({}, u, dataClient, dataUser);
+    localStorage.setItem('mayne_current_user', JSON.stringify(merged));
+    displayUser(merged);
+    return phoneKey;
+  }catch(e){console.log(e); return phoneKey;}
+}
+
+async function init(){
+  uid = await chargerInfosCompte();
+  if(!uid) return;
   db.ref('clients/'+uid).on('value',function(s){
     var d=s.val()||{}; soldePrincipal=+d.solde||0; soldeEpargne=+d.solde_epargne||0;
     document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';
