@@ -16,13 +16,13 @@ const database=firebase.database();
 *{box-sizing:border-box}html,body{margin:0;height:100dvh;overflow:hidden;font-family:Arial}body{background:#111;display:flex;justify-content:center}
 .app-container{width:100%;max-width:430px;height:100dvh;background:#4b0000;border:2px solid #fff;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;color:#fff}
 .header{flex-shrink:0;padding:14px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.2)}
-.back-btn{width:36px;height:36px;border-radius:50%;background:#fff;color:#4b0000;border:none;font-size:18px}
-.content{flex:1;overflow-y:auto;padding:16px;background:#4b0000}
+.back-btn{width:36px;height:36px;border-radius:50%;background:#fff;color:#4b0000;border:none;font-size:18px;font-weight:bold}
+.content{flex:1;min-height:0;overflow-y:auto;padding:16px;background:#4b0000}
 .card-profile{background:rgba(255,255,255,.08);border-radius:14px;padding:14px;display:flex;gap:12px;margin-bottom:18px}
 .avatar{width:56px;height:56px;border-radius:50%;background:#eacbc3;color:#4b0000;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold}
-.item{display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.3);cursor:pointer}
-.icon-circle{width:48px;height:48px;border-radius:50%;background:#eacbc3;display:flex;align-items:center;justify-content:center;font-size:22px}
-.item-text{flex:1;text-align:left}.item-title{font-weight:bold;font-size:15px}.item-sub{font-size:12px;color:#c9a8a0}
+.item{display:flex;align-items:center;gap:12px;padding:18px 0;border-bottom:1px solid rgba(255,255,255,.25);cursor:pointer}
+.icon-circle{width:48px;height:48px;border-radius:50%;background:#eacbc3;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.item-text{flex:1;text-align:left}.item-title{font-weight:bold;font-size:15px}.item-sub{font-size:12px;color:#c9a8a0;margin-top:2px}
 .bottom-bar{flex-shrink:0;height:62px;background:#0a0a0a;display:flex;justify-content:space-around;align-items:center;border-top:2px solid #fff}
 .bottom-bar button{background:transparent;color:#fff;border:none;font-size:11px;font-weight:bold;opacity:.7}
 .bottom-bar button.active{background:#1a4d2e;color:#a3ffb0;padding:8px 14px;border-radius:20px;opacity:1}
@@ -31,26 +31,26 @@ const database=firebase.database();
 .input-field{width:100%;padding:12px;border-radius:8px;border:2px solid #fff;background:#2a3942;color:#fff;margin:8px 0;text-align:center;font-weight:bold}
 .btn-yes{background:#ff5000;color:#fff;border:none;padding:11px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px}
 .btn-no{background:#ddd;color:#000;border:none;padding:11px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px}
-.switch{width:44px;height:26px;background:#555;border-radius:20px;position:relative}.switch.on{background:#0f0}.switch-ball{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.2s}.switch.on.switch-ball{left:21px}
 </style>
 </head>
 <body>
 <div class="app-container">
 <div class="header"><button class="back-btn" onclick="location.href='compte.html'">←</button><h2>Connexion et sécurité</h2></div>
 <div class="content">
-<div class="card-profile"><div class="avatar" id="avatar">A</div><div><div id="user-name" style="font-weight:bold">AYIZAN</div><div id="user-email" style="font-size:12px;color:#c9a8a0">topalmayne@gmail.com</div><div style="font-size:10px;color:#0f0">● Compte vérifié</div></div></div>
+<div class="card-profile"><div class="avatar" id="avatar">M</div><div><div id="user-name" style="font-weight:bold">MARIUS AYIZAN</div><div id="user-email" style="font-size:12px;color:#c9a8a0"></div><div style="font-size:11px;color:#0f0">● Compte vérifié</div></div></div>
+
 <div class="item" onclick="openChangePin()"><div class="icon-circle">🔑</div><div class="item-text"><div class="item-title">Modifier mot de passe</div><div class="item-sub">PIN à 6 chiffres</div></div>›</div>
 <div class="item" onclick="openChangeEmail()"><div class="icon-circle">📧</div><div class="item-text"><div class="item-title">Modifier email</div><div class="item-sub" id="email-sub"></div></div>›</div>
-<div class="item" onclick="location.href='pin-setup.html'"><div class="icon-circle">🔒</div><div class="item-text"><div class="item-title">Verrouillage par PIN</div></div>
+<div class="item" onclick="location.href='pin-setup.html'"><div class="icon-circle">🔒</div><div class="item-text"><div class="item-title">Verrouillage par PIN</div><div class="item-sub" id="pin-status">Code à 4 chiffres</div></div>›</div>
 <div class="item" onclick="logoutAll()"><div class="icon-circle">🚪</div><div class="item-text"><div class="item-title">Déconnexion partout</div><div class="item-sub">Se déconnecter de tous les appareils</div></div>›</div>
 <div class="item" onclick="openDelete()"><div class="icon-circle" style="background:#ffb0b0">🗑️</div><div class="item-text"><div class="item-title" style="color:#ffb0b0">Supprimer le compte</div><div class="item-sub">Action irréversible</div></div>›</div>
 </div>
 <div class="bottom-bar"><button onclick="location.href='index.html'">RETOUR À L'ACCUEIL 🏠</button><button onclick="location.href='epargne.html'">MON ÉPARGNE ⭐</button><button class="active">MES INFOS 👤</button></div>
 </div>
 
-<div id="modal-pin" class="modal-overlay"><div class="modal-box"><h3>Modifier PIN</h3><input id="old-pin" type="password" maxlength="6" class="input-field" placeholder="Ancien PIN"><input id="new-pin" type="password" maxlength="6" class="input-field" placeholder="Nouveau PIN"><input id="new-pin2" type="password" maxlength="6" class="input-field" placeholder="Confirmer"><button class="btn-yes" onclick="changePin()">Valider</button><button class="btn-no" onclick="closeModals()">Annuler</button></div></div>
+<div id="modal-pin" class="modal-overlay"><div class="modal-box"><h3>Mot de passe 6 chiffres</h3><input id="old-pin" type="password" maxlength="6" class="input-field" placeholder="Ancien PIN"><input id="new-pin" type="password" maxlength="6" class="input-field" placeholder="Nouveau PIN"><input id="new-pin2" type="password" maxlength="6" class="input-field" placeholder="Confirmer"><button class="btn-yes" onclick="changePin()">Valider</button><button class="btn-no" onclick="closeModals()">Annuler</button></div></div>
 <div id="modal-email" class="modal-overlay"><div class="modal-box"><h3>Modifier email</h3><input id="new-email" type="email" class="input-field" placeholder="Nouvel email"><button class="btn-yes" onclick="changeEmail()">Enregistrer</button><button class="btn-no" onclick="closeModals()">Annuler</button></div></div>
-<div id="modal-delete" class="modal-overlay"><div class="modal-box"><h3 style="color:#ffb0b0">Supprimer?</h3><input id="del-pin" type="password" maxlength="6" class="input-field" placeholder="Ton PIN"><button class="btn-yes" style="background:#c00" onclick="deleteAccount()">Supprimer</button><button class="btn-no" onclick="closeModals()">Annuler</button></div></div>
+<div id="modal-delete" class="modal-overlay"><div class="modal-box"><h3 style="color:#ffb0b0">Supprimer?</h3><input id="del-pin" type="password" maxlength="6" class="input-field" placeholder="Ton PIN 6 chiffres"><button class="btn-yes" style="background:#c00" onclick="deleteAccount()">Supprimer</button><button class="btn-no" onclick="closeModals()">Annuler</button></div></div>
 <div id="modal-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="btn-yes" onclick="closeModals()">OK</button></div></div>
 
 <script>
@@ -60,13 +60,11 @@ function closeModals(){document.querySelectorAll('.modal-overlay').forEach(e=>e.
 function openChangePin(){document.getElementById('modal-pin').style.display='flex';}
 function openChangeEmail(){document.getElementById('modal-email').style.display='flex';}
 function openDelete(){document.getElementById('modal-delete').style.display='flex';}
-function togglePinLock(){const en=localStorage.getItem('mayne_pin_enabled')==='true';localStorage.setItem('mayne_pin_enabled',en?'false':'true');if(en)sessionStorage.removeItem('mayne_unlocked');updatePinUI();showAlert(en?'🔓 PIN désactivé':'🔒 PIN activé');}
-function updatePinUI(){const en=localStorage.getItem('mayne_pin_enabled')==='true';document.getElementById('pin-status').innerText=en?'Activé':'Désactivé';document.getElementById('pin-switch').classList.toggle('on',en);}
-async function changePin(){const oldP=document.getElementById('old-pin').value.trim();const newP=document.getElementById('new-pin').value.trim();const newP2=document.getElementById('new-pin2').value.trim();if(newP!==newP2)return showAlert('Confirmation différente');const oldH=CryptoJS.MD5(oldP).toString();if(currentData.pin!==oldH&&currentData.pin!==oldP)return showAlert('Ancien PIN incorrect');await database.ref('clients/'+currentUserId).update({pin:CryptoJS.MD5(newP).toString()});closeModals();showAlert('✅ PIN modifié');}
+async function changePin(){const oldP=document.getElementById('old-pin').value.trim();const newP=document.getElementById('new-pin').value.trim();const newP2=document.getElementById('new-pin2').value.trim();if(newP.length!==6||newP!==newP2)return showAlert('6 chiffres + confirmation identique');const oldH=CryptoJS.MD5(oldP).toString();if(currentData.pin!==oldH&&currentData.pin!==oldP)return showAlert('Ancien PIN incorrect');await database.ref('clients/'+currentUserId).update({pin:CryptoJS.MD5(newP).toString()});closeModals();showAlert('✅ Mot de passe 6 chiffres modifié');}
 async function changeEmail(){const ne=document.getElementById('new-email').value.trim().toLowerCase();if(!ne.includes('@'))return showAlert('Email invalide');await database.ref('clients/'+currentUserId).update({email:ne});closeModals();showAlert('✅ Email mis à jour');init();}
 function logoutAll(){localStorage.removeItem('mayne_current_user');sessionStorage.clear();location.href='index.html';}
 async function deleteAccount(){const pin=document.getElementById('del-pin').value.trim();const h=CryptoJS.MD5(pin).toString();if(currentData.pin!==h&&currentData.pin!==pin)return showAlert('PIN incorrect');await database.ref('clients/'+currentUserId).remove();localStorage.clear();sessionStorage.clear();location.href='index.html';}
-function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{currentData=v.val()||{};document.getElementById('user-name').innerText=(currentData.nom||'').toUpperCase();document.getElementById('user-email').innerText=currentData.email||'';document.getElementById('email-sub').innerText=currentData.email||'';document.getElementById('avatar').innerText=(currentData.nom||'A')[0].toUpperCase();});updatePinUI();}
+function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{currentData=v.val()||{};document.getElementById('user-name').innerText=(currentData.nom||'').toUpperCase();document.getElementById('user-email').innerText=currentData.email||'';document.getElementById('email-sub').innerText=currentData.email||'';document.getElementById('avatar').innerText=(currentData.nom||'M')[0].toUpperCase();const en=localStorage.getItem('mayne_pin_enabled')==='true';document.getElementById('pin-status').innerText=en?'Activé • '+localStorage.getItem('mayne_pin')?.length+' chiffres':'Code à 4 chiffres - Désactivé';});}
 window.onload=init;
 </script>
 </body>
