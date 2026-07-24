@@ -33,242 +33,67 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 .navbtn{background:transparent;border:1px solid #fff;color:#fff;border-radius:100px;padding:6px 12px;font-size:12px;cursor:pointer}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:15px}
 .modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
-.modal-msg{font-size:15px;margin-bottom:18px}
-.modal-btns{display:flex;gap:8px}
-.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
-.btn-yes{background:#2b8a3e;color:#fff}
-.btn-no{background:#ddd;color:#000}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">NOTIF🔔</button></div></div>
-<div class="card"><div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">👁️</span></div><div class="montant" id="solde">0.00 XOF</div><div class="sub"><div style="color:#fe3a">BONUS<br><b id="com">0 XOF</b></div><div style="color:#4CAF50FF"><b>Solde_Epargne<br><b id="rec">0 XOF</b></div></div><button class="btn" id="btnRet" onclick="openR()">Retirer de l'argent ↓</button><small id="blocInfo" style="display:none;color:#ff9999;font-size:11px;margin-top:8px;line-height:1.3"></small></div>
-<div class="pills"><div class="pill" onclick="openN()">+ Nouvelle épargne</div><div class="pill" onclick="document.querySelector('.list').scrollIntoView({behavior:'smooth'})">Mes épargnes</div></div>
+<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">NOTIF</button></div></div>
+<div class="card"><div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">O</span></div><div class="montant" id="solde">0.00 XOF</div><div class="sub"><div style="color:#fe3a">BONUS<br><b id="com">0 XOF</b></div><div style="color:#4CAF50">Solde_Epargne<br><b id="rec">0 XOF</b></div></div><button class="btn" onclick="openR()">Retirer de l'argent</button><small id="blocInfo" style="display:none;color:#ff9999;font-size:11px;margin-top:8px"></small></div>
+<div class="pills"><div class="pill" onclick="openN()">+ Nouvelle epargne</div><div class="pill" onclick="document.querySelector('.list').scrollIntoView({behavior:'smooth'})">Mes epargnes</div></div>
 <div class="kyc" id="kyc"><div><b>Verification d'identite</b><br><span style="font-size:11px">Retrait apres KYC valide</span></div><button style="background:#aaaa;border:none;border-radius:100px;padding:8px 14px;font-weight:700" onclick="location.href='kyc.html'">Verifier</button></div>
 <div class="list"><h3>Historique d'epargne</h3><div id="histo"></div></div>
 </div>
-<div class="bottom"><button class="bnav" onclick="location.href='index.html'">REROUR</button><button class="bnav active">CORFRE-FORT⭐</button><button class="bnav">↕</button><button class="bnav" onclick="location.href='compte.html'">INFOS👤</button></div>
-
+<div class="bottom"><button class="bnav" onclick="location.href='index.html'">RETOUR</button><button class="bnav active">COFFRE-FORT</button><button class="bnav">↕</button><button class="bnav" onclick="location.href='compte.html'">INFOS</button></div>
 <div class="modal" id="mnew" onclick="if(event.target===this)closeM()"><div class="sheet">
-<div id="step0"><div class="navrow"><span></span><button class="navbtn" onclick="closeM()">X Fermer</button></div><div style="text-align:center;padding:10px"><div style="font-size:50px">🐷</div><h2>Creer une tontine</h2><p>Choisissez le type</p></div><div class="opt" onclick="choisirType('groupe')"><div><b>Tontine de groupe</b><br><small>Epargnez ensemble</small></div><div>></div></div><div class="opt" onclick="choisirType('perso')"><div><b>Epargne personnelle</b><br><small>Fixez un objectif</small></div><div>></div></div><button class="input" style="background:#333" onclick="closeM()">Annuler</button></div>
-<div id="step1" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(0)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Epargne personnelle</h3><input id="nomEp" class="input" placeholder="MOTO" value="MOTO"><p style="margin:10px 0;font-weight:700">Icone</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'📱')">📱</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'👔')">👔</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'💻')">💻</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🏍️')">🏍️</div></div><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(2)">Continuer</button><button class="input" style="background:#333;border-radius:100px" onclick="goStep(0)">Retour</button></div>
-<div id="step2" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(1)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Type epargne</h3><div class="opt active" onclick="setRythme(this,'A mon rythme')"><div><b>A mon rythme</b><br><small>Retrait libre</small></div><div>O</div></div><div class="opt" onclick="setRythme(this,'A une date precise')"><div><b>A une date precise</b><br><small>Bloque jusqua date</small></div><div>O</div></div><div id="dateFixeBox" style="display:none;margin-top:12px;background:#000;border-radius:12px;padding:12px"><label style="font-size:13px">Choisis ta date fixe</label><input id="dateFixe" type="date" class="input" style="background:#fff;color:#000"><small style="color:#aaa">Apres 1er depot, bloque jusqua cette date. 5% si avant.</small></div><h3 style="margin-top:14px">Montant objectif?</h3><div style="font-size:32px;color:#ccc;text-align:center;margin:15px 0" id="objLabel">0.00 XOF</div><input id="objectif" type="number" class="input" placeholder="10000 optionnel" oninput="objLabel.textContent=(this.value||0)+' XOF'"><button class="input" style="background:#ff5000;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(3)">Continuer</button><button class="input" style="background:#333;border-radius:100px" onclick="goStep(1)">Retour</button></div>
-<div id="step3" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(2)">Retour</button><button class="navbtn" onclick="closeM()">X Fermer</button></div><h3>Frequence</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>O</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>O</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>O</span></div><div style="margin-top:16px" class="opt" id="blocBox"><div><b id="blocLabel">Bloquer la tontine</b><br><small id="blocSub">5% si retrait avant</small></div><input type="checkbox" id="bloque"></div><input id="montant" type="number" class="input" placeholder="Premier depot ex: 2000"><input id="wa" class="input" placeholder="WhatsApp"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800" onclick="placerLegal()">Creer la tontine</button><button class="input" style="background:#333;border-radius:100px" onclick="goStep(2)">Retour</button><button class="input" style="background:#000;border:1px solid #fff;border-radius:100px" onclick="closeM()">Annuler</button></div>
+<div id="step0"><div class="navrow"><span></span><button class="navbtn" onclick="closeM()">X Fermer</button></div><div style="text-align:center;padding:10px"><div style="font-size:50px">🐷</div><h2>Creer une tontine</h2></div><div class="opt" onclick="choisirType('groupe')"><div><b>Tontine de groupe</b></div><div>></div></div><div class="opt" onclick="choisirType('perso')"><div><b>Epargne personnelle</b></div><div>></div></div><button class="input" style="background:#333" onclick="closeM()">Annuler</button></div>
+<div id="step1" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(0)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Epargne personnelle</h3><input id="nomEp" class="input" placeholder="MOTO" value="MOTO"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'📱')">📱</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'👔')">👔</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'💻')">💻</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🏍️')">🏍️</div></div><button class="input" style="background:#0f3d2e;border-radius:100px" onclick="goStep(2)">Continuer</button></div>
+<div id="step2" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(1)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Type epargne</h3><div class="opt active" onclick="setRythme(this,'A mon rythme')"><div><b>A mon rythme</b></div><div>O</div></div><div class="opt" onclick="setRythme(this,'A une date precise')"><div><b>A une date precise</b></div><div>O</div></div><div id="dateFixeBox" style="display:none;background:#000;padding:12px;border-radius:12px"><input id="dateFixe" type="date" class="input" style="background:#fff;color:#000"></div><h3>Objectif?</h3><div id="objLabel" style="text-align:center">0.00 XOF</div><input id="objectif" type="number" class="input" placeholder="10000" oninput="objLabel.textContent=(this.value||0)+' XOF'"><button class="input" style="background:#ff5000;border-radius:100px" onclick="goStep(3)">Continuer</button></div>
+<div id="step3" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(2)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Frequence</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>O</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>O</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>O</span></div><div class="opt" id="blocBox"><div><b id="blocLabel">Bloquer</b></div><input type="checkbox" id="bloque"></div><input id="montant" type="number" class="input" placeholder="Premier depot"><input id="wa" class="input" placeholder="WhatsApp"><button class="input" style="background:#0f3d2e;border-radius:100px" onclick="placerLegal()">Creer</button></div>
 </div></div>
-<div class="modal" id="mret" onclick="if(event.target===this)closeM()"><div class="sheet"><div class="navrow"><span>Retrait direct</span><button class="navbtn" onclick="closeM()">X</button></div><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Demander</button><button class="input" style="background:#333;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
-<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Non</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui</button></div></div></div>
-
+<div class="modal" id="mret"><div class="sheet"><div class="navrow"><span>Retrait direct</span><button class="navbtn" onclick="closeM()">X</button></div><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;border-radius:100px" onclick="retirer()">Demander</button></div></div>
+<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg"></div><button onclick="hideAlert()">OK</button></div></div>
+<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg"></div><div style="display:flex;gap:8px"><button onclick="doConfirm(false)">Non</button><button onclick="doConfirm(true)">Oui</button></div></div></div>
 <script>
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 var db=firebase.database();
-var uid, soldePrincipal=0, soldeEpargne=0, vis=true;
-var icon='🚗', rythme='A mon rythme', frequence='Par mois';
-var confirmCallback=null;
-var blockedEpargnes=[], blockedTotal=0;
-const ADMIN_UID="0158612131";
-const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
-async function pushJS(destId,titre,message){if(!destId)return;try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId,titre,message})});}catch(e){}}
-function notifEpargne(titre,msg){
-  const dateStr=new Date().toLocaleString('fr-FR');
-  pushJS(uid,titre,msg);
-  pushJS(ADMIN_UID,titre,msg+" - Client: "+uid);
-  // FIX : notifications.html lit "message" pas "msg"
-  db.ref('notifications/'+uid).push({titre:titre,message:msg,date:dateStr});
-  db.ref('notifications/'+ADMIN_UID).push({titre:titre,message:msg+" - "+uid,date:dateStr});
-}
+var uid,soldePrincipal=0,soldeEpargne=0,vis=true,icon='🚗',rythme='A mon rythme',frequence='Par mois',confirmCallback=null,blockedEpargnes=[],blockedTotal=0;
+var ADMIN_UID="0158612131";
+var ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+async function pushJS(destId,titre,message){if(!destId)return;try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:message})});}catch(e){}}
+function notifEpargne(titre,msg){var d=new Date().toLocaleString('fr-FR');pushJS(uid,titre,msg);pushJS(ADMIN_UID,titre,msg+" - Client: "+uid);try{db.ref('notifications/'+uid).push({titre:titre,message:msg,date:d});}catch(e){}try{db.ref('notifications/'+ADMIN_UID).push({titre:titre,message:msg+" - "+uid,date:d});}catch(e){}}
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-function displayUser(u){
-  if(!u) return;
-  var full=((u.prenom||'')+' '+(u.nom||'')).trim()||u.nom||'Client';
-  document.getElementById('uname').textContent=full;
-  document.getElementById('uemail').textContent=u.email||u.phone||'';
-  document.getElementById('av').textContent=(full[0]||'A').toUpperCase();
-  document.getElementById('wa').value=u.phone||'';
-  document.getElementById('rwa').value=u.phone||'';
-}
-async function chargerInfosCompte(){
-  var u = JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!u ||!u.phone){location.href='index.html';return null;}
-  var phoneKey = u.phone.replace(/[^0-9]/g,'');
-  displayUser(u);
-  try{
-    var snapClient = await db.ref('clients/'+phoneKey).once('value');
-    var dataClient = snapClient.val()||{};
-    var snapUser = await db.ref('users/'+phoneKey).once('value');
-    var dataUser = snapUser.val()||{};
-    var merged = Object.assign({}, u, dataClient, dataUser);
-    localStorage.setItem('mayne_current_user', JSON.stringify(merged));
-    displayUser(merged);
-    return phoneKey;
-  }catch(e){return phoneKey;}
-}
-function parseEcheance(str){
-  if(!str) return null;
-  const p=str.split('/'); if(p.length!==3) return null;
-  return new Date(p[2]+'-'+p[1]+'-'+p[0]);
-}
+function displayUser(u){if(!u)return;var full=((u.prenom||'')+' '+(u.nom||'')).trim()||u.nom||'Client';document.getElementById('uname').textContent=full;document.getElementById('uemail').textContent=u.email||u.phone||'';document.getElementById('av').textContent=(full[0]||'A').toUpperCase();document.getElementById('wa').value=u.phone||'';document.getElementById('rwa').value=u.phone||'';}
+async function chargerInfosCompte(){var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!u||!u.phone){location.href='index.html';return null;}var k=u.phone.replace(/[^0-9]/g,'');displayUser(u);try{var c=await db.ref('clients/'+k).once('value');var us=await db.ref('users/'+k).once('value');var m=Object.assign({},u,c.val()||{},us.val()||{});localStorage.setItem('mayne_current_user',JSON.stringify(m));displayUser(m);return k;}catch(e){return k;}}
+function parseEcheance(s){if(!s)return null;var p=s.split('/');if(p.length!==3)return null;return new Date(p[2]+'-'+p[1]+'-'+p[0]);}
 async function init(){
-  uid = await chargerInfosCompte();
-  if(!uid) return;
-  db.ref('clients/'+uid).on('value',function(s){
-    var d=s.val()||{}; soldePrincipal=+d.solde||0; soldeEpargne=+d.solde_epargne||0;
-    document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';
-    document.getElementById('rec').textContent=soldeEpargne.toFixed(2)+' XOF';
-    document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';
-    if(d.verifie) document.getElementById('kyc').style.display='none';
-    updateBlocUI();
-    if(soldeEpargne<=0){
-      document.getElementById('histo').innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';
-    }
-  });
-  db.ref('epargne/'+uid).on('value',function(s){
-    var c=document.getElementById('histo');
-    blockedEpargnes=[]; blockedTotal=0;
-    if(!s.exists() || soldeEpargne<=0){
-      c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';
-      updateBlocUI();
-      return;
-    }
-    var h='',cnt=0;
-    s.forEach(function(ch){
-      var v=ch.val(); var key=ch.key;
-      var collecte = +(v.montantCollecte?? v.montant?? 0);
-      if(v.type==='Retrait') return;
-      if(collecte<=0) return;
-      if(v.bloque){
-        var fin=parseEcheance(v.echeance);
-        if(fin && fin>new Date()){
-          blockedEpargnes.push(v);
-          blockedTotal+=collecte;
-        }
-      }
-      cnt++;
-      h='<div class=item onclick="location.href=\'epargne-detail.html?id='+key+'\'"><div><b>'+(v.icon||'')+' '+(v.nom||v.type)+'</b><br><small>'+v.date+' - '+(v.frequence||'')+' '+(v.bloque?' - Bloquee '+v.echeance:'')+'</small></div><b>'+collecte+' XOF</b></div>'+h;
-    });
-    c.innerHTML=cnt?h:'<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';
-    updateBlocUI();
-  });
+uid=await chargerInfosCompte();if(!uid)return;
+db.ref('clients/'+uid).on('value',function(s){var d=s.val()||{};soldePrincipal=+d.solde||0;soldeEpargne=+d.solde_epargne||0;document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';document.getElementById('rec').textContent=soldeEpargne.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';if(d.verifie)document.getElementById('kyc').style.display='none';updateBlocUI();if(soldeEpargne<=0){document.getElementById('histo').innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';}});
+db.ref('epargne/'+uid).on('value',function(s){var c=document.getElementById('histo');blockedEpargnes=[];blockedTotal=0;if(!s.exists()||soldeEpargne<=0){c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';updateBlocUI();return;}var h='',cnt=0;s.forEach(function(ch){var v=ch.val();var key=ch.key;var collecte=+(v.montantCollecte!=null?v.montantCollecte:v.montant||0);if(v.type==='Retrait')return;if(collecte<=0)return;if(v.bloque){var fin=parseEcheance(v.echeance);if(fin&&fin>new Date()){blockedEpargnes.push(v);blockedTotal+=collecte;}}cnt++;h='<div class=item onclick="location.href=\'epargne-detail.html?id='+key+'\'"><div><b>'+(v.icon||'')+' '+(v.nom||v.type)+'</b><br><small>'+v.date+' - '+(v.frequence||'')+' '+(v.bloque?' - Bloquee '+v.echeance:'')+'</small></div><b>'+collecte+' XOF</b></div>'+h;});c.innerHTML=cnt?h:'<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';updateBlocUI();});
 }
-function updateBlocUI(){
-  const info=document.getElementById('blocInfo');
-  const blockedReel = Math.min(blockedTotal, soldeEpargne);
-  const disponible = Math.max(0, soldeEpargne - blockedReel);
-  if(blockedEpargnes.length>0 && soldeEpargne>0){
-    info.style.display='block';
-    info.innerHTML='⚠️ '+blockedReel+' XOF bloques jusqu au '+blockedEpargnes[0].echeance+'. Dispo direct : <b style="color:#fff">'+disponible+' XOF</b>';
-  }else{
-    info.style.display='none';
-  }
-}
-function toggleSolde(){vis=!vis; document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';}
-function openN(){document.getElementById('mnew').classList.add('show'); goStep(0);}
-function openR(){
-  const blockedReel = Math.min(blockedTotal, soldeEpargne);
-  const disponible = Math.max(0, soldeEpargne - blockedReel);
-  if(soldeEpargne<=0){showAlert('Solde epargne vide');return;}
-  if(blockedReel>0 && disponible<=0){
-    showAlert('Retrait direct bloque : '+blockedReel+' XOF bloques jusqu au '+blockedEpargnes[0].echeance+'. Va dans detail.');
-    return;
-  }
-  document.getElementById('mret').classList.add('show');
-}
+function updateBlocUI(){var info=document.getElementById('blocInfo');var blockedReel=Math.min(blockedTotal,soldeEpargne);var dispo=Math.max(0,soldeEpargne-blockedReel);if(blockedEpargnes.length>0&&soldeEpargne>0){info.style.display='block';info.innerHTML='⚠️ '+blockedReel+' XOF bloques jusqu au '+blockedEpargnes[0].echeance+'. Dispo : '+dispo+' XOF';}else{info.style.display='none';}}
+function toggleSolde(){vis=!vis;document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';}
+function openN(){document.getElementById('mnew').classList.add('show');goStep(0);}
+function openR(){var b=Math.min(blockedTotal,soldeEpargne);var d=Math.max(0,soldeEpargne-b);if(soldeEpargne<=0){showAlert('Solde epargne vide');return;}if(b>0&&d<=0){showAlert('Retrait bloque : '+b+' XOF jusqu au '+blockedEpargnes[0].echeance);return;}document.getElementById('mret').classList.add('show');}
 function closeM(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('show')})}
-function goStep(n){
-  ['step0','step1','step2','step3'].forEach(function(id,i){document.getElementById(id).style.display=i===n?'block':'none';});
-  if(n===3){
-    if(rythme==='A une date precise'){
-      var dv=document.getElementById('dateFixe').value;
-      if(!dv){showAlert('Choisis ta date fixe'); goStep(2); return;}
-      document.getElementById('bloque').checked=true;
-      document.getElementById('blocBox').style.opacity='0.7';
-      document.getElementById('blocLabel').innerText='Bloquee jusqu au '+new Date(dv).toLocaleDateString('fr-FR');
-    }else{
-      document.getElementById('blocBox').style.opacity='1';
-      document.getElementById('blocLabel').innerText='Bloquer la tontine';
-    }
-  }
-}
-function choisirType(t){ if(t==='perso') goStep(1); else showAlert('Groupe bientot'); }
-function pickIcon(el,i){icon=i; el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.remove('active')}); el.classList.add('active');}
-function setRythme(el,r){
-  rythme=r;
-  document.getElementById('step2').querySelectorAll('.opt').forEach(function(o){o.classList.remove('active'); o.lastElementChild.textContent='O';});
-  el.classList.add('active'); el.lastElementChild.textContent='X';
-  if(r==='A une date precise'){document.getElementById('dateFixeBox').style.display='block';}else{document.getElementById('dateFixeBox').style.display='none';}
-}
-function setFreq(el,f){frequence=f; el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.remove('active'); o.lastElementChild.textContent='O';}); el.classList.add('active'); el.lastElementChild.textContent='X';}
+function goStep(n){['step0','step1','step2','step3'].forEach(function(id,i){document.getElementById(id).style.display=i===n?'block':'none';});}
+function choisirType(t){if(t==='perso')goStep(1);else showAlert('Groupe bientot');}
+function pickIcon(el,i){icon=i;el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.remove('active')});el.classList.add('active');}
+function setRythme(el,r){rythme=r;document.getElementById('step2').querySelectorAll('.opt').forEach(function(o){o.classList.remove('active');o.lastElementChild.textContent='O';});el.classList.add('active');el.lastElementChild.textContent='X';document.getElementById('dateFixeBox').style.display=r==='A une date precise'?'block':'none';}
+function setFreq(el,f){frequence=f;el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.remove('active');o.lastElementChild.textContent='O';});el.classList.add('active');el.lastElementChild.textContent='X';}
 function placerLegal(){
-  var nom=document.getElementById('nomEp').value.trim()||'Mayne';
-  var obj=Number(document.getElementById('objectif').value)||0;
-  var mt=Number(document.getElementById('montant').value);
-  if(!mt) return showAlert('Montant premier depot');
-  if(mt>soldePrincipal) return showAlert('Solde insuffisant: '+soldePrincipal);
-  var echeance, joursRestants, tours, bloque;
-  var intervalDays= frequence==='Par jour'?1:frequence==='Par semaine'?7:30;
-  var intervalSec= intervalDays*86400;
-  if(rythme==='A une date precise'){
-    var dateFixeVal=document.getElementById('dateFixe').value;
-    if(!dateFixeVal) return showAlert('Choisis ta date fixe');
-    var selected=new Date(dateFixeVal); var today=new Date(); today.setHours(0,0,0,0);
-    var diffMs=selected-today; var diffDays=Math.ceil(diffMs/86400000);
-    if(diffDays<=0) return showAlert('Date doit etre future');
-    echeance=selected.toLocaleDateString('fr-FR');
-    joursRestants=diffDays;
-    tours= obj>0? Math.ceil(obj/mt) : Math.max(1, Math.ceil(diffDays/intervalDays));
-    bloque=true;
-  }else{
-    tours= obj>0? Math.ceil(obj/mt) : 5;
-    var totalDays=tours*intervalDays;
-    joursRestants=Math.max(0, totalDays - intervalDays);
-    var d=new Date(); d.setDate(d.getDate()+joursRestants);
-    echeance=d.toLocaleDateString('fr-FR');
-    bloque=document.getElementById('bloque').checked;
-  }
-  db.ref('clients/'+uid).once('value').then(function(s){
-    var c=s.val()||{};
-    return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt, solde_epargne:(+c.solde_epargne||0)+mt});
-  }).then(function(){return db.ref('epargne/'+uid).push().set({
-    type:'Epargne personnelle',nom:nom,icon:icon,objectif:obj,montant:mt,montantCollecte:mt,
-    rythme:rythme,frequence:frequence,bloque:bloque,
-    echeance:echeance,joursRestants:joursRestants,tours:tours,
-    prochainDepot:new Date(Date.now()+intervalSec*1000).toISOString(),
-    date:new Date().toLocaleString('fr-FR'),statut:'actif'
-  })}).then(function(){
-    notifEpargne("Nouvelle épargne","Tontine "+nom+" créée: "+mt+" XOF - "+frequence+" - Bloquée jusqu au "+echeance);
-    showAlert('Tontine '+nom+' creee: '+mt+' XOF'); closeM();
-  });
+var nom=document.getElementById('nomEp').value.trim()||'Mayne';var obj=Number(document.getElementById('objectif').value)||0;var mt=Number(document.getElementById('montant').value);
+if(!mt)return showAlert('Montant');if(mt>soldePrincipal)return showAlert('Solde insuffisant');
+var echeance,joursRestants,tours,bloque;var intervalDays=frequence==='Par jour'?1:frequence==='Par semaine'?7:30;var intervalSec=intervalDays*86400;
+if(rythme==='A une date precise'){var dv=document.getElementById('dateFixe').value;if(!dv)return showAlert('Date fixe');var sel=new Date(dv);var today=new Date();today.setHours(0,0,0,0);var diff=Math.ceil((sel-today)/86400000);if(diff<=0)return showAlert('Date future');echeance=sel.toLocaleDateString('fr-FR');joursRestants=diff;tours=obj>0?Math.ceil(obj/mt):Math.max(1,Math.ceil(diff/intervalDays));bloque=true;}else{tours=obj>0?Math.ceil(obj/mt):5;var total=tours*intervalDays;joursRestants=Math.max(0,total-intervalDays);var d=new Date();d.setDate(d.getDate()+joursRestants);echeance=d.toLocaleDateString('fr-FR');bloque=document.getElementById('bloque').checked;}
+db.ref('clients/'+uid).once('value').then(function(s){var c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt,solde_epargne:(+c.solde_epargne||0)+mt});}).then(function(){return db.ref('epargne/'+uid).push().set({type:'Epargne personnelle',nom:nom,icon:icon,objectif:obj,montant:mt,montantCollecte:mt,rythme:rythme,frequence:frequence,bloque:bloque,echeance:echeance,joursRestants:joursRestants,tours:tours,prochainDepot:new Date(Date.now()+intervalSec*1000).toISOString(),date:new Date().toLocaleString('fr-FR'),statut:'actif'});}).then(function(){notifEpargne("Nouvelle epargne","Tontine "+nom+" creee: "+mt+" XOF - "+frequence+" - Bloquee jusqu au "+echeance);showAlert('Cree '+nom);closeM();});
 }
 function retirer(){
-  var mt=Number(document.getElementById('rmont').value);
-  if(!mt) return showAlert('Montant');
-  var blockedReel = Math.min(blockedTotal, soldeEpargne);
-  var disponible = Math.max(0, soldeEpargne - blockedReel);
-  if(mt>disponible) return showAlert('Max dispo '+disponible+' XOF');
-  db.ref('epargne/'+uid).once('value').then(function(snap){
-    var reste=mt,upd={};
-    snap.forEach(function(ch){
-      if(reste<=0)return;
-      var v=ch.val(),k=ch.key;
-      if(v.type==='Retrait'||v.bloque)return;
-      var col=+(v.montantCollecte||0);if(col<=0)return;
-      var take=Math.min(col,reste);
-      upd['epargne/'+uid+'/'+k+'/montantCollecte']=col-take;
-      reste-=take;
-    });
-    return db.ref().update(upd);
-  }).then(function(){return db.ref('clients/'+uid).once('value');}).then(function(s){
-    var c=s.val()||{};
-    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
-  }).then(function(){
-    notifEpargne("Retrait épargne","Retrait direct "+mt+" XOF - Dispo restant "+(soldeEpargne-mt)+" XOF");
-    showAlert('Retrait '+mt+' XOF envoye');closeM();
-  });
+var mt=Number(document.getElementById('rmont').value);if(!mt)return showAlert('Montant');var b=Math.min(blockedTotal,soldeEpargne);var d=Math.max(0,soldeEpargne-b);if(mt>d)return showAlert('Max dispo '+d);
+db.ref('epargne/'+uid).once('value').then(function(snap){var reste=mt,upd={};snap.forEach(function(ch){if(reste<=0)return;var v=ch.val(),k=ch.key;if(v.type==='Retrait'||v.bloque)return;var col=+(v.montantCollecte||0);if(col<=0)return;var take=Math.min(col,reste);upd['epargne/'+uid+'/'+k+'/montantCollecte']=col-take;reste-=take;});return db.ref().update(upd);}).then(function(){return db.ref('clients/'+uid).once('value');}).then(function(s){var c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});}).then(function(){notifEpargne("Retrait epargne","Retrait direct "+mt+" XOF");showAlert('Retrait '+mt+' XOF');closeM();});
 }
 window.onload=init;
 </script>
