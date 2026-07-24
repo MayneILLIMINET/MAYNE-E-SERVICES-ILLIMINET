@@ -72,10 +72,12 @@ const ADMIN_UID="0158612131";
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 async function pushJS(destId,titre,message){if(!destId)return;try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId,titre,message})});}catch(e){}}
 function notifEpargne(titre,msg){
+  const dateStr=new Date().toLocaleString('fr-FR');
   pushJS(uid,titre,msg);
   pushJS(ADMIN_UID,titre,msg+" - Client: "+uid);
-  try{db.ref('notifications/'+uid).push({titre,msg,date:new Date().toLocaleString('fr-FR')});}catch(e){}
-  try{db.ref('notifications/'+ADMIN_UID).push({titre,msg:msg+" - "+uid,date:new Date().toLocaleString('fr-FR')});}catch(e){}
+  // FIX : notifications.html lit "message" pas "msg"
+  db.ref('notifications/'+uid).push({titre:titre,message:msg,date:dateStr});
+  db.ref('notifications/'+ADMIN_UID).push({titre:titre,message:msg+" - "+uid,date:dateStr});
 }
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
@@ -238,7 +240,7 @@ function placerLegal(){
     prochainDepot:new Date(Date.now()+intervalSec*1000).toISOString(),
     date:new Date().toLocaleString('fr-FR'),statut:'actif'
   })}).then(function(){
-    notifEpargne("Nouvelle épargne","Tontine "+nom+" créée: "+mt+" XOF - Bloquée jusqu au "+echeance);
+    notifEpargne("Nouvelle épargne","Tontine "+nom+" créée: "+mt+" XOF - "+frequence+" - Bloquée jusqu au "+echeance);
     showAlert('Tontine '+nom+' creee: '+mt+' XOF'); closeM();
   });
 }
@@ -264,7 +266,7 @@ function retirer(){
     var c=s.val()||{};
     return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
   }).then(function(){
-    notifEpargne("Retrait épargne","Retrait direct "+mt+" XOF - Client "+uid);
+    notifEpargne("Retrait épargne","Retrait direct "+mt+" XOF - Dispo restant "+(soldeEpargne-mt)+" XOF");
     showAlert('Retrait '+mt+' XOF envoye');closeM();
   });
 }
