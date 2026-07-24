@@ -54,18 +54,19 @@ const OTP_URL="https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4i
 <div id="m-pin" class="overlay"><div class="box"><h3>Modifier PIN 6 chiffres</h3><input id="old-pin" type="password" maxlength="6" class="input" placeholder="Ancien"><input id="new-pin" type="password" maxlength="6" class="input" placeholder="Nouveau"><input id="new-pin2" type="password" maxlength="6" class="input" placeholder="Confirmer"><button class="btn-y" onclick="changePin()">Valider</button><div class="link" onclick="openForgot()">Mot de passe oublié?</div><button class="btn-n" onclick="closeAll()">Fermer</button></div></div>
 
 <div id="m-forgot" class="overlay"><div class="box">
-<div id="s1" class="step active"><h3>Réinitialiser</h3><input id="f-email" type="email" class="input" placeholder="Ton email"><button class="btn-y" id="btn-send" onclick="sendCode()">Envoyer code</button><button class="btn-n" onclick="closeAll()">Annuler</button></div>
-<div id="s2" class="step"><h3>Code reçu</h3><input id="f-code" class="input" placeholder="Code 6 chiffres"><button class="btn-y" onclick="verifyCode()">Vérifier</button><div class="link" onclick="sendCode()">Renvoyer</div><button class="btn-n" onclick="closeAll()">Annuler</button></div>
-<div id="s3" class="step"><h3>Nouveau PIN</h3><input id="f-n1" type="password" maxlength="6" class="input" placeholder="Nouveau"><input id="f-n2" type="password" maxlength="6" class="input" placeholder="Confirmer"><button class="btn-y" onclick="saveNewPin()">Enregistrer</button></div>
+<div id="s1" class="step active"><h3>Réinitialiser</h3><p style="font-size:12px;color:#aaa">Code envoyé à ton email actuel</p><input id="f-email" type="email" class="input" placeholder="Ton email"><button class="btn-y" id="btn-send" onclick="sendCode()">Envoyer code</button><button class="btn-n" onclick="closeAll()">Annuler</button></div>
+<div id="s2" class="step"><h3>Code reçu</h3><p style="font-size:12px;color:#aaa">Colle le code reçu par email</p><input id="f-code" type="text" maxlength="6" class="input" placeholder="Code 6 chiffres"><button class="btn-y" onclick="verifyCode()">Vérifier</button><div class="link" onclick="sendCode()">Renvoyer le code</div><button class="btn-n" onclick="closeAll()">Annuler</button></div>
+<div id="s3" class="step"><h3>Nouveau PIN</h3><input id="f-n1" type="password" maxlength="6" class="input" placeholder="Nouveau PIN 6 chiffres"><input id="f-n2" type="password" maxlength="6" class="input" placeholder="Confirmer"><button class="btn-y" onclick="saveNewPin()">Enregistrer</button></div>
 </div></div>
 
 <div id="m-email" class="overlay"><div class="box"><h3>Modifier email</h3><input id="n-email" type="email" class="input" placeholder="Nouvel email"><button class="btn-y" onclick="changeEmail()">Enregistrer</button><button class="btn-n" onclick="closeAll()">Annuler</button></div></div>
 <div id="m-del" class="overlay"><div class="box"><h3 style="color:#ffb0b0">Supprimer?</h3><input id="d-pin" type="password" maxlength="6" class="input" placeholder="PIN 6 chiffres"><button class="btn-y" style="background:#c00" onclick="delAccount()">Supprimer</button><button class="btn-n" onclick="closeAll()">Annuler</button></div></div>
-<div id="m-alert" class="overlay"><div class="box"><div id="a-msg" style="white-space:pre-wrap"></div><button class="btn-y" onclick="closeAll()">OK</button></div></div>
+<div id="m-alert" class="overlay"><div class="box"><div id="a-msg" style="white-space:pre-wrap"></div><button class="btn-y" onclick="closeAlert()">OK</button></div></div>
 
 <script>
 let curId=null,curData=null,tempMail=null;
 function alertM(m){document.getElementById('a-msg').innerText=m;document.getElementById('m-alert').style.display='flex';}
+function closeAlert(){document.getElementById('m-alert').style.display='none';}
 function closeAll(){document.querySelectorAll('.overlay').forEach(e=>e.style.display='none');}
 function openPin(){document.getElementById('m-pin').style.display='flex';}
 function openEmail(){document.getElementById('m-email').style.display='flex';}
@@ -91,16 +92,20 @@ function sendCode(){
  fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(email),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
 .then(r=>r.text()).then(t=>{
    document.getElementById('btn-send').innerText='Envoyer code';
-   if(t.includes('sent')||t.includes('ok')){showS(2);alertM('Code envoye a '+email);}
-   else if(t.includes('email_exists')){showS(2);alertM('Code renvoye a '+email);}
-   else alertM('Erreur: '+t);
+   if(t.includes('sent')||t.includes('ok')){
+     showS(2);
+     alertM('Code envoye a '+email+'\nColle le code dans la case Code recu');
+   }else if(t.includes('email_exists')){
+     showS(2);
+     alertM('Code renvoye a '+email);
+   }else alertM('Erreur: '+t);
  }).catch(()=>{document.getElementById('btn-send').innerText='Envoyer code';alertM('Erreur reseau');});
 }
 function verifyCode(){
  const code=document.getElementById('f-code').value.trim();
- if(!code)return;
+ if(!code)return alertM('Colle le code');
  fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempMail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}})
-.then(r=>r.text()).then(t=>{if(t.includes('ok'))showS(3);else alertM('Code incorrect ou expire');});
+.then(r=>r.text()).then(t=>{if(t.includes('ok')){showS(3);closeAlert();}else alertM('Code incorrect ou expire');});
 }
 async function saveNewPin(){
  const n1=document.getElementById('f-n1').value.trim();
