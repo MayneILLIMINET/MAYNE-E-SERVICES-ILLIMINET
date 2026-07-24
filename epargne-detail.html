@@ -13,130 +13,93 @@ body{background:#fff;display:flex;justify-content:center}
 .card{margin:12px 16px;background:#ff5000;border-radius:22px;padding:20px;color:#fff}
 .mont{font-size:42px;font-weight:900;text-align:center;margin:6px 0}
 .subcard{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px;margin-top:12px}
-.white{background:#fff;border-radius:16px;padding:14px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.white{background:#fff;border-radius:16px;padding:14px}
 .btns{display:flex;gap:12px;padding:16px}
 .btn{flex:1;border:none;border-radius:100px;padding:14px;font-weight:800;cursor:pointer}
-.btnW{background:#ff1000;color:#fff;border:1px solid #ddd}
+.btnW{background:#ff1000;color:#fff}
 .btnG{background:#ffbb0a;color:#fff}
 .timer{margin:16px;background:#ff5000;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;color:#fff}
 .tours{display:flex;gap:12px;overflow:auto;padding:0 16px 10px}
-.tour{min-width:170px;background:#fff;border:1px solid #eee;border-radius:16px;padding:12px}
+.tour{min-width:170px;background:#fff;border-radius:16px;padding:12px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.show{display:flex}
 .sheet{background:#000;color:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px}
 .input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #333;z-index:10}
-.bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer;padding:8px 12px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;z-index:10}
+.bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer}
 .bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;font-weight:700}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="top"><div style="display:flex;align-items:center;gap:10px"><div onclick="location.href='epargne.html'" style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;font-weight:bold">‹</div><b id="nomTop">Mayne</b></div><div>⚙️</div></div>
-<div class="card">
-<div style="text-align:center;color:#a8c0b6;font-size:13px">Montant collecte <span onclick="toggle()" style="cursor:pointer">👁️</span></div>
-<div class="mont" id="collecte">0.0 XOF</div>
-<div style="display:flex;justify-content:space-between;margin-top:12px;border-top:1px solid rgba(255,255,255,.2);padding-top:12px">
-<div style="text-align:center;flex:1">Jours restants<br><b id="jours" style="font-size:22px">0</b></div>
-<div style="width:1px;background:rgba(255,255,255,.2)"></div>
-<div style="text-align:center;flex:1">Echeance<br><b id="dateFin">-</b></div>
-</div>
-</div>
+<div class="card"><div style="text-align:center;color:#a8c0b6;font-size:13px">Montant collecte <span onclick="toggle()" style="cursor:pointer">👁️</span></div><div class="mont" id="collecte">0.0 XOF</div><div style="display:flex;justify-content:space-between;margin-top:12px;border-top:1px solid rgba(255,255,255,.2);padding-top:12px"><div style="text-align:center;flex:1">Jours restants<br><b id="jours" style="font-size:22px">0</b></div><div style="width:1px;background:rgba(255,255,255,.2)"></div><div style="text-align:center;flex:1">Echeance<br><b id="dateFin">-</b></div></div></div>
 <div class="btns"><button class="btn btnW" onclick="openRet()">↓ Retirer</button><button class="btn btnG" onclick="openDep()">↑ Depot</button></div>
-<div class="subcard">
-<div class="white"><small style="color:#6abf9a">Frequence</small><br><b id="freq">Par mois</b></div>
-<div class="white"><small style="color:#6abf9a">Contribution</small><br><b id="contrib">2000 XOF</b></div>
+<div class="subcard"><div class="white"><small>Frequence</small><br><b id="freq">Par mois</b></div><div class="white"><small>Contribution</small><br><b id="contrib">2000 XOF</b></div></div>
+<div class="timer"><div>⏳</div><div><b>Prochain depot dans :</b><br><span id="countdown"></span></div></div>
+<h3 style="padding:16px">Tours a venir</h3><div class="tours" id="tours"></div>
 </div>
-<div class="timer"><div style="width:44px;height:44px;background:#d6f78c;border-radius:12px;display:flex;align-items:center;justify-content:center">⏳</div><div><b>Prochain depot dans :</b><br><span id="countdown">Chargement...</span></div></div>
-<h3 style="padding:16px 16px 8px;color:#fff">Tours a venir</h3>
-<div class="tours" id="tours"></div>
-</div>
-
-<div class="bottom">
-<button class="bnav" onclick="location.href='epargne.html'">← EPARGNE</button>
-<button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button>
-<button class="bnav active" onclick="location.href='compte.html'">INFOS👤</button>
-</div>
-
+<div class="bottom"><button class="bnav" onclick="location.href='epargne.html'">← EPARGNE</button><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav active">INFOS👤</button></div>
 <div class="modal" id="mAlert"><div class="sheet" style="text-align:center"><p id="alertTxt"></p><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="closeM()">OK</button></div></div>
 <div class="modal" id="mConfirm"><div class="sheet" style="text-align:center"><p id="confirmTxt"></p><div style="display:flex;gap:10px"><button class="input" style="background:#eee;flex:1;border-radius:100px;color:#000" onclick="closeM()">Annuler</button><button class="input" style="background:#0f3d2e;color:#fff;flex:1;border-radius:100px" id="confirmOk">Continuer</button></div></div></div>
-<div class="modal" id="mDep" onclick="if(event.target===this)closeM()"><div class="sheet"><h3>Depot</h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="deposer()">Confirmer</button><button class="input" style="background:#333;border-radius:100px;color:#fff" onclick="closeM()">Annuler</button></div></div>
-<div class="modal" id="mRet" onclick="if(event.target===this)closeM()"><div class="sheet"><h3>Retrait</h3><input id="rMont" type="number" class="input" placeholder="Montant"><p id="penal" style="font-size:12px;color:#e74c3c;display:none">Bloquee : 5% penalite si avant echeance</p><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Retirer</button><button class="input" style="background:#333;border-radius:100px;color:#fff" onclick="closeM()">Annuler</button></div></div>
-
+<div class="modal" id="mDep"><div class="sheet"><h3>Depot</h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="deposer()">Confirmer</button><button class="input" style="background:#333;border-radius:100px;color:#fff" onclick="closeM()">Annuler</button></div></div>
+<div class="modal" id="mRet"><div class="sheet"><h3>Retrait</h3><input id="rMont" type="number" class="input" placeholder="Montant"><p id="penal" style="font-size:12px;color:#e74c3c;display:none">Bloquee : 5% penalite</p><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Retirer</button><button class="input" style="background:#333;border-radius:100px;color:#fff" onclick="closeM()">Annuler</button></div></div>
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
-const ADMIN_UID = "0158612131"; // AYIZAN MARIUS - recompense
+const ADMIN_UID="0158612131";
+const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+async function pushJS(destId,titre,message){if(!destId)return;try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId,titre,message})});}catch(e){}}
 let uid,eid,data,vis=true,timer=null,targetTime=null;
-
 function getIntervalSec(freq){const f=(freq||'').toLowerCase();if(f.includes('jour'))return 86400;if(f.includes('semaine'))return 7*86400;if(f.includes('mois'))return 30*86400;return 86400;}
-function getCollecte(){return Number(data.montantCollecte?? data.montant?? 0);}
+function getCollecte(){return Number(data.montantCollecte??data.montant??0);}
 function init(){
-  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!u){location.href='index.html';return;}
-  uid=(u.phone||'').replace(/[^0-9]/g,'');
-  eid=new URLSearchParams(location.search).get('id');
-  if(!eid){document.getElementById('countdown').textContent='ID manquant';return;}
-  db.ref('epargne/'+uid+'/'+eid).on('value',s=>{
-    if(!s.exists())return;data=s.val();
-    document.getElementById('nomTop').textContent=data.nom||'Mayne';
-    document.getElementById('collecte').textContent=vis?(getCollecte()+' XOF'):'••••••';
-    document.getElementById('freq').textContent=data.frequence||'Par mois';
-    document.getElementById('contrib').textContent=(+data.montant||2000)+' XOF';
-    document.getElementById('dateFin').textContent=data.echeance||'-';
-    document.getElementById('jours').textContent=Math.round(data.joursRestants?? 0);
-    if(data.bloque)document.getElementById('penal').style.display='block';else document.getElementById('penal').style.display='none';
-    renderTours();
-    const interval=getIntervalSec(data.frequence);
-    if(data.prochainDepot){targetTime=new Date(data.prochainDepot);}else{targetTime=new Date(Date.now()+interval*1000);}
-    startCountdown();
-  });
+  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!u){location.href='index.html';return;}
+  uid=(u.phone||'').replace(/[^0-9]/g,'');eid=new URLSearchParams(location.search).get('id');
+  db.ref('epargne/'+uid+'/'+eid).on('value',s=>{if(!s.exists())return;data=s.val();document.getElementById('nomTop').textContent=data.nom||'Mayne';document.getElementById('collecte').textContent=vis?(getCollecte()+' XOF'):'••••••';document.getElementById('freq').textContent=data.frequence||'Par mois';document.getElementById('contrib').textContent=(+data.montant||2000)+' XOF';document.getElementById('dateFin').textContent=data.echeance||'-';document.getElementById('jours').textContent=Math.round(data.joursRestants??0);document.getElementById('penal').style.display=data.bloque?'block':'none';renderTours();const interval=getIntervalSec(data.frequence);targetTime=data.prochainDepot?new Date(data.prochainDepot):new Date(Date.now()+interval*1000);startCountdown();});
 }
-function renderTours(){
-  const contrib=+data.montant||2000;
-  const obj=+data.objectif||contrib*5;
-  const tours=Math.max(1,Math.ceil(obj/contrib));
-  const collecte=getCollecte();
-  const payes=Math.floor(collecte/contrib);
-  let h='';for(let i=1;i<=tours;i++){h+=`<div class="tour"><div style="display:flex;justify-content:space-between"><b style="background:${i<=payes?'#0f3d2e':'#d6f78c'};color:${i<=payes?'#fff':'#000'};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">${String(i).padStart(2,'0')}</b>${i>payes?'<span style="background:#a8e6a0;border-radius:100px;padding:4px 10px;font-size:11px">Avance</span>':''}</div><div style="margin-top:8px">Tour ${i}</div><b>${contrib} XOF</b></div>`;}
-  document.getElementById('tours').innerHTML=h;
-}
-function startCountdown(){clearInterval(timer);timer=setInterval(()=>{if(!targetTime)return;const diff=targetTime-new Date();if(diff<=0){document.getElementById('countdown').textContent='Depot du maintenant';return;}const j=Math.floor(diff/86400000);const h=Math.floor((diff%86400000)/3600000);const m=Math.floor((diff%3600000)/60000);const s=Math.floor((diff%60000)/1000);document.getElementById('countdown').textContent=`${j} j : ${h} h : ${m} min : ${s} sec`;},1000);}
+function renderTours(){const contrib=+data.montant||2000;const obj=+data.objectif||contrib*5;const tours=Math.max(1,Math.ceil(obj/contrib));const collecte=getCollecte();const payes=Math.floor(collecte/contrib);let h='';for(let i=1;i<=tours;i++){h+=`<div class="tour"><b>${String(i).padStart(2,'0')}</b> Tour ${i} <b>${contrib} XOF</b></div>`;}document.getElementById('tours').innerHTML=h;}
+function startCountdown(){clearInterval(timer);timer=setInterval(()=>{if(!targetTime)return;const diff=targetTime-new Date();if(diff<=0){document.getElementById('countdown').textContent='Depot maintenant';return;}const j=Math.floor(diff/86400000);const h=Math.floor((diff%86400000)/3600000);const m=Math.floor((diff%3600000)/60000);document.getElementById('countdown').textContent=`${j}j ${h}h ${m}m`;},1000);}
 function toggle(){vis=!vis;document.getElementById('collecte').textContent=vis?(getCollecte()+' XOF'):'••••••';}
 function openDep(){document.getElementById('mDep').classList.add('show')}
 function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
 function showAlert(t){closeM();document.getElementById('alertTxt').textContent=t;document.getElementById('mAlert').classList.add('show');}
 function showConfirm(t,cb){closeM();document.getElementById('confirmTxt').textContent=t;document.getElementById('mConfirm').classList.add('show');document.getElementById('confirmOk').onclick=()=>{closeM();cb();};}
-function deposer(){const mt=Number(document.getElementById('dMont').value);if(!mt)return showAlert('Entre le montant');const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);const newCollecte=getCollecte()+mt;const newJours=Math.max(0,(data.joursRestants??0)-(mt/contrib)*(interval/86400));const newProchain=new Date(Date.now()+interval*1000).toISOString();db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours),prochainDepot:newProchain}).then(()=>db.ref('clients/'+uid).once('value')).then(s=>db.ref('clients/'+uid).update({solde_epargne:(+s.val().solde_epargne||0)+mt})).then(()=>closeM());}
-function retirer(){const mt=Number(document.getElementById('rMont').value);if(!mt)return showAlert('Entre le montant');if(mt>getCollecte())return showAlert('Collecte insuffisante : '+getCollecte()+' XOF');let penalty=0,finalMt=mt;if(data.bloque){const parts=(data.echeance||'').split('/');const fin=parts.length===3?new Date(parts[2]+'-'+parts[1]+'-'+parts[0]):null;if(fin&&fin>new Date()){penalty=Math.round(mt*0.05);finalMt=mt-penalty;return showConfirm(`Bloquee : penalite 5% = ${penalty}F. Tu vas recevoir ${finalMt}F. Continuer?`,()=>doRetrait(mt,finalMt,penalty));}}doRetrait(mt,finalMt,penalty);}
-
+function deposer(){
+  const mt=Number(document.getElementById('dMont').value);if(!mt)return showAlert('Montant');
+  const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);
+  const newCollecte=getCollecte()+mt;const newJours=Math.max(0,(data.joursRestants??0)-(mt/contrib)*(interval/86400));
+  const newProchain=new Date(Date.now()+interval*1000).toISOString();
+  db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours),prochainDepot:newProchain})
+ .then(()=>db.ref('clients/'+uid).once('value')).then(s=>db.ref('clients/'+uid).update({solde_epargne:(+s.val().solde_epargne||0)+mt}))
+ .then(()=>{
+    pushJS(uid,"Dépôt épargne","Dépôt "+mt+" XOF sur "+data.nom);
+    pushJS(ADMIN_UID,"Dépôt épargne","Client "+uid+" a déposé "+mt+" XOF sur "+data.nom);
+    closeM();
+  });
+}
+function retirer(){const mt=Number(document.getElementById('rMont').value);if(!mt)return showAlert('Montant');if(mt>getCollecte())return showAlert('Insuffisant');let penalty=0,finalMt=mt;if(data.bloque){const p=(data.echeance||'').split('/');const fin=p.length===3?new Date(p[2]+'-'+p[1]+'-'+p[0]):null;if(fin&&fin>new Date()){penalty=Math.round(mt*0.05);finalMt=mt-penalty;return showConfirm(`Bloquée: pénalité 5% = ${penalty}F. Tu recevras ${finalMt}F`,()=>doRetrait(mt,finalMt,penalty));}}doRetrait(mt,finalMt,penalty);}
 function doRetrait(mt,finalMt,penalty){
-  const contrib=+data.montant||1000;
-  const interval=getIntervalSec(data.frequence);
-  const newCollecte=Math.max(0,getCollecte()-mt);
-  const newJours=(data.joursRestants??0)+(mt/contrib)*(interval/86400);
-  // 1. vide la collecte de l'epargne
+  const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);
+  const newCollecte=Math.max(0,getCollecte()-mt);const newJours=(data.joursRestants??0)+(mt/contrib)*(interval/86400);
   db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours)})
-  // 2. credite le user - BONUS NE BOUGE PAS
  .then(()=>db.ref('clients/'+uid).once('value')).then(s=>{
     const c=s.val()||{};
-    return db.ref('clients/'+uid).update({
-      solde:(+c.solde||0)+finalMt,
-      solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)
-      // commission non touchee
-    });
-  })
-  // 3. penalite va dans recompense admin
- .then(()=>{
+    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
+  }).then(()=>{
     if(penalty>0){
-      return db.ref('clients/'+ADMIN_UID).once('value').then(aSnap=>{
-        const ad=aSnap.val()||{};
-        return db.ref('clients/'+ADMIN_UID).update({
-          recompense:(+ad.recompense||0)+penalty
-        });
+      return db.ref('clients/'+ADMIN_UID).once('value').then(a=>{
+        const ad=a.val()||{};
+        return db.ref('clients/'+ADMIN_UID).update({recompense:(+ad.recompense||0)+penalty});
+      }).then(()=>{
+        pushJS(ADMIN_UID,"Pénalité épargne","Client "+uid+" pénalité "+penalty+"F → recompense");
+        pushJS(uid,"Retrait avec pénalité","Retrait "+mt+" XOF, pénalité "+penalty+"F, reçu "+finalMt+"F sur "+data.nom);
       });
+    }else{
+      pushJS(uid,"Retrait épargne","Retrait "+mt+" XOF sur "+data.nom);
+      pushJS(ADMIN_UID,"Retrait épargne","Client "+uid+" a retiré "+mt+" XOF sur "+data.nom);
     }
   }).then(()=>closeM());
 }
