@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Notifications - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -12,21 +13,23 @@ const db=firebase.database();
 </script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+html,body{overflow-x:hidden}
 body{background:#500;display:flex;justify-content:center}
 .app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
 .head{padding:16px;display:flex;align-items:center;justify-content:space-between;background:#500;color:#fff;position:sticky;top:0;z-index:5}
 .back{width:44px;height:44px;background:#fff;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold}
-.notif{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #f0e9d8;background:#fff;margin:8px 12px;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative}
+.notif{display:flex;gap:12px;padding:14px 16px;background:#fff;margin:8px 12px;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative}
 .notif.unread{border-left:4px solid #ff5000}
 .ico{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.ico.green{background:#d6f78c} .ico.red{background:#ffcccc} .ico.blue{background:#cce5ff} .ico.yellow{background:#fff3cd}
+.ico.green{background:#d6f78c}.ico.red{background:#ffcccc}.ico.blue{background:#cce5ff}.ico.yellow{background:#fff3cd}
 .dot{width:8px;height:8px;background:#ff0000;border-radius:50%;position:absolute;top:12px;right:12px}
-.date-group{padding:8px 16px;font-size:12px;font-weight:800;color:#888;text-transform:uppercase;margin-top:8px}
+.date-group{padding:8px 16px;font-size:11px;font-weight:800;color:#888;text-transform:uppercase;margin-top:4px}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;z-index:5}
 .bnav{border:none;background:none;color:#fff;font-size:11px;cursor:pointer}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:99;padding:16px}
-.box{background:#fff;border-radius:20px;padding:20px;max-width:380px;width:100%;text-align:center}
-.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:12px;font-weight:800;margin-top:12px;cursor:pointer}
+/* MODAL FIX */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:99;padding:20px}
+.box{background:#fff;border-radius:20px;padding:20px;width:calc(100% - 32px);max-width:360px;max-height:85vh;overflow:auto;box-sizing:border-box;transform:none!important}
+.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:14px;font-weight:800;margin-top:16px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -37,10 +40,10 @@ body{background:#500;display:flex;justify-content:center}
 <div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav" onclick="location.href='epargne.html'">EPARGNE⭐</button><button class="bnav" onclick="location.href='compte.html'">INFOS👤</button></div>
 
 <div id="detail" class="overlay" onclick="if(event.target===this)closeDetail()"><div class="box">
-<div id="d-icon" style="font-size:40px;margin-bottom:10px"></div>
-<h3 id="d-title"></h3>
-<p id="d-date" style="font-size:12px;color:#888;margin:6px 0"></p>
-<p id="d-msg" style="font-size:14px;margin:12px 0;text-align:left;white-space:pre-wrap"></p>
+<div id="d-icon" style="font-size:36px;margin-bottom:8px"></div>
+<h3 id="d-title" style="font-size:16px"></h3>
+<p id="d-date" style="font-size:11px;color:#888;margin:6px 0"></p>
+<p id="d-msg" style="font-size:14px;margin:12px 0;text-align:left;line-height:1.4;word-wrap:break-word"></p>
 <b id="d-mont" style="font-size:18px;color:#0f3d2e"></b>
 <button class="btn" onclick="closeDetail()">Fermer</button>
 </div></div>
@@ -50,16 +53,31 @@ let uid=null;
 let allNotifs=[];
 let readIds = JSON.parse(localStorage.getItem('mayne_notif_read')||'[]');
 
+function parseFRDate(str){
+  if(!str) return Date.now();
+  // essaie ISO d'abord
+  let t=Date.parse(str);
+  if(!isNaN(t)) return t;
+  // format 24/07/2026 17:49:46
+  try{
+    const [dPart,timePart] = str.split(' ');
+    if(dPart && dPart.includes('/')){
+      const [d,m,y]=dPart.split('/').map(Number);
+      let h=0,mi=0,s=0;
+      if(timePart){ const tp=timePart.split(':'); h=+tp[0]||0; mi=+tp[1]||0; s=+tp[2]||0; }
+      return new Date(y,m-1,d,h,mi,s).getTime();
+    }
+  }catch(e){}
+  return Date.now();
+}
 function pushNotif(obj){
-  // evite doublons
   if(!allNotifs.find(n=>n.id===obj.id)){
     allNotifs.push(obj);
     render();
   }
 }
-function formatGroup(dateStr){
-  const d=new Date(dateStr);
-  const now=new Date();
+function formatGroup(ts){
+  const d=new Date(ts); const now=new Date();
   if(d.toDateString()===now.toDateString()) return "Aujourd'hui";
   const yest=new Date(); yest.setDate(now.getDate()-1);
   if(d.toDateString()===yest.toDateString()) return "Hier";
@@ -72,10 +90,10 @@ function render(){
   allNotifs.forEach((v,i)=>{
     const group=formatGroup(v.ts);
     if(group!==lastGroup){ h+=`<div class="date-group">${group}</div>`; lastGroup=group; }
-    const unread = !readIds.includes(v.id);
+    const unread =!readIds.includes(v.id);
     h+=`<div class="notif ${unread?'unread':''}" onclick="openNotif(${i})">
       <div class="ico ${v.color}">${v.icon}</div>
-      <div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="font-size:14px">${v.titre}</b><small style="color:#999;font-size:11px">${v.date||''}</small></div>
+      <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.titre}</b><small style="color:#999;font-size:10px;flex-shrink:0">${v.date||''}</small></div>
       <p style="font-size:13px;margin-top:4px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.message}</p>
       ${v.montant?`<b style="font-size:12px;color:#0f3d2e">${v.montant} XOF</b>`:''}
       </div>${unread?'<div class="dot"></div>':''}
@@ -85,25 +103,22 @@ function render(){
   c.innerHTML=h;
 }
 function openNotif(idx){
-  const v=allNotifs[idx];
-  if(!v) return;
+  const v=allNotifs[idx]; if(!v) return;
   document.getElementById('d-icon').textContent=v.icon;
-  document.getElementById('d-icon').className=''; 
   document.getElementById('d-title').textContent=v.titre;
   document.getElementById('d-date').textContent=v.date;
   document.getElementById('d-msg').textContent=v.message;
   document.getElementById('d-mont').textContent=v.montant? v.montant+' XOF' : '';
   document.getElementById('detail').style.display='flex';
-  // marquer lu
+  document.body.style.overflow='hidden';
   if(!readIds.includes(v.id)){ readIds.push(v.id); localStorage.setItem('mayne_notif_read', JSON.stringify(readIds)); render(); }
 }
-function closeDetail(){document.getElementById('detail').style.display='none';}
+function closeDetail(){document.getElementById('detail').style.display='none'; document.body.style.overflow='';}
 
 async function init(){
   const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||!u.phone) return;
   uid=(u.phone||'').replace(/[^0-9]/g,'');
-
   db.ref('epargne/'+uid).on('value',snap=>{
     if(!snap.exists())return;
     snap.forEach(ch=>{
@@ -112,39 +127,18 @@ async function init(){
       pushNotif({
         id:'ep_'+key,
         titre: isRetrait? 'Retrait epargne' : 'Placement '+ (v.nom||''),
-        message: isRetrait? `Retrait de ${Math.abs(v.montantCollecte||v.montant)} XOF vers Principal ${v.penalite?' - penalite '+v.penalite+'F':''}` : `Depot ${v.montantCollecte||v.montant} XOF - ${v.frequence||''} ${v.bloque?' - Bloquee jusqu au '+v.echeance:''} - ${v.rythme||''}`,
+        message: isRetrait? `Retrait de ${Math.abs(v.montantCollecte||v.montant)} XOF vers Principal ${v.penalite?' - penalite '+v.penalite+'F':''}` : `Depot ${v.montantCollecte||v.montant} XOF - ${v.frequence||''} ${v.bloque?' - Bloquee jusqu au '+v.echeance:''}`,
         date: v.date||'',
-        ts: new Date(v.date||v.echeance||Date.now()).getTime(),
+        ts: parseFRDate(v.date),
         icon: isRetrait?'↓':'↑',
         color: isRetrait?'red':'green',
         montant: v.montantCollecte||v.montant
       });
     });
   });
-
-  db.ref('security_logs/'+uid).on('value',snap=>{
-    if(!snap.exists())return;
-    snap.forEach(ch=>{
-      const v=ch.val();
-      pushNotif({id:'sec_'+ch.key, titre:v.titre||'Securite', message:v.message||'', date:v.date||'', ts:new Date(v.date||Date.now()).getTime(), icon:'🔒', color:'blue'});
-    });
-  });
-
-  db.ref('notifications/'+uid).on('value',snap=>{
-    if(!snap.exists())return;
-    snap.forEach(ch=>{
-      const v=ch.val();
-      pushNotif({id:'not_'+ch.key, titre:v.titre||'Info', message:v.message||'', date:v.date||'', ts:new Date(v.date||Date.now()).getTime(), icon:'🔔', color:'yellow'});
-    });
-  });
-
-  db.ref('transactions/'+uid).limitToLast(50).on('value',snap=>{
-    if(!snap.exists())return;
-    snap.forEach(ch=>{
-      const v=ch.val();
-      pushNotif({id:'tr_'+ch.key, titre:v.titre||v.type||'Commande', message:v.message||`${v.type||'Operation'} - ${v.statut||''}`, date:v.date||'', ts:new Date(v.date||Date.now()).getTime(), icon:'🛒', color:'blue', montant:v.montant||''});
-    });
-  });
+  db.ref('security_logs/'+uid).on('value',snap=>{ if(!snap.exists())return; snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'sec_'+ch.key, titre:v.titre||'Securite', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date), icon:'🔒', color:'blue'}); }); });
+  db.ref('notifications/'+uid).on('value',snap=>{ if(!snap.exists())return; snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'not_'+ch.key, titre:v.titre||'Info', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date), icon:'🔔', color:'yellow'}); }); });
+  db.ref('transactions/'+uid).limitToLast(50).on('value',snap=>{ if(!snap.exists())return; snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'tr_'+ch.key, titre:v.titre||v.type||'Commande', message:v.message||`${v.type||'Operation'}`, date:v.date||'', ts:parseFRDate(v.date), icon:'🛒', color:'blue', montant:v.montant||''}); }); });
 }
 window.onload=init;
 </script>
