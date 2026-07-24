@@ -1,8 +1,19 @@
+---
+---
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Déverrouiller - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<script>
+var firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var database=firebase.database();
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#500;display:flex;justify-content:center;align-items:center;min-height:100vh}
@@ -10,34 +21,75 @@ body{background:#500;display:flex;justify-content:center;align-items:center;min-
 .dots{display:flex;gap:16px;justify-content:center;margin:20px 0}
 .d{width:18px;height:18px;border-radius:50%;border:2px solid #0f3d2e}
 .d.fill{background:#fff}
-.num{width:72px;height:72px;border-radius:50%;background:#aaaa;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.06)}
+.num{width:72px;height:72px;border-radius:50%;background:#aaaa;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.06);user-select:none}
 .num:active{background:#500;color:#ff5000}
-.shake{animation:shake .3s}
+.shake{animation:shake.3s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:99999;padding:15px}
+.box{background:#1e1e1e;color:#fff;padding:20px;border-radius:14px;max-width:340px;width:100%;border:2px solid #fff;text-align:center}
+.input{width:100%;padding:12px;border-radius:8px;border:2px solid #fff;background:#2a3942;color:#fff;margin:8px 0;text-align:center;font-weight:bold}
+.btn-y{background:#ff5000;color:#fff;border:none;padding:12px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px;cursor:pointer}
+.btn-n{background:#333;color:#fff;border:1px solid #fff;padding:12px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="app" id="box">
 <h2 style="color:#aaa">Entrez votre code PIN</h2>
 <div class="dots"><div class="d" id="d0"></div><div class="d" id="d1"></div><div class="d" id="d2"></div><div class="d" id="d3"></div></div>
-<p id="err" style="color:#c0392b;font-size:13px;height:18px"></p>
+<p id="err" style="color:#ff8a8a;font-size:13px;height:18px"></p>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;justify-items:center;margin-top:20px">
 <div class="num" onclick="tap(1)">1</div><div class="num" onclick="tap(2)">2</div><div class="num" onclick="tap(3)">3</div>
 <div class="num" onclick="tap(4)">4</div><div class="num" onclick="tap(5)">5</div><div class="num" onclick="tap(6)">6</div>
 <div class="num" onclick="tap(7)">7</div><div class="num" onclick="tap(8)">8</div><div class="num" onclick="tap(9)">9</div>
 <div style="width:72px"></div><div class="num" onclick="tap(0)">0</div><div class="num" onclick="del()">⌫</div>
 </div>
-<p style="margin-top:30px;font-size:12px;color:#888" onclick="if(confirm('Réinitialiser PIN ? Tu devras te reconnecter')){localStorage.clear();location.href='index.html'}">Oublié ? Réinitialiser</p>
+<p style="margin-top:30px;font-size:12px;color:#aaa;text-decoration:underline;cursor:pointer" onclick="openReset()">Oublié? Réinitialiser</p>
 </div>
+
+<div id="m-reset" class="overlay"><div class="box"><h3>Réinitialiser PIN 4</h3><p style="font-size:12px;color:#aaa;margin:8px 0">Entre ton mot de passe 6 chiffres pour déverrouiller</p><input id="pw6" type="password" maxlength="6" class="input" placeholder="PIN 6 chiffres"><button class="btn-y" onclick="verifyReset()">Vérifier et désactiver</button><button class="btn-n" onclick="closeAll()">Annuler</button></div></div>
+<div id="m-alert" class="overlay"><div class="box"><div id="a-msg" style="white-space:pre-wrap"></div><button class="btn-y" onclick="closeAlert()">OK</button></div></div>
+
 <script>
-let pin=''; const real=localStorage.getItem('mayne_pin')||'0000';
-function tap(n){ if(pin.length<4){pin+=n; draw(); if(pin.length===4) check();} }
-function del(){ pin=pin.slice(0,-1); draw(); }
-function draw(){ for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('fill', i<pin.length); }
+var pin='',curId=null;
+function gid(id){return document.getElementById(id);}
+function showAlert(m){gid('a-msg').innerText=m;gid('m-alert').style.display='flex';}
+function closeAlert(){gid('m-alert').style.display='none';}
+function closeAll(){var els=document.querySelectorAll('.overlay');for(var i=0;i<els.length;i++){els[i].style.display='none';}}
+function openReset(){gid('m-reset').style.display='flex';gid('pw6').value='';}
+function draw(){for(var i=0;i<4;i++){var d=gid('d'+i);if(i<pin.length){d.classList.add('fill');}else{d.classList.remove('fill');}}}
+function tap(n){if(pin.length<4){pin=pin+n;draw();if(pin.length===4){setTimeout(check,120);}}}
+function del(){pin=pin.slice(0,-1);draw();gid('err').innerText='';}
 function check(){
-  if(pin===real){ sessionStorage.setItem('mayne_unlocked','1'); location.href='index.html'; }
-  else { document.getElementById('err').textContent='Code incorrect'; document.getElementById('box').classList.add('shake'); setTimeout(()=>{document.getElementById('box').classList.remove('shake'); pin=''; draw();},400); }
+  var real=localStorage.getItem('mayne_pin')||'0000';
+  if(pin===real){sessionStorage.setItem('mayne_unlocked','1');location.href='index.html';}
+  else{gid('err').innerText='Code incorrect';gid('box').classList.add('shake');setTimeout(function(){gid('box').classList.remove('shake');pin='';draw();},400);}
 }
+async function verifyReset(){
+  var pw=gid('pw6').value.trim();
+  if(pw.length!==6){showAlert('Entre 6 chiffres');return;}
+  try{
+    if(!curId){
+      var s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+      if(!s){showAlert('Pas connecte');return;}
+      curId=s.phone.replace(/[^0-9]/g,'');
+    }
+    var snap=await database.ref('clients/'+curId).once('value');
+    var data=snap.val()||{};
+    var dbPin=data.pin||'';
+    var h=CryptoJS.MD5(pw).toString();
+    if(dbPin!==h && dbPin!==pw){showAlert('Mot de passe 6 chiffres incorrect');return;}
+    localStorage.setItem('mayne_pin_enabled','false');
+    localStorage.removeItem('mayne_pin');
+    sessionStorage.setItem('mayne_unlocked','1');
+    closeAll();
+    showAlert('PIN 4 desactive');
+    setTimeout(function(){location.href='index.html';},800);
+  }catch(e){showAlert('Erreur: '+e.message);}
+}
+(function(){
+  if(localStorage.getItem('mayne_pin_enabled')!=='true'){location.href='index.html';return;}
+  try{var s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(s)curId=s.phone.replace(/[^0-9]/g,'');}catch(e){}
+})();
 </script>
 </body>
 </html>
