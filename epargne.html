@@ -15,6 +15,7 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 .montant{font-size:20px;font-weight:800;margin:10px 0}
 .sub{font-size:20px;color:#fff;display:flex;gap:20px;margin-bottom:20px}
 .btn{width:100%;background:#c00;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff}
+.btn:disabled{background:#555;opacity:.6}
 .pills{display:flex;gap:10px;padding:10px 16px}
 .pill{flex:1;background:#aaaa;border-radius:100px;padding:12px;text-align:center;font-weight:700;cursor:pointer}
 .kyc{margin:12px 16px;background:#1e1e1e;border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center}
@@ -43,7 +44,7 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 <body>
 <div class="app">
 <div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">NOTIF🔔</button></div></div>
-<div class="card"><div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">👁️</span></div><div class="montant" id="solde">0.00 XOF</div><div class="sub"><div style="color:#fe3a">BONUS<br><b id="com">0 XOF</b></div><div style="color:#4CAF50FF"><b>Solde_Epargne<br><b id="rec">0 XOF</b></div></div><button class="btn" onclick="openR()">Retirer de l'argent ↓</button></div>
+<div class="card"><div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">👁️</span></div><div class="montant" id="solde">0.00 XOF</div><div class="sub"><div style="color:#fe3a">BONUS<br><b id="com">0 XOF</b></div><div style="color:#4CAF50FF"><b>Solde_Epargne<br><b id="rec">0 XOF</b></div></div><button class="btn" id="btnRet" onclick="openR()">Retirer de l'argent ↓</button><small id="blocInfo" style="display:none;color:#ff9999;font-size:11px;margin-top:6px"></small></div>
 <div class="pills"><div class="pill" onclick="openN()">+ Nouvelle épargne</div><div class="pill" onclick="document.querySelector('.list').scrollIntoView({behavior:'smooth'})">Mes épargnes</div></div>
 <div class="kyc" id="kyc"><div><b>Verification d'identite</b><br><span style="font-size:11px">Retrait apres KYC valide</span></div><button style="background:#aaaa;border:none;border-radius:100px;padding:8px 14px;font-weight:700" onclick="location.href='kyc.html'">Verifier</button></div>
 <div class="list"><h3>Historique d'epargne</h3><div id="histo"></div></div>
@@ -99,11 +100,11 @@ var db=firebase.database();
 var uid, soldePrincipal=0, soldeEpargne=0, vis=true;
 var icon='🚗', rythme='A mon rythme', frequence='Par mois';
 var confirmCallback=null;
+var blockedEpargnes=[];
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-
 function displayUser(u){
   if(!u) return;
   var full=((u.prenom||'')+' '+(u.nom||'')).trim()||u.nom||'Client';
@@ -113,7 +114,6 @@ function displayUser(u){
   document.getElementById('wa').value=u.phone||'';
   document.getElementById('rwa').value=u.phone||'';
 }
-
 async function chargerInfosCompte(){
   var u = JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u ||!u.phone){location.href='index.html';return null;}
@@ -128,9 +128,13 @@ async function chargerInfosCompte(){
     localStorage.setItem('mayne_current_user', JSON.stringify(merged));
     displayUser(merged);
     return phoneKey;
-  }catch(e){console.log(e); return phoneKey;}
+  }catch(e){return phoneKey;}
 }
-
+function parseEcheance(str){
+  if(!str) return null;
+  const p=str.split('/'); if(p.length!==3) return null;
+  return new Date(p[2]+'-'+p[1]+'-'+p[0]);
+}
 async function init(){
   uid = await chargerInfosCompte();
   if(!uid) return;
@@ -143,14 +147,40 @@ async function init(){
   });
   db.ref('epargne/'+uid).limitToLast(30).on('value',function(s){
     var c=document.getElementById('histo');
-    if(!s.exists()){c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucun historique</div>';return;}
-    var h=''; s.forEach(function(ch){var v=ch.val(); var key=ch.key; h='<div class=item onclick="location.href=\'epargne-detail.html?id='+key+'\'"><div><b>'+(v.icon||'')+' '+(v.nom||v.type)+'</b><br><small>'+v.date+' - '+(v.frequence||'')+' '+(v.bloque?' - Bloquee '+v.echeance:'')+'</small></div><b>'+(v.montantCollecte||v.montant)+' XOF</b></div>'+h;});
+    blockedEpargnes=[];
+    if(!s.exists()){c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucun historique</div>'; updateBlocUI(); return;}
+    var h=''; s.forEach(function(ch){var v=ch.val(); var key=ch.key;
+      if(v.bloque && v.type!=='Retrait'){
+        var fin=parseEcheance(v.echeance);
+        if(fin && fin>new Date()) blockedEpargnes.push(v);
+      }
+      h='<div class=item onclick="location.href=\'epargne-detail.html?id='+key+'\'"><div><b>'+(v.icon||'')+' '+(v.nom||v.type)+'</b><br><small>'+v.date+' - '+(v.frequence||'')+' '+(v.bloque?' - Bloquee '+v.echeance:'')+'</small></div><b>'+(v.montantCollecte||v.montant)+' XOF</b></div>'+h;
+    });
     c.innerHTML=h;
+    updateBlocUI();
   });
+}
+function updateBlocUI(){
+  const btn=document.getElementById('btnRet');
+  const info=document.getElementById('blocInfo');
+  if(blockedEpargnes.length>0){
+    btn.disabled=true;
+    info.style.display='block';
+    info.textContent='Retrait direct bloque : '+blockedEpargnes.length+' epargne(s) bloquee(s) jusqu au '+blockedEpargnes[0].echeance+'. Va dans detail.';
+  }else{
+    btn.disabled=false;
+    info.style.display='none';
+  }
 }
 function toggleSolde(){vis=!vis; document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';}
 function openN(){document.getElementById('mnew').classList.add('show'); goStep(0);}
-function openR(){document.getElementById('mret').classList.add('show')}
+function openR(){
+  if(blockedEpargnes.length>0){
+    showAlert('Retrait direct bloque : tu as '+blockedEpargnes.length+' epargne(s) bloquee(s) jusqu au '+blockedEpargnes[0].echeance+'. Ouvre le detail pour retirer avec 5% de penalite.');
+    return;
+  }
+  document.getElementById('mret').classList.add('show')
+}
 function closeM(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('show')})}
 function goStep(n){
   ['step0','step1','step2','step3'].forEach(function(id,i){document.getElementById(id).style.display=i===n?'block':'none';});
@@ -215,6 +245,10 @@ function placerLegal(){
   })}).then(function(){showAlert('Tontine '+nom+' creee: '+mt+' XOF - Bloquee jusqu au '+echeance); closeM();});
 }
 function retirer(){
+  if(blockedEpargnes.length>0){
+    showAlert('Retrait direct bloque : epargne bloquee jusqu au '+blockedEpargnes[0].echeance);
+    return;
+  }
   var mt=Number(document.getElementById('rmont').value);
   if(!mt) return showAlert('Montant');
   if(mt>soldeEpargne) return showAlert('Epargne insuffisante');
