@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Infos Compte - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -16,7 +15,7 @@ const database = firebase.database();
 body{background:#fcb;display:flex;justify-content:center}
 .app{max-width:430px;width:100%;min-height:100vh;background:#aaaa;padding-bottom:90px}
 .head{padding:16px;color:#fff;display:flex;align-items:center;gap:12px;position:sticky;top:0;background:#500;z-index:2}
-.back{width:44px;height:44px;background:#aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
+.back{width:44px;height:44px;background:#aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .card{margin:10px 16px;background:#000;border-radius:20px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
 .label{font-size:11px;font-weight:800;color:#aaa;margin-top:14px;display:block;text-transform:uppercase}
 .input,.select{width:100%;color:#fff;padding:14px;border:1px solid #fff;border-radius:14px;margin-top:6px;font-size:14px;background:#aaaa}
@@ -33,34 +32,46 @@ body{background:#fcb;display:flex;justify-content:center}
 <div class="head"><div class="back" onclick="location.href='compte.html'">🔙</div><b>Information sur le compte</b></div>
 <div class="card">
 <label class="label">Nom</label><input id="nom" class="input">
-<label class="label">Prénom</label><input id="prenom" class="input">
-<label class="label">Numéro WhatsApp</label><input id="phone" class="input">
+<label class="label">Prenom</label><input id="prenom" class="input">
+<label class="label">Numero WhatsApp</label><input id="phone" class="input" disabled>
 <label class="label">Email</label><input id="email" class="input">
 <label class="label">Sexe</label>
 <select id="sexe" class="select"><option value="">Choisir</option><option value="Homme">Homme</option><option value="Femme">Femme</option></select>
-<label class="label">Numéro Carte d'Identité / CIP</label><input id="cni" class="input">
+<label class="label">Numero Carte d'Identite / CIP</label><input id="cni" class="input">
 <label class="label">Statut du compte</label><div id="statut"></div>
 <button class="btn" onclick="saveInfos()">Enregistrer</button>
 </div>
 </div>
 <div class="notif" id="notif"></div>
 <script>
-function showN(t){const e=document.getElementById('notif');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',3000);}
-let currentUser = JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
-const phoneKey = (currentUser.phone||'').replace(/[^0-9]/g,'') || 'user_'+Date.now();
+function showN(t){var e=document.getElementById('notif');e.textContent=t;e.style.display='block';setTimeout(function(){e.style.display='none'},3000);}
+var currentUser = JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
+var phoneKey = (currentUser.phone||'').replace(/[^0-9]/g,'');
 
-function load(){
-  // Charge depuis Firebase si dispo
-  if(currentUser.phone){
-    database.ref('users/'+phoneKey).once('value').then(snap=>{
-      if(snap.exists()){
-        const fb = snap.val();
-        currentUser = {...currentUser, ...fb};
-        localStorage.setItem('mayne_current_user', JSON.stringify(currentUser));
-        fill();
-      } else { fill(); }
-    });
-  } else { fill(); }
+async function load(){
+  if(!phoneKey){
+    document.getElementById('statut').innerHTML='<span class="badge no">Non connecte</span>';
+    return;
+  }
+  try{
+    // 1. Charge la source principale clients/
+    var snapClient = await database.ref('clients/'+phoneKey).once('value');
+    var dataClient = snapClient.val()||{};
+    // 2. Charge users/ pour CNI etc
+    var snapUser = await database.ref('users/'+phoneKey).once('value');
+    var dataUser = snapUser.val()||{};
+
+    // Merge : users ecrase clients pour cni/sexe/verifie
+    currentUser = Object.assign({}, currentUser, dataClient, dataUser);
+    // Garde le phone d origine
+    if(!currentUser.phone) currentUser.phone = dataClient.phone || dataUser.phone;
+
+    localStorage.setItem('mayne_current_user', JSON.stringify(currentUser));
+    fill();
+  }catch(e){
+    console.log(e);
+    fill();
+  }
 }
 function fill(){
   document.getElementById('nom').value = currentUser.nom || '';
@@ -69,32 +80,43 @@ function fill(){
   document.getElementById('email').value = currentUser.email || '';
   document.getElementById('sexe').value = currentUser.sexe || '';
   document.getElementById('cni').value = currentUser.cni || '';
-  const isVerif = currentUser.verifie === true;
-  const hasCni = (currentUser.cni||'').length >= 5;
-  let html = isVerif ? '<span class="badge ok">✅ Vérifié</span>' : hasCni ? '<span class="badge wait">⏳ En attente</span>' : '<span class="badge no">❌ Non vérifié</span>';
+  var isVerif = currentUser.verifie === true || currentUser.verifie === 'true';
+  var hasCni = (currentUser.cni||'').length >= 5;
+  var html = isVerif ? '<span class="badge ok">✅ Verifie</span>' : hasCni ? '<span class="badge wait">⏳ En attente</span>' : '<span class="badge no">❌ Non verifie</span>';
   document.getElementById('statut').innerHTML = html;
 }
 function saveInfos(){
   currentUser.nom = document.getElementById('nom').value.trim();
   currentUser.prenom = document.getElementById('prenom').value.trim();
-  currentUser.phone = document.getElementById('phone').value.trim();
   currentUser.email = document.getElementById('email').value.trim();
   currentUser.sexe = document.getElementById('sexe').value;
   currentUser.cni = document.getElementById('cni').value.trim();
   if(currentUser.cni && currentUser.verifie !== true) currentUser.verifie = false;
 
   localStorage.setItem('mayne_current_user', JSON.stringify(currentUser));
-  const key = (currentUser.phone||phoneKey).replace(/[^0-9]/g,'');
-  database.ref('users/'+key).update({
-    nom: currentUser.nom,
-    prenom: currentUser.prenom,
-    phone: currentUser.phone,
-    email: currentUser.email,
-    sexe: currentUser.sexe,
-    cni: currentUser.cni,
-    verifie: currentUser.verifie || false,
-    date_update: new Date().toLocaleString('fr-FR')
-  }).then(()=>{ showN('✅ Enregistré et envoyé pour vérif'); fill(); });
+  var key = (currentUser.phone||phoneKey).replace(/[^0-9]/g,'');
+
+  // Sauvegarde dans les 2 tables
+  Promise.all([
+    database.ref('clients/'+key).update({
+      nom: currentUser.nom,
+      prenom: currentUser.prenom,
+      email: currentUser.email,
+      sexe: currentUser.sexe,
+      cni: currentUser.cni,
+      verifie: currentUser.verifie || false
+    }),
+    database.ref('users/'+key).update({
+      nom: currentUser.nom,
+      prenom: currentUser.prenom,
+      phone: currentUser.phone,
+      email: currentUser.email,
+      sexe: currentUser.sexe,
+      cni: currentUser.cni,
+      verifie: currentUser.verifie || false,
+      date_update: new Date().toLocaleString('fr-FR')
+    })
+  ]).then(function(){ showN('✅ Enregistre'); fill(); });
 }
 window.onload=load;
 </script>
