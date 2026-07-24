@@ -14,7 +14,7 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 .card{margin:12px 16px;background:#1e1e1e;border:3px solid #fff;border-radius:22px;padding:18px;color:#fff}
 .montant{font-size:20px;font-weight:800;margin:10px 0}
 .sub{font-size:20px;color:#fff;display:flex;gap:20px;margin-bottom:20px}
-.btn{width:100%;background:#c00;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff}
+.btn{width:100%;background:#c00;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff;cursor:pointer}
 .pills{display:flex;gap:10px;padding:10px 16px}
 .pill{flex:1;background:#aaaa;border-radius:100px;padding:12px;text-align:center;font-weight:700;cursor:pointer}
 .kyc{margin:12px 16px;background:#1e1e1e;border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center}
@@ -51,42 +51,10 @@ body{background:#500;color:#fff;display:flex;justify-content:center}
 <div class="bottom"><button class="bnav" onclick="location.href='index.html'">REROUR</button><button class="bnav active">CORFRE-FORT⭐</button><button class="bnav">↕</button><button class="bnav" onclick="location.href='compte.html'">INFOS👤</button></div>
 
 <div class="modal" id="mnew" onclick="if(event.target===this)closeM()"><div class="sheet">
-<div id="step0">
-<div class="navrow"><span></span><button class="navbtn" onclick="closeM()">X Fermer</button></div>
-<div style="text-align:center;padding:10px"><div style="font-size:50px">🐷</div><h2>Creer une tontine</h2><p>Choisissez le type</p></div>
-<div class="opt" onclick="choisirType('groupe')"><div><b>Tontine de groupe</b><br><small>Epargnez ensemble</small></div><div>></div></div>
-<div class="opt" onclick="choisirType('perso')"><div><b>Epargne personnelle</b><br><small>Fixez un objectif</small></div><div>></div></div>
-<button class="input" style="background:#333" onclick="closeM()">Annuler</button>
-</div>
-<div id="step1" style="display:none">
-<div class="navrow"><button class="navbtn" onclick="goStep(0)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div>
-<h3>Epargne personnelle</h3><input id="nomEp" class="input" placeholder="MOTO" value="MOTO"><p style="margin:10px 0;font-weight:700">Icone</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'📱')">📱</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'👔')">👔</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'💻')">💻</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🏍️')">🏍️</div></div>
-<button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(2)">Continuer</button>
-<button class="input" style="background:#333;border-radius:100px" onclick="goStep(0)">Retour</button>
-</div>
-<div id="step2" style="display:none">
-<div class="navrow"><button class="navbtn" onclick="goStep(1)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div>
-<h3>Type epargne</h3>
-<div class="opt active" onclick="setRythme(this,'A mon rythme')"><div><b>A mon rythme</b><br><small>Retrait libre</small></div><div>O</div></div>
-<div class="opt" onclick="setRythme(this,'A une date precise')"><div><b>A une date precise</b><br><small>Bloque jusqua date</small></div><div>O</div></div>
-<div id="dateFixeBox" style="display:none;margin-top:12px;background:#000;border-radius:12px;padding:12px">
-<label style="font-size:13px">Choisis ta date fixe</label>
-<input id="dateFixe" type="date" class="input" style="background:#fff;color:#000">
-<small style="color:#aaa">Apres 1er depot, bloque jusqua cette date. 5% si avant.</small>
-</div>
-<h3 style="margin-top:14px">Montant objectif?</h3><div style="font-size:32px;color:#ccc;text-align:center;margin:15px 0" id="objLabel">0.00 XOF</div><input id="objectif" type="number" class="input" placeholder="10000 optionnel" oninput="objLabel.textContent=(this.value||0)+' XOF'">
-<button class="input" style="background:#ff5000;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(3)">Continuer</button>
-<button class="input" style="background:#333;border-radius:100px" onclick="goStep(1)">Retour</button>
-</div>
-<div id="step3" style="display:none">
-<div class="navrow"><button class="navbtn" onclick="goStep(2)">Retour</button><button class="navbtn" onclick="closeM()">X Fermer</button></div>
-<h3>Frequence</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>O</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>O</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>O</span></div>
-<div style="margin-top:16px" class="opt" id="blocBox"><div><b id="blocLabel">Bloquer la tontine</b><br><small id="blocSub">5% si retrait avant</small></div><input type="checkbox" id="bloque"></div>
-<input id="montant" type="number" class="input" placeholder="Premier depot ex: 2000"><input id="wa" class="input" placeholder="WhatsApp">
-<button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800" onclick="placerLegal()">Creer la tontine</button>
-<button class="input" style="background:#333;border-radius:100px" onclick="goStep(2)">Retour</button>
-<button class="input" style="background:#000;border:1px solid #fff;border-radius:100px" onclick="closeM()">Annuler</button>
-</div>
+<div id="step0"><div class="navrow"><span></span><button class="navbtn" onclick="closeM()">X Fermer</button></div><div style="text-align:center;padding:10px"><div style="font-size:50px">🐷</div><h2>Creer une tontine</h2><p>Choisissez le type</p></div><div class="opt" onclick="choisirType('groupe')"><div><b>Tontine de groupe</b><br><small>Epargnez ensemble</small></div><div>></div></div><div class="opt" onclick="choisirType('perso')"><div><b>Epargne personnelle</b><br><small>Fixez un objectif</small></div><div>></div></div><button class="input" style="background:#333" onclick="closeM()">Annuler</button></div>
+<div id="step1" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(0)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Epargne personnelle</h3><input id="nomEp" class="input" placeholder="MOTO" value="MOTO"><p style="margin:10px 0;font-weight:700">Icone</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'📱')">📱</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'👔')">👔</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'💻')">💻</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🏍️')">🏍️</div></div><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(2)">Continuer</button><button class="input" style="background:#333;border-radius:100px" onclick="goStep(0)">Retour</button></div>
+<div id="step2" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(1)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Type epargne</h3><div class="opt active" onclick="setRythme(this,'A mon rythme')"><div><b>A mon rythme</b><br><small>Retrait libre</small></div><div>O</div></div><div class="opt" onclick="setRythme(this,'A une date precise')"><div><b>A une date precise</b><br><small>Bloque jusqua date</small></div><div>O</div></div><div id="dateFixeBox" style="display:none;margin-top:12px;background:#000;border-radius:12px;padding:12px"><label style="font-size:13px">Choisis ta date fixe</label><input id="dateFixe" type="date" class="input" style="background:#fff;color:#000"><small style="color:#aaa">Apres 1er depot, bloque jusqua cette date. 5% si avant.</small></div><h3 style="margin-top:14px">Montant objectif?</h3><div style="font-size:32px;color:#ccc;text-align:center;margin:15px 0" id="objLabel">0.00 XOF</div><input id="objectif" type="number" class="input" placeholder="10000 optionnel" oninput="objLabel.textContent=(this.value||0)+' XOF'"><button class="input" style="background:#ff5000;color:#fff;border-radius:100px;margin-top:20px" onclick="goStep(3)">Continuer</button><button class="input" style="background:#333;border-radius:100px" onclick="goStep(1)">Retour</button></div>
+<div id="step3" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(2)">Retour</button><button class="navbtn" onclick="closeM()">X Fermer</button></div><h3>Frequence</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>O</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>O</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>O</span></div><div style="margin-top:16px" class="opt" id="blocBox"><div><b id="blocLabel">Bloquer la tontine</b><br><small id="blocSub">5% si retrait avant</small></div><input type="checkbox" id="bloque"></div><input id="montant" type="number" class="input" placeholder="Premier depot ex: 2000"><input id="wa" class="input" placeholder="WhatsApp"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px;font-weight:800" onclick="placerLegal()">Creer la tontine</button><button class="input" style="background:#333;border-radius:100px" onclick="goStep(2)">Retour</button><button class="input" style="background:#000;border:1px solid #fff;border-radius:100px" onclick="closeM()">Annuler</button></div>
 </div></div>
 <div class="modal" id="mret" onclick="if(event.target===this)closeM()"><div class="sheet"><div class="navrow"><span>Retrait direct</span><button class="navbtn" onclick="closeM()">X</button></div><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Demander</button><button class="input" style="background:#333;border-radius:100px" onclick="closeM()">Annuler</button></div></div>
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
@@ -100,12 +68,19 @@ var uid, soldePrincipal=0, soldeEpargne=0, vis=true;
 var icon='🚗', rythme='A mon rythme', frequence='Par mois';
 var confirmCallback=null;
 var blockedEpargnes=[], blockedTotal=0;
-
+const ADMIN_UID="0158612131";
+const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+async function pushJS(destId,titre,message){if(!destId)return;try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId,titre,message})});}catch(e){}}
+function notifEpargne(titre,msg){
+  pushJS(uid,titre,msg);
+  pushJS(ADMIN_UID,titre,msg+" - Client: "+uid);
+  try{db.ref('notifications/'+uid).push({titre,msg,date:new Date().toLocaleString('fr-FR')});}catch(e){}
+  try{db.ref('notifications/'+ADMIN_UID).push({titre,msg:msg+" - "+uid,date:new Date().toLocaleString('fr-FR')});}catch(e){}
+}
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-
 function displayUser(u){
   if(!u) return;
   var full=((u.prenom||'')+' '+(u.nom||'')).trim()||u.nom||'Client';
@@ -146,7 +121,6 @@ async function init(){
     document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';
     if(d.verifie) document.getElementById('kyc').style.display='none';
     updateBlocUI();
-    // SI SOLDE 0 => VIDE HISTORIQUE DIRECT
     if(soldeEpargne<=0){
       document.getElementById('histo').innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';
     }
@@ -154,7 +128,6 @@ async function init(){
   db.ref('epargne/'+uid).on('value',function(s){
     var c=document.getElementById('histo');
     blockedEpargnes=[]; blockedTotal=0;
-    // SI SOLDE 0 ON CACHE TOUT
     if(!s.exists() || soldeEpargne<=0){
       c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';
       updateBlocUI();
@@ -164,8 +137,8 @@ async function init(){
     s.forEach(function(ch){
       var v=ch.val(); var key=ch.key;
       var collecte = +(v.montantCollecte?? v.montant?? 0);
-      if(v.type==='Retrait') return; // pas afficher retraits
-      if(collecte<=0) return; // CACHE LES VIDES - TON BUG 2000F
+      if(v.type==='Retrait') return;
+      if(collecte<=0) return;
       if(v.bloque){
         var fin=parseEcheance(v.echeance);
         if(fin && fin>new Date()){
@@ -264,7 +237,10 @@ function placerLegal(){
     echeance:echeance,joursRestants:joursRestants,tours:tours,
     prochainDepot:new Date(Date.now()+intervalSec*1000).toISOString(),
     date:new Date().toLocaleString('fr-FR'),statut:'actif'
-  })}).then(function(){showAlert('Tontine '+nom+' creee: '+mt+' XOF - Bloquee jusqu au '+echeance); closeM();});
+  })}).then(function(){
+    notifEpargne("Nouvelle épargne","Tontine "+nom+" créée: "+mt+" XOF - Bloquée jusqu au "+echeance);
+    showAlert('Tontine '+nom+' creee: '+mt+' XOF'); closeM();
+  });
 }
 function retirer(){
   var mt=Number(document.getElementById('rmont').value);
@@ -272,7 +248,6 @@ function retirer(){
   var blockedReel = Math.min(blockedTotal, soldeEpargne);
   var disponible = Math.max(0, soldeEpargne - blockedReel);
   if(mt>disponible) return showAlert('Max dispo '+disponible+' XOF');
-  // deduit des epargnes non bloquees + ne touche PAS au BONUS/commission
   db.ref('epargne/'+uid).once('value').then(function(snap){
     var reste=mt,upd={};
     snap.forEach(function(ch){
@@ -288,7 +263,10 @@ function retirer(){
   }).then(function(){return db.ref('clients/'+uid).once('value');}).then(function(s){
     var c=s.val()||{};
     return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
-  }).then(function(){showAlert('Retrait '+mt+' XOF envoye');closeM();});
+  }).then(function(){
+    notifEpargne("Retrait épargne","Retrait direct "+mt+" XOF - Client "+uid);
+    showAlert('Retrait '+mt+' XOF envoye');closeM();
+  });
 }
 window.onload=init;
 </script>
