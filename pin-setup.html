@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Verrouillage PIN</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -13,89 +14,117 @@ if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const database=firebase.database();
 </script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}html,body{height:100dvh;overflow:hidden}body{background:#111;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;height:100dvh;background:#4b0000;border:2px solid #fff;border-radius:10px;display:flex;flex-direction:column;color:#fff}
-.head{padding:14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.2)}
-.back{width:36px;height:36px;background:#fff;color:#4b0000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;border:none}
+*{box-sizing:border-box}html,body{margin:0;height:100dvh;overflow:hidden;font-family:Arial}body{background:#111;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;height:100dvh;background:#4b0000;border:2px solid #fff;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;color:#fff}
+.header{padding:14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.2)}
+.back{width:36px;height:36px;background:#fff;color:#4b0000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;border:none;cursor:pointer}
 .card{margin:12px 16px;background:rgba(255,255,255,.08);border-radius:16px;padding:16px}
-.switch{width:52px;height:30px;background:#555;border-radius:20px;position:relative;cursor:pointer;transition:.2s}.switch.on{background:#0f0}.dot{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}.switch.on .dot{left:24px}
+.switch{width:52px;height:30px;background:#555;border-radius:20px;position:relative;cursor:pointer;flex-shrink:0}.switch.on{background:#00c853}.dot{width:26px;height:26px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}.switch.on .dot{left:24px}
 .dots{display:flex;gap:14px;justify-content:center;margin:22px 0}.d{width:16px;height:16px;border-radius:50%;border:2px solid #eacbc3}.d.fill{background:#eacbc3}
-.num{width:70px;height:70px;border-radius:50%;background:#eacbc3;color:#4b0000;border:1px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;cursor:pointer}
-.num:active{background:#4b0000;color:#fff}
+.num{width:70px;height:70px;border-radius:50%;background:#eacbc3;color:#4b0000;border:1px solid #fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;cursor:pointer;user-select:none}
+.num:active{transform:scale(.92)}
 .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:99999;padding:15px}
 .box{background:#1e1e1e;color:#fff;padding:20px;border-radius:14px;max-width:340px;width:100%;border:2px solid #fff;text-align:center}
 .input{width:100%;padding:12px;border-radius:8px;border:2px solid #fff;background:#2a3942;color:#fff;margin:8px 0;text-align:center;font-weight:bold}
-.btn-y{background:#ff5000;color:#fff;border:none;padding:11px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px;cursor:pointer}
-.btn-n{background:#ddd;color:#000;border:none;padding:11px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px;cursor:pointer}
+.btn-y{background:#ff5000;color:#fff;border:none;padding:12px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px;cursor:pointer}
+.btn-n{background:#333;color:#fff;border:1px solid #fff;padding:12px;border-radius:8px;width:100%;font-weight:bold;margin-top:8px;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="head"><button class="back" onclick="location.href='securite.html'">←</button><b>Verrouillage par PIN</b></div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>Activer PIN 4 chiffres</b><br><span style="font-size:11px;color:#c9a8a0">Demande à l'ouverture</span></div><div class="switch" id="sw" onclick="toggle()"><div class="dot"></div></div></div></div>
-<div class="card" id="setupBox" style="display:none"><h4 id="title" style="text-align:center">Définir code 4 chiffres</h4><div class="dots"><div class="d" id="d0"></div><div class="d" id="d1"></div><div class="d" id="d2"></div><div class="d" id="d3"></div></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center"><div class="num" onclick="tap(1)">1</div><div class="num" onclick="tap(2)">2</div><div class="num" onclick="tap(3)">3</div><div class="num" onclick="tap(4)">4</div><div class="num" onclick="tap(5)">5</div><div class="num" onclick="tap(6)">6</div><div class="num" onclick="tap(7)">7</div><div class="num" onclick="tap(8)">8</div><div class="num" onclick="tap(9)">9</div><div></div><div class="num" onclick="tap(0)">0</div><div class="num" onclick="del()">⌫</div></div><p id="msg" style="text-align:center;font-size:12px;margin-top:12px"></p><div style="text-align:center;margin-top:10px;color:#ffcc80;font-size:12px;text-decoration:underline;cursor:pointer" onclick="openForgot4()">Code 4 chiffres oublié?</div></div>
+<div class="header"><button class="back" onclick="location.href='securite.html'">←</button><b>Verrouillage par PIN</b></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>Activer PIN 4 chiffres</b><br><span style="font-size:11px;color:#c9a8a0">Demande à l'ouverture</span></div><div class="switch" id="sw" onclick="togglePin()"><div class="dot"></div></div></div></div>
+<div class="card" id="setupBox" style="display:none"><h4 id="title" style="text-align:center">Définir code 4 chiffres</h4><div class="dots"><div class="d" id="d0"></div><div class="d" id="d1"></div><div class="d" id="d2"></div><div class="d" id="d3"></div></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center"><div class="num" onclick="tap(1)">1</div><div class="num" onclick="tap(2)">2</div><div class="num" onclick="tap(3)">3</div><div class="num" onclick="tap(4)">4</div><div class="num" onclick="tap(5)">5</div><div class="num" onclick="tap(6)">6</div><div class="num" onclick="tap(7)">7</div><div class="num" onclick="tap(8)">8</div><div class="num" onclick="tap(9)">9</div><div></div><div class="num" onclick="tap(0)">0</div><div class="num" onclick="del()">⌫</div></div><p id="msg" style="text-align:center;font-size:12px;margin-top:12px;min-height:16px"></p><div style="text-align:center;margin-top:10px;color:#ffcc80;font-size:12px;text-decoration:underline;cursor:pointer" onclick="openForgot()">Code 4 chiffres oublié?</div></div>
 </div>
 
-<div id="m-confirm" class="overlay"><div class="box"><div id="c-msg">Désactiver?</div><button class="btn-y" onclick="confirmOff(true)">Oui</button><button class="btn-n" onclick="confirmOff(false)">Non</button></div></div>
-<div id="m-forgot4" class="overlay"><div class="box"><h3>Code 4 chiffres oublié</h3><p style="font-size:12px;color:#aaa">Entre ton mot de passe 6 chiffres</p><input id="pw6" type="password" maxlength="6" class="input" placeholder="Mot de passe 6 chiffres"><button class="btn-y" onclick="verifyPw6()">Vérifier</button><button class="btn-n" onclick="closeAll()">Annuler</button></div></div>
+<div id="m-confirm" class="overlay"><div class="box"><p id="c-msg">Désactiver?</p><button class="btn-y" onclick="doDisable(true)">Oui désactiver</button><button class="btn-n" onclick="doDisable(false)">Non</button></div></div>
+<div id="m-forgot" class="overlay"><div class="box"><h3>Code 4 chiffres oublié</h3><p style="font-size:12px;color:#aaa">Entre ton mot de passe 6 chiffres</p><input id="pw6" type="password" maxlength="6" class="input" placeholder="PIN 6 chiffres"><button class="btn-y" onclick="verifyPw6()">Vérifier</button><button class="btn-n" onclick="closeAll()">Annuler</button></div></div>
 <div id="m-alert" class="overlay"><div class="box"><div id="a-msg" style="white-space:pre-wrap"></div><button class="btn-y" onclick="closeAlert()">OK</button></div></div>
 
 <script>
-let pin='',step='new',firstPin='',enabled=localStorage.getItem('mayne_pin_enabled')==='true',curId=null,curData=null,pendingOff=false;
-function alertM(m){document.getElementById('a-msg').innerText=m;document.getElementById('m-alert').style.display='flex';}
-function closeAlert(){document.getElementById('m-alert').style.display='none';}
+let pin='',step='new',firstPin='',enabled=false,curId=null;
+function $(id){return document.getElementById(id);}
+function showAlert(m){$('a-msg').innerText=m;$('m-alert').style.display='flex';}
+function closeAlert(){$('m-alert').style.display='none';}
 function closeAll(){document.querySelectorAll('.overlay').forEach(e=>e.style.display='none');}
-function openForgot4(){document.getElementById('m-forgot4').style.display='flex';}
-const sw=document.getElementById('sw');
-function refreshSwitch(){sw.classList.toggle('on',enabled);document.getElementById('setupBox').style.display=enabled?'block':'none';if(enabled&&!localStorage.getItem('mayne_pin')){step='new';firstPin='';document.getElementById('title').textContent='Définir code 4 chiffres';}}
-function toggle(){
- if(enabled){
-  pendingOff=true;
-  document.getElementById('c-msg').innerText='Désactiver le verrouillage PIN 4 chiffres?';
-  document.getElementById('m-confirm').style.display='flex';
- }else{
-  enabled=true;localStorage.setItem('mayne_pin_enabled','true');refreshSwitch();
- }
+function openForgot(){$('m-forgot').style.display='flex';$('pw6').value='';$('pw6').focus();}
+function refreshUI(){
+  enabled=localStorage.getItem('mayne_pin_enabled')==='true';
+  $('sw').classList.toggle('on',enabled);
+  $('setupBox').style.display=enabled?'block':'none';
+  if(enabled&&!localStorage.getItem('mayne_pin')){step='new';firstPin='';pin='';$('title').innerText='Définir code 4 chiffres';draw();}
 }
-function confirmOff(ok){
- document.getElementById('m-confirm').style.display='none';
- if(ok&&pendingOff){
-  enabled=false;localStorage.setItem('mayne_pin_enabled','false');localStorage.removeItem('mayne_pin');sessionStorage.removeItem('mayne_unlocked');refreshSwitch();
- }
- pendingOff=false;
-}
-function tap(n){if(pin.length<4){pin+=n;draw();}if(pin.length===4){if(step==='new'){firstPin=pin;pin='';step='confirm';document.getElementById('title').textContent='Confirme ton code';draw();}else{if(pin===firstPin){localStorage.setItem('mayne_pin',pin);document.getElementById('msg').style.color='#0f0';document.getElementById('msg').textContent='✅ Code 4 chiffres enregistré';setTimeout(()=>location.href='securite.html',800);}else{document.getElementById('msg').style.color='#ffb0b0';document.getElementById('msg').textContent='❌ Codes différents';pin='';firstPin='';step='new';document.getElementById('title').textContent='Définir code 4 chiffres';draw();}}}}
-function del(){pin=pin.slice(0,-1);draw();}
-function draw(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('fill',i<pin.length);}
-
-async function verifyPw6(){
- try{
-  const pw=document.getElementById('pw6').value.trim();
-  if(pw.length!==6)return alertM('Entre 6 chiffres');
-  if(!curData){
-   const snap=await database.ref('clients/'+curId).once('value');
-   curData=snap.val()||{};
+function togglePin(){
+  if(enabled){
+    $('c-msg').innerText='Désactiver le verrouillage 4 chiffres?';
+    $('m-confirm').style.display='flex';
+  }else{
+    localStorage.setItem('mayne_pin_enabled','true');
+    refreshUI();draw();
   }
-  const h=CryptoJS.MD5(pw).toString();
-  const dbPin=curData.pin||'';
-  if(dbPin!==h&&dbPin!==pw)return alertM('Mot de passe 6 chiffres incorrect');
-  localStorage.removeItem('mayne_pin');
-  pin='';firstPin='';step='new';
-  document.getElementById('title').textContent='Définir nouveau code 4 chiffres';
-  closeAll();
-  alertM('✅ Ok tu peux redéfinir ton code 4 chiffres maintenant');
-  draw();
- }catch(e){
-  alertM('Erreur: '+e.message);
- }
 }
-function init(){
- let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
- if(!s){location.href='index.html';return;}
- curId=s.phone.replace(/[^0-9]/g,'');
- database.ref('clients/'+curId).once('value').then(v=>{curData=v.val()||{};});
+function doDisable(ok){
+  $('m-confirm').style.display='none';
+  if(ok){
+    localStorage.setItem('mayne_pin_enabled','false');
+    localStorage.removeItem('mayne_pin');
+    sessionStorage.removeItem('mayne_unlocked');
+    pin='';firstPin='';step='new';
+    refreshUI();draw();
+  }
 }
-init();refreshSwitch();draw();
+function tap(n){if(pin.length<4){pin+=n;draw();} if(pin.length===4){ setTimeout(handlePin,100); } }
+function del(){pin=pin.slice(0,-1);draw();}
+function draw(){for(let i=0;i<4;i++){const d=$('d'+i);if(i<pin.length)d.classList.add('fill');else d.classList.remove('fill');}}
+function handlePin(){
+  if(step==='new'){
+    firstPin=pin;pin='';$('title').innerText='Confirme ton code';$('msg').innerText='';draw();
+    step='confirm';
+  }else{
+    if(pin===firstPin){
+      localStorage.setItem('mayne_pin',pin);
+      $('msg').style.color='#0f0';$('msg').innerText='✅ Code enregistré';
+      setTimeout(()=>location.href='securite.html',700);
+    }else{
+      $('msg').style.color='#ffb0b0';$('msg').innerText='❌ Codes différents';
+      pin='';firstPin='';step='new';$('title').innerText='Définir code 4 chiffres';draw();
+    }
+  }
+}
+async function verifyPw6(){
+  const pw=$('pw6').value.trim();
+  if(pw.length!==6)return showAlert('Entre 6 chiffres');
+  try{
+    if(!curId){
+      const s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+      if(!s)return showAlert('Pas connecté');
+      curId=s.phone.replace(/[^0-9]/g,'');
+    }
+    const snap=await database.ref('clients/'+curId).once('value');
+    const data=snap.val()||{};
+    const dbPin=data.pin||'';
+    const h=CryptoJS.MD5(pw).toString();
+    if(dbPin!==h && dbPin!==pw){
+      return showAlert('Mot de passe 6 chiffres incorrect');
+    }
+    localStorage.removeItem('mayne_pin');
+    pin='';firstPin='';step='new';
+    $('title').innerText='Définir NOUVEAU code 4 chiffres';
+    $('msg').innerText='';
+    closeAll();
+    showAlert('✅ Vérifié! Définis ton nouveau code 4 chiffres maintenant');
+    draw();
+  }catch(e){
+    showAlert('Erreur: '+e.message);
+  }
+}
+(function init(){
+  try{
+    const s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+    if(s)curId=s.phone.replace(/[^0-9]/g,'');
+  }catch(e){}
+  refreshUI();draw();
+})();
 </script>
 </body>
 </html>
