@@ -4,13 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mon Compte - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#fff;display:flex;justify-content:center}
 .app{max-width:430px;width:100%;min-height:100vh;background:#500;padding-bottom:90px}
 .top{text-align:center;color:#fff;padding:20px 16px 10px}
 .avatar-wrap{width:90px;height:90px;margin:0 auto;position:relative}
-.avatar{width:90px;height:90px;border-radius:50%;background:#aaa;display:flex;align-items:center;justify-content:center;font-size:40px;color:#666}
+.avatar{width:90px;height:90px;border-radius:50%;background:#aaa;display:flex;align-items:center;justify-content:center;font-size:40px;color:#666;font-weight:800}
 .star{position:absolute;bottom:0;right:0;width:28px;height:28px;background:#aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fdf6ec}
 .list{padding:10px 16px}
 .item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #fff;cursor:pointer}
@@ -19,7 +26,7 @@ body{background:#fff;display:flex;justify-content:center}
 .item span{font-size:11px;color:#999}
 .arrow{margin-left:auto;color:#bbb}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
-.bnav{border:none;background:none;font-size:11px;color:#888}
+.bnav{border:none;background:none;font-size:11px;color:#888;cursor:pointer}
 .bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;padding:8px 16px;font-weight:700}
 </style>
 </head>
@@ -27,42 +34,65 @@ body{background:#fff;display:flex;justify-content:center}
 <div class="app">
 <div class="top">
 <h2>Mon Compte</h2>
-<div class="avatar-wrap" style="margin-top:16px"><div class="avatar" id="av">👤</div><div class="star">★</div></div>
-<b id="name" style="display:block;margin-top:10px;font-size:18px"></b>
+<div class="avatar-wrap" style="margin-top:16px"><div class="avatar" id="av">A</div><div class="star">★</div></div>
+<b id="name" style="display:block;margin-top:10px;font-size:18px">Chargement...</b>
 <span id="email" style="color:#999;font-size:13px"></span>
 </div>
 
 <div class="list">
 <div class="item" onclick="location.href='info-compte.html'"><div class="icon">👤</div><div><b>Information sur le compte</b><span>Information sur votre profil</span></div><div class="arrow">›</div></div>
 <div class="item" onclick="location.href='pin-setup.html'"><div class="icon">🔢</div><div><b>Verrouillage par PIN</b><span id="pinStatus">Chargement...</span></div><div class="arrow">›</div></div>
-
-<div class="item" onclick="location.href='securite.html'"><div class="icon">🔒</div><div ><b>Connexion et sécurité</b><span>Protégez votre compte</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="location.href='securite.html'"><div class="icon">🔒</div><div><b>Connexion et sécurité</b><span>Protégez votre compte</span></div><div class="arrow">›</div></div>
 <div class="item"><div class="icon">🌐</div><div><b>Langue</b><span>Changez la langue de votre appli</span></div><div class="arrow">›</div></div>
 <div class="item" onclick="location.href='parrainage.html'"><div class="icon">🪙</div><div><b>Compte de parrainage</b><span>Suivez vos gains de parrainage</span></div><div class="arrow">›</div></div>
 <div class="item"><div class="icon">🎧</div><div><b>Aide & assistance</b><span>Vous avez besoin d'aide?</span></div><div class="arrow">›</div></div>
-<div class="item"><div class="icon">⭐</div><div><b>Noter ACTIFER-MGAP</b><span>Partagez votre avis</span></div><div class="arrow">›</div></div>
+<div class="item"><div class="icon">⭐</div><div><b>Noter MAYNE</b><span>Partagez votre avis</span></div><div class="arrow">›</div></div>
 <div class="item"><div class="icon">ℹ️</div><div><b>À propos</b><span>Accéder au site web de MAYNE</span></div><div class="arrow">›</div></div>
-<div class="item" style="color:#c0392b"><div class="icon" style="background:#fde2e2">⛔</div><div><b>Désactiver le compte</b><span>Supprimer définitivement votre compte</span></div><div class="arrow">›</div></div>
+<div class="item" style="color:#c0392b"><div class="icon" style="background:#fde2e2">⛔</div><div><b>Désactiver le compte</b><span>Supprimer définitivement</span></div><div class="arrow">›</div></div>
 </div>
 </div>
 
 <div class="bottom">
-<button class="bnav" onclick="location.href='index.html'">RETOUR À L'ACCUEIL🏠</button>
-<button class="bnav" onclick="location.href='epargne.html'">MON ÉPARGNE⭐</button>
+<button class="bnav" onclick="location.href='index.html'">ACCUEIL🏠</button>
+<button class="bnav" onclick="location.href='epargne.html'">EPARGNE⭐</button>
 <button class="bnav">↕</button>
 <button class="bnav active">MES INFOS👤</button>
 </div>
+
 <script>
-// ajoute ça en bas avec ton autre script
-document.getElementById('pinStatus').textContent = localStorage.getItem('mayne_pin_enabled')==='true' ? 'Activé • Code à 4 chiffres' : 'Désactivé';
-</script>
-<script>
-const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-if(u){
-document.getElementById('name').textContent=u.nom||'Nom et prénom';
-document.getElementById('email').textContent=u.email||u.phone;
-document.getElementById('av').textContent=(u.nom||'A')[0].toUpperCase();
+function displayUser(u){
+  if(!u) return;
+  document.getElementById('name').textContent = ((u.prenom||'')+' '+(u.nom||'')).trim() || u.nom || 'Nom et prenom';
+  document.getElementById('email').textContent = u.email || u.phone || '';
+  document.getElementById('av').textContent = ((u.nom||u.prenom||'A')[0]||'A').toUpperCase();
+  document.getElementById('pinStatus').textContent = localStorage.getItem('mayne_pin_enabled')==='true'? 'Active • Code 4 chiffres' : 'Desactive';
 }
+
+// Fonction chargee info compte auto
+async function chargerInfosCompte(){
+  var u = JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  if(!u ||!u.phone){
+    displayUser(u);
+    return;
+  }
+  var phoneKey = u.phone.replace(/[^0-9]/g,'');
+  displayUser(u); // affiche vite le cache
+
+  try{
+    var snapClient = await database.ref('clients/'+phoneKey).once('value');
+    var dataClient = snapClient.val()||{};
+    var snapUser = await database.ref('users/'+phoneKey).once('value');
+    var dataUser = snapUser.val()||{};
+
+    var merged = Object.assign({}, u, dataClient, dataUser);
+    localStorage.setItem('mayne_current_user', JSON.stringify(merged));
+    displayUser(merged);
+  }catch(e){
+    console.log('Erreur chargement compte', e);
+  }
+}
+
+window.onload = chargerInfosCompte;
 </script>
 </body>
 </html>
