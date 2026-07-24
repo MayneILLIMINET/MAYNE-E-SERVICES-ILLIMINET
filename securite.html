@@ -41,23 +41,21 @@ const OTP_URL="https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4i
 <div class="header"><button class="back-btn" onclick="location.href='compte.html'">←</button><h2>Connexion et sécurité</h2></div>
 <div class="content">
 <div class="card-profile"><div class="avatar" id="avatar">M</div><div><div id="user-name" style="font-weight:bold">MARIUS AYIZAN</div><div id="user-email" style="font-size:12px;color:#c9a8a0"></div><div style="font-size:11px;color:#0f0">● Compte vérifié</div></div></div>
-<div class="item" onclick="openChangePin()"><div class="icon-circle">🔑</div><div class="item-text"><div class="item-title">Modifier mot de passe</div><div class="item-sub">PIN à 6 chiffres</div></div>›</div>
+<div class="item" onclick="openChangePin()"><div class="icon-circle">🔑</div><div class="item-text"><div class="item-title">Modifier mot de passe</div><div class="item-sub">PIN 6 chiffres</div></div>›</div>
 <div class="item" onclick="openChangeEmail()"><div class="icon-circle">📧</div><div class="item-text"><div class="item-title">Modifier email</div><div class="item-sub" id="email-sub"></div></div>›</div>
 <div class="item" onclick="location.href='pin-setup.html'"><div class="icon-circle">🔒</div><div class="item-text"><div class="item-title">Verrouillage par PIN</div><div class="item-sub" id="pin-status"></div></div>›</div>
 <div class="item" onclick="logoutAll()"><div class="icon-circle">🚪</div><div class="item-text"><div class="item-title">Déconnexion partout</div></div>›</div>
-<div class="item" onclick="openDelete()"><div class="icon-circle" style="background:#ffb0b0">🗑️</div><div class="item-text"><div class="item-title" style="color:#ffb0b0">Supprimer le compte</div></div>›</div>
+<div class="item" onclick="openDelete()"><div class="icon-circle" style="background:#ffb0b0">🗑️</div><div class="item-text"><div class="item-title" style="color:#ffb0b0">Supprimer compte</div></div>›</div>
 </div>
-<div class="bottom-bar"><button onclick="location.href='index.html'">RETOUR À L'ACCUEIL 🏠</button><button onclick="location.href='epargne.html'">MON ÉPARGNE ⭐</button><button class="active">MES INFOS 👤</button></div>
+<div class="bottom-bar"><button onclick="location.href='index.html'">ACCUEIL 🏠</button><button onclick="location.href='epargne.html'">ÉPARGNE ⭐</button><button class="active">MES INFOS 👤</button></div>
 </div>
 
-<!-- MODAL CHANGE PIN NORMAL -->
-<div id="modal-pin" class="modal-overlay"><div class="modal-box"><h3>Modifier mot de passe</h3><input id="old-pin" type="password" maxlength="6" class="input-field" placeholder="Ancien PIN"><input id="new-pin" type="password" maxlength="6" class="input-field" placeholder="Nouveau PIN"><input id="new-pin2" type="password" maxlength="6" class="input-field" placeholder="Confirmer"><button class="btn-yes" onclick="changePin()">Valider</button><div class="link" onclick="openForgot()">Mot de passe oublié?</div><button class="btn-no" onclick="closeModals()">Fermer</button></div></div>
+<div id="modal-pin" class="modal-overlay"><div class="modal-box"><h3>Modifier mot de passe</h3><input id="old-pin" type="password" maxlength="6" class="input-field" placeholder="Ancien PIN"><input id="new-pin" type="password" maxlength="6" class="input-field" placeholder="Nouveau"><input id="new-pin2" type="password" maxlength="6" class="input-field" placeholder="Confirmer"><button class="btn-yes" onclick="changePin()">Valider</button><div class="link" onclick="openForgot()">Mot de passe oublié?</div><button class="btn-no" onclick="closeModals()">Fermer</button></div></div>
 
-<!-- MODAL FORGOT -->
 <div id="modal-forgot" class="modal-overlay"><div class="modal-box">
-<div id="step1" class="step active"><h3>Réinitialiser</h3><p style="font-size:12px;color:#aaa">On envoie un code à ton email</p><input id="forgot-email" type="email" class="input-field" placeholder="Ton email"><button class="btn-yes" onclick="sendResetCode()">Envoyer le code</button><button class="btn-no" onclick="closeModals()">Annuler</button></div>
-<div id="step2" class="step"><h3>Code reçu</h3><p style="font-size:12px;color:#aaa">Vérifie ta boîte mail (spam aussi)</p><input id="forgot-code" type="text" maxlength="6" class="input-field" placeholder="Code 6 chiffres"><button class="btn-yes" onclick="verifyResetCode()">Vérifier</button><button class="btn-no" onclick="closeModals()">Annuler</button></div>
-<div id="step3" class="step"><h3>Nouveau mot de passe</h3><input id="forgot-new1" type="password" maxlength="6" class="input-field" placeholder="Nouveau PIN 6 chiffres"><input id="forgot-new2" type="password" maxlength="6" class="input-field" placeholder="Confirmer"><button class="btn-yes" onclick="confirmNewPinForgot()">Enregistrer</button></div>
+<div id="step1" class="step active"><h3>Réinitialiser</h3><p style="font-size:12px;color:#aaa">Code envoyé à ton email actuel</p><input id="forgot-email" type="email" class="input-field" placeholder="Ton email"><button class="btn-yes" id="btn-send" onclick="sendResetCode()">Envoyer le code</button><button class="btn-no" onclick="closeModals()">Annuler</button></div>
+<div id="step2" class="step"><h3>Code reçu</h3><input id="forgot-code" class="input-field" placeholder="Code 6 chiffres"><button class="btn-yes" onclick="verifyResetCode()">Vérifier</button><div class="link" onclick="sendResetCode()">Renvoyer le code</div><button class="btn-no" onclick="closeModals()">Annuler</button></div>
+<div id="step3" class="step"><h3>Nouveau PIN</h3><input id="forgot-new1" type="password" maxlength="6" class="input-field" placeholder="Nouveau PIN 6 chiffres"><input id="forgot-new2" type="password" maxlength="6" class="input-field" placeholder="Confirmer"><button class="btn-yes" onclick="confirmNewPinForgot()">Enregistrer</button></div>
 </div></div>
 
 <div id="modal-email" class="modal-overlay"><div class="modal-box"><h3>Modifier email</h3><input id="new-email" type="email" class="input-field" placeholder="Nouvel email"><button class="btn-yes" onclick="changeEmail()">Enregistrer</button><button class="btn-no" onclick="closeModals()">Annuler</button></div></div>
@@ -65,66 +63,67 @@ const OTP_URL="https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4i
 <div id="modal-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg" style="white-space:pre-wrap"></div><button class="btn-yes" onclick="closeModals()">OK</button></div></div>
 
 <script>
-let currentUserId=null,currentData=null,generatedOtp=null,otpExpiry=null;
+let currentUserId=null,currentData=null,tempEmailForReset=null;
 function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('modal-alert').style.display='flex';}
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(e=>e.style.display='none');}
 function openChangePin(){document.getElementById('modal-pin').style.display='flex';}
 function openChangeEmail(){document.getElementById('modal-email').style.display='flex';}
 function openDelete(){document.getElementById('modal-delete').style.display='flex';}
 function openForgot(){closeModals();document.getElementById('modal-forgot').style.display='flex';showStep(1);document.getElementById('forgot-email').value=currentData.email||'';}
-function showStep(n){document.querySelectorAll('#modal-forgot.step').forEach(s=>s.classList.remove('active'));document.getElementById('step'+n).classList.add('active');}
+function showStep(n){document.getElementById('step1').classList.remove('active');document.getElementById('step2').classList.remove('active');document.getElementById('step3').classList.remove('active');document.getElementById('step'+n).classList.add('active');}
 
 async function changePin(){
   const oldP=document.getElementById('old-pin').value.trim();
   const newP=document.getElementById('new-pin').value.trim();
   const newP2=document.getElementById('new-pin2').value.trim();
-  if(newP.length!==6||newP!==newP2)return showAlert('6 chiffres identiques requis');
+  if(newP.length!==6||newP!==newP2)return showAlert('6 chiffres identiques');
   const oldH=CryptoJS.MD5(oldP).toString();
-  if(currentData.pin!==oldH&&currentData.pin!==oldP)return showAlert('Ancien PIN incorrect');
+  if(currentData.pin!==oldH&&currentData.pin!==oldP)return showAlert('Ancien incorrect');
   await database.ref('clients/'+currentUserId).update({pin:CryptoJS.MD5(newP).toString()});
   closeModals();showAlert('✅ Mot de passe modifié');
 }
-
-async function sendResetCode(){
+// LOGIQUE EXACTE COMME TON INDEX.HTML
+function sendResetCode(){
   const email=document.getElementById('forgot-email').value.trim().toLowerCase();
-  if(!email||email!==currentData.email)return showAlert('Entre ton vrai email: '+currentData.email);
-  generatedOtp=Math.floor(100000+Math.random()*900000).toString();
-  otpExpiry=Date.now()+5*60*1000;
-  // Envoi réel via ton Apps Script
-  try{
-    await fetch(OTP_URL,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email,code:generatedOtp,type:'reset',action:'reset_password'})
-    });
-  }catch(e){}
-  // Fallback GET pour compatibilité avec ton script
-  try{
-    await fetch(OTP_URL+"?email="+encodeURIComponent(email)+"&code="+generatedOtp+"&type=reset",{mode:'no-cors'});
-  }catch(e){}
-  showAlert('Code envoyé à '+email+'\nVérifie ta boîte mail (et spams)');
-  showStep(2);
+  if(!email||email!==currentData.email)return showAlert('Doit être ton email actuel: '+currentData.email);
+  tempEmailForReset=email;
+  document.getElementById('btn-send').innerText='Envoi...';
+  fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(email),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+ .then(r=>r.text()).then(t=>{
+    document.getElementById('btn-send').innerText='Envoyer le code';
+    if(t.includes('sent')){
+      showStep(2);
+      showAlert('Code envoyé à '+email);
+    }else if(t.includes('email_exists')){
+      // pour reset on autorise quand même, on renvoie
+      showStep(2);
+      showAlert('Code renvoyé à '+email);
+    }else{
+      showAlert('Erreur: '+t);
+    }
+  }).catch(()=>{document.getElementById('btn-send').innerText='Envoyer le code';showAlert('Erreur réseau, réessaye');});
 }
 function verifyResetCode(){
   const code=document.getElementById('forgot-code').value.trim();
-  if(Date.now()>otpExpiry)return showAlert('Code expiré, renvoie');
-  if(code!==generatedOtp)return showAlert('Code incorrect');
-  showStep(3);
+  if(!code)return;
+  fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmailForReset)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+ .then(r=>r.text()).then(t=>{
+    if(t.includes('ok')){showStep(3);}
+    else showAlert('Code incorrect ou expiré');
+  });
 }
 async function confirmNewPinForgot(){
   const n1=document.getElementById('forgot-new1').value.trim();
   const n2=document.getElementById('forgot-new2').value.trim();
-  if(n1.length!==6||n1!==n2)return showAlert('6 chiffres identiques requis');
+  if(n1.length!==6||n1!==n2)return showAlert('6 chiffres identiques');
   await database.ref('clients/'+currentUserId).update({pin:CryptoJS.MD5(n1).toString()});
-  generatedOtp=null;
-  closeModals();showAlert('✅ Nouveau mot de passe défini, connecte-toi');
+  closeModals();showAlert('✅ Nouveau PIN défini');
 }
 async function changeEmail(){
   const ne=document.getElementById('new-email').value.trim().toLowerCase();
   if(!ne.includes('@'))return showAlert('Email invalide');
   await database.ref('clients/'+currentUserId).update({email:ne});
-  closeModals();showAlert('✅ Email mis à jour');init();
+  closeModals();showAlert('✅ Email MAJ');init();
 }
 function logoutAll(){localStorage.removeItem('mayne_current_user');sessionStorage.clear();location.href='index.html';}
 async function deleteAccount(){
