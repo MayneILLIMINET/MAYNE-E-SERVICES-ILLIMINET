@@ -43,7 +43,7 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <div class="nb-red"><b>NB RETRAIT:</b> 1XBET > Retrait > Moyen = <b>Espèce</b>, VILLE: <b>ABOMEY-CALAVI</b>, RUE: <b>SECRÉTAIRE DE DIEU</b>. Copiez le code et collez ici.</div>
 <div class="toggle"><button id="tab-depot" class="select" style="background:#ff5000" onclick="switchMode('depot')">Dépôt</button><button id="tab-retrait" class="select" style="background:#1e1e1e" onclick="switchMode('retrait')">Retrait</button></div>
 <div id="zone-depot"><input id="xbet-id" class="input" placeholder="ID Joueur 1XBET"><input id="xbet-montant" type="number" class="input" placeholder="Montant minimum 300F"><input id="xbet-wa" class="input" placeholder="Numéro WhatsApp (facultatif)"><div id="warning-depot" class="warning-box"><div style="color:#ffeb3b;font-weight:bold;font-size:12px">⚠️ AVERTISSEMENT - FRAIS 1%</div><div id="detail-depot" style="font-size:11px;margin-top:8px;line-height:1.4"></div></div><button id="btn-depot" class="btn btn-depot" onclick="handleDepot()">Continuer</button></div>
-<div id="zone-retrait" style="display:none"><input id="xbet-id-r" class="input" placeholder="ID Joueur 1XBET"><input id="xbet-montant-r" type="number" class="input" placeholder="Montant à retirer"><select id="xbet-methode" class="select"><option value="ESPECES">ESPÈCES</option></select><input id="xbet-num-benef" class="input" placeholder="Numéro bénéficiaire (facultatif)"><input id="xbet-code-recu" class="input" placeholder="CODE 1XBET REÇU *"><input id="xbet-wa-r" class="input" placeholder="Numéro WhatsApp (facultatif)"><div id="warning-retrait" class="warning-box"><div style="color:#ffeb3b;font-weight:bold;font-size:12px">⚠️ AVERTISSEMENT - FRAIS 1%</div><div id="detail-retrait" style="font-size:11px;margin-top:8px;line-height:1.4"></div></div><button id="btn-retrait" class="btn btn-retrait" onclick="handleRetrait()">Continuer</button></div>
+<div id="zone-retrait" style="display:none"><input id="xbet-id-r" class="input" placeholder="ID Joueur 1XBET"><input id="xbet-montant-r" type="number" class="input" placeholder="Montant à retirer"><select id="xbet-methode" class="select"><option value="ESPECES">ESPÈCES</option></select><input id="xbet-num-benef" class="input" placeholder="Numéro bénéficiaire (facultatif)"><input id="xbet-code-recu" class="input" placeholder="CODE 1XBET REÇU *"><input id="xbet-wa-r" class="input" placeholder="Numéro WhatsApp (facultatif)"><div id="warning-retrait" class="warning-box"><div style="color:#ffeb3b;font-weight:bold;font-size:12px">✅ RETRAIT GRATUIT</div><div id="detail-retrait" style="font-size:11px;margin-top:8px;line-height:1.4"></div></div><button id="btn-retrait" class="btn btn-retrait" onclick="handleRetrait()">Continuer</button></div>
 <div id="xbet-status" style="margin-top:8px;font-size:12px;display:none;text-align:center"></div>
 </div>
 <div class="list"><h3>Mes transactions 1XBET</h3><div id="histo">Aucune opération</div></div>
@@ -93,15 +93,25 @@ function handleRetrait(){
   if(etapeRetrait===1){
     let id=document.getElementById('xbet-id-r').value.trim();let m=Number(document.getElementById('xbet-montant-r').value);let code=document.getElementById('xbet-code-recu').value.trim();
     if(!id||m<=0)return showAlert('ID et montant requis');if(!code)return showAlert('CODE 1XBET REÇU obligatoire');
-    let frais=Math.ceil(m*0.01);if(solde<frais)return showAlert('Solde insuffisant pour frais 1%: '+frais+'F');
-    document.getElementById('detail-retrait').innerHTML=`<b>NB:</b> Frais 1%.<br><br>Retrait: <b>${m}F</b><br>Frais: <b>${frais}F</b> sur solde`;
+    document.getElementById('detail-retrait').innerHTML=`<b>NB:</b> Retrait gratuit - 0% frais.<br><br>Retrait demandé: <b>${m}F</b><br>Frais: <b>0F</b><br>Vous recevez: <b>${m}F</b>`;
     document.getElementById('warning-retrait').style.display='block';document.getElementById('btn-retrait').innerText='Valider Retrait';document.getElementById('btn-retrait').className='btn btn-valid';etapeRetrait=2;
   }else{executerRetrait();}
 }
 async function executerRetrait(){
-  let id=document.getElementById('xbet-id-r').value.trim();let m=Number(document.getElementById('xbet-montant-r').value);let methode=document.getElementById('xbet-methode').value;let numBenef=document.getElementById('xbet-num-benef').value.trim();let code=document.getElementById('xbet-code-recu').value.trim();let wa=document.getElementById('xbet-wa-r').value.trim();let frais=Math.ceil(m*0.01);
+  let id=document.getElementById('xbet-id-r').value.trim();let m=Number(document.getElementById('xbet-montant-r').value);let methode=document.getElementById('xbet-methode').value;let numBenef=document.getElementById('xbet-num-benef').value.trim();let code=document.getElementById('xbet-code-recu').value.trim();let wa=document.getElementById('xbet-wa-r').value.trim();
+  let frais=0;
   if(_lock)return;_lock=true;document.getElementById('btn-retrait').innerText='Traitement...';
-  try{await db.ref('clients/'+uid).update({solde:solde-frais});await crediterAdminFrais(frais);let full={action:'retrait',id_joueur:id,montant:m,frais:frais,methode:methode,numero_beneficiaire:numBenef||'N/A',code_1xbet_recu:code,whatsapp:wa||''};let alerte={code_1xbet:code,id_joueur:id,whatsapp:wa||'',montant:m,frais:frais};pushJS(ADMIN_UID,"RETRAIT 1XBET "+m+"F",`RETRAIT ID:${id} Montant:${m}F Frais:${frais}F Methode:${methode} CODE:${code} WA:${wa} Client:${uid}`);envoyerAlerte('1xbet',alerte);proposerSupport('1xbet',alerte,()=>afficherSucces('xbet-status'));db.ref('commandes_1xbet').push().set({...full,client_id:uid,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours'});document.getElementById('xbet-id-r').value='';document.getElementById('xbet-montant-r').value='';document.getElementById('xbet-num-benef').value='';document.getElementById('xbet-code-recu').value='';document.getElementById('xbet-wa-r').value='';document.getElementById('warning-retrait').style.display='none';document.getElementById('btn-retrait').innerText='Continuer';document.getElementById('btn-retrait').className='btn btn-retrait';etapeRetrait=1;}catch(e){showAlert(e.message);}finally{_lock=false;}
+  try{
+    // RETRAIT GRATUIT - AUCUNE DEDUCTION SOLDE
+    let full={action:'retrait',id_joueur:id,montant:m,frais:frais,methode:methode,numero_beneficiaire:numBenef||'N/A',code_1xbet_recu:code,whatsapp:wa||''};
+    let alerte={code_1xbet:code,id_joueur:id,whatsapp:wa||'',montant:m,frais:frais};
+    pushJS(ADMIN_UID,"RETRAIT 1XBET "+m+"F",`RETRAIT ID:${id} Montant:${m}F Frais:0F Methode:${methode} CODE:${code} WA:${wa} Client:${uid}`);
+    envoyerAlerte('1xbet',alerte);
+    proposerSupport('1xbet',alerte,()=>afficherSucces('xbet-status'));
+    db.ref('commandes_1xbet').push().set({...full,client_id:uid,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
+    document.getElementById('xbet-id-r').value='';document.getElementById('xbet-montant-r').value='';document.getElementById('xbet-num-benef').value='';document.getElementById('xbet-code-recu').value='';document.getElementById('xbet-wa-r').value='';
+    document.getElementById('warning-retrait').style.display='none';document.getElementById('btn-retrait').innerText='Continuer';document.getElementById('btn-retrait').className='btn btn-retrait';etapeRetrait=1;
+  }catch(e){showAlert(e.message);}finally{_lock=false;}
 }
 window.onload=init;
 </script>
