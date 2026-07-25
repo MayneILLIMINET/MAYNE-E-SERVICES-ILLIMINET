@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
 <script>
-if(localStorage.getItem('mayne_pin_enabled')==='true' && !sessionStorage.getItem('mayne_unlocked')){
+if(localStorage.getItem('mayne_pin_enabled')==='true' &&!sessionStorage.getItem('mayne_unlocked')){
   location.href='lock.html';
 }
 </script>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-if (!window.AppInventor) { 
+if (!window.AppInventor) {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
@@ -18,47 +18,31 @@ if (!window.AppInventor) {
       serviceWorkerParam: { scope: '/MAYNE-E-SERVICES-ILLIMINET/' },
       serviceWorkerPath: 'OneSignalSDKWorker.js'
     });
-    
     const u = JSON.parse(localStorage.getItem('mayne_current_user') || 'null');
     if (u && u.phone) {
       const phone = String(u.phone).replace(/\D/g,'');
       try {
         await OneSignal.login(phone);
         await OneSignal.User.addTag("phone", phone);
-        console.log("OneSignal lié à", phone);
       } catch(e) {}
     }
-    console.log('OneSignal prêt (web)');
   });
-} 
-
+}
 const ONESIGNAL_APP_ID = "9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
-
 async function activerNotifications() {
-  if (window.AppInventor) {
-    alert('✅ Notifications APK actives (via l’application)');
-    return;
-  }
+  if (window.AppInventor) { alert('✅ Notifications APK actives'); return; }
   const OS = window.OneSignal;
   if (!OS) return alert('OneSignal charge... réessaie dans 3s');
   const permission = await OS.Notifications.requestPermission();
   if (permission) {
-    alert('✅ Notifications activées !');
+    alert('✅ Notifications activées!');
     const u = JSON.parse(localStorage.getItem('mayne_current_user') || 'null');
     if (u && u.phone) await OS.login(String(u.phone).replace(/\D/g,''));
-  } else {
-    alert('❌ Permission refusée');
-  }
+  } else { alert('❌ Permission refusée'); }
 }
 </script>
-
-<script>
-// Playables SDK v1.0.0
-(function(){'use strict';if(window.playablesSDK)return;var HANDLER_NAME='playablesGameEventHandler';var ANDROID_BRIDGE_NAME='_MetaPlayablesBridge';var RAF_FRAME_THRESHOLD=3;var gameReadySent=false;var firstInteractionSent=false;var errorSent=false;var frameCount=0;var originalRAF=window.requestAnimationFrame;function hasIOSBridge(){return!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers[HANDLER_NAME])}function hasAndroidBridge(){return!!(window[ANDROID_BRIDGE_NAME]&&typeof window[ANDROID_BRIDGE_NAME].postEvent==='function')}function isInIframe(){return!!(window.parent&&window.parent!==window)}function sendEvent(eventName,payload){var message={type:eventName,payload:payload||{},timestamp:Date.now()};if(hasIOSBridge()){try{window.webkit.messageHandlers[HANDLER_NAME].postMessage(message)}catch(e){}return}if(hasAndroidBridge()){try{var p=payload||{};p.__secureToken=window.__fbAndroidBridgeAuthToken||'';p.timestamp=message.timestamp;window[ANDROID_BRIDGE_NAME].postEvent(eventName,JSON.stringify(p))}catch(e){}return}if(isInIframe()){try{window.parent.postMessage(message,'*')}catch(e){}return}}function onFrame(){if(gameReadySent)return;frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()});return}originalRAF.call(window,onFrame)}if(originalRAF){window.requestAnimationFrame=function(callback){if(!gameReadySent){return originalRAF.call(window,function(timestamp){frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD&&!gameReadySent){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()})}callback(timestamp)})}return originalRAF.call(window,callback)}}function setupFirstInteractionDetection(){var events=['touchstart','mousedown','keydown'];function onFirstInteraction(){if(firstInteractionSent)return;firstInteractionSent=true;sendEvent('user_interaction_start',null);for(var i=0;i<events.length;i++){document.removeEventListener(events[i],onFirstInteraction,true)}}for(var i=0;i<events.length;i++){document.addEventListener(events[i],onFirstInteraction,true)}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setupFirstInteractionDetection)}else{setupFirstInteractionDetection()}window.addEventListener('error',function(event){if(errorSent)return;errorSent=true;sendEvent('error',{message:event.message||'Unknown error',source:event.filename||'',lineno:event.lineno||0,colno:event.colno||0,auto_captured:true})});window.addEventListener('unhandledrejection',function(event){if(errorSent)return;errorSent=true;var reason=event.reason;sendEvent('error',{message:(reason instanceof Error)?reason.message:String(reason),type:'unhandled_promise_rejection',auto_captured:true})});window.playablesSDK={complete:function(score){sendEvent('game_ended',{score:score,completed:true})},error:function(message){if(errorSent)return;errorSent=true;sendEvent('error',{message:message||'Unknown error',auto_captured:false})},sendEvent:function(eventName,payload){if(!eventName||typeof eventName!=='string')return;sendEvent(eventName,payload)}};if(originalRAF){originalRAF.call(window,onFrame)}})();
-</script>
-<script>
-(function(){if(window.__playableTouchPatchInstalled)return;window.__playableTouchPatchInstalled=true;var origAdd=EventTarget.prototype.addEventListener;var blockedTypes={touchstart:1,touchmove:1,wheel:1};EventTarget.prototype.addEventListener=function(type,listener,options){if(blockedTypes[type]){if(options===undefined||options===null){options={passive:true}}else if(typeof options==='boolean'){options={capture:options,passive:true}}else{options=Object.assign({},options,{passive:true})}}return origAdd.call(this,type,listener,options)}})();
-</script>
+<script>(function(){'use strict';if(window.playablesSDK)return;var HANDLER_NAME='playablesGameEventHandler';var ANDROID_BRIDGE_NAME='_MetaPlayablesBridge';var RAF_FRAME_THRESHOLD=3;var gameReadySent=false;var firstInteractionSent=false;var errorSent=false;var frameCount=0;var originalRAF=window.requestAnimationFrame;function hasIOSBridge(){return!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers[HANDLER_NAME])}function hasAndroidBridge(){return!!(window[ANDROID_BRIDGE_NAME]&&typeof window[ANDROID_BRIDGE_NAME].postEvent==='function')}function isInIframe(){return!!(window.parent&&window.parent!==window)}function sendEvent(eventName,payload){var message={type:eventName,payload:payload||{},timestamp:Date.now()};if(hasIOSBridge()){try{window.webkit.messageHandlers[HANDLER_NAME].postMessage(message)}catch(e){}return}if(hasAndroidBridge()){try{var p=payload||{};p.__secureToken=window.__fbAndroidBridgeAuthToken||'';p.timestamp=message.timestamp;window[ANDROID_BRIDGE_NAME].postEvent(eventName,JSON.stringify(p))}catch(e){}return}if(isInIframe()){try{window.parent.postMessage(message,'*')}catch(e){}return}}function onFrame(){if(gameReadySent)return;frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()});return}originalRAF.call(window,onFrame)}if(originalRAF){window.requestAnimationFrame=function(callback){if(!gameReadySent){return originalRAF.call(window,function(timestamp){frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD&&!gameReadySent){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()})}callback(timestamp)})}return originalRAF.call(window,callback)}}function setupFirstInteractionDetection(){var events=['touchstart','mousedown','keydown'];function onFirstInteraction(){if(firstInteractionSent)return;firstInteractionSent=true;sendEvent('user_interaction_start',null);for(var i=0;i<events.length;i++){document.removeEventListener(events[i],onFirstInteraction,true)}}for(var i=0;i<events.length;i++){document.addEventListener(events[i],onFirstInteraction,true)}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setupFirstInteractionDetection)}else{setupFirstInteractionDetection()}window.addEventListener('error',function(event){if(errorSent)return;errorSent=true;sendEvent('error',{message:event.message||'Unknown error',source:event.filename||'',lineno:event.lineno||0,colno:event.colno||0,auto_captured:true})});window.addEventListener('unhandledrejection',function(event){if(errorSent)return;errorSent=true;var reason=event.reason;sendEvent('error',{message:(reason instanceof Error)?reason.message:String(reason),type:'unhandled_promise_rejection',auto_captured:true})});window.playablesSDK={complete:function(score){sendEvent('game_ended',{score:score,completed:true})},error:function(message){if(errorSent)return;errorSent=true;sendEvent('error',{message:message||'Unknown error',auto_captured:false})},sendEvent:function(eventName,payload){if(!eventName||typeof eventName!=='string')return;sendEvent(eventName,payload)}};if(originalRAF){originalRAF.call(window,onFrame)}})();</script>
+<script>(function(){if(window.__playableTouchPatchInstalled)return;window.__playableTouchPatchInstalled=true;var origAdd=EventTarget.prototype.addEventListener;var blockedTypes={touchstart:1,touchmove:1,wheel:1};EventTarget.prototype.addEventListener=function(type,listener,options){if(blockedTypes[type]){if(options===undefined||options===null){options={passive:true}}else if(typeof options==='boolean'){options={capture:options,passive:true}}else{options=Object.assign({},options,{passive:true})}}return origAdd.call(this,type,listener,options)}})();</script>
 <script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 
 <meta charset="UTF-8">
@@ -79,24 +63,28 @@ const firebaseConfig = {
   messagingSenderId: "904857888891",
   appId: "1:904857888891:web:a89e339ea89de0340a5ade"
 };
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-// BYPASS App Check pour debug
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 if (typeof firebase.appCheck === 'function') {
   firebase.appCheck().setTokenAutoRefreshEnabled(false);
-  console.log('AppCheck désactivé localement');
 }
 database = firebase.database();
-db = database; 
+db = database;
 </script>
 <style>
 body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
 .app-container{width:100%;max-width:100%;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#500;border:2px solid #fff;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
-.header-actions{display:flex;justify-content:flex-end;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.header-actions{display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .btn-action-top{padding:5px 6px;font-size:10px}
 .btn-action-top{background:#aaaa;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
 .btn-action-top.retrait{background:#aaaa;color:#fff}
+/* CLOCHE NOTIF */
+.notif-bell{position:relative;cursor:pointer;font-size:20px;background:#1e1e1e;border:1px solid #fff;border-radius:6px;padding:5px 10px;margin-right:auto}
+.notif-count{position:absolute;top:-8px;right:-8px;background:#ff5000;color:#fff;font-size:11px;font-weight:bold;border-radius:50%;padding:2px 6px;min-width:18px;text-align:center;display:none}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes borderPulse{0%{box-shadow:0 0 4px rgba(255,80,0,.4)}50%{box-shadow:0 0 14px rgba(255,80,0,.9)}100%{box-shadow:0 0 4px rgba(255,80,0,.4)}}
+/* BORDURE COLOREE SERVICE */
+.service-btn-new{border-left:6px solid #fff!important;position:relative;transition:all.3s}
+.service-btn-new.has-new{border-left-color:#ff5000!important;animation:borderPulse 1.2s infinite}
 .input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
 .input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
@@ -107,9 +95,9 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .profile-line{font-size:14px;font-weight:bold;margin-bottom:2px;width:65%}
 .solde-val{font-size:18px;font-weight:bold;color:#0f0}
 .btn-logout{position:absolute;top:1px;right:8px;background:#500;color:#fff;border:4px solid #aaa;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
-.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:10px}
-.tab-btn{padding:8px 4px;font-size:10px;font-weight:bold;background:#500;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;text-transform:uppercase}
-.tab-btn.btn-home{grid-column:span 2;background:#aaaa;color:#fff;font-size:12px}
+.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px}
+.tab-btn{padding:10px 4px;font-size:10px;font-weight:bold;background:#500;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;text-transform:uppercase}
+.tab-btn.btn-home{grid-column:span 2;background:#aaaa;color:#fff;font-size:12px;border-left:6px solid #fff!important}
 .tab-btn.btn-full{grid-column:span 2;background:#500}
 .service-panel{background:#500;color:#fff;padding:10px;border-radius:6px;text-align:left}
 .sub-panel h4{margin:0 0 8px 0;color:#fff;border-bottom:2px solid #fff;padding-bottom:3px;font-size:14px;text-transform:uppercase}
@@ -162,19 +150,16 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .wave span:nth-child(2){animation-delay:.15s}
 .wave span:nth-child(3){animation-delay:.3s}
 .wave span:nth-child(4){animation-delay:.45s}
-@keyframes wave{0%,100%{height:5px}50%{height:16px}
-/* --- BOUTONS BLOQUÉS TEMPORAIREMENT --- */
+@keyframes wave{0%,100%{height:5px}50%{height:16px}}
 .tab-btn[onclick="switchService('service-livraison')"],
 .tab-btn[onclick="switchService('service-immo')"] {
-  opacity: 0.45 !important;
-  background: #2b2b2b !important;
-  color: #888 !important;
-  cursor: not-allowed !important;
-  pointer-events: auto !important; /* on garde le clic pour afficher l'alerte */
+  opacity: 0.45!important;
+  background: #2b2b2b!important;
+  color: #888!important;
+  cursor: not-allowed!important;
+  pointer-events: auto!important;
   position: relative;
 }
-
-/* petit cadenas en haut à droite */
 .tab-btn[onclick="switchService('service-livraison')"]::after,
 .tab-btn[onclick="switchService('service-immo')"]::after {
   content: "🔒";
@@ -189,7 +174,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <body>
 
 <div class="app-container">
-<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:8px;z-index:9999;background:#aaaa;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
+<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:1px;z-index:9999;background:#000;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.4);"></div>
 
 <div id="logged-out-zone">
@@ -223,6 +208,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 
 <div id="logged-in-zone" style="display:none;">
   <div class="header-actions">
+  <div class="notif-bell"  onclick="location.href='notifications.html'" style="background:#aaa;top:1px;left:38px;padding:1px">🔔<span id="notif-count" class="notif-count">0</span></div>
   <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#aaaa">Profil👤</button>
   <button class="btn-action-top" onclick="location.href='depot.html'">📥Recharger</button>
   <button class="btn-action-top retrait" onclick="location.href='retrait.html'">📤RETIRER</button>
@@ -237,33 +223,26 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div class="solde-val"><span id="user-balance"><b>0</span> F</div>
     <div style="font-size:10px;color:#e0e0e0;margin-top:4px;"><b>BONUS :</div>
     <div class="solde-val" style="color:#ffeb3b"><span id="user-commission"><b>0</span> F</div><div style="font-size:10px;color:#fff;"><b>SOLDE EPARGNE :</div>
-  <div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div></div> <!-- fin user-header -->
-
-
+  <div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div></div>
 
 <div class="services-grid">
-  </div>
-  <div class="services-grid">
     <button class="tab-btn btn-home" onclick="switchService('menu-principal')">🏠 ACCUEIL</button>
-
-    <button class="tab-btn" onclick="location.href='market.html'">Market</button>
-    <button class="tab-btn" onclick="location.href='1xbet.html'">1XBET</button>
-    <button class="tab-btn" onclick="location.href='factures.html'">Facture</button>
+    <button id="btn-market" class="tab-btn service-btn-new" style="border-left-color:#FF9800" onclick="location.href='market.html'">Market</button>
+    <button id="btn-1xbet" class="tab-btn service-btn-new" style="border-left-color:#2196F3" onclick="location.href='1xbet.html'">1XBET</button>
+    <button id="btn-facture" class="tab-btn service-btn-new" style="border-left-color:#4CAF50" onclick="location.href='factures.html'">Facture</button>
     <button class="tab-btn" onclick="switchService('service-immo')">Immobilier</button>
-    <button class="tab-btn" onclick="location.href='epargne.html'">Épargne</button>
+    <button id="btn-epargne" class="tab-btn service-btn-new" style="border-left-color:#9C27B0" onclick="location.href='epargne.html'">Épargne</button>
     <button class="tab-btn" onclick="switchService('service-livraison')">Livraison</button>
-    <button class="tab-btn" onclick="location.href='transfert.html'">TRANSFERT</button>
-    <button class="tab-btn" onclick="location.href='p2p.html'">🚀 P2P/P2M</button>
-    <button class="tab-btn btn-full" onclick="location.href='messagerie.html'">💬 Messagerie</button>
-    <button class="tab-btn btn-full" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
+    <button id="btn-transfert" class="tab-btn service-btn-new" style="border-left-color:#00BCD4" onclick="location.href='transfert.html'">TRANSFERT</button>
+    <button id="btn-p2p" class="tab-btn service-btn-new" style="border-left-color:#f5000" onclick="location.href='p2p.html'">🚀 P2P/P2M</button>
+    <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" style="border-left-color:#E91E63" onclick="location.href='messagerie.html'">💬 Messagerie</button>
+    <button id="btn-forfait" class="tab-btn btn-full service-btn-new" style="border-left-color:#8BC34A" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
   </div>
 
   <div class="service-panel">
     <div id="menu-principal" class="sub-panel">
       <h4 style="color:#fff;border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
       <p style="font-size:12px;text-align:justify;margin-bottom:15px;line-height:1.4;color:#aaa;">Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
-      <div ;"></b><br>
-      </div>
       <div class="about-section">
         <center><b style="color:#fff;">NOS PARTENAIRES</b></center>
         <div class="partners-container">
@@ -277,248 +256,29 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
       </div>
     </div>
 
-    <div id="solde-depot" class="sub-panel" style="display:none;">
-      <h4 style="color:#fff;">FAITES UN DEPOT</h4>
-      <div class="input-group">
-        <select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()">
-          <option value="">-- Réseau --</option>
-          <option value="MTN">MTN Bénin</option>
-          <option value="MOOV">Moov Africa</option>
-          <option value="CELTIS">Celtis Bénin</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()">
-      </div>
-      <div id="zone-code-marchand" style="display:none;margin-bottom:10px;">
-        <label class="input-label" style="color:#fff;">Code à lancer sur votre mobile :</label>
-        <div id="code-marchand-affiche" class="info-block-code"></div>
-      </div>
-      <button type="button" class="btn-submit" style="background-color:#4CAF50!important;" onclick="envoyerInfosDepotWhatsApp()">Je Confirme Avoir Validé le Dépôt</button>
-      <p id="depot-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES DÉPÔTS </div>
-      <div id="depot-historique" class="history-box">Aucun dépôt</div>
-    </div>
+    <div id="solde-depot" class="sub-panel" style="display:none;"><h4 style="color:#fff;">FAITES UN DEPOT</h4><div class="input-group"><select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()"><option value="">-- Réseau --</option><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div><div class="input-group"><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()"></div><div id="zone-code-marchand" style="display:none;margin-bottom:10px;"><label class="input-label" style="color:#fff;">Code à lancer sur votre mobile :</label><div id="code-marchand-affiche" class="info-block-code"></div></div><button type="button" class="btn-submit" style="background-color:#4CAF50!important;" onclick="envoyerInfosDepotWhatsApp()">Je Confirme Avoir Validé le Dépôt</button><p id="depot-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES DÉPÔTS </div><div id="depot-historique" class="history-box">Aucun dépôt</div></div>
 
-    <div id="solde-retrait" class="sub-panel" style="display:none;">
-      <h4>Retirer de l'argent</h4>
-      <div class="input-group"><input type="number" id="retrait-montant" class="input-field dark-field" placeholder="Montant à retirer"></div>
-      <div class="input-group"><input type="text" id="retrait-numero" class="input-field dark-field" placeholder="Numéro de réception"></div>
-      <div class="input-group">
-        <select id="retrait-reseau" class="select-field dark-field">
-          <option value="">-- Choix Réseau --</option>
-          <option value="MTN">MTN</option>
-          <option value="MOOV">MOOV</option>
-          <option value="CELTIS">CELTIS</option>
-        </select>
-      </div>
-      <button type="button" class="btn-submit" style="background-color:#cc0000!important;" onclick="validerRetrait()">Valider le retrait</button>
-      <p id="retrait-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES RETRAITS</div>
-      <div id="retrait-historique" class="history-box">Aucun retrait Effectué</div>
-    </div>
+    <div id="solde-retrait" class="sub-panel" style="display:none;"><h4>Retirer de l'argent</h4><div class="input-group"><input type="number" id="retrait-montant" class="input-field dark-field" placeholder="Montant à retirer"></div><div class="input-group"><input type="text" id="retrait-numero" class="input-field dark-field" placeholder="Numéro de réception"></div><div class="input-group"><select id="retrait-reseau" class="select-field dark-field"><option value="">-- Choix Réseau --</option><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div><button type="button" class="btn-submit" style="background-color:#cc0000!important;" onclick="validerRetrait()">Valider le retrait</button><p id="retrait-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES RETRAITS</div><div id="retrait-historique" class="history-box">Aucun retrait Effectué</div></div>
 
-    <div id="service-market" class="sub-panel" style="display:none;">
-      <h4>Market-place communautaire</h4>
-      <textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea>
-<label onclick="pickImage()" style="display:block;background:#aaaa;color:#fff;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label>
-<div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div>
-      
-      <button class="btn-submit" style="background:#ff5000" onclick="publierPost()">Publier</button>
-      <p id="market-status" class="status-msg"></p>
-      <div id="market-feed" style="margin-top:10px"></div>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;margin-top:15px;">MES ACHATS MARKET</div>
-      <div id="market-historique" class="history-box">Aucun</div>
-    </div>
+    <div id="service-market" class="sub-panel" style="display:none;"><h4>Market-place communautaire</h4><textarea id="post-texte" class="input-field dark-field" rows="2" placeholder="Propose un produit..."></textarea><label onclick="pickImage()" style="display:block;background:#aaaa;color:#fff;padding:10px;border-radius:6px;text-align:center;font-weight:bold;margin:6px 0;cursor:pointer">📷 Choisir une photo</label><div id="img-name" style="font-size:12px;color:#fff;text-align:center;margin-bottom:5px">Aucun</div><button class="btn-submit" style="background:#ff5000" onclick="publierPost()">Publier</button><p id="market-status" class="status-msg"></p><div id="market-feed" style="margin-top:10px"></div><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;margin-top:15px;">MES ACHATS MARKET</div><div id="market-historique" class="history-box">Aucun</div></div>
 
-    <div id="service-1xbet" class="sub-panel" style="display:none;">
-      <h4>Service 1XBET</h4>
-      <div class="inner-toggle">
-        <button class="inner-btn active" id="tab-xbet-depot" onclick="toggleXbetMode('depot')">Dépôt</button>
-        <button class="inner-btn" id="tab-xbet-retrait" onclick="location.href='retrait1xbet.html'">Retrait</button>
-      </div>
-      <div id="xbet-depot-zone">
-        <div class="input-group"><input type="text" id="xbet-id-joueur" class="input-field dark-field" placeholder="ID Joueur (Dépôt)"></div>
-        <div class="input-group"><input type="number" id="xbet-montant" class="input-field dark-field" placeholder="Montant"></div>
-        <div class="input-group"><input type="text" id="xbet-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
-        <button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="recharger1XBet()">Valider Dépôt</button>
-      </div>
-      <div id="xbet-retrait-zone" style="display:none;">
-        <div class="input-group"><input type="text" id="xbet-retrait-id" class="input-field dark-field" placeholder="ID Joueur (Retrait)"></div>
-        <div class="input-group"><input type="number" id="xbet-retrait-montant" class="input-field dark-field" placeholder="Montant"></div>
-        <div class="input-group"><input type="text" id="xbet-retrait-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
-        <button type="button" class="btn-submit" style="background-color:#e67e22!important;" onclick="retrait1XBet()">Valider Retrait</button>
-      </div>
-      <p id="xbet-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES TRANSACTIONS </div>
-      <div id="xbet-historique" class="history-box">Aucune opération</div>
-    </div>
+    <div id="service-1xbet" class="sub-panel" style="display:none;"><h4>Service 1XBET</h4><div class="inner-toggle"><button class="inner-btn active" id="tab-xbet-depot" onclick="toggleXbetMode('depot')">Dépôt</button><button class="inner-btn" id="tab-xbet-retrait" onclick="location.href='retrait1xbet.html'">Retrait</button></div><div id="xbet-depot-zone"><div class="input-group"><input type="text" id="xbet-id-joueur" class="input-field dark-field" placeholder="ID Joueur (Dépôt)"></div><div class="input-group"><input type="number" id="xbet-montant" class="input-field dark-field" placeholder="Montant"></div><div class="input-group"><input type="text" id="xbet-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div><button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="recharger1XBet()">Valider Dépôt</button></div><div id="xbet-retrait-zone" style="display:none;"><div class="input-group"><input type="text" id="xbet-retrait-id" class="input-field dark-field" placeholder="ID Joueur (Retrait)"></div><div class="input-group"><input type="number" id="xbet-retrait-montant" class="input-field dark-field" placeholder="Montant"></div><div class="input-group"><input type="text" id="xbet-retrait-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div><button type="button" class="btn-submit" style="background-color:#e67e22!important;" onclick="retrait1XBet()">Valider Retrait</button></div><p id="xbet-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES TRANSACTIONS </div><div id="xbet-historique" class="history-box">Aucune opération</div></div>
 
-    <div id="service-facture" class="sub-panel" style="display:none;">
-      <h4>Facture</h4>
-      <div class="input-group">
-        <select id="facture-type" class="select-field dark-field">
-          <option value="SBEE">SBEE</option>
-          <option value="SONEB">SONEB</option>
-          <option value="CANAL+">CANAL+</option>
-          <option value="CELTIIS DUAL FIBRE">CELTIIS DUAL FIBRE</option>
-        </select>
-      </div>
-      <div class="input-group"><input type="text" id="facture-id" class="input-field dark-field" placeholder="Réf / Numéro Compteur"></div>
-      <div class="input-group"><input type="number" id="facture-montant" class="input-field dark-field" placeholder="Montant"></div>
-      <div class="input-group"><input type="text" id="facture-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
-      <button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="payerFacture()">Payer</button>
-      <p id="facture-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON HISTORIQUE DE FACTURE </div>
-      <div id="facture-historique" class="history-box">Aucune facture</div>
-    </div>
+    <div id="service-facture" class="sub-panel" style="display:none;"><h4>Facture</h4><div class="input-group"><select id="facture-type" class="select-field dark-field"><option value="SBEE">SBEE</option><option value="SONEB">SONEB</option><option value="CANAL+">CANAL+</option><option value="CELTIIS DUAL FIBRE">CELTIIS DUAL FIBRE</option></select></div><div class="input-group"><input type="text" id="facture-id" class="input-field dark-field" placeholder="Réf / Numéro Compteur"></div><div class="input-group"><input type="number" id="facture-montant" class="input-field dark-field" placeholder="Montant"></div><div class="input-group"><input type="text" id="facture-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div><button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="payerFacture()">Payer</button><p id="facture-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON HISTORIQUE DE FACTURE </div><div id="facture-historique" class="history-box">Aucune facture</div></div>
 
-    <div id="service-credit" class="sub-panel" style="display:none;">
-      <h4>Forfait & Crédit</h4>
-      <div class="input-group">
-        <select id="forfait-reseau" class="select-field dark-field">
-          <option value="">--Choix Réseau--</option>
-          <option value="MTN">MTN</option>
-          <option value="MOOV">MOOV</option>
-          <option value="CELTIS">CELTIS</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <select id="forfait-motif" class="select-field dark-field">
-          <option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option>
-          <option value="FORFAIT APPEL">FORFAIT APPEL</option>
-          <option value="INTERNET VOLUME">INTERNET VOLUME</option>
-          <option value="APPEL ET INTERNET">APPEL ET INTERNET</option>
-          <option value="ILLIMITE">ILLIMITÉ</option>
-        </select>
-      </div>
-      <div class="input-group"><input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Numéro bénéficiaire"></div>
-      <div class="input-group"><input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Montant"></div>
-      <button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="acheterForfait()">Valider</button>
-      <p id="forfait-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON HISTORIQUE D'ACHAT </div>
-      <div id="forfait-historique" class="history-box">Aucun achat</div>
-    </div>
+    <div id="service-credit" class="sub-panel" style="display:none;"><h4>Forfait & Crédit</h4><div class="input-group"><select id="forfait-reseau" class="select-field dark-field"><option value="">--Choix Réseau--</option><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div><div class="input-group"><select id="forfait-motif" class="select-field dark-field"><option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option><option value="FORFAIT APPEL">FORFAIT APPEL</option><option value="INTERNET VOLUME">INTERNET VOLUME</option><option value="APPEL ET INTERNET">APPEL ET INTERNET</option><option value="ILLIMITE">ILLIMITÉ</option></select></div><div class="input-group"><input type="text" id="forfait-numero" class="input-field dark-field" placeholder="Numéro bénéficiaire"></div><div class="input-group"><input type="number" id="forfait-offre" class="input-field dark-field" placeholder="Montant"></div><button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="acheterForfait()">Valider</button><p id="forfait-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON HISTORIQUE D'ACHAT </div><div id="forfait-historique" class="history-box">Aucun achat</div></div>
 
-    <div id="service-immo" class="sub-panel" style="display:none;">
-      <h4>Immobilier</h4>
-      <div class="input-group">
-        <select id="immo-ville" class="select-field dark-field">
-          <option value="Cotonou">Cotonou</option>
-          <option value="Calavi">Calavi</option>
-          <option value="Porto-Novo">Porto-Novo</option>
-          <option value="Golo">Golo</option>
-          <option value="Bohicon">Bohicon</option>
-        </select>
-      </div>
-      <div class="input-group"><input type="number" id="immo-montant" class="input-field dark-field" placeholder="Montant visite"></div>
-      <div class="input-group"><input type="text" id="immo-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
-      <button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="solliciterImmo()">Valider</button>
-      <p id="immo-status" class="status-msg"></p>
-      <div id="immo-historique" class="history-box">Aucune demande</div>
-    </div>
+    <div id="service-immo" class="sub-panel" style="display:none;"><h4>Immobilier</h4><div class="input-group"><select id="immo-ville" class="select-field dark-field"><option value="Cotonou">Cotonou</option><option value="Calavi">Calavi</option><option value="Porto-Novo">Porto-Novo</option><option value="Golo">Golo</option><option value="Bohicon">Bohicon</option></select></div><div class="input-group"><input type="number" id="immo-montant" class="input-field dark-field" placeholder="Montant visite"></div><div class="input-group"><input type="text" id="immo-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div><button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="solliciterImmo()">Valider</button><p id="immo-status" class="status-msg"></p><div id="immo-historique" class="history-box">Aucune demande</div></div>
 
-    <div id="service-epargne" class="sub-panel" style="display:none;">
-      <h4>Épargne MAYNE</h4>
-      <div class="input-group">
-        <select id="epargne-compteur" class="select-field dark-field">
-          <option value="Mensuel">Mensuel +2%</option>
-          <option value="Annuel">Annuel +5%</option>
-          <option value="Fermé">Fermé +7%</option>
-        </select>
-      </div>
-      <div class="input-group"><input type="number" id="epargne-montant" class="input-field dark-field" placeholder="Montant"></div>
-      <div class="input-group"><input type="text" id="epargne-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
-      <button type="button" class="btn-submit" style="background-color:#2b8a3e!important;" onclick="placerEpargne()">PLACEMENT </button>
-<button type="button" class="btn-submit" style="background-color:#FF5000!important;" onclick="retirerEpargne()">VIREMENT </button>
-      <p id="epargne-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON HISTORIQUE D'ÉPARGNE </div>
-      <div id="epargne-historique" class="history-box">Aucun dépôt</div>
-    </div>
+    <div id="service-epargne" class="sub-panel" style="display:none;"><h4>Épargne MAYNE</h4><div class="input-group"><select id="epargne-compteur" class="select-field dark-field"><option value="Mensuel">Mensuel +2%</option><option value="Annuel">Annuel +5%</option><option value="Fermé">Fermé +7%</option></select></div><div class="input-group"><input type="number" id="epargne-montant" class="input-field dark-field" placeholder="Montant"></div><div class="input-group"><input type="text" id="epargne-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div><button type="button" class="btn-submit" style="background-color:#2b8a3e!important;" onclick="placerEpargne()">PLACEMENT </button><button type="button" class="btn-submit" style="background-color:#FF5000!important;" onclick="retirerEpargne()">VIREMENT </button><p id="epargne-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON HISTORIQUE D'ÉPARGNE </div><div id="epargne-historique" class="history-box">Aucun dépôt</div></div>
 
-    <div id="service-livraison" class="sub-panel" style="display:none;">
-      <h4>Livraison</h4>
-      <div class="input-group">
-        <select id="livraison-ville" class="select-field dark-field">
-          <option value="Cotonou">Cotonou</option>
-          <option value="Calavi">Calavi</option>
-          <option value="Porto-Novo">Porto-Novo</option>
-        </select>
-      </div>
-      <div class="input-group"><input type="number" id="livraison-montant" class="input-field dark-field" min="500" placeholder="Montant course (Min 500F)"></div>
-      <div class="input-group"><input type="text" id="livraison-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
-      <button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="demanderLivraison()">Valider</button>
-      <p id="livraison-status" class="status-msg"></p>
-      <div id="livraison-historique" class="history-box">Aucune course</div>
-    </div>
+    <div id="service-livraison" class="sub-panel" style="display:none;"><h4>Livraison</h4><div class="input-group"><select id="livraison-ville" class="select-field dark-field"><option value="Cotonou">Cotonou</option><option value="Calavi">Calavi</option><option value="Porto-Novo">Porto-Novo</option></select></div><div class="input-group"><input type="number" id="livraison-montant" class="input-field dark-field" min="500" placeholder="Montant course (Min 500F)"></div><div class="input-group"><input type="text" id="livraison-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div><button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="demanderLivraison()">Valider</button><p id="livraison-status" class="status-msg"></p><div id="livraison-historique" class="history-box">Aucune course</div></div>
 
-    <div id="service-echange" class="sub-panel" style="display:none;">
-      <h4>Échange</h4>
-      <div class="input-group">
-        <label class="input-label" style="color:#000;">Je donne :</label>
-        <select id="echange-donne" class="select-field dark-field">
-          <option value="XOF">XOF</option>
-          <option value="USDT">USDT</option>
-          <option value="BTC">BTC</option>
-          <option value="USD">USD</option>
-          <option value="EURO">EURO</option>
-          <option value="PI NETWORK">PI NETWORK</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <label class="input-label" style="color:#000;">Je reçois :</label>
-        <select id="echange-recoit" class="select-field dark-field">
-          <option value="USDT">USDT</option>
-          <option value="XOF">XOF</option>
-          <option value="BTC">BTC</option>
-          <option value="USD">USD</option>
-          <option value="EURO">EURO</option>
-          <option value="PI NETWORK">PI NETWORK</option>
-        </select>
-      </div>
-      <div class="input-group"><input type="number" id="echange-montant" class="input-field dark-field" placeholder="Montant"></div>
-      <div class="input-group"><input type="text" id="echange-adresse" class="input-field dark-field" placeholder="Adresse / Numéro"></div>
-      <div class="input-group"><input type="text" id="echange-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div>
-      <button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="executerEchange()">Valider</button>
-      <p id="echange-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES ÉCHANGES PRÉCÉDENTS </div>
-      <div id="echange-historique" class="history-box">Aucun échange</div>
-    </div>
+    <div id="service-echange" class="sub-panel" style="display:none;"><h4>Échange</h4><div class="input-group"><label class="input-label" style="color:#000;">Je donne :</label><select id="echange-donne" class="select-field dark-field"><option value="XOF">XOF</option><option value="USDT">USDT</option><option value="BTC">BTC</option><option value="USD">USD</option><option value="EURO">EURO</option><option value="PI NETWORK">PI NETWORK</option></select></div><div class="input-group"><label class="input-label" style="color:#000;">Je reçois :</label><select id="echange-recoit" class="select-field dark-field"><option value="USDT">USDT</option><option value="XOF">XOF</option><option value="BTC">BTC</option><option value="USD">USD</option><option value="EURO">EURO</option><option value="PI NETWORK">PI NETWORK</option></select></div><div class="input-group"><input type="number" id="echange-montant" class="input-field dark-field" placeholder="Montant"></div><div class="input-group"><input type="text" id="echange-adresse" class="input-field dark-field" placeholder="Adresse / Numéro"></div><div class="input-group"><input type="text" id="echange-whatsapp" class="input-field dark-field" placeholder="Votre WhatsApp"></div><button type="button" class="btn-submit" style="background-color:#0000ff!important;" onclick="executerEchange()">Valider</button><p id="echange-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES ÉCHANGES PRÉCÉDENTS </div><div id="echange-historique" class="history-box">Aucun échange</div></div>
 
-    <div id="service-p2p" class="sub-panel" style="display:none;">
-      <h4>P2P / P2M</h4>
-      <div class="input-group">
-        <select id="p2p-donneur" class="select-field dark-field">
-          <option value="MTN">MTN Donneur</option>
-          <option value="MOOV">MOOV Donneur</option>
-          <option value="CELTIS">CELTIS Donneur</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <select id="p2p-receveur" class="select-field dark-field">
-          <option value="MTN">MTN Receveur</option>
-          <option value="MOOV">MOOV Receveur</option>
-          <option value="CELTIS">CELTIS Receveur</option>
-        </select>
-      </div>
-      <div class="input-group"><input type="text" id="p2p-numero" class="input-field dark-field" placeholder="Numéro Receveur"></div>
-      <div class="input-group"><input type="number" id="p2p-montant" class="input-field dark-field" placeholder="Montant"></div>
-      <button type="button" class="btn-submit" style="background-color:#2b8a3e!important;" onclick="executerP2P()">Valider</button>
-      <p id="p2p-status" class="status-msg"></p>
-      <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON RELEVÉ DE COMPTE </div>
-      <div id="p2p-historique" class="history-box">Aucun transfert</div>
-    </div>
+    <div id="service-p2p" class="sub-panel" style="display:none;"><h4>P2P / P2M</h4><div class="input-group"><select id="p2p-donneur" class="select-field dark-field"><option value="MTN">MTN Donneur</option><option value="MOOV">MOOV Donneur</option><option value="CELTIS">CELTIS Donneur</option></select></div><div class="input-group"><select id="p2p-receveur" class="select-field dark-field"><option value="MTN">MTN Receveur</option><option value="MOOV">MOOV Receveur</option><option value="CELTIS">CELTIS Receveur</option></select></div><div class="input-group"><input type="text" id="p2p-numero" class="input-field dark-field" placeholder="Numéro Receveur"></div><div class="input-group"><input type="number" id="p2p-montant" class="input-field dark-field" placeholder="Montant"></div><button type="button" class="btn-submit" style="background-color:#2b8a3e!important;" onclick="executerP2P()">Valider</button><p id="p2p-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MON RELEVÉ DE COMPTE </div><div id="p2p-historique" class="history-box">Aucun transfert</div></div>
 
-    <div id="service-messagerie" class="sub-panel" style="display:none;">
-  <h4>Mes Messages Privés</h4>
-  
-  <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-    <input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Rechercher par Nom ou Numéro..." oninput="rechercherUtilisateur()">
-    <div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div>
-  </div>
-
-  <div id="messagerie-feed" style="margin-top:10px"></div>
-</div>
+    <div id="service-messagerie" class="sub-panel" style="display:none;"><h4>Mes Messages Privés</h4><div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;"><input type="text" id="recherche-user-input" class="input-field dark-field" placeholder="Rechercher par Nom ou Numéro..." oninput="rechercherUtilisateur()"><div id="resultats-recherche" style="margin-top: 5px; max-height: 150px; overflow-y: auto; background: #fff; border-radius: 4px; display: none;"></div></div><div id="messagerie-feed" style="margin-top:10px"></div></div>
 
   </div>
 </div>
@@ -528,34 +288,18 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div id="custom-prompt" class="modal-overlay"><div class="modal-box"><div id="custom-prompt-msg" class="modal-msg"></div><input id="custom-prompt-input" class="input-field" style="margin:12px 0;text-align:left"><div class="modal-btns"><button class="modal-btn btn-no" onclick="hidePrompt(false)">Annuler</button><button class="modal-btn btn-yes" onclick="hidePrompt(true)">OK</button></div></div></div>
 
 <script>
-const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec'; 
-
+const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 const ONESIGNAL_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
-
 const OTP_URL = 'https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
 let tempPhone = '', tempEmail = '';
-// TinyDB équivalent JS + TIMER SESSION
-const TinyDB = {
-  put: (k,v) => localStorage.setItem('mayne_'+k, JSON.stringify(v)),
-  get: (k, def=null) => { try{const v=localStorage.getItem('mayne_'+k); return v?JSON.parse(v):def;}catch{return def;} }
-};
+const TinyDB = { put: (k,v) => localStorage.setItem('mayne_'+k, JSON.stringify(v)), get: (k, def=null) => { try{const v=localStorage.getItem('mayne_'+k); return v?JSON.parse(v):def;}catch{return def;} } };
 let sessionTimer = null;
-
-function demarrerTimerSession(){
-  clearInterval(sessionTimer);
-  sessionTimer = setInterval(()=>{
-    TinyDB.put('current_user_last', Date.now());
-  }, 60000); // garde vivant chaque minute
-}
-
+function demarrerTimerSession(){ clearInterval(sessionTimer); sessionTimer = setInterval(()=>{ TinyDB.put('current_user_last', Date.now()); }, 60000); }
 function tryAutoLogin(){
   const saved = TinyDB.get('current_user') || JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!saved || !saved.phone) return;
+  if(!saved ||!saved.phone) return;
   const last = TinyDB.get('current_user_last') || Date.now();
-  if(Date.now() - last > 7*24*60*60*1000){ // expire après 7 jours
-    executerDeconnexion(); return;
-  }
-  // Connexion automatique même si page rafraîchie ou internet coupé
+  if(Date.now() - last > 7*24*60*60*1000){ executerDeconnexion(); return; }
   currentUserId = saved.phone;
   chargerSessionDepuisFirebase(saved.phone);
 }
@@ -565,10 +309,10 @@ function chargerHistoriques(){
       const hb=document.getElementById(el); if(!hb) return;
       if(sh.exists()){
         let h=''; sh.forEach(c=>{
-          const v=c.val(); 
+          const v=c.val();
           const statut=(v.statut||'en cours').toLowerCase().trim();
-          let couleur='#ffbb00'; 
-          if(statut.includes('valid')) couleur='#28a745'; 
+          let couleur='#ffbb00';
+          if(statut.includes('valid')) couleur='#28a745';
           else if(statut.includes('annul')) couleur='#dc3545';
           h+=`• ${fmt(v)} - ${v.date} - <span style="background:${couleur};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold">${v.statut||'en cours'}</span><br>`;
         }); hb.innerHTML=h;
@@ -587,8 +331,43 @@ function chargerHistoriques(){
   listen('commandes_echanges','echange-historique',v=>`${v.donne}→${v.recoit} ${v.montant}`);
   listen('commandes_p2p_p2m','p2p-historique',v=>`${v.montant}F vers ${v.numero_receveur||v.numero}`);
 }
-
-
+function ecouterClocheEtBordures(){
+  if(!currentUserId) return;
+  db.ref('notifications/'+currentUserId).on('value',snap=>{
+    let c=snap.numChildren();
+    let badge=document.getElementById('notif-count');
+    if(badge){
+      if(c>0){badge.style.display='block';badge.innerText=c>99?'99+':c;badge.style.animation='pulse 1s infinite';}
+      else badge.style.display='none';
+    }
+  });
+  const map={
+    'commandes_p2p_p2m':'btn-p2p',
+    'commandes_marketplace':'btn-market',
+    'commandes_1xbet':'btn-1xbet',
+    'commandes_factures':'btn-facture',
+    'commandes_forfaits':'btn-forfait',
+    'commandes_epargne':'btn-epargne',
+    'commandes_livraison':'btn-livraison',
+    'commandes_echanges':'btn-transfert',
+    'conversations':'btn-messagerie'
+  };
+  Object.entries(map).forEach(([path,btnId])=>{
+    if(path==='conversations'){
+      database.ref(path).on('value',snap=>{
+        let has=false;
+        snap.forEach(ch=>{if(ch.key.includes(currentUserId)){let msgs=Object.values(ch.child('messages').val()||{}); msgs.forEach(m=>{if(m.senderId!==currentUserId &&!m.vu) has=true;});}});
+        let btn=document.getElementById(btnId); if(btn){ if(has) btn.classList.add('has-new'); else btn.classList.remove('has-new'); }
+      });
+    } else {
+      database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',s=>{
+        let hasNew=false;
+        s.forEach(ch=>{let st=(ch.val().statut||'').toLowerCase(); if(st.includes('en cours')) hasNew=true;});
+        let btn=document.getElementById(btnId); if(btn){ if(hasNew) btn.classList.add('has-new'); else btn.classList.remove('has-new'); }
+      });
+    }
+  });
+}
 function chargerSessionDepuisFirebase(phone){
   database.ref('clients/'+phone).on('value', v=>{
     const data = v.val() || {};
@@ -597,105 +376,64 @@ function chargerSessionDepuisFirebase(phone){
     document.getElementById('logged-out-zone').style.display='none';
     document.getElementById('logged-in-zone').style.display='block';
     document.getElementById('user-name').innerText = data.nom || phone;
-    // met à jour soldes...
     const majSolde = (id, valeur)=>{
       const el = document.getElementById(id);
       if(!el) return;
       el.dataset.vrai = valeur.toLocaleString('fr-FR');
-      el.innerText = soldeMasque ? '••••••' : el.dataset.vrai;
+      el.innerText = soldeMasque? '••••••' : el.dataset.vrai;
     };
     majSolde('user-balance', currentUserSolde);
     majSolde('user-commission', data.commission||0);
     majSolde('user-recompense', currentUserRecompense);
-    // cache offline
     TinyDB.put('cache_'+phone, data);
   });
-  chargerFeed(); chargerMessagerie(); demarrerTimerSession();
-chargerHistoriques();
+  chargerFeed(); chargerMessagerie(); demarrerTimerSession(); chargerHistoriques(); ecouterClocheEtBordures();
 }
-
-window.addEventListener('load', ()=>{
-  setTimeout(tryAutoLogin, 500);
-  setTimeout(appliquerMasqueSolde, 500);
-});
-
+window.addEventListener('load', ()=>{ setTimeout(tryAutoLogin, 500); setTimeout(appliquerMasqueSolde, 500); });
 async function pushJS(destId, titre, message, imageUrl=''){
   if(!destId || destId===currentUserId) return;
   try{
-    await fetch(ONESIGNAL_WEBHOOK,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({destId, titre, message, imageUrl})
-    });
-    console.log('Push envoyé à', destId);
-  }catch(e){ console.warn('Push fail', e); }
+    await fetch(ONESIGNAL_WEBHOOK,{ method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify({destId, titre, message, imageUrl}) });
+  }catch(e){}
 }
-
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
-
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
 function showInput(titre,cb){promptCallback=cb;document.getElementById('custom-prompt-msg').innerText=titre;document.getElementById('custom-prompt-input').value='';document.getElementById('custom-prompt').style.display='flex';setTimeout(()=>document.getElementById('custom-prompt-input').focus(),100);}
 function hidePrompt(ok){document.getElementById('custom-prompt').style.display='none';if(ok&&promptCallback){promptCallback(document.getElementById('custom-prompt-input').value.trim());}}
-function pickImage(){
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('PICK_IMAGE');
-  }
-}
-function pickImageChat(){
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('PICK_CHAT');
-  }
-}
+function pickImage(){ if(window.AppInventor){ window.AppInventor.setWebViewString('PICK_IMAGE'); } }
+function pickImageChat(){ if(window.AppInventor){ window.AppInventor.setWebViewString('PICK_CHAT'); } }
 setInterval(()=>{
   if(window.AppInventor){
     let data = window.AppInventor.getWebViewString();
     if(!data) return;
-    
     if(data.startsWith('https://')){
-      // MARKET
       document.getElementById('img-name').innerText = 'VOTRE IMAGE EST PRÊTE ⬆️CLIQUEZ POUR PUBLIER ⬇️ ';
       window.currentImageUrl = data;
       window.AppInventor.setWebViewString('');
     } else if(data.startsWith('CHAT_')){
-      // IMAGE CHAT
       let url = data.replace('CHAT_','');
       window.AppInventor.setWebViewString('');
       if(window.currentConvId){
-        database.ref(`conversations/${window.currentConvId}/messages`).push({
-          senderId: currentUserId,
-          senderNom: document.getElementById('user-name').innerText,
-          type: 'image',
-          url: url,
-          texte: '📷',
-          createdAt: Date.now()
-        });
+        database.ref(`conversations/${window.currentConvId}/messages`).push({ senderId: currentUserId, senderNom: document.getElementById('user-name').innerText, type: 'image', url: url, texte: '📷', createdAt: Date.now() });
       }
-    } else if(data.startsWith('AUDIO_URL_')){   // <-- AJOUTE ÇA
+    } else if(data.startsWith('AUDIO_URL_')){
       let url = data.replace('AUDIO_URL_','');
       window.AppInventor.setWebViewString('');
       if(window.currentConvId){
-        database.ref(`conversations/${window.currentConvId}/messages`).push({
-          senderId: currentUserId,
-          senderNom: document.getElementById('user-name').innerText,
-          type: 'audio',
-          url: url,
-          createdAt: Date.now()
-        });
+        database.ref(`conversations/${window.currentConvId}/messages`).push({ senderId: currentUserId, senderNom: document.getElementById('user-name').innerText, type: 'audio', url: url, createdAt: Date.now() });
       }
     }else if(data === "REC_STOP"){
-  window.AppInventor.setWebViewString('');
-  document.getElementById('global-notif').style.display = 'none';
-  showAlert('✅ Vocal envoyé !');
-}
+      window.AppInventor.setWebViewString('');
+      document.getElementById('global-notif').style.display = 'none';
+      showAlert('✅ Vocal envoyé!');
+    }
   }
 },500);
 function recordAudioChat(){
   if(!window.AppInventor) return;
-  
   if(!isRecording){
     window.AppInventor.setWebViewString('REC_AUDIO_' + window.currentConvId);
     isRecording = true;
@@ -711,157 +449,68 @@ function recordAudioChat(){
 function toggleTheme(){
   const app = document.querySelector('.app-container');
   const btn = document.getElementById('theme-toggle');
-  const isDark = !app.classList.contains('dark-mode');
-  
+  const isDark =!app.classList.contains('dark-mode');
   app.classList.toggle('dark-mode');
-  localStorage.setItem('mayne_theme', isDark ? 'dark' : 'light');
-  btn.innerText = isDark ? '☀️' : '🌙';
-
+  localStorage.setItem('mayne_theme', isDark? 'dark' : 'light');
+  btn.innerText = isDark? '☀️' : '🌙';
   if(isDark){
-    // MODE SOMBRE = GRIS/NOIR
     app.style.background = '#121212';
     app.style.borderColor = '#333';
     document.body.style.background = '#000';
-    
-    // tous les panels deviennent gris foncé
-    document.querySelectorAll('.service-panel, .sub-panel, .user-header').forEach(el=>{
-      el.style.background = '#1e1e1e';
-      el.style.color = '#fff';
-    });
-    // boutons bleus -> gris
-    document.querySelectorAll('.tab-btn').forEach(b=>{
-      if(!b.classList.contains('btn-home')) b.style.background = '#2a2a2a';
-    });
+    document.querySelectorAll('.service-panel,.sub-panel,.user-header').forEach(el=>{ el.style.background = '#1e1e1e'; el.style.color = '#fff'; });
+    document.querySelectorAll('.tab-btn').forEach(b=>{ if(!b.classList.contains('btn-home')) b.style.background = '#2a2a2a'; });
   } else {
-    // MODE CLAIR = BLEU ORIGINAL
     app.style.background = '#500';
     app.style.borderColor = '#aaa';
     document.body.style.background = '#f0f0f0';
-    
-    document.querySelectorAll('.service-panel, .sub-panel, .user-header').forEach(el=>{
-      el.style.background = '';
-      el.style.color = '';
-    });
+    document.querySelectorAll('.service-panel,.sub-panel,.user-header').forEach(el=>{ el.style.background = ''; el.style.color = ''; });
     document.querySelectorAll('.tab-btn').forEach(b=> b.style.background = '');
   }
 }
 let soldeMasque = localStorage.getItem('mayne_hide_solde') === 'true';
-
-function toggleSolde(){
-  soldeMasque = !soldeMasque;
-  localStorage.setItem('mayne_hide_solde', soldeMasque);
-  appliquerMasqueSolde();
-}
-
+function toggleSolde(){ soldeMasque =!soldeMasque; localStorage.setItem('mayne_hide_solde', soldeMasque); appliquerMasqueSolde(); }
 function appliquerMasqueSolde(){
   const elements = ['user-balance','user-commission','user-recompense'];
-  elements.forEach(id=>{
-    const el = document.getElementById(id);
-    if(!el) return;
-    
-    if(soldeMasque){
-      // sauvegarde la vraie valeur
-      if(!el.dataset.vrai) el.dataset.vrai = el.innerText;
-      el.innerText = '••••••';
-    } else {
-      
-      if(el.dataset.vrai) el.innerText = el.dataset.vrai;
-    }
-  });
-  const icone = document.querySelector('[onclick="toggleSolde()"]');
-  if(icone) icone.innerText = soldeMasque ? '👁️' : '👁️';
+  elements.forEach(id=>{ const el = document.getElementById(id); if(!el) return; if(soldeMasque){ if(!el.dataset.vrai) el.dataset.vrai = el.innerText; el.innerText = '••••••'; } else { if(el.dataset.vrai) el.innerText = el.dataset.vrai; } });
 }
-
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
 async function uploadToCloudinary(base64Data){
   try {
-    const fd = new FormData();
-    fd.append('file', base64Data);
-    fd.append('upload_preset','mayneaudio');
-
-    const res = await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload",{
-      method:'POST',
-      body:fd
-    });
-
+    const fd = new FormData(); fd.append('file', base64Data); fd.append('upload_preset','mayneaudio');
+    const res = await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload",{method:'POST',body:fd});
     const data = await res.json();
-    console.log('CLOUDINARY:', data);
-
-    if(data.secure_url){
-      return data.secure_url;
-    } else {
-      throw new Error(data.error?.message || 'Upload échoué');
-    }
-  } catch(e){
-    console.error('Upload error:', e);
-    showAlert('❌ Erreur upload: '+e.message);
-    throw e;
-  }
+    if(data.secure_url){ return data.secure_url; } else { throw new Error(data.error?.message || 'Upload échoué'); }
+  } catch(e){ showAlert('❌ Erreur upload: '+e.message); throw e; }
 }
 function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
-
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
-
 function switchService(id){
-  
   const servicesBloques = ['service-livraison','service-immo'];
-  if(servicesBloques.includes(id)){
-    showAlert('🚧 Service bientôt disponible');
-    return;
-  }
-  
-  
+  if(servicesBloques.includes(id)){ showAlert('🚧 Service bientôt disponible'); return; }
   document.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');
   const cible = document.getElementById(id);
   if(cible) cible.style.display='block';
-  
   window.scrollTo(0,0);
 }
-function retourAccueil(){
-  if(currentUserId && document.getElementById('logged-in-zone').style.display!=='none'){
-    switchService('menu-principal');
-    return true; // on a géré le retour
-  }
-  return false; // pas connecté, laisse Kodular gérer
-}
-
-// piège le bouton retour du navigateur
+function retourAccueil(){ if(currentUserId && document.getElementById('logged-in-zone').style.display!=='none'){ switchService('menu-principal'); return true; } return false; }
 history.pushState(null, null, location.href);
-window.addEventListener('popstate', function(){
-  if(retourAccueil()){
-    history.pushState(null, null, location.href);
-  }
-});
-function toggleXbetMode(m){
-  if(m==='retrait'){
-    window.location.href='retrait1xbet.html';
-    return;
-  }
-  document.getElementById('tab-xbet-depot').classList.toggle('active',true);
-  document.getElementById('tab-xbet-retrait').classList.toggle('active',false);
-  document.getElementById('xbet-depot-zone').style.display='block';
-  document.getElementById('xbet-retrait-zone').style.display='none';
-}
-
+window.addEventListener('popstate', function(){ if(retourAccueil()){ history.pushState(null, null, location.href); } });
+function toggleXbetMode(m){ if(m==='retrait'){ window.location.href='retrait1xbet.html'; return; } document.getElementById('tab-xbet-depot').classList.toggle('active',true); document.getElementById('tab-xbet-retrait').classList.toggle('active',false); document.getElementById('xbet-depot-zone').style.display='block'; document.getElementById('xbet-retrait-zone').style.display='none'; }
 function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
-
 function executerConnexion(){
   const i = document.getElementById('login-id').value.trim();
   const p = document.getElementById('login-pin').value.trim();
-  if(!i || !p) return;
-
+  if(!i ||!p) return;
   const pinSaisiHache = CryptoJS.MD5(p).toString();
-
   database.ref('clients/'+i).once('value').then(s=>{
     if(s.exists()) {
       const dbPin = String(s.val().pin);
-      
-            if(dbPin === pinSaisiHache || dbPin === p) {
+      if(dbPin === pinSaisiHache || dbPin === p) {
        const data = s.val();
        if(data.email_verified === false){
-         tempPhone=i; tempEmail=data.email;         document.getElementById('verify-email-affiche').innerText=data.email;
+         tempPhone=i; tempEmail=data.email; document.getElementById('verify-email-affiche').innerText=data.email;
          envoyerCodeEmail(data.email);
          return showAlert('Vérifie ton email d\'abord');
        }
@@ -869,51 +518,34 @@ function executerConnexion(){
        TinyDB.put('current_user', {phone: i, pinHash: pinSaisiHache});
        TinyDB.put('current_user_last', Date.now());
        localStorage.setItem('mayne_current_user', JSON.stringify({phone: i}));
-
        if (!window.AppInventor) {
          window.OneSignalDeferred.push(async function(OneSignal) {
            await OneSignal.login(currentUserId);
            await OneSignal.User.addTag("phone", currentUserId);
          });
        }
-
-       if (window.AppInventor) {
-         window.AppInventor.setWebViewString('USER_'+currentUserId);
-       }
-        
-        if(dbPin === p) {
-           database.ref('clients/'+i).update({ pin: pinSaisiHache });
-        }
-        
+       if (window.AppInventor) { window.AppInventor.setWebViewString('USER_'+currentUserId); }
+        if(dbPin === p) { database.ref('clients/'+i).update({ pin: pinSaisiHache }); }
         database.ref('clients/'+i).on('value', v=>{
           const data = v.val() || {};
           currentUserSolde = data.solde || 0;
           const commission = data.commission || 0;
           const recompense = data.recompense || 0;
-          currentUserRecompense = recompense; 
-          
+          currentUserRecompense = recompense;
           document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
           document.getElementById('logged-out-zone').style.display = 'none';
           document.getElementById('logged-in-zone').style.display = 'block';
           document.getElementById('user-name').innerText = data.nom;
           const majSolde = (id, valeur)=>{
-  const el = document.getElementById(id);
-  el.dataset.vrai = valeur.toLocaleString('fr-FR');
-  el.innerText = soldeMasque ? '••••••' : el.dataset.vrai;
-};
-majSolde('user-balance', currentUserSolde);
-majSolde('user-commission', commission);
-majSolde('user-recompense', recompense);
-          document.getElementById('user-commission').innerText = commission.toLocaleString('fr-FR');
-          document.getElementById('user-recompense').innerText = recompense.toLocaleString('fr-FR');
+            const el = document.getElementById(id);
+            el.dataset.vrai = valeur.toLocaleString('fr-FR');
+            el.innerText = soldeMasque? '••••••' : el.dataset.vrai;
+          };
+          majSolde('user-balance', currentUserSolde);
+          majSolde('user-commission', commission);
+          majSolde('user-recompense', recompense);
         });
-
-        
-
-        chargerFeed();
-        chargerMessagerie();
-        chargerHistoriques();
-     
+        chargerFeed(); chargerMessagerie(); chargerHistoriques(); ecouterClocheEtBordures();
         const statusRef = database.ref('clients/'+currentUserId+'/status');
         database.ref('.info/connected').on('value', s => {
           if(s.val()){
@@ -921,105 +553,54 @@ majSolde('user-recompense', recompense);
             statusRef.onDisconnect().set({online:false, last:Date.now()});
           }
         });
-        
        ecouterNotifLikes();
-if (window.AppInventor) {
-  window.lastPidSauve = null;
-  clearInterval(window.pidInterval);
-  window.pidInterval = setInterval(() => {
-    try {
-      const raw = window.AppInventor.getWebViewString() || '';
-      if (!raw.startsWith('PID_')) return;
-
-      const parts = raw.split('_');
-      const pid = parts[1];
-      const phone = parts[2]; // le téléphone vient de Kodular
-
-      if (pid && phone && pid!== window.lastPidSauve) {
-        window.lastPidSauve = pid;
-        database.ref('clients/' + phone + '/onesignal_id').set(pid)
-         .then(() => console.log('✅ onesignal_id sauvé pour', phone))
-         .catch(e => console.error('Firebase set error:', e));
-      }
-      window.AppInventor.setWebViewString(''); // vide après lecture
-    } catch(e) {}
-  }, 800);
-}
-
-
-       
-      } else {
-        showAlert('Numéro ou mot de passe incorrect');
-      }
-    } else {
-      showAlert('Numéro ou mot de passe incorrect');
-    }
-  }).catch(error => {
-    console.error("Erreur de connexion:", error);
-    showAlert("Une erreur est survenue lors de la connexion.");
+       if (window.AppInventor) {
+         window.lastPidSauve = null;
+         clearInterval(window.pidInterval);
+         window.pidInterval = setInterval(() => {
+           try {
+             const raw = window.AppInventor.getWebViewString() || '';
+             if (!raw.startsWith('PID_')) return;
+             const parts = raw.split('_');
+             const pid = parts[1];
+             const phone = parts[2];
+             if (pid && phone && pid!== window.lastPidSauve) {
+               window.lastPidSauve = pid;
+               database.ref('clients/' + phone + '/onesignal_id').set(pid);
+             }
+             window.AppInventor.setWebViewString('');
+           } catch(e) {}
+         }, 800);
+       }
+      } else { showAlert('Numéro ou mot de passe incorrect'); }
+    } else { showAlert('Numéro ou mot de passe incorrect'); }
   });
 }
-
-      function rechercherUtilisateur() {
+function rechercherUtilisateur() {
   const query = document.getElementById('recherche-user-input').value.trim().toLowerCase();
   const zoneResultats = document.getElementById('resultats-recherche');
-
-  if (!query) {
-    zoneResultats.style.display = 'none';
-    zoneResultats.innerHTML = '';
-    return;
-  }
-
+  if (!query) { zoneResultats.style.display = 'none'; zoneResultats.innerHTML = ''; return; }
   database.ref('clients').once('value').then(snap => {
-    let html = '';
-    let count = 0;
-
+    let html = ''; let count = 0;
     snap.forEach(child => {
-      const client_id = child.key; // Le numéro de téléphone est la clé du nœud
+      const client_id = child.key;
       const data = child.val();
-      // On récupère le nom (on check client_nom ou nom par sécurité)
-      const client_nom = data.client_nom || data.nom || ''; 
-      
-      // On ignore l'utilisateur actuellement connecté (currentUserId qui contient son numéro)
+      const client_nom = data.client_nom || data.nom || '';
       if (client_id === currentUserId) return;
-
-      // Recherche par nom ou par numéro de téléphone (client_id)
       if (client_nom.toLowerCase().includes(query) || client_id.includes(query)) {
         count++;
-        html += `
-          <div style="padding: 10px; color: #000; border-bottom: 1px solid #eee; text-align: left; cursor: pointer; font-weight: bold; font-size: 13px;" 
-  onclick="selectionnerUserPourChat('${client_id}','${client_nom.replace(/'/g,"\\'")}')">       
-               👤 ${client_nom} <span style="font-size: 11px; color: #666; font-weight: normal;">(${client_id})</span>
-          </div>
-        `;
+        html += `<div style="padding: 10px; color: #000; border-bottom: 1px solid #eee; text-align: left; cursor: pointer; font-weight: bold; font-size: 13px;" onclick="selectionnerUserPourChat('${client_id}','${client_nom.replace(/'/g,"\\'")}')">👤 ${client_nom} <span style="font-size: 11px; color: #666; font-weight: normal;">(${client_id})</span></div>`;
       }
     });
-
-    if (count > 0) {
-      zoneResultats.innerHTML = html;
-      zoneResultats.style.display = 'block';
-    } else {
-      zoneResultats.innerHTML = '<div style="padding: 10px; color: #666; font-size: 12px;">Aucun utilisateur trouvé</div>';
-      zoneResultats.style.display = 'block';
-    }
-  }).catch(err => {
-    console.error("Erreur recherche :", err);
+    if (count > 0) { zoneResultats.innerHTML = html; zoneResultats.style.display = 'block'; } else { zoneResultats.innerHTML = '<div style="padding: 10px; color: #666; font-size: 12px;">Aucun utilisateur trouvé</div>'; zoneResultats.style.display = 'block'; }
   });
 }
-
-// Fonction pour nettoyer la barre et ouvrir la discussion
 function selectionnerUserPourChat(client_id, client_nom) {
   document.getElementById('recherche-user-input').value = '';
   document.getElementById('resultats-recherche').style.display = 'none';
-  
-  // Ouvre le chat avec les bonnes variables
   ouvrirChat(client_id, client_nom);
 }
-
-   function emailToKey(email){
-  return email.toLowerCase().replace(/\./g, ','); 
-}
-
+function emailToKey(email){ return email.toLowerCase().replace(/\./g, ','); }
 function executerInscription(){
   const n=document.getElementById('reg-name').value.trim();
   const i=document.getElementById('reg-id').value.trim();
@@ -1029,13 +610,12 @@ function executerInscription(){
   const phone=i.replace(/\D/g,'');
   const emailKey=e.replace(/\./g,',');
   const pinHache=CryptoJS.MD5(p).toString();
-
   database.ref('clients/'+phone).once('value').then(s=>{
     if(s.exists()) return showAlert('Numéro déjà utilisé');
     database.ref('emails_index/'+emailKey).once('value').then(se=>{
       if(se.exists()) return showAlert('Email déjà utilisé');
       database.ref('clients/'+phone).set({nom:n,email:e,pin:pinHache,solde:0,commission:0,recompense:0,email_verified:false})
-      .then(()=>{
+     .then(()=>{
         database.ref('emails_index/'+emailKey).set(phone).then(()=>{
           tempPhone=phone; tempEmail=e;
           document.getElementById('verify-email-affiche').innerText=e;
@@ -1045,29 +625,27 @@ function executerInscription(){
     });
   });
 }
-
 function envoyerCodeEmail(email, isResend=false){
   const mail = email || tempEmail;
   fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
-  .then(r=>r.text()).then(t=>{
+ .then(r=>r.text()).then(t=>{
     if(t.includes('sent')){
       document.getElementById('login-interface').style.display='none';
       document.getElementById('register-interface').style.display='none';
       document.getElementById('verify-interface').style.display='block';
       if(!isResend) showAlert('Code envoyé à '+mail);
-      else showAlert('Code renvoyé !');
+      else showAlert('Code renvoyé!');
     } else if(t.includes('email_exists')) showAlert('Email déjà utilisé');
   });
 }
-
 function verifierCodeEmail(){
   const code=document.getElementById('verify-code').value.trim();
   if(!code) return;
   fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}})
-  .then(r=>r.text()).then(t=>{
+ .then(r=>r.text()).then(t=>{
     if(t.includes('ok')){
       database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{
-        showAlert('Email vérifié ! Connecte-toi');
+        showAlert('Email vérifié! Connecte-toi');
         document.getElementById('verify-interface').style.display='none';
         document.getElementById('login-interface').style.display='block';
         document.getElementById('login-id').value=tempPhone;
@@ -1075,14 +653,12 @@ function verifierCodeEmail(){
     } else showAlert('Code incorrect ou expiré');
   });
 }
-
 function executerDeconnexion(){
 TinyDB.put('current_user', null);
 localStorage.removeItem('mayne_current_user');
 clearInterval(sessionTimer);
 if(window.pidInterval) clearInterval(window.pidInterval);
-if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';localStorage.removeItem('mayne_current_user');}
-
+if(currentUserId){database.ref('clients/'+currentUserId).off();['commandes_marketplace','commandes_1xbet','commandes_factures','commandes_forfaits','commandes_immobilier','commandes_epargne','commandes_livraison','commandes_echanges','commandes_p2p_p2m','notifications'].forEach(p=>{database.ref(p).orderByChild('client_id').equalTo(currentUserId).off(); database.ref(p).off();});database.ref('posts').off();database.ref('conversations').off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';localStorage.removeItem('mayne_current_user');}
 function envoyerInfosDepotWhatsApp(){const m=document.getElementById('depot-montant').value;const r=document.getElementById('depot-reseau').value;if(!r||!m||m<100)return showAlert('Choisissez un réseau et un montant minimum de 100F');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={reseau:r,montant:Number(m)};envoyerAlerte('depot',d);proposerSupport('depot',d,()=>afficherSucces('depot-status'));database.ref('commandes_depots').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
 function validerRetrait(){
   const m=Number(document.getElementById('retrait-montant').value);
@@ -1097,16 +673,10 @@ function validerRetrait(){
     database.ref('commandes_retraits').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});
   });
 }
-  async function publierPost(){
+async function publierPost(){
   const texte = document.getElementById('post-texte').value.trim();
-  if(!texte && !window.currentImageUrl) return showAlert('Ajoute texte ou photo');
-  const post = {
-    authorId: currentUserId,
-    authorNom: document.getElementById('user-name').innerText,
-    texte: texte,
-    image: window.currentImageUrl || null,
-    createdAt: Date.now()
-  };
+  if(!texte &&!window.currentImageUrl) return showAlert('Ajoute texte ou photo');
+  const post = { authorId: currentUserId, authorNom: document.getElementById('user-name').innerText, texte: texte, image: window.currentImageUrl || null, createdAt: Date.now() };
   await database.ref('posts').push().set(post);
   document.getElementById('post-texte').value = '';
   window.currentImageUrl = null;
@@ -1117,94 +687,48 @@ function chargerFeed(){
   const feed = document.getElementById('market-feed');
   if(!feed) return;
   feed.innerHTML = '';
-
   const postsRef = database.ref('posts').orderByChild('createdAt').limitToLast(20);
-  postsRef.off(); // évite les doublons
-
+  postsRef.off();
   postsRef.on('child_added', snap => {
     const p = snap.val();
     const id = snap.key;
     if(document.getElementById('post-'+id)) return;
-
     const date = new Date(p.createdAt).toLocaleString('fr-FR');
     const safeNom = (p.authorNom || '').replace(/'/g,"\\'");
-    const safeImg = (p.image || '').replace(/'/g,"\\'");
-    
-    const thumb = p.image ? p.image.replace('/upload/', '/upload/w_800,q_auto,f_auto/') : '';
-const img = p.image ? `<img src="${thumb}" loading="lazy" style="width:100%;height:auto;max-height:500px;object-fit:cover;border-radius:6px;margin:4px 0;">` : '';
-    
+    const thumb = p.image? p.image.replace('/upload/', '/upload/w_800,q_auto,f_auto/') : '';
+    const img = p.image? `<img src="${thumb}" loading="lazy" style="width:100%;height:auto;max-height:500px;object-fit:cover;border-radius:6px;margin:4px 0;">` : '';
     const div = document.createElement('div');
     div.id = 'post-'+id;
     div.className = 'product-card';
     div.style.cssText = 'text-align:left;margin-bottom:8px;';
-    div.innerHTML = `
-      <div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>
-      ${img}
-      <div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div>
-      <div style="display:flex;gap:5px;margin-top:6px">
-        <button class="inner-btn" id="btn-like-${id}" onclick="toggleLike('${id}')">❤️ <span id="like-${id}">0</span></button>
-        <button class="inner-btn" onclick="commenterPost('${id}')">💬 Commenter</button>
-        <button class="inner-btn" onclick="ouvrirChat('${p.authorId}','${safeNom}')">✉️ Message</button>
-      </div>
-      <div id="comments-${id}" style="margin-top:6px;font-size:10px;color:#333"></div>
-      <div id="likers-${id}" style="font-size:11px;color:#00f;margin-top:4px;font-weight:bold"></div>
-    `;
-    
+    div.innerHTML = `<div style="font-size:11px;color:#00f;font-weight:bold">${p.authorNom} • ${date}</div>${img}<div class="product-title" style="margin:4px 0;white-space:pre-wrap">${p.texte||''}</div><div style="display:flex;gap:5px;margin-top:6px"><button class="inner-btn" id="btn-like-${id}" onclick="toggleLike('${id}')">❤️ <span id="like-${id}">0</span></button><button class="inner-btn" onclick="commenterPost('${id}')">💬 Commenter</button><button class="inner-btn" onclick="ouvrirChat('${p.authorId}','${safeNom}')">✉️ Message</button></div><div id="comments-${id}" style="margin-top:6px;font-size:10px;color:#333"></div><div id="likers-${id}" style="font-size:11px;color:#00f;margin-top:4px;font-weight:bold"></div>`;
     feed.prepend(div);
     chargerComments(id);
     listenLikes(id);
   });
-
-  postsRef.on('child_changed', snap => {
-    const el = document.getElementById('post-'+snap.key);
-    if(el) el.querySelector('.product-title').innerText = snap.val().texte || '';
-  });
-
-  postsRef.on('child_removed', snap => {
-    const el = document.getElementById('post-'+snap.key);
-    if(el) el.remove();
-  });
+  postsRef.on('child_changed', snap => { const el = document.getElementById('post-'+snap.key); if(el) el.querySelector('.product-title').innerText = snap.val().texte || ''; });
+  postsRef.on('child_removed', snap => { const el = document.getElementById('post-'+snap.key); if(el) el.remove(); });
 }
-
 function ouvrirImage(url){
-  // ★ réduit l'image à 1000px max pour Kodular
   let small = url;
-  if(url.includes('cloudinary.com') && url.includes('/upload/')){
-    small = url.replace('/upload/', '/upload/w_1000,q_auto,f_auto/');
-  }
-  if(window.AppInventor){
-    window.AppInventor.setWebViewString('VIEW_'+small);
-  } else {
-    document.getElementById('img-viewer-pic').src = small;
-    document.getElementById('img-viewer').style.display = 'flex';
-  }
+  if(url.includes('cloudinary.com') && url.includes('/upload/')){ small = url.replace('/upload/', '/upload/w_1000,q_auto,f_auto/'); }
+  if(window.AppInventor){ window.AppInventor.setWebViewString('VIEW_'+small); } else { document.getElementById('img-viewer-pic').src = small; document.getElementById('img-viewer').style.display = 'flex'; }
   return false;
 }
 function formatTime(s){const m=Math.floor(s/60).toString().padStart(2,'0');const sec=Math.floor(s%60).toString().padStart(2,'0');return m+':'+sec}
 function commenterPost(postId){
   showInput('Ton commentaire :', function(txt){
     if(!txt) return;
-    database.ref(`comments/${postId}`).push().set({
-      authorId: currentUserId,
-      authorNom: document.getElementById('user-name').innerText,
-      texte: txt,
-      createdAt: Date.now()
-    }).then(() => {
+    database.ref(`comments/${postId}`).push().set({ authorId: currentUserId, authorNom: document.getElementById('user-name').innerText, texte: txt, createdAt: Date.now() }).then(() => {
       database.ref(`posts/${postId}`).once('value').then(snap => {
         const postData = snap.val();
         if(!postData) return;
-        
-        // COLLAGE DIRECT ICI
-        if(postData.authorId !== currentUserId){
-          pushJS(postData.authorId, "💬 Commentaire", `${document.getElementById('user-name').innerText} : "${txt}"`);
-        }
+        if(postData.authorId!== currentUserId){ pushJS(postData.authorId, "💬 Commentaire", `${document.getElementById('user-name').innerText} : "${txt}"`); }
       });
     });
   });
 }
-
 function chargerComments(postId){database.ref(`comments/${postId}`).limitToLast(3).on('value',s=>{let h='';s.forEach(c=>{const v=c.val();h+=`• <b>${v.authorNom}</b>: ${v.texte}<br>`});const el=document.getElementById(`comments-${postId}`);if(el)el.innerHTML=h;});}
-
 function ouvrirChat(destId,destNom){if(destId===currentUserId)return showAlert("C'est toi :)");showInput('Message privé à '+destNom+' :',function(txt){if(!txt)return;const convId=[currentUserId,destId].sort().join('_');database.ref(`conversations/${convId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>{showAlert('Message envoyé à '+destNom);switchService('service-messagerie');setTimeout(()=>ouvrirConversation(convId,destNom),500);});});}
 function chargerMessagerie(){
   database.ref('conversations').on('value',snap=>{
@@ -1228,96 +752,24 @@ function chargerMessagerie(){
       const initiales=nom.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
       const preview=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':(c.last.texte||'').length>35?c.last.texte.substring(0,35)+'...':c.last.texte;
       const heure=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}','${nom.replace(/'/g,"\\'")}')">
-        <div class="chat-header">
-          <div style="position:relative">
-            <div class="msg-avatar">${initiales}</div>
-            <span id="dot-${correspondantId}" style="position:absolute;bottom:0;right:8px;width:10px;height:10px;background:#999;border:2px solid #fff;border-radius:50%"></span>
-          </div>
-          <div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div>
-          <div class="chat-time">${heure}</div>
-        </div></div>`;
-      // présence
-      database.ref('clients/'+correspondantId+'/status').on('value', s=>{
-        const d = document.getElementById('dot-'+correspondantId);
-        if(d) d.style.background = s.val() && s.val().online? '#0f0' : '#999';
-      });
+      html+=`<div class="chat-card" onclick="ouvrirConversation('${c.id}','${nom.replace(/'/g,"\\'")}')"><div class="chat-header"><div style="position:relative"><div class="msg-avatar">${initiales}</div><span id="dot-${correspondantId}" style="position:absolute;bottom:0;right:8px;width:10px;height:10px;background:#999;border:2px solid #fff;border-radius:50%"></span></div><div class="chat-preview"><div class="chat-name">${nom}</div><div class="chat-last">${c.last.senderId===currentUserId?'Vous: ':''}${preview}</div></div><div class="chat-time">${heure}</div></div></div>`;
+      database.ref('clients/'+correspondantId+'/status').on('value', s=>{ const d = document.getElementById('dot-'+correspondantId); if(d) d.style.background = s.val() && s.val().online? '#0f0' : '#999'; });
     });
     feed.innerHTML=html||'<div style="color:#fff;text-align:center;padding:30px">💬 Aucune conversation<br><span style="font-size:12px;opacity:.8">Envoyez un message depuis le Market</span></div>';
   });
 }
 function ouvrirConversation(convId,nom){
   switchService('service-messagerie');
-  database.ref('conversations').off(); // <-- AJOUTE ÇA
+  database.ref('conversations').off();
   window.currentConvId = convId;
   const feed = document.getElementById('messagerie-feed');
   const parts = convId.split('_');
   const otherId = parts[0]===currentUserId? parts[1] : parts[0];
-
-  // marquer comme vu
-  database.ref(`conversations/${convId}/messages`).on('child_added', m => {
-    const v = m.val();
-    if(v.senderId!== currentUserId &&!v.vu){
-      m.ref.update({vu:true, vuAt:Date.now()});
-    }
-  });
-
-  // structure
-  feed.innerHTML = `
-    <div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:-10px;z-index:10">
-      <span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span>
-      <div style="position:relative">
-        <div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div>
-        <span id="online-dot" style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:#999;border:2px solid #075e54;border-radius:50%"></span>
-      </div>
-      <div>
-        <div>${nom}</div>
-        <div id="online-text" style="font-size:10px;font-weight:normal;opacity:.8">hors ligne</div>
-<div id="typing-indicator" style="font-size:10px;font-weight:normal;opacity:.8;color:#0f0;display:none">en train d'écrire...</div>
-<div id="recording-indicator" style="font-size:10px;font-weight:normal;opacity:.8;color:#ff9800;display:none">enregistrement...</div>
-      </div>
-    </div>
-    <div class="chat-container" id="chat-scroll"></div>
-    <div class="chat-input-bar">
-      <label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label>
-      <label onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label>
-      <input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" oninput="jeTape('${convId}')" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')">
-      <button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button>
-    </div>`;
-
-  // présence
-  database.ref('clients/'+otherId+'/status').on('value', s=>{
-    const dot = document.getElementById('online-dot');
-    const txt = document.getElementById('online-text');
-    const on = s.val() && s.val().online;
-    if(dot) dot.style.background = on? '#0f0' : '#999';
-    if(txt) txt.innerText = on? 'en ligne' : 'innactif ';
-  });
-  // typing indicator
-  database.ref(`conversations/${convId}/typing`).on('value', s=>{
-    const ind = document.getElementById('typing-indicator');
-    const onl = document.getElementById('online-text');
-    if(!ind) return;
-    let ecrit = false;
-    s.forEach(ch=>{ if(ch.key!==currentUserId && ch.val()===true) ecrit=true; });
-    ind.style.display = ecrit? 'block':'none';
-    if(onl) onl.style.display = ecrit? 'none':'block';
-  });
-  // recording indicator
-  database.ref(`conversations/${convId}/recording`).on('value', s=>{
-    const rec = document.getElementById('recording-indicator');
-    const typ = document.getElementById('typing-indicator');
-    const onl = document.getElementById('online-text');
-    if(!rec) return;
-    let enregistre = false;
-    s.forEach(ch=>{ if(ch.key!==currentUserId && ch.val()===true) enregistre=true; });
-    rec.style.display = enregistre? 'block':'none';
-    if(enregistre){
-      if(typ) typ.style.display = 'none';
-      if(onl) onl.style.display = 'none';
-    }
-  });
-  // messages
+  database.ref(`conversations/${convId}/messages`).on('child_added', m => { const v = m.val(); if(v.senderId!== currentUserId &&!v.vu){ m.ref.update({vu:true, vuAt:Date.now()}); } });
+  feed.innerHTML = `<div style="background:#075e54;color:#fff;padding:12px;margin:-10px -10px 0;font-weight:bold;display:flex;align-items:center;gap:10px;position:sticky;top:-10px;z-index:10"><span onclick="chargerMessagerie()" style="cursor:pointer;font-size:20px">←</span><div style="position:relative"><div class="msg-avatar" style="width:32px;height:32px;font-size:12px">${nom.substring(0,2).toUpperCase()}</div><span id="online-dot" style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:#999;border:2px solid #075e54;border-radius:50%"></span></div><div><div>${nom}</div><div id="online-text" style="font-size:10px;font-weight:normal;opacity:.8">hors ligne</div><div id="typing-indicator" style="font-size:10px;font-weight:normal;opacity:.8;color:#0f0;display:none">en train d'écrire...</div><div id="recording-indicator" style="font-size:10px;font-weight:normal;opacity:.8;color:#ff9800;display:none">enregistrement...</div></div></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><label onclick="pickImageChat()" style="font-size:24px;cursor:pointer;padding:5px">📷</label><label onclick="recordAudioChat()" style="font-size:22px;cursor:pointer;padding:5px">🎙️</label><input id="msg-input" class="input-field" style="flex:1;text-align:left;margin:0 5px;border-radius:20px" placeholder="Message" oninput="jeTape('${convId}')" onkeypress="if(event.key==='Enter')envoyerDirect('${convId}')"><button class="btn-submit" style="width:auto;padding:8px 14px;margin:0;border-radius:50%;background:#0084ff" onclick="envoyerDirect('${convId}')">➤</button></div>`;
+  database.ref('clients/'+otherId+'/status').on('value', s=>{ const dot = document.getElementById('online-dot'); const txt = document.getElementById('online-text'); const on = s.val() && s.val().online; if(dot) dot.style.background = on? '#0f0' : '#999'; if(txt) txt.innerText = on? 'en ligne' : 'innactif '; });
+  database.ref(`conversations/${convId}/typing`).on('value', s=>{ const ind = document.getElementById('typing-indicator'); const onl = document.getElementById('online-text'); if(!ind) return; let ecrit = false; s.forEach(ch=>{ if(ch.key!==currentUserId && ch.val()===true) ecrit=true; }); ind.style.display = ecrit? 'block':'none'; if(onl) onl.style.display = ecrit? 'none':'block'; });
+  database.ref(`conversations/${convId}/recording`).on('value', s=>{ const rec = document.getElementById('recording-indicator'); const typ = document.getElementById('typing-indicator'); const onl = document.getElementById('online-text'); if(!rec) return; let enregistre = false; s.forEach(ch=>{ if(ch.key!==currentUserId && ch.val()===true) enregistre=true; }); rec.style.display = enregistre? 'block':'none'; if(enregistre){ if(typ) typ.style.display = 'none'; if(onl) onl.style.display = 'none'; } });
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value', s => {
     const scrollZone = document.getElementById('chat-scroll');
     if(!scrollZone) return;
@@ -1326,38 +778,23 @@ function ouvrirConversation(convId,nom){
       const v = m.val();
       const isMe = v.senderId === currentUserId;
       const heure = new Date(v.createdAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
-let contenu = v.texte || '';
-if(v.type === 'image'){
-  const thumb = v.url.includes('/upload/')? v.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/') : v.url;
-  const safeUrl = v.url.replace(/'/g,"\\'");
-  // PAS de chargement auto — juste un placeholder
-  contenu = `<div onclick="this.innerHTML='<img src=\\'${thumb}\\' style=\\'max-width:200px;border-radius:12px;display:block;cursor:pointer\\' onclick=\\'ouvrirImage(\\'${safeUrl}\\');return false;\\'>';this.style.padding='0';this.style.background='transparent'" style="max-width:200px;background:#ddd;border-radius:12px;padding:30px 10px;text-align:center;cursor:pointer;color:#333">
-    📷<br><span style="font-size:12px">Charger l'image</span>
-  </div>`;
-}
-if(v.type === 'video'){
-  const thumb = v.url.includes('/upload/')? v.url.replace('/upload/', '/upload/so_auto,w_300,q_auto,f_auto/') : v.url;
-  const safeVid = v.url.replace(/'/g,"\\'");
-  contenu = `<div style="position:relative;max-width:200px;border-radius:12px;overflow:hidden;cursor:pointer" onclick="var v=this.querySelector('video');v.paused?v.play():v.pause()">
-    <video src="${safeVid}" poster="${thumb}" style="width:100%;display:block;border-radius:12px" preload="metadata"></video>
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.55);color:#fff;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;pointer-events:none">▶</div>
-  </div>`;
-}
-if(v.type === 'audio'){
-  const safeAudio = v.url.replace(/'/g,"\\'");
-  // audio SANS src au départ = 0 Ko téléchargé
-  contenu = `<div class="audio-wrap">
-    <button onclick="var w=this.parentNode;var a=w.querySelector('audio');var wave=w.querySelector('.wave');if(!a.src){a.src='${safeAudio}';a.load();w.querySelector('.dur').innerText='...'};a.paused?(a.play(),this.innerText='⏸',wave.classList.add('playing')):(a.pause(),this.innerText='▶',wave.classList.remove('playing'))" style="background:#0084ff;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:14px">▶</button>
-    <div class="wave"><span></span><span></span><span></span></div>
-    <audio preload="none" onloadedmetadata="this.parentNode.querySelector('.dur').innerText=formatTime(this.duration)" onended="this.parentNode.querySelector('.wave').classList.remove('playing');this.parentNode.querySelector('button').innerText='▶'"></audio>
-    <span class="dur" style="font-size:11px;color:#555;min-width:45px">Télécharger</span>
-  </div>`;
-}
-const tick = isMe? (v.vu? '<span style="color:#34b7f1"> ✓✓</span>' : '<span style="color:#999"> ✓</span>') : '';
-htmlMessages += `<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">
-  ${!isMe?`<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>`:''}
-  <div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${contenu}<span class="msg-time">${heure}${tick}</span></div>
-</div>`;
+      let contenu = v.texte || '';
+      if(v.type === 'image'){
+        const thumb = v.url.includes('/upload/')? v.url.replace('/upload/', '/upload/w_300,q_auto,f_auto/') : v.url;
+        const safeUrl = v.url.replace(/'/g,"\\'");
+        contenu = `<div onclick="this.innerHTML='<img src=\\'${thumb}\\' style=\\'max-width:200px;border-radius:12px;display:block;cursor:pointer\\' onclick=\\'ouvrirImage(\\'${safeUrl}\\');return false;\\'>';this.style.padding='0';this.style.background='transparent'" style="max-width:200px;background:#ddd;border-radius:12px;padding:30px 10px;text-align:center;cursor:pointer;color:#333">📷<br><span style="font-size:12px">Charger l'image</span></div>`;
+      }
+      if(v.type === 'video'){
+        const thumb = v.url.includes('/upload/')? v.url.replace('/upload/', '/upload/so_auto,w_300,q_auto,f_auto/') : v.url;
+        const safeVid = v.url.replace(/'/g,"\\'");
+        contenu = `<div style="position:relative;max-width:200px;border-radius:12px;overflow:hidden;cursor:pointer" onclick="var v=this.querySelector('video');v.paused?v.play():v.pause()"><video src="${safeVid}" poster="${thumb}" style="width:100%;display:block;border-radius:12px" preload="metadata"></video><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.55);color:#fff;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;pointer-events:none">▶</div></div>`;
+      }
+      if(v.type === 'audio'){
+        const safeAudio = v.url.replace(/'/g,"\\'");
+        contenu = `<div class="audio-wrap"><button onclick="var w=this.parentNode;var a=w.querySelector('audio');var wave=w.querySelector('.wave');if(!a.src){a.src='${safeAudio}';a.load();w.querySelector('.dur').innerText='...'};a.paused?(a.play(),this.innerText='⏸',wave.classList.add('playing')):(a.pause(),this.innerText='▶',wave.classList.remove('playing'))" style="background:#0084ff;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:14px">▶</button><div class="wave"><span></span><span></span></div><audio preload="none" onloadedmetadata="this.parentNode.querySelector('.dur').innerText=formatTime(this.duration)" onended="this.parentNode.querySelector('.wave').classList.remove('playing');this.parentNode.querySelector('button').innerText='▶'"></audio><span class="dur" style="font-size:11px;color:#555;min-width:45px">Télécharger</span></div>`;
+      }
+      const tick = isMe? (v.vu? '<span style="color:#34b7f1"> ✓✓</span>' : '<span style="color:#999"> ✓</span>') : '';
+      htmlMessages += `<div class="chat-row" style="justify-content:${isMe?'flex-end':'flex-start'}">${!isMe?`<div class="msg-avatar" style="width:24px;height:24px;font-size:10px;background:#999;margin-right:4px">${nom[0]}</div>`:''}<div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${contenu}<span class="msg-time">${heure}${tick}</span></div></div>`;
     });
     scrollZone.innerHTML = htmlMessages;
     setTimeout(()=>{scrollZone.scrollTop = scrollZone.scrollHeight;},100);
@@ -1371,14 +808,7 @@ async function envoyerFichier(cid){
   r.onload=async e=>{
     try{
       const url = await uploadToCloudinary(e.target.result);
-      database.ref(`conversations/${cid}/messages`).push({
-        senderId:currentUserId,
-        senderNom:document.getElementById('user-name').innerText,
-        type:'image',
-        url:url,
-        texte:'📷',
-        createdAt:Date.now()
-      });
+      database.ref(`conversations/${cid}/messages`).push({ senderId:currentUserId, senderNom:document.getElementById('user-name').innerText, type:'image', url:url, texte:'📷', createdAt:Date.now() });
     }catch(err){}
   };
   r.readAsDataURL(f);
@@ -1387,18 +817,9 @@ function envoyerDirect(cid){
   const i=document.getElementById('msg-input');
   const t=i.value.trim();
   if(!t) return;
-  database.ref(`conversations/${cid}/messages`).push({
-    senderId:currentUserId,
-    senderNom:document.getElementById('user-name').innerText,
-    type:'text',
-    vu:false,
-    texte:t,
-    createdAt:Date.now()
-  }).then(()=>{
+  database.ref(`conversations/${cid}/messages`).push({ senderId:currentUserId, senderNom:document.getElementById('user-name').innerText, type:'text', vu:false, texte:t, createdAt:Date.now() }).then(()=>{
     const parts = cid.split('_');
     const destId = parts[0]===currentUserId? parts[1] : parts[0];
-    
-    // COLLAGE DIRECT ICI
     pushJS(destId, "💬 Nouveau message", `${document.getElementById('user-name').innerText} : ${t}`);
   });
   i.value='';
@@ -1409,31 +830,19 @@ function jeTape(convId){
   if(!currentUserId) return;
   database.ref(`conversations/${convId}/typing/${currentUserId}`).set(true);
   clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(()=>{
-    database.ref(`conversations/${convId}/typing/${currentUserId}`).set(false);
-  },1500);
+  typingTimeout = setTimeout(()=>{ database.ref(`conversations/${convId}/typing/${currentUserId}`).set(false); },1500);
 }
-
-// écoute typing (à mettre dans ouvrirConversation, juste après le listener de présence)
-// ==== LIKES MAYNE ====
 function toggleLike(postId){
   if(!currentUserId) return showAlert('Connecte-toi');
   const ref = db.ref('likes/'+postId+'/'+currentUserId);
   ref.get().then(s => {
-    if(s.exists()){
-      ref.remove();
-    } else {
+    if(s.exists()){ ref.remove(); } else {
       const monNom = document.getElementById('user-name').innerText;
       ref.set({ nom: monNom, at: Date.now() });
-      
       database.ref(`posts/${postId}`).once('value').then(p=>{
         const postData = p.val();
         if(!postData) return;
-        
-        // COLLAGE DIRECT ICI
-        if(postData.authorId !== currentUserId){
-          pushJS(postData.authorId, "❤️ Nouveau j'aime", `${monNom} a aimé ta publication`);
-        }
+        if(postData.authorId!== currentUserId){ pushJS(postData.authorId, "❤️ Nouveau j'aime", `${monNom} a aimé ta publication`); }
       });
     }
   });
@@ -1444,33 +853,18 @@ function listenLikes(postId){
     const countEl = document.getElementById('like-'+postId);
     const btn = document.getElementById('btn-like-'+postId);
     const likersEl = document.getElementById('likers-'+postId);
-    
     if(countEl) countEl.innerText = count;
-    if(btn) btn.style.background = snap.hasChild(currentUserId) ? '#ff0040' : '#000';
-    
+    if(btn) btn.style.background = snap.hasChild(currentUserId)? '#ff0040' : '#000';
     if(likersEl){
-      if(count === 0){
-        likersEl.innerText = '';
-        likersEl.onclick = null;
-      } else {
-        // récupère tous les noms (même les anciens)
-        let noms = [];
-        let promises = [];
-        snap.forEach(c => {
-          const v = c.val();
-          if(v && v.nom) noms.push(v.nom);
-          else promises.push(database.ref('clients/'+c.key+'/nom').once('value').then(s => s.val() || c.key));
-        });
+      if(count === 0){ likersEl.innerText = ''; likersEl.onclick = null; } else {
+        let noms = []; let promises = [];
+        snap.forEach(c => { const v = c.val(); if(v && v.nom) noms.push(v.nom); else promises.push(database.ref('clients/'+c.key+'/nom').once('value').then(s => s.val() || c.key)); });
         const anciens = await Promise.all(promises);
         noms = noms.concat(anciens);
-        
-        // affichage court
         const court = noms.slice(0,2).join(', ');
-        const reste = count > 2 ? ` et ${count-2} autre${count-2>1?'s':''}` : '';
+        const reste = count > 2? ` et ${count-2} autre${count-2>1?'s':''}` : '';
         likersEl.innerText = `❤️ ${count} j'aime${count>1?'s':''} · ${court}${reste}`;
         likersEl.style.cursor = 'pointer';
-        
-        // clic = voir TOUTE la liste
         likersEl.onclick = () => showAlert('Personnes qui ont aimé :\n\n' + noms.join('\n'));
       }
     }
@@ -1482,87 +876,26 @@ function ecouterNotifLikes(){
     db.ref('likes/'+pid).on('child_added', likeSnap => {
       const v = likeSnap.val();
       const liker = likeSnap.key;
-      if(liker === currentUserId) return; // pas toi
-      if(!v.at || v.at < Date.now() - 10000) return; // ignore les vieux likes au chargement
-      
-      if(Notification.permission === 'granted'){
-        new Notification('❤️', { body: (v.nom || 'Quelqu\'un') + ' a aimé ton post' });
-      }
+      if(liker === currentUserId) return;
+      if(!v.at || v.at < Date.now() - 10000) return;
+      if(Notification.permission === 'granted'){ new Notification('❤️', { body: (v.nom || 'Quelqu\'un') + ' a aimé ton post' }); }
     });
   });
 }
 function recharger1XBet(){const id=document.getElementById('xbet-id-joueur').value.trim();const m=Number(document.getElementById('xbet-montant').value);const wa=document.getElementById('xbet-whatsapp').value.trim();if(!id||m<100||currentUserSolde<m)return showAlert('Vérifiez ID, montant et solde');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'depot',id_joueur:id,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Dépôt',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function retrait1XBet(){const id=document.getElementById('xbet-retrait-id').value.trim();const m=Number(document.getElementById('xbet-retrait-montant').value);const wa=document.getElementById('xbet-retrait-whatsapp').value.trim();if(!id||m<=0)return showAlert('Remplissez tous les champs');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={action:'retrait',id_joueur:id,montant:m,whatsapp_client:wa};envoyerAlerte('1xbet',d);proposerSupport('1xbet',d,()=>afficherSucces('xbet-status'));database.ref('commandes_1xbet').push().set({...d,client_id:currentUserId,type:'Retrait',date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
-
 function payerFacture(){const t=document.getElementById('facture-type').value;const id=document.getElementById('facture-id').value.trim();const m=Number(document.getElementById('facture-montant').value);const wa=document.getElementById('facture-whatsapp').value.trim();if(!id||currentUserSolde<m)return showAlert('Vérifiez référence et solde');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={fournisseur:t,reference:id,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('facture',d);proposerSupport('facture',d,()=>afficherSucces('facture-status'));database.ref('commandes_factures').push().set({...d,client_id:currentUserId,type:t,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function acheterForfait(){const r=document.getElementById('forfait-reseau').value;const mo=document.getElementById('forfait-motif').value;const n=document.getElementById('forfait-numero').value.trim();const m=Number(document.getElementById('forfait-offre').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={operateur:r,type:mo,numero_beneficiaire:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('forfait_credit',d);proposerSupport('forfait_credit',d,()=>afficherSucces('forfait-status'));database.ref('commandes_forfaits').push().set({...d,client_id:currentUserId,motif:mo,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
-
 function solliciterImmo(){const v=document.getElementById('immo-ville').value;const m=Number(document.getElementById('immo-montant').value);const wa=document.getElementById('immo-whatsapp').value.trim();if(!wa||currentUserSolde<m)return showAlert('WhatsApp requis et solde suffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={ville:v,montant_visite:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('immobilier',d);proposerSupport('immobilier',d,()=>afficherSucces('immo-status'));database.ref('commandes_immobilier').push().set({...d,client_id:currentUserId,montant:m,date:new Date().toLocaleString('fr-FR'),statut:'en cours'});});}
-function placerEpargne(){
-  const c=document.getElementById('epargne-compteur').value;
-  const m=Number(document.getElementById('epargne-montant').value);
-  const wa=document.getElementById('epargne-whatsapp').value.trim();
-  
-  if(!wa || m<=0 || currentUserSolde < m) return showAlert('Vérifiez WhatsApp et solde');
-  if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
-  
-  const d={plan:c,montant:m,whatsapp_client:wa};
-  
-  // PRÉLÈVE SOLDE PRINCIPAL + CRÉDITE SOLDE_EPARGNE
-  database.ref('clients/'+currentUserId).update({
-    solde: currentUserSolde - m,
-    recompense: currentUserRecompense + m
-  }).then(()=>{
-    envoyerAlerte('epargne',d);
-    proposerSupport('epargne',d,()=>afficherSucces('epargne-status'));
-    database.ref('commandes_epargne').push().set({
-      ...d,
-      client_id:currentUserId,
-      compteur:c,
-      date:new Date().toLocaleString('fr-FR'),
-      statut:'validé✅ '
-    });
-  });
-}
-function retirerEpargne(){
-  const c=document.getElementById('epargne-compteur').value;
-  const m=Number(document.getElementById('epargne-montant').value);
-  const wa=document.getElementById('epargne-whatsapp').value.trim();
-  
-  if(!wa || m<=0 || currentUserSolde < m) return showAlert('Vérifiez WhatsApp et solde');
-  if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
-  
-  const d={plan:c,montant:m,whatsapp_client:wa};
-  
-  // PRÉLÈVE SOLDE PRINCIPAL + CRÉDITE SOLDE_EPARGNE
-  database.ref('clients/'+currentUserId).update({
-    solde: currentUserSolde + m,
-    recompense: currentUserRecompense - m
-  }).then(()=>{
-    database.ref('commandes_epargne').push().set({
-      ...d,
-      client_id:currentUserId,
-      compteur:c,
-      date:new Date().toLocaleString('fr-FR'),
-      statut:'annulé ✅ '
-    });
-  });
-}
-
+function placerEpargne(){const c=document.getElementById('epargne-compteur').value;const m=Number(document.getElementById('epargne-montant').value);const wa=document.getElementById('epargne-whatsapp').value.trim();if(!wa || m<=0 || currentUserSolde < m) return showAlert('Vérifiez WhatsApp et solde');if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);const d={plan:c,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde: currentUserSolde - m, recompense: currentUserRecompense + m}).then(()=>{envoyerAlerte('epargne',d);proposerSupport('epargne',d,()=>afficherSucces('epargne-status'));database.ref('commandes_epargne').push().set({...d,client_id:currentUserId,compteur:c,date:new Date().toLocaleString('fr-FR'),statut:'validé✅ '});});}
+function retirerEpargne(){const c=document.getElementById('epargne-compteur').value;const m=Number(document.getElementById('epargne-montant').value);const wa=document.getElementById('epargne-whatsapp').value.trim();if(!wa || m<=0 || currentUserSolde < m) return showAlert('Vérifiez WhatsApp et solde');if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);const d={plan:c,montant:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde: currentUserSolde + m, recompense: currentUserRecompense - m}).then(()=>{database.ref('commandes_epargne').push().set({...d,client_id:currentUserId,compteur:c,date:new Date().toLocaleString('fr-FR'),statut:'annulé ✅ '});});}
 function demanderLivraison(){const v=document.getElementById('livraison-ville').value;const m=Number(document.getElementById('livraison-montant').value);const wa=document.getElementById('livraison-whatsapp').value.trim();if(!wa||m<500||currentUserSolde<m)return showAlert('Minimum 500F et solde suffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const d={ville:v,montant_course:m,whatsapp_client:wa};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('livraison',d);proposerSupport('livraison',d,()=>afficherSucces('livraison-status'));database.ref('commandes_livraison').push().set({...d,client_id:currentUserId,montant:m,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 function executerEchange(){const d=document.getElementById('echange-donne').value;const r=document.getElementById('echange-recoit').value;const m=Number(document.getElementById('echange-montant').value);const a=document.getElementById('echange-adresse').value.trim();const wa=document.getElementById('echange-whatsapp').value.trim();if(!a||!wa)return showAlert('Remplissez adresse et WhatsApp');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donne:d,recoit:r,montant:m,adresse_numero:a,whatsapp_client:wa};envoyerAlerte('echange',data);proposerSupport('echange',data,()=>afficherSucces('echange-status'));database.ref('commandes_echanges').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});}
-
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 </script>
-<div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'">
-  <img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px">
-</div>
-
+<div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'"><img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px"></div>
 <footer style="background:#500; color:#aaaa; padding:30px 16px; text-align:center; font-size:14px; margin-top:50px;">
-  <div style="margin-bottom:10px;">
-    <strong style="color:#aaaa; font-size:16px;">MAYNE SERVICE</strong> © 2023 — Tous droits réservés
-  </div>
-  
+  <div style="margin-bottom:10px;"><strong style="color:#aaaa; font-size:16px;">MAYNE SERVICE</strong> © 2023 — Tous droits réservés</div>
   <div style="margin:12px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
     <a href="about.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">À propos</a>
     <a href="contact.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Contact</a>
@@ -1570,27 +903,7 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
     <a href="conditions.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Conditions d'utilisation</a>
    <a href="#" onclick="let base=location.href.substring(0,location.href.lastIndexOf('/')+1); let u=base+'updates.html?nocache='+Date.now(); if(window.AppInventor){window.AppInventor.setWebViewString('FORCE:'+u)}else{location.href=u} return false;" style="color:#ff5000; margin:0 12px; text-decoration:none;">Mises à jour</a>
   </div>
-
-  <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">
-    MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>
-    Cotonou, Bénin — contact : mayneactifer@gmail.com <br>
-    Lancé en juin 2023
-  </div>
+  <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>Cotonou, Bénin — contact : mayneactifer@gmail.com <br>Lancé en juin 2023</div>
 </footer>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
