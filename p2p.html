@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P2P / P2M MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#f5000;color:#fff;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#1e1e1e;padding-bottom:90px;border:5px solid #fff}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px}
+.avatar{width:44px;height:44px;border-radius:50%;background:#feb3;display:flex;align-items:center;justify-content:center;font-weight:800}
+.card{margin:12px 16px;background:#aaaa;border:10px solid #ff5000;border-radius:22px;padding:18px}
+.montant{font-size:22px;font-weight:900;margin:8px 0}
+.input{width:100%;background:#1e1e1e;color:#fff;padding:13px;border:1px solid #fff;border-radius:12px;margin:6px 0}
+.select{width:100%;background:#1e1e1e;color:#fff;padding:13px;border:1px solid #fff;border-radius:12px;margin:6px 0}
+.btn{width:100%;background:#2b8a3e;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff;cursor:pointer;margin-top:10px}
+.list{padding:16px}
+.item{background:#000;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #333}
+.bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer;padding:8px 12px}
+.bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;font-weight:700}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:15px}
+.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
+.marchand-box{background:#1e1e1e;border:2px dashed #ff5000;border-radius:12px;padding:12px;margin:10px 0;display:none}
+.capture-preview{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">M</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#aaa"></span></div></div><button class="bnav" onclick="location.href='notifications.html'">NOTIF🔔</button></div>
+
+<div class="card">
+<div style="font-size:12px;color:#a8c0b6">Solde Principal</div>
+<div class="montant" id="solde">0.00 XOF</div>
+<div style="font-size:12px;color:#aaa">BONUS: <b id="com">0 XOF</b></div>
+</div>
+
+<div class="card">
+<h3>P2P / P2M</h3>
+<label style="font-size:12px">Je donne depuis</label>
+<select id="p2p-donneur" class="select" onchange="updateNumeroMarchand()">
+<option value="SOLDE PRINCIPAL">SOLDE PRINCIPAL</option>
+<option value="MTN">MTN</option>
+<option value="MOOV">MOOV</option>
+<option value="CELTIS">CELTIS</option>
+<option value="USD">USD</option>
+<option value="EURO">EURO</option>
+<option value="USDT">USDT</option>
+</select>
+
+<div id="box-num-donneur" style="display:none">
+<input id="p2p-numero-donneur" class="input" placeholder="Votre Numero donneur (ex: 01... / adresse USDT)">
+</div>
+
+<div id="zone-marchand" class="marchand-box">
+<label style="font-size:11px;color:#ff5000;font-weight:bold">ENVOYEZ D'ABORD ICI :</label>
+<div id="marchand-affiche" style="font-size:14px;font-weight:bold;color:#fff;margin-top:6px;font-family:monospace;text-align:center;white-space:pre-line"></div>
+<small id="marchand-note" style="font-size:10px;color:#aaa;display:block;margin-top:6px;text-align:center"></small>
+</div>
+
+<label style="font-size:12px;margin-top:8px;display:block">Je recois vers</label>
+<select id="p2p-receveur" class="select">
+<option value="MTN">MTN Receveur</option>
+<option value="MOOV">MOOV Receveur</option>
+<option value="CELTIS">CELTIS Receveur</option>
+<option value="SOLDE PRINCIPAL">SOLDE PRINCIPAL</option>
+<option value="USD">USD</option>
+<option value="EURO">EURO</option>
+<option value="USDT">USDT</option>
+</select>
+
+<input id="p2p-numero" class="input" placeholder="Numero Receveur / Adresse">
+<input id="p2p-montant" type="number" class="input" placeholder="Montant">
+
+<div style="background:#000;border-radius:12px;padding:10px;margin:10px 0">
+<label style="font-size:12px">Preuve de paiement</label>
+<input type="file" id="capture-file" class="input" accept="image/*" onchange="previewCapture(this)">
+<img id="capture-preview" class="capture-preview">
+<input id="p2p-txid" class="input" placeholder="ID transaction (facultatif si capture)">
+<small style="font-size:10px;color:#ccc">Capture → envoyée aussi à l'admin 0158612131 dans messagerie</small>
+</div>
+
+<input id="p2p-wa" class="input" placeholder="Votre WhatsApp">
+<button class="btn" id="btnValider" onclick="executerP2P()">Valider le transfert</button>
+<div id="p2p-status" style="margin-top:8px;font-size:12px;display:none;text-align:center"></div>
+</div>
+
+<div class="list"><h3>Mon historique P2P</h3><div id="histo">Aucun transfert</div></div>
+</div>
+
+<div class="bottom">
+<button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button>
+<button class="bnav" onclick="location.href='epargne.html'">EPARGNE⭐</button>
+<button class="bnav active">P2P🚀</button>
+<button class="bnav" onclick="location.href='compte.html'">INFOS👤</button>
+</div>
+
+<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button style="margin-top:10px;padding:8px 16px;border-radius:20px" onclick="hideAlert()">OK</button></div></div>
+
+<script>
+var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+var db=firebase.database();
+var uid,userNom='Client',solde=0,_lock=false;
+var ADMIN_UID="0158612131";
+var ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+
+async function pushJS(destId,titre,fullData){
+  if(!destId)return;
+  try{
+    let msg = fullData ? 
+`🚀 ${fullData.donneur} -> ${fullData.receveur}
+📅 Date: ${fullData.date}
+👤 Client ID: ${fullData.client_id}
+💸 Donneur: ${fullData.donneur}
+🔢 Numero Donneur: ${fullData.numero_donneur}
+📥 Receveur: ${fullData.receveur}
+🔢 Numero Receveur: ${fullData.numero_receveur}
+🔢 Numero: ${fullData.numero}
+💰 Montant: ${fullData.montant}
+🆔 Transaction ID: ${fullData.transaction_id}
+📞 WhatsApp: ${fullData.whatsapp_client}
+📌 Statut: ${fullData.statut}
+✅ Credited: ${fullData.credited}
+📷 Capture: ${fullData.capture_url||'vide'}`
+    : titre;
+    await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})});
+  }catch(e){}
+}
+
+function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
+function hideAlert(){document.getElementById('custom-alert').style.display='none';}
+
+function updateNumeroMarchand(){
+  var d=document.getElementById('p2p-donneur').value;
+  var box=document.getElementById('box-num-donneur');
+  var zone=document.getElementById('zone-marchand');
+  var affiche=document.getElementById('marchand-affiche');
+  var note=document.getElementById('marchand-note');
+  if(d==='SOLDE PRINCIPAL'){box.style.display='none';zone.style.display='none';return;}
+  box.style.display='block';zone.style.display='block';
+  if(d==='MTN'){affiche.innerText='MTN : 0159415617\nMAYNE SERVICE';note.innerText='*880*41*340807*montant#';}
+  else if(d==='MOOV'){affiche.innerText='MOOV : 0158612104\nMAYNE SERVICE';note.innerText='*855*4*1*307657*montant#';}
+  else if(d==='CELTIS'){affiche.innerText='CELTIIS : 0140228185\nMAYNE SERVICE';note.innerText='*889*6*1# (MAY01)';}
+  else if(d==='USD'){affiche.innerText='USD = BIENTOT';note.innerText='Contact support';}
+  else if(d==='USDT'){affiche.innerText='USDT = BIENTOT';note.innerText='Contact support';}
+  else if(d==='EURO'){affiche.innerText='EURO = BIENTOT';note.innerText='Contact support';}
+}
+function previewCapture(i){
+  var p=document.getElementById('capture-preview');
+  if(i.files&&i.files[0]){var r=new FileReader();r.onload=function(e){p.src=e.target.result;p.style.display='block';};r.readAsDataURL(i.files[0]);}
+}
+async function uploadToCloudinary(b){
+  var fd=new FormData();fd.append('file',b);fd.append('upload_preset','mayneaudio');
+  var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload",{method:'POST',body:fd});
+  var data=await res.json();if(data.secure_url)return data.secure_url;throw new Error('Upload echoue');
+}
+
+async function tryCredit(key,v){
+  if(v.receveur!=='SOLDE PRINCIPAL')return;
+  if(!String(v.statut||'').toLowerCase().includes('valid'))return;
+  if(v.credited===true)return;
+  var target=(v.numero_receveur||v.numero||'').replace(/[^0-9]/g,'');
+  if(!target)return;
+  try{
+    var ref=db.ref('clients/'+target);
+    var snap=await ref.once('value');
+    var cur=+(snap.val()?.solde||0);
+    await ref.update({solde:cur+Number(v.montant)});
+    await db.ref('commandes_p2p_p2m/'+key).update({credited:true,credited_at:new Date().toLocaleString('fr-FR')});
+    db.ref('notifications/'+target).push({titre:"P2P crédité",message:`${v.montant}F crédité sur solde principal - ${v.donneur} -> SOLDE`,date:new Date().toLocaleString('fr-FR')});
+  }catch(e){console.log(e);}
+}
+
+async function init(){
+  var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  if(!u||!u.phone){location.href='index.html';return;}
+  uid=u.phone.replace(/[^0-9]/g,'');userNom=u.nom||u.phone;
+  document.getElementById('uname').textContent=userNom;
+  document.getElementById('uemail').textContent=u.phone;
+  document.getElementById('av').textContent=(userNom[0]||'M').toUpperCase();
+  document.getElementById('p2p-wa').value=u.phone;
+  updateNumeroMarchand();
+
+  db.ref('clients/'+uid).on('value',function(s){var d=s.val()||{};solde=+d.solde||0;document.getElementById('solde').textContent=solde.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';});
+
+  // ENVOYE
+  db.ref('commandes_p2p_p2m').orderByChild('client_id').equalTo(uid).on('value',async function(s){
+    var c=document.getElementById('histo');
+    if(!s.exists()){c.innerHTML='Aucun transfert';return;}
+    var h='';var vals=s.val();
+    for(let key in vals){
+      let v=vals[key];
+      await tryCredit(key,v);
+      let col=v.statut.toLowerCase().includes('valid')?'#28a745':v.statut.toLowerCase().includes('annul')?'#dc3545':'#ffbb00';
+      h='<div class=item><div><b>'+v.donneur+' → '+v.receveur+'</b><br><small>'+v.numero_receveur+' - '+v.date+(v.credited?' - ✅ Credite':'')+'</small></div><div style="text-align:right"><b>'+v.montant+'F</b><br><span style="background:'+col+';color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">'+v.statut+'</span></div></div>'+h;
+    }
+    c.innerHTML=h;
+  });
+
+  // RECU - pour que 0147880711 se credite lui-meme
+  db.ref('commandes_p2p_p2m').orderByChild('numero_receveur').equalTo(uid).on('value',async function(s){
+    if(!s.exists())return;
+    let vals=s.val();
+    for(let key in vals){await tryCredit(key,vals[key]);}
+  });
+}
+
+async function executerP2P(){
+  var donneur=document.getElementById('p2p-donneur').value;
+  var numDonneur=document.getElementById('p2p-numero-donneur').value.trim();
+  var receveur=document.getElementById('p2p-receveur').value;
+  var numero=document.getElementById('p2p-numero').value.trim();
+  var montant=Number(document.getElementById('p2p-montant').value);
+  var wa=document.getElementById('p2p-wa').value.trim();
+  var txid=document.getElementById('p2p-txid').value.trim();
+  var file=document.getElementById('capture-file').files[0];
+
+  if(!numero||!montant||montant<=0)return showAlert('Numero receveur et montant requis');
+  if(donneur!=='SOLDE PRINCIPAL' &&!numDonneur)return showAlert('Numero donneur requis pour '+donneur);
+  if(donneur!=='SOLDE PRINCIPAL' &&!file &&!txid)return showAlert('Ajoute capture OU ID transaction pour '+donneur);
+  if(donneur==='SOLDE PRINCIPAL' && solde<montant)return showAlert('Solde insuffisant: '+solde+'F');
+  if(_lock)return;_lock=true;document.getElementById('btnValider').innerText='Envoi...';document.getElementById('btnValider').disabled=true;
+
+  try{
+    var captureUrl='';
+    if(file){
+      var reader=new FileReader();
+      var base64=await new Promise(function(res,rej){reader.onload=function(e){res(e.target.result);};reader.onerror=rej;reader.readAsDataURL(file);});
+      captureUrl=await uploadToCloudinary(base64);
+    }
+
+    if(donneur==='SOLDE PRINCIPAL'){
+      await db.ref('clients/'+uid).update({solde:solde-montant});
+    }
+
+    let fullData={
+      client_id:uid,
+      credited:false,
+      date:new Date().toLocaleString('fr-FR'),
+      donneur:donneur,
+      montant:montant,
+      numero:numero,
+      numero_donneur:numDonneur||'SOLDE',
+      numero_receveur:numero,
+      receveur:receveur,
+      statut:'en cours',
+      transaction_id:txid||'N/A',
+      whatsapp_client:wa,
+      capture_url:captureUrl||''
+    };
+
+    await db.ref('commandes_p2p_p2m').push().set(fullData);
+
+    // OneSignal avec TOUS les details
+    pushJS(ADMIN_UID,"NOUVEAU P2P "+montant+"F",fullData);
+    pushJS(uid,"P2P Envoyé "+montant+"F",{...fullData, donneur:"RESUME", numero_donneur:"", numero_receveur:numero, capture_url:"", credited:"-"});
+
+    db.ref('notifications/'+uid).push({titre:"P2P envoye",message:`${donneur} -> ${receveur} ${montant}F vers ${numero}`,date:fullData.date});
+    db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau P2P",message:`${montant}F ${donneur}->${receveur} Client:${uid} Num:${numero}`,date:fullData.date});
+
+    var convId=[uid,ADMIN_UID].sort().join('_');
+    await db.ref('conversations/'+convId+'/messages').push().set({
+      senderId:uid,senderNom:userNom,type:'text',texte:`🚀 NOUVEAU P2P\nClient: ${uid}\nDonneur: ${donneur} (${numDonneur})\nReceveur: ${receveur} (${numero})\nMontant: ${montant}\nTX: ${txid}\nWA: ${wa}\nStatut: en cours`,createdAt:Date.now()
+    });
+    if(captureUrl){
+      await db.ref('conversations/'+convId+'/messages').push().set({
+        senderId:uid,senderNom:userNom,type:'image',url:captureUrl,texte:`📷 Preuve P2P ${montant}F`,createdAt:Date.now()+100
+      });
+    }
+
+    document.getElementById('p2p-status').style.display='block';
+    document.getElementById('p2p-status').innerText=donneur==='SOLDE PRINCIPAL'?'✅ Envoyé!':'✅ Demande envoyée! En attente validation';
+    document.getElementById('p2p-numero').value='';document.getElementById('p2p-montant').value='';document.getElementById('p2p-txid').value='';document.getElementById('capture-file').value='';document.getElementById('capture-preview').style.display='none';
+    if(donneur!=='SOLDE PRINCIPAL') document.getElementById('p2p-numero-donneur').value='';
+    setTimeout(function(){document.getElementById('p2p-status').style.display='none';},4000);
+  }catch(e){showAlert('Erreur: '+e.message);}
+  finally{_lock=false;document.getElementById('btnValider').innerText='Valider le transfert';document.getElementById('btnValider').disabled=false;}
+}
+window.onload=init;
+</script>
+</body>
+</html>
