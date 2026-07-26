@@ -894,16 +894,21 @@ function executerEchange(){const d=document.getElementById('echange-donne').valu
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 </script>
 <div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'"><img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px"></div>
-<footer style="background:#500; color:#aaaa; padding:30px 16px; text-align:center; font-size:14px; margin-top:50px;">
-  <div style="margin-bottom:10px;"><strong style="color:#aaaa; font-size:16px;">MAYNE SERVICE</strong> © 2023 — Tous droits réservés</div>
-  <div style="margin:12px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
-    <a href="about.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">À propos</a>
-    <a href="contact.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Contact</a>
-    <a href="privacy.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Confidentialité</a>
-    <a href="conditions.html" target="_self" style="color:#aaaa; margin:0 12px; text-decoration:none;">Conditions d'utilisation</a>
-   <a href="#" onclick="let base=location.href.substring(0,location.href.lastIndexOf('/')+1); let u=base+'updates.html?nocache='+Date.now(); if(window.AppInventor){window.AppInventor.setWebViewString('FORCE:'+u)}else{location.href=u} return false;" style="color:#ff5000; margin:0 12px; text-decoration:none;">Mises à jour</a>
+<footer style="background:#000; color:#888; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
+  <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023-2026</div>
+  <div style="margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
+    <a href="about.html" style="color:#d6f78c; text-decoration:none;">À propos</a>
+    <a href="privacy.html" style="color:#d6f78c; text-decoration:none;">Confidentialité</a>
+    <a href="conditions.html" style="color:#d6f78c; text-decoration:none;">CGU</a>
   </div>
-  <div style="margin-top:18px; font-size:12px; color:#777; line-height:1.5;">MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671<br>Cotonou, Bénin — contact : mayneactifer@gmail.com <br>Lancé en juin 2023</div>
+  <div style="margin-top:14px; font-size:10px; color:#aaa; line-height:1.7">
+    <b style="color:#fff">Agent commercial marchand agréé MTN - MOOV - CELTIS</b><br>
+    SIMs marchandes & accepteurs - Vente forfaits, crédits, transfert d'argent national & international via corridors officiels<br>
+    Paiement factures SBEE, SONEB, CANAL+ via canaux agréés<br>
+    <span style="color:#ffbb00">Recharge 1XBET via partenaire agent 1XBET agréé — MAYNE SERVICE n'est pas 1XBET. 1XBET est une marque indépendante. 18+ Jeu responsable.</span><br><br>
+    MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671 — Cotonou, Bénin<br>
+    contact : mayneactifer@gmail.com
+  </div>
 </footer>
 </body>
 </html>
