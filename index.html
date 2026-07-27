@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <script>
 if(localStorage.getItem('mayne_pin_enabled')==='true' &&!sessionStorage.getItem('mayne_unlocked')){
   location.href='lock.html';
