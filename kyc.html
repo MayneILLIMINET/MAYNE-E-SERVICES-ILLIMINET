@@ -8,58 +8,70 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#fdf6ec;display:flex;justify-content:center}
 .app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:20px}
-.head{display:flex;justify-content:space-between;align-items:center;padding:18px 16px}
-.head b{font-size:20px}
-.close{width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.illu{width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:160px;background:radial-gradient(circle,#e8f5d8 0%, transparent 70%)}
+.head{display:flex;justify-content:space-between;align-items:center;padding:18px 16px;position:sticky;top:0;background:#fdf6ec;z-index:10}
+.head b{font-size:18px}
+.close{width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
+.illu{width:100%;height:200px;display:flex;align-items:center;justify-content:center;font-size:120px;background:radial-gradient(circle,#e8f5d8 0%, transparent 70%)}
 .step{padding:20px 16px}
-.step h1{font-size:28px;text-align:center;margin:10px 0}
+.step h1{font-size:26px;text-align:center;margin:10px 0}
 .step p{color:#888;text-align:center;font-size:14px;line-height:1.5}
-.input{width:100%;padding:15px;border:1px solid #ddd;border-radius:14px;margin-top:14px;font-size:15px;background:#fff}
-.label{font-size:12px;font-weight:700;margin-top:16px;display:block}
+.input{width:100%;padding:14px;border:1px solid #ddd;border-radius:14px;margin-top:10px;font-size:15px;background:#fff}
+.label{font-size:12px;font-weight:700;margin-top:14px;display:block}
 .label span{color:red}
-.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:18px;font-weight:800;font-size:16px;margin-top:24px}
+.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;font-size:16px;margin-top:22px;cursor:pointer}
 .hidden{display:none}
-.card-green{background:#5ec48c;width:120px;height:80px;border-radius:14px;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center;font-size:50px}
+.verified-badge{background:#d6f78c;color:#0f3d2e;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;display:inline-block;margin:10px auto}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="head"><div style="width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center" onclick="history.back()">‹</div><b id="title">Vérifier mon compte</b><div class="close" onclick="location.href='epargne.html'">✕</div></div>
+<div class="head">
+<div style="width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="location.href='epargne.html'">‹</div>
+<b id="title">Vérifier mon compte</b>
+<div class="close" onclick="location.href='epargne.html'">✕</div>
+</div>
 
-<!-- ETAPE 1 -->
 <div class="step" id="s1">
 <div class="illu">🪪</div>
 <h1>Vérification d'identité</h1>
-<p>Avant de pouvoir retirer vos fonds, nous devons vérifier votre identité. Cette procédure, appelée KYC, est une obligation légale pour assurer la sécurité de vos transactions.</p>
+<p>Photo de pièce + N° CNI/NPI obligatoires avant retrait.</p>
 <button class="btn" onclick="go(2)">Continuer</button>
 </div>
 
-<!-- ETAPE 2 -->
 <div class="step hidden" id="s2">
-<h1 style="text-align:left;font-size:26px">Vérification d'identité</h1>
-<p style="text-align:left">Vérifiez que vos informations d'identités correspondent à votre pièce d'identité.</p>
-<label class="label">Nom <span>*</span></label><input id="nom" class="input" placeholder="Ayizan">
-<label class="label">Prénom <span>*</span></label><input id="prenom" class="input" placeholder="Marius">
-<label class="label">Date de naissance <span>*</span></label><input id="dob" type="date" class="input" value="2000-01-18">
+<h1 style="text-align:left;font-size:24px">Tes informations</h1>
+<label class="label">Nom <span>*</span></label><input id="nom" class="input" placeholder="AYIZAN">
+<label class="label">Prénom <span>*</span></label><input id="prenom" class="input" placeholder="MARIUS">
+<label class="label">Type de pièce <span>*</span></label>
+<select id="piece_type" class="input">
+<option value="">-- Choisis --</option>
+<option value="CNI">CNI</option>
+<option value="NPI">NPI / CIP</option>
+<option value="Passeport">Passeport</option>
+<option value="Carte séjour">Carte de séjour</option>
+</select>
+<label class="label">Numéro CNI/NPI <span>*</span></label><input id="numero_piece" class="input" placeholder="Ex: 20001234567">
+<label class="label">Date naissance <span>*</span></label><input id="dob" type="date" class="input">
 <label class="label">Genre <span>*</span></label><select id="genre" class="input"><option>Masculin</option><option>Féminin</option></select>
 <label class="label">Pays <span>*</span></label><select id="pays" class="input"><option>Benin</option><option>Togo</option><option>Nigeria</option><option>Côte d'Ivoire</option></select>
-<button class="btn" onclick="go(3)">Suivant</button>
+<button class="btn" onclick="validerEtape2()">Suivant</button>
 </div>
 
-<!-- ETAPE 3 -->
 <div class="step hidden" id="s3">
-<div class="illu">🪪</div>
-<h1>Prenez une photo de votre carte d'identité</h1>
-<p>Assurez-vous que votre carte est lisible et bien éclairée. Pas de photocopies.</p>
-<input type="file" id="file" accept="image/*" class="input">
-<button class="btn" onclick="validerKYC()">Continuer</button>
+<div class="illu">📸</div>
+<h1>Photo de ta pièce</h1>
+<p style="color:#c00;font-weight:bold">⚠️ SANS PHOTO = BLOQUÉ</p>
+<input type="file" id="file" accept="image/*" class="input" style="border:2px solid #c00">
+<div id="preview" style="margin-top:10px;display:none"><img id="prev-img" style="width:100%;border-radius:12px"></div>
+<button class="btn" id="btn-kyc" onclick="validerKYC()">Envoyer à l'admin 0158612131</button>
+<p id="kyc-status" style="margin-top:10px;text-align:center;font-weight:bold;color:#c00"></p>
 </div>
 
-<div class="step hidden" id="s4" style="text-align:center;padding-top:60px">
-<div style="font-size:80px">✅</div>
-<h1>Demande envoyée!</h1>
-<p>Votre vérification est en cours. Vous serez notifié dans 24h.</p>
+<div class="step hidden" id="s4" style="text-align:center;padding-top:40px">
+<div style="font-size:70px">✅</div>
+<h1 id="s4-title">Demande envoyée!</h1>
+<p id="s4-msg">Vérification en cours 24h.</p>
+<div id="badge-verif" style="display:none"><span class="verified-badge">✅ Déjà vérifié</span><p style="margin-top:10px;color:#000">Ton compte est déjà vérifié.</p></div>
 <button class="btn" onclick="location.href='epargne.html'">Retour à l'épargne</button>
 </div>
 </div>
@@ -70,16 +82,96 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
+const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
+const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+
 let uid=JSON.parse(localStorage.getItem('mayne_current_user')||'null')?.phone;
-function go(n){
-document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden'));
-document.getElementById('s'+n).classList.remove('hidden');
-if(n==2)document.getElementById('title').textContent="Vérification d'identité";
+let currentUserNom=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.nom || uid;
+
+function go(n){ document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden')); document.getElementById('s'+n).classList.remove('hidden'); }
+
+document.getElementById('file')?.addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{ document.getElementById('prev-img').src=ev.target.result; document.getElementById('preview').style.display='block'; window._kyc_b64=ev.target.result; };
+  r.readAsDataURL(f);
+});
+
+function validerEtape2(){
+  if(!nom.value||!prenom.value||!piece_type.value||!numero_piece.value||!dob.value){
+    alert('Remplis: Nom, Prénom, Type pièce, Numéro CNI/NPI, Date naissance'); return;
+  }
+  go(3);
 }
-function validerKYC(){
-const data={nom:nom.value,prenom:prenom.value,dob:dob.value,genre:genre.value,pays:pays.value,statut:'en_attente',date:new Date().toISOString()};
-if(!uid)return alert('Reconnectez-vous');
-db.ref('clients/'+uid+'/kyc').set(data).then(()=>go(4));
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  if(!uid) return;
+  db.ref('clients/'+uid+'/kyc').once('value').then(snap=>{
+    if(!snap.exists()) return;
+    const k=snap.val();
+    if(k.statut==='verifie'||k.statut==='valide'||k.statut==='validé'){
+      document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden'));
+      document.getElementById('s4').classList.remove('hidden');
+      document.getElementById('s4-title').textContent='Déjà vérifié';
+      document.getElementById('s4-msg').style.display='none';
+      document.getElementById('badge-verif').style.display='block';
+      document.getElementById('title').textContent='Déjà vérifié';
+    }
+  });
+});
+
+async function uploadToCloudinary(b64){
+  const fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio');
+  const res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload",{method:'POST',body:fd});
+  const j=await res.json();
+  if(!j.secure_url) throw new Error('Cloudinary échoué');
+  return j.secure_url;
+}
+
+async function validerKYC(){
+  const btn=document.getElementById('btn-kyc');
+  const status=document.getElementById('kyc-status');
+  if(!window._kyc_b64){ status.textContent='❌ PHOTO OBLIGATOIRE'; return; }
+  btn.disabled=true; btn.textContent='⏳ Envoi à AYIZAN MARIUS...';
+  try{
+    const photoUrl=await uploadToCloudinary(window._kyc_b64);
+    const data={nom:nom.value, prenom:prenom.value, piece_type:piece_type.value, numero_piece:numero_piece.value, dob:dob.value, genre:genre.value, pays:pays.value, photo:photoUrl, statut:'en_attente', date:new Date().toLocaleString('fr-FR'), timestamp:Date.now()};
+    await db.ref('clients/'+uid+'/kyc').set(data);
+    await db.ref('kyc_demandes').push().set({...data, client_id:uid, client_nom:currentUserNom});
+
+    // ENVOI DIRECT DANS MESSAGERIE ADMIN 0158612131 AYIZAN MARIUS
+    const adminId="0158612131";
+    const myIdClean=uid.replace(/[^0-9]/g,'');
+    const adminClean=adminId.replace(/[^0-9]/g,'');
+    const convId=[myIdClean,adminClean].sort().join('_');
+
+    await db.ref(`conversations/${convId}/messages`).push().set({
+      senderId: myIdClean,
+      senderNom: currentUserNom,
+      texte: `🔐 NOUVEAU KYC\n👤 ${data.nom} ${data.prenom}\n🪪 ${data.piece_type} : ${data.numero_piece}\n📅 ${data.dob}\n📞 ${uid}\nPhoto: ${photoUrl}`,
+      photo: photoUrl,
+      image: photoUrl,
+      type: 'text',
+      createdAt: Date.now()
+    });
+
+    await db.ref(`conversations/${convId}/messages`).push().set({
+      senderId: myIdClean,
+      senderNom: currentUserNom,
+      texte: photoUrl,
+      type: 'image',
+      image: photoUrl,
+      createdAt: Date.now()+1
+    });
+
+    try{ fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId:adminClean,titre:'🔐 KYC - '+data.nom, message:`${data.piece_type} ${data.numero_piece}`})}); }catch(e){}
+    try{ fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({service:'kyc',data:{client_id:uid, nom:data.nom+' '+data.prenom, type_piece:data.piece_type, numero:data.numero_piece, photo:photoUrl}})}); }catch(e){}
+
+    go(4);
+  }catch(e){
+    status.textContent='Erreur: '+e.message;
+    btn.disabled=false; btn.textContent='Envoyer à l\'admin 0158612131';
+  }
 }
 </script>
 </body>
