@@ -73,6 +73,7 @@ database = firebase.database();
 db = database;
 </script>
 <style>
+  footer{display:none}
 body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
 .app-container{width:100%;max-width:100%;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#500;border:9px solid #ff5000;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
 .header-actions{display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
@@ -178,9 +179,12 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div class="app-container">
 <button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:1px;z-index:9999;background:#000;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.4);"></div>
+<div id="splash-zone" style="display:flex;min-height:60vh;align-items:center;justify-content:center;flex-direction:column;color:#ffeb3b;font-weight:bold;font-size:14px">
+  <div style="font-size:40px">⏳</div><div>Chargement...</div>
+</div>
 
-<div id="logged-out-zone">
-  <div id="login-interface">
+<div id="logged-out-zone" style="display:none">
+  <div id="login-interface" style="display:none">
     <h3 style="margin-top:0;margin-bottom:30px;color:#ffeb3b">BIENVENUE SUR ACTIFER</h3>
     <div class="history-title" style="color:#aaa;font-weight:bold;text-align:center;font-size:14px;">Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et 100% sécurisées</div>
     <div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:15px;margin-top:10px;">S'INSCRIRE OU SE CONNECTER ICI</div>
@@ -241,11 +245,26 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
     <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" style="border-left-color:#E91E63" onclick="location.href='messagerie.html'">💬 Messagerie</button>
     <button id="btn-forfait" class="tab-btn btn-full service-btn-new" style="border-left-color:#8BC34A" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
   </div>
-
+      <footer style="display:none;background:#1e1e1e;color:#500; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
+  <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023</div>
+  <div style="margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
+    <a href="about.html" style="color:#d6f78c; text-decoration:none;">À propos</a>
+    <a href="privacy.html" style="color:#d6f78c; text-decoration:none;">Confidentialité</a>
+    <a href="conditions.html" style="color:#d6f78c; text-decoration:none;">CGU</a>
+  </div>
+  <div style="margin-top:14px; font-size:10px; color:#aaa; line-height:1.7">
+    <b style="color:#fff">Agent commercial marchand agréé MTN - MOOV - CELTIS</b><br>
+    SIMs marchandes & accepteurs - Vente forfaits, crédits, transfert d'argent national & international via corridors officiels<br>
+    Paiement factures SBEE, SONEB, CANAL+ via canaux agréés<br>
+    <span style="color:#ffbb00">Recharge 1XBET via partenaire agent 1XBET agréé — MAYNE SERVICE n'est pas 1XBET. 1XBET est une marque indépendante. 18+ Jeu responsable.</span><br><br>
+    MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671 — Cotonou, Bénin<br>
+    contact : mayneactifer@gmail.com
+  </div>
+</footer>
   <div class="service-panel">
     <div id="menu-principal" class="sub-panel">
-      <h4 style="color:#fff;border-bottom-color:#fff;">MAYNE E-SERVICES</h4>
-      <p style="font-size:12px;text-align:justify;margin-bottom:15px;line-height:1.4;color:#aaa;">Bienvenue sur votre plateforme centralisée. Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et <b>100% sécurisées</b>.</p>
+      <h4 style="color:#fff;border-bottom-color:#fff;">ACTIFER-MGAP</h4>
+  
       <div class="about-section">
         <center><b style="color:#fff;">NOS PARTENAIRES</b></center>
         <div class="partners-container">
@@ -257,6 +276,7 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
           <div class="partner-logo partner-sbee">SBEE</div>
         </div>
       </div>
+    
     </div>
 
     <div id="solde-depot" class="sub-panel" style="display:none;"><h4 style="color:#fff;">FAITES UN DEPOT</h4><div class="input-group"><select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()"><option value="">-- Réseau --</option><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div><div class="input-group"><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()"></div><div id="zone-code-marchand" style="display:none;margin-bottom:10px;"><label class="input-label" style="color:#fff;">Code à lancer sur votre mobile :</label><div id="code-marchand-affiche" class="info-block-code"></div></div><button type="button" class="btn-submit" style="background-color:#4CAF50!important;" onclick="envoyerInfosDepotWhatsApp()">Je Confirme Avoir Validé le Dépôt</button><p id="depot-status" class="status-msg"></p><div class="history-title" style="color:#fff;font-weight:bold;text-align:center;font-size:14px;">MES DÉPÔTS </div><div id="depot-historique" class="history-box">Aucun dépôt</div></div>
@@ -299,11 +319,39 @@ const TinyDB = { put: (k,v) => localStorage.setItem('mayne_'+k, JSON.stringify(v
 let sessionTimer = null;
 function demarrerTimerSession(){ clearInterval(sessionTimer); sessionTimer = setInterval(()=>{ TinyDB.put('current_user_last', Date.now()); }, 60000); }
 function tryAutoLogin(){
+  const splash = document.getElementById('splash-zone');
+  const outZone = document.getElementById('logged-out-zone');
+  const inZone = document.getElementById('logged-in-zone');
+  const login = document.getElementById('login-interface');
+  const reg = document.getElementById('register-interface');
+  const verif = document.getElementById('verify-interface');
+  const foot = document.querySelector('footer'); // marche même sans i
+
   const saved = TinyDB.get('current_user') || JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!saved ||!saved.phone) return;
+
+  if(!saved || !saved.phone){
+    if(splash) splash.style.display='none';
+    if(inZone) inZone.style.display='none';
+    if(outZone) outZone.style.display='block';
+    if(login) login.style.display='block';
+    if(reg) reg.style.display='none';
+    if(verif) verif.style.display='none';
+    if(foot) foot.style.display='none'; // cache footer sur login
+    return;
+  }
+
   const last = TinyDB.get('current_user_last') || Date.now();
   if(Date.now() - last > 7*24*60*60*1000){ executerDeconnexion(); return; }
+
   currentUserId = saved.phone;
+  currentUserNomCache = saved.nom || 'Client';
+  if(splash) splash.style.display='none';
+  if(outZone) outZone.style.display='none';
+  if(login) login.style.display='none';
+  if(reg) reg.style.display='none';
+  if(verif) verif.style.display='none';
+  if(foot) foot.style.display='block'; // montre footer seulement quand connecté
+  
   chargerSessionDepuisFirebase(saved.phone);
 }
 function chargerHistoriques(){
@@ -372,12 +420,16 @@ function ecouterClocheEtBordures(){
   });
 }
 function chargerSessionDepuisFirebase(phone){
+  const splash = document.getElementById('splash-zone');
+  if(splash) splash.style.display='none';
   database.ref('clients/'+phone).on('value', v=>{
     const data = v.val() || {};
     currentUserSolde = data.solde || 0;
     currentUserRecompense = data.recompense || 0;
+    currentUserNomCache = data.nom || phone;
     document.getElementById('logged-out-zone').style.display='none';
     document.getElementById('logged-in-zone').style.display='block';
+    if(splash) splash.style.display='none';
     document.getElementById('user-name').innerText = data.nom || phone;
     const majSolde = (id, valeur)=>{
       const el = document.getElementById(id);
@@ -392,7 +444,7 @@ function chargerSessionDepuisFirebase(phone){
   });
   chargerFeed(); chargerMessagerie(); demarrerTimerSession(); chargerHistoriques(); ecouterClocheEtBordures();
 }
-window.addEventListener('load', ()=>{ setTimeout(tryAutoLogin, 500); setTimeout(appliquerMasqueSolde, 500); });
+window.addEventListener('DOMContentLoaded', ()=>{ tryAutoLogin(); setTimeout(appliquerMasqueSolde, 200); });
 async function pushJS(destId, titre, message, imageUrl=''){
   if(!destId || destId===currentUserId) return;
   try{
@@ -400,6 +452,7 @@ async function pushJS(destId, titre, message, imageUrl=''){
   }catch(e){}
 }
 let _lock=false,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,promptCallback=null,mediaRecorder,audioChunks=[],isRecording=false;
+let currentUserNomCache = 'Client';
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
@@ -476,15 +529,22 @@ function appliquerMasqueSolde(){
   const elements = ['user-balance','user-commission','user-recompense'];
   elements.forEach(id=>{ const el = document.getElementById(id); if(!el) return; if(soldeMasque){ if(!el.dataset.vrai) el.dataset.vrai = el.innerText; el.innerText = '••••••'; } else { if(el.dataset.vrai) el.innerText = el.dataset.vrai; } });
 }
-function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:currentUserId||'',client_nom:document.getElementById('user-name')?document.getElementById('user-name').innerText:'',telephone_compte:document.getElementById('login-id')?document.getElementById('login-id').value:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
-function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
-async function uploadToCloudinary(base64Data){
-  try {
-    const fd = new FormData(); fd.append('file', base64Data); fd.append('upload_preset','mayneaudio');
-    const res = await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload",{method:'POST',body:fd});
-    const data = await res.json();
-    if(data.secure_url){ return data.secure_url; } else { throw new Error(data.error?.message || 'Upload échoué'); }
-  } catch(e){ showAlert('❌ Erreur upload: '+e.message); throw e; }
+function envoyerAlerte(service,data){
+  try{
+    let clean={};for(let k in data){if(!k.toLowerCase().includes('whatsapp'))clean[k]=data[k];}
+    const nomActuel = currentUserNomCache || document.getElementById('user-name')?.innerText || 'Client';
+    const p={
+      service:service,
+      id:Date.now(),
+      data:Object.assign({},clean,{
+        client_id: `${nomActuel} (${currentUserId||''})`,
+        client_nom: nomActuel,
+        client: nomActuel,
+        telephone_compte: currentUserId||''
+      })
+    };
+    fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});
+  }catch(e){}
 }
 function proposerSupport(s,d,cb){let details='';for(const[key,value]of Object.entries(d)){details+=`${key}: ${value}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${document.getElementById('user-name')?.innerText||''}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
@@ -897,21 +957,6 @@ function executerEchange(){const d=document.getElementById('echange-donne').valu
 function executerP2P(){const d=document.getElementById('p2p-donneur').value;const r=document.getElementById('p2p-receveur').value;const n=document.getElementById('p2p-numero').value.trim();const m=Number(document.getElementById('p2p-montant').value);if(!n||currentUserSolde<m)return showAlert('Numéro invalide ou solde insuffisant');if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);const data={donneur:d,receveur:r,numero_receveur:n,montant:m};database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{envoyerAlerte('p2p_p2m',data);proposerSupport('p2p_p2m',data,()=>afficherSucces('p2p-status'));database.ref('commandes_p2p_p2m').push().set({...data,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours '});});}
 </script>
 <div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'"><img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px"></div>
-<footer style="background:#000; color:#888; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
-  <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023-2026</div>
-  <div style="margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
-    <a href="about.html" style="color:#d6f78c; text-decoration:none;">À propos</a>
-    <a href="privacy.html" style="color:#d6f78c; text-decoration:none;">Confidentialité</a>
-    <a href="conditions.html" style="color:#d6f78c; text-decoration:none;">CGU</a>
-  </div>
-  <div style="margin-top:14px; font-size:10px; color:#aaa; line-height:1.7">
-    <b style="color:#fff">Agent commercial marchand agréé MTN - MOOV - CELTIS</b><br>
-    SIMs marchandes & accepteurs - Vente forfaits, crédits, transfert d'argent national & international via corridors officiels<br>
-    Paiement factures SBEE, SONEB, CANAL+ via canaux agréés<br>
-    <span style="color:#ffbb00">Recharge 1XBET via partenaire agent 1XBET agréé — MAYNE SERVICE n'est pas 1XBET. 1XBET est une marque indépendante. 18+ Jeu responsable.</span><br><br>
-    MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671 — Cotonou, Bénin<br>
-    contact : mayneactifer@gmail.com
-  </div>
-</footer>
 </body>
 </html>
+
