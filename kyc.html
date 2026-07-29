@@ -21,6 +21,9 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 .btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;font-size:16px;margin-top:22px;cursor:pointer}
 .hidden{display:none}
 .verified-badge{background:#d6f78c;color:#0f3d2e;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;display:inline-block;margin:10px auto}
+/* MODAL MASQUE URL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.modal-box{background:#fff;color:#000;padding:22px;border-radius:18px;max-width:320px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 </style>
 </head>
 <body>
@@ -40,8 +43,8 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 
 <div class="step hidden" id="s2">
 <h1 style="text-align:left;font-size:24px">Tes informations</h1>
-<label class="label">Nom <span>*</span></label><input id="nom" class="input" placeholder="AYIZAN">
-<label class="label">Prénom <span>*</span></label><input id="prenom" class="input" placeholder="MARIUS">
+<label class="label">Nom <span>*</span></label><input id="nom" class="input" placeholder="">
+<label class="label">Prénom <span>*</span></label><input id="prenom" class="input" placeholder="">
 <label class="label">Type de pièce <span>*</span></label>
 <select id="piece_type" class="input">
 <option value="">-- Choisis --</option>
@@ -50,7 +53,7 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <option value="Passeport">Passeport</option>
 <option value="Carte séjour">Carte de séjour</option>
 </select>
-<label class="label">Numéro CNI/NPI <span>*</span></label><input id="numero_piece" class="input" placeholder="Ex: 20001234567">
+<label class="label">Numéro CNI/NPI <span>*</span></label><input id="numero_piece" class="input" placeholder="Ex: 1234567890">
 <label class="label">Date naissance <span>*</span></label><input id="dob" type="date" class="input">
 <label class="label">Genre <span>*</span></label><select id="genre" class="input"><option>Masculin</option><option>Féminin</option></select>
 <label class="label">Pays <span>*</span></label><select id="pays" class="input"><option>Benin</option><option>Togo</option><option>Nigeria</option><option>Côte d'Ivoire</option></select>
@@ -60,10 +63,10 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <div class="step hidden" id="s3">
 <div class="illu">📸</div>
 <h1>Photo de ta pièce</h1>
-<p style="color:#c00;font-weight:bold">⚠️ SANS PHOTO = BLOQUÉ</p>
+<p style="color:#c00;font-weight:bold">⚠️ SANS PHOTO = REJETE</p>
 <input type="file" id="file" accept="image/*" class="input" style="border:2px solid #c00">
 <div id="preview" style="margin-top:10px;display:none"><img id="prev-img" style="width:100%;border-radius:12px"></div>
-<button class="btn" id="btn-kyc" onclick="validerKYC()">Envoyer à l'admin 0158612131</button>
+<button class="btn" id="btn-kyc" onclick="validerKYC()">Envoyer pour être traiter...</button>
 <p id="kyc-status" style="margin-top:10px;text-align:center;font-weight:bold;color:#c00"></p>
 </div>
 
@@ -76,18 +79,21 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 </div>
 </div>
 
+<div id="custom-alert" class="modal-overlay" onclick="if(event.target===this)hideAlert()"><div class="modal-box"><div id="alert-msg" style="font-size:15px;line-height:1.4"></div><button class="btn" style="margin-top:16px" onclick="hideAlert()">OK</button></div></div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
-const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 
 let uid=JSON.parse(localStorage.getItem('mayne_current_user')||'null')?.phone;
 let currentUserNom=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.nom || uid;
 
+function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
+function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function go(n){ document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden')); document.getElementById('s'+n).classList.remove('hidden'); }
 
 document.getElementById('file')?.addEventListener('change', e=>{
@@ -99,7 +105,7 @@ document.getElementById('file')?.addEventListener('change', e=>{
 
 function validerEtape2(){
   if(!nom.value||!prenom.value||!piece_type.value||!numero_piece.value||!dob.value){
-    alert('Remplis: Nom, Prénom, Type pièce, Numéro CNI/NPI, Date naissance'); return;
+    showAlert('Remplis: Nom, Prénom, Type pièce, Numéro CNI/NPI, Date naissance'); return;
   }
   go(3);
 }
@@ -121,8 +127,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
 });
 
 async function uploadToCloudinary(b64){
-  const fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio');
-  const res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/auto/upload",{method:'POST',body:fd});
+  const fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio'); fd.append('folder','kyc');
+  const res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd});
   const j=await res.json();
   if(!j.secure_url) throw new Error('Cloudinary échoué');
   return j.secure_url;
@@ -139,34 +145,22 @@ async function validerKYC(){
     await db.ref('clients/'+uid+'/kyc').set(data);
     await db.ref('kyc_demandes').push().set({...data, client_id:uid, client_nom:currentUserNom});
 
-    // ENVOI DIRECT DANS MESSAGERIE ADMIN 0158612131 AYIZAN MARIUS
     const adminId="0158612131";
     const myIdClean=uid.replace(/[^0-9]/g,'');
     const adminClean=adminId.replace(/[^0-9]/g,'');
     const convId=[myIdClean,adminClean].sort().join('_');
 
     await db.ref(`conversations/${convId}/messages`).push().set({
-      senderId: myIdClean,
-      senderNom: currentUserNom,
-      texte: `🔐 NOUVEAU KYC\n👤 ${data.nom} ${data.prenom}\n🪪 ${data.piece_type} : ${data.numero_piece}\n📅 ${data.dob}\n📞 ${uid}\nPhoto: ${photoUrl}`,
-      photo: photoUrl,
-      image: photoUrl,
-      type: 'text',
-      createdAt: Date.now()
+      senderId: myIdClean, senderNom: currentUserNom,
+      texte: `🔐 NOUVEAU KYC\n👤 ${data.nom} ${data.prenom}\n🪪 ${data.piece_type} : ${data.numero_piece}\n📅 ${data.dob}\n📞 ${uid}`,
+      type: 'text', createdAt: Date.now()
     });
-
     await db.ref(`conversations/${convId}/messages`).push().set({
-      senderId: myIdClean,
-      senderNom: currentUserNom,
-      texte: photoUrl,
-      type: 'image',
-      image: photoUrl,
-      createdAt: Date.now()+1
+      senderId: myIdClean, senderNom: currentUserNom,
+      type: 'image', url: photoUrl, createdAt: Date.now()+1
     });
 
     try{ fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId:adminClean,titre:'🔐 KYC - '+data.nom, message:`${data.piece_type} ${data.numero_piece}`})}); }catch(e){}
-    try{ fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({service:'kyc',data:{client_id:uid, nom:data.nom+' '+data.prenom, type_piece:data.piece_type, numero:data.numero_piece, photo:photoUrl}})}); }catch(e){}
-
     go(4);
   }catch(e){
     status.textContent='Erreur: '+e.message;
