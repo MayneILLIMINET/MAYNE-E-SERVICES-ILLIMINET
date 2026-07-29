@@ -26,41 +26,41 @@ body{background:#500;display:flex;justify-content:center}
 .date-group{padding:8px 16px;font-size:11px;font-weight:800;color:#888;text-transform:uppercase;margin-top:4px}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;z-index:5}
 .bnav{border:none;background:none;color:#fff;font-size:11px;cursor:pointer}
-/* MODAL FIX */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:99;padding:20px}
-.box{background:#fff;border-radius:20px;padding:20px;width:calc(100% - 32px);max-width:360px;max-height:85vh;overflow:auto;box-sizing:border-box;transform:none!important}
-.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:14px;font-weight:800;margin-top:16px;cursor:pointer}
+.box{background:#fff;border-radius:20px;padding:20px;width:calc(100% - 32px);max-width:360px;max-height:85vh;overflow:auto;box-sizing:border-box}
+.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:14px;font-weight:800;margin-top:10px;cursor:pointer}
+.btn-red{background:#ff3b30}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="head"><div class="back" onclick="location.href='index.html'">‹↩️</div><b>Notifications</b><div class="back" onclick="location.reload()">↻</div></div>
+<div class="head"><div class="back" onclick="location.href='index.html'">‹</div><b>Notifications</b><div class="back" onclick="location.reload()">↻</div></div>
 <div id="notif-list"></div>
 </div>
-<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🔙ACCUEIL</button><button class="bnav" onclick="location.href='epargne.html'">EPARGNE⭐</button><button class="bnav" onclick="location.href='compte.html'">INFOS👤</button></div>
+<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🔙ACCUEIL</button><button class="bnav" onclick="marquerToutLu()">✓ TOUT LU</button><button class="bnav" onclick="location.href='compte.html'">INFOS👤</button></div>
 
 <div id="detail" class="overlay" onclick="if(event.target===this)closeDetail()"><div class="box">
 <div id="d-icon" style="font-size:36px;margin-bottom:8px"></div>
-<h3 id="d-title" style="font-size:16px"></h3>
+<h3 id="d-title"></h3>
 <p id="d-date" style="font-size:11px;color:#888;margin:6px 0"></p>
-<p id="d-msg" style="font-size:14px;margin:12px 0;text-align:left;line-height:1.4;word-wrap:break-word"></p>
+<p id="d-msg" style="font-size:14px;margin:12px 0;text-align:left;line-height:1.4;word-break:break-word"></p>
 <b id="d-mont" style="font-size:18px;color:#0f3d2e"></b>
 <button class="btn" onclick="closeDetail()">Fermer</button>
+<button class="btn btn-red" onclick="supprimerNotif()">🗑️ Supprimer</button>
 </div></div>
 
 <script>
-let uid=null;
-let allNotifs=[];
-let readIds = JSON.parse(localStorage.getItem('mayne_notif_read')||'[]');
+let uid=null, allNotifs=[], currentOpenId=null;
+function getReadKey(){ return 'mayne_notif_read_'+uid; }
+function getDelKey(){ return 'mayne_notif_del_'+uid; }
+function getReadIds(){ try{return JSON.parse(localStorage.getItem(getReadKey())||'[]')}catch(e){return[]} }
+function getDelIds(){ try{return JSON.parse(localStorage.getItem(getDelKey())||'[]')}catch(e){return[]} }
 
 function parseFRDate(str){
   if(!str) return Date.now();
-  // essaie ISO d'abord
-  let t=Date.parse(str);
-  if(!isNaN(t)) return t;
-  // format 24/07/2026 17:49:46
+  let t=Date.parse(str); if(!isNaN(t)) return t;
   try{
-    const [dPart,timePart] = str.split(' ');
+    const [dPart,timePart]=str.split(' ');
     if(dPart && dPart.includes('/')){
       const [d,m,y]=dPart.split('/').map(Number);
       let h=0,mi=0,s=0;
@@ -71,10 +71,11 @@ function parseFRDate(str){
   return Date.now();
 }
 function pushNotif(obj){
-  if(!allNotifs.find(n=>n.id===obj.id)){
-    allNotifs.push(obj);
-    render();
-  }
+  if(getDelIds().includes(obj.id)) return;
+  const idx=allNotifs.findIndex(n=>n.id===obj.id);
+  if(idx>=0) allNotifs[idx]=obj; else allNotifs.push(obj);
+  render();
+  updateBadge();
 }
 function formatGroup(ts){
   const d=new Date(ts); const now=new Date();
@@ -86,24 +87,32 @@ function formatGroup(ts){
 function render(){
   allNotifs.sort((a,b)=> (b.ts||0) - (a.ts||0));
   const c=document.getElementById('notif-list');
-  let h=''; let lastGroup='';
-  allNotifs.forEach((v,i)=>{
+  const readIds=getReadIds();
+  let h='', lastGroup='';
+  allNotifs.forEach(v=>{
+    if(getDelIds().includes(v.id)) return;
     const group=formatGroup(v.ts);
     if(group!==lastGroup){ h+=`<div class="date-group">${group}</div>`; lastGroup=group; }
-    const unread =!readIds.includes(v.id);
-    h+=`<div class="notif ${unread?'unread':''}" onclick="openNotif(${i})">
+    const unread=!readIds.includes(v.id);
+    h+=`<div class="notif ${unread?'unread':''}" onclick="openNotif('${v.id}')">
       <div class="ico ${v.color}">${v.icon}</div>
-      <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.titre}</b><small style="color:#999;font-size:10px;flex-shrink:0">${v.date||''}</small></div>
+      <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.titre}</b><small style="color:#999;font-size:10px">${v.date||''}</small></div>
       <p style="font-size:13px;margin-top:4px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.message}</p>
       ${v.montant?`<b style="font-size:12px;color:#0f3d2e">${v.montant} XOF</b>`:''}
       </div>${unread?'<div class="dot"></div>':''}
     </div>`;
   });
-  if(!h) h='<div style="text-align:center;padding:40px;color:#888">Aucune notification</div>';
-  c.innerHTML=h;
+  c.innerHTML=h||'<div style="text-align:center;padding:40px;color:#888">Aucune notification</div>';
 }
-function openNotif(idx){
-  const v=allNotifs[idx]; if(!v) return;
+function updateBadge(){
+  const unread=allNotifs.filter(n=>!getReadIds().includes(n.id) &&!getDelIds().includes(n.id)).length;
+  localStorage.setItem('mayne_notif_unread', unread);
+  localStorage.setItem('mayne_notif_unread_'+uid, unread);
+}
+
+function openNotif(id){
+  const v=allNotifs.find(n=>n.id===id); if(!v) return;
+  currentOpenId=id;
   document.getElementById('d-icon').textContent=v.icon;
   document.getElementById('d-title').textContent=v.titre;
   document.getElementById('d-date').textContent=v.date;
@@ -111,34 +120,37 @@ function openNotif(idx){
   document.getElementById('d-mont').textContent=v.montant? v.montant+' XOF' : '';
   document.getElementById('detail').style.display='flex';
   document.body.style.overflow='hidden';
-  if(!readIds.includes(v.id)){ readIds.push(v.id); localStorage.setItem('mayne_notif_read', JSON.stringify(readIds)); render(); }
+  // MARQUE LU - CORRIGE
+  let read=getReadIds();
+  if(!read.includes(id)){ read.push(id); localStorage.setItem(getReadKey(), JSON.stringify(read)); }
+  render(); updateBadge();
 }
 function closeDetail(){document.getElementById('detail').style.display='none'; document.body.style.overflow='';}
+function supprimerNotif(){
+  if(!currentOpenId) return;
+  let del=getDelIds(); if(!del.includes(currentOpenId)) del.push(currentOpenId);
+  localStorage.setItem(getDelKey(), JSON.stringify(del));
+  // si c'est une vraie notif système, supprime aussi de Firebase
+  if(currentOpenId.startsWith('not_')){
+    db.ref('notifications/'+uid+'/'+currentOpenId.replace('not_','')).remove();
+  }
+  allNotifs=allNotifs.filter(n=>n.id!==currentOpenId);
+  closeDetail(); render(); updateBadge();
+}
+function marquerToutLu(){
+  const ids=allNotifs.map(n=>n.id);
+  localStorage.setItem(getReadKey(), JSON.stringify(ids));
+  render(); updateBadge();
+}
 
 async function init(){
   const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||!u.phone) return;
   uid=(u.phone||'').replace(/[^0-9]/g,'');
-  db.ref('epargne/'+uid).on('value',snap=>{
-    if(!snap.exists())return;
-    snap.forEach(ch=>{
-      const v=ch.val(); const key=ch.key;
-      const isRetrait = v.type==='Retrait' || (v.montant||0)<0;
-      pushNotif({
-        id:'ep_'+key,
-        titre: isRetrait? 'Retrait epargne' : 'Placement '+ (v.nom||''),
-        message: isRetrait? `Retrait de ${Math.abs(v.montantCollecte||v.montant)} XOF vers Principal ${v.penalite?' - penalite '+v.penalite+'F':''}` : `Depot ${v.montantCollecte||v.montant} XOF - ${v.frequence||''} ${v.bloque?' - Bloquee jusqu au '+v.echeance:''}`,
-        date: v.date||'',
-        ts: parseFRDate(v.date),
-        icon: isRetrait?'↓':'↑',
-        color: isRetrait?'red':'green',
-        montant: v.montantCollecte||v.montant
-      });
-    });
-  });
-  db.ref('security_logs/'+uid).on('value',snap=>{ if(!snap.exists())return; snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'sec_'+ch.key, titre:v.titre||'Securite', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date), icon:'🔒', color:'blue'}); }); });
-  db.ref('notifications/'+uid).on('value',snap=>{ if(!snap.exists())return; snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'not_'+ch.key, titre:v.titre||'Info', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date), icon:'🔔', color:'yellow'}); }); });
-  db.ref('transactions/'+uid).limitToLast(50).on('value',snap=>{ if(!snap.exists())return; snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'tr_'+ch.key, titre:v.titre||v.type||'Commande', message:v.message||`${v.type||'Operation'}`, date:v.date||'', ts:parseFRDate(v.date), icon:'🛒', color:'blue', montant:v.montant||''}); }); });
+  db.ref('epargne/'+uid).on('value',snap=>{ snap.forEach(ch=>{ const v=ch.val(); const isRetrait=v.type==='Retrait'||(v.montant||0)<0; pushNotif({id:'ep_'+ch.key, titre:isRetrait?'Retrait epargne':'Placement '+(v.nom||''), message:isRetrait?`Retrait de ${Math.abs(v.montantCollecte||v.montant)} XOF`:`Depot ${v.montantCollecte||v.montant} XOF`, date:v.date||'', ts:parseFRDate(v.date), icon:isRetrait?'↓':'↑', color:isRetrait?'red':'green', montant:v.montantCollecte||v.montant}); }); });
+  db.ref('security_logs/'+uid).on('value',snap=>{ snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'sec_'+ch.key, titre:v.titre||'Securite', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date), icon:'🔒', color:'blue'}); }); });
+  db.ref('notifications/'+uid).on('value',snap=>{ snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'not_'+ch.key, titre:v.titre||'Info', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date)||v.createdAt||Date.now(), icon:'🔔', color:'yellow'}); }); });
+  db.ref('transactions/'+uid).limitToLast(50).on('value',snap=>{ snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'tr_'+ch.key, titre:v.titre||v.type||'Commande', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date), icon:'🛒', color:'blue', montant:v.montant||''}); }); });
 }
 window.onload=init;
 </script>
