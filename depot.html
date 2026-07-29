@@ -43,9 +43,12 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
 .modal-box{background:#ff5000;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
 .capture-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:6px;display:none;border:2px solid #ff5000}
+#img-viewer{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99999}
+#img-viewer img{max-width:96%;max-height:96%;border-radius:10px}
 </style>
 </head>
 <body>
+<div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
 <div class="app-container">
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;"></div>
 <div class="user-header">
@@ -66,7 +69,6 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <input type="file" id="depot-capture-file" class="input-field dark-field" accept="image/*" onchange="previewDepotCapture(this)">
 <img id="depot-capture-preview" class="capture-preview">
 <input type="text" id="depot-id-transaction" class="input-field dark-field" placeholder="ID transaction PSP (si pas de capture)" style="margin-top:6px">
-<small style="font-size:10px;color:#aaa"></small>
 </div>
 
 <button type="button" class="btn-submit" style="background:#4CAF50!important;" onclick="envoyerInfosDepot()">Je Confirme Avoir Validé le Dépôt</button>
@@ -89,6 +91,7 @@ function hideAlert(){document.getElementById('custom-alert').style.display='none
 function toggleSolde(){soldeMasque=!soldeMasque;localStorage.setItem('mayne_hide_solde',soldeMasque);const el=document.getElementById('user-balance');if(soldeMasque){if(!el.dataset.vrai) el.dataset.vrai=el.innerText; el.innerText='••••••';}else{if(el.dataset.vrai) el.innerText=el.dataset.vrai;}}
 function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
 function previewDepotCapture(i){var p=document.getElementById('depot-capture-preview');if(i.files&&i.files[0]){var r=new FileReader();r.onload=function(e){p.src=e.target.result;p.style.display='block';};r.readAsDataURL(i.files[0]);}}
+function openImage(url){document.getElementById('img-viewer-pic').src=url;document.getElementById('img-viewer').style.display='flex';}
 async function uploadToCloudinary(b){var fd=new FormData();fd.append('file',b);fd.append('upload_preset','mayneaudio');fd.append('folder','depot');var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd});var data=await res.json();if(data.secure_url)return data.secure_url;throw new Error('Upload echoue');}
 async function pushJS(destId,titre,msg){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId,titre,message:msg})});}catch(e){}}
 
@@ -104,7 +107,7 @@ function init(){
       const v=c.val();
       const statut=(v.statut||'en cours').toLowerCase();
       let coul='#ffbb00'; if(statut.includes('valid')) coul='#28a745'; else if(statut.includes('annul')) coul='#dc3545';
-      const preuve = v.capture_url? `📷 <a href="${v.capture_url}" target="_blank" style="color:#ffcc80">Voir capture</a>` : `🆔 ID: ${v.id_transaction||'N/A'}`;
+      const preuve = v.capture_url? `<span onclick="openImage('${v.capture_url}')" style="color:#ffcc80;text-decoration:underline;cursor:pointer">📷 Voir capture</span>` : `🆔 ID: ${v.id_transaction||'N/A'}`;
       h=`• ${v.montant}F ${v.reseau} | ${v.numero_envoyeur||''} | ${preuve} - ${v.date} - <span style="background:${coul};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${v.statut}</span><br>`+h;
     });
     hb.innerHTML=h;
@@ -117,39 +120,27 @@ async function envoyerInfosDepot(){
   const numEnv=document.getElementById('depot-numero-envoyeur').value.trim();
   const idTx=document.getElementById('depot-id-transaction').value.trim();
   const file=document.getElementById('depot-capture-file').files[0];
-
   if(!r||!m||m<100) return showAlert('Réseau + montant 100F min');
   if(!numEnv) return showAlert('Numéro envoyeur requis');
   if(!file &&!idTx) return showAlert('Ajoute capture OU ID transaction');
   if(_lock) return; _lock=true;
-
   try{
     let captureUrl='';
     if(file){
       document.getElementById('depot-status').style.display='block';
-      document.getElementById('depot-status').innerText='⏳ Upload capture Cloudinary...';
+      document.getElementById('depot-status').innerText='⏳ Upload capture...';
       const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.onerror=rej;fr.readAsDataURL(file);});
       captureUrl=await uploadToCloudinary(b64);
     }
-
     const data={reseau:r,montant:Number(m),numero_envoyeur:numEnv,id_transaction:idTx||'N/A',capture_url:captureUrl,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
     await database.ref('commandes_depots').push().set(data);
-
-    // ENVOI ADMIN 0158612131 AVEC PHOTO COMME P2P
     const convId=[currentUserId,ADMIN_UID].sort().join('_');
     const userNom=document.getElementById('user-name').innerText;
-    await database.ref('conversations/'+convId+'/messages').push().set({
-      senderId:currentUserId,senderNom:userNom,type:'text',
-      texte:`💰 DEPOT ${data.montant}F ${data.reseau}\nClient: ${currentUserId}\nNum Env: ${numEnv}\nID: ${idTx||'capture'}\n${captureUrl? captureUrl : ''}`,
-      createdAt:Date.now()
-    });
+    await database.ref('conversations/'+convId+'/messages').push().set({senderId:currentUserId,senderNom:userNom,type:'text',texte:`💰 DEPOT ${data.montant}F ${data.reseau}\nClient: ${currentUserId}\nNum Env: ${numEnv}\nID: ${idTx||'capture'}`,createdAt:Date.now()});
     if(captureUrl){
-      await database.ref('conversations/'+convId+'/messages').push().set({
-        senderId:currentUserId,senderNom:userNom,type:'image',url:captureUrl,texte:'📷 Preuve depot '+data.montant+'F',createdAt:Date.now()+100
-      });
+      await database.ref('conversations/'+convId+'/messages').push().set({senderId:currentUserId,senderNom:userNom,type:'image',url:captureUrl,texte:'📷 Preuve depot '+data.montant+'F',createdAt:Date.now()+100});
     }
     pushJS(ADMIN_UID, `DEPOT ${m}F ${r}`, `${m}F ${r} Client:${currentUserId} Num:${numEnv} ID:${idTx} ${captureUrl}`);
-
     document.getElementById('depot-status').innerText='✅ Envoyé! Attente validation';
     document.getElementById('depot-montant').value='';document.getElementById('depot-numero-envoyeur').value='';document.getElementById('depot-id-transaction').value='';document.getElementById('depot-capture-file').value='';document.getElementById('depot-capture-preview').style.display='none';
     setTimeout(()=>document.getElementById('depot-status').style.display='none',4000);
