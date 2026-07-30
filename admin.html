@@ -16,103 +16,104 @@ async function pushJS(d,t,m){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mo
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#111;color:#fff;display:flex;justify-content:center}
-.app{max-width:530px;width:100%;min-height:100vh;background:#1e1e1e;border:2px solid #ff5000}
+.app{max-width:550px;width:100%;min-height:100vh;background:#1e1e1e;border:2px solid #ff5000}
 .top{padding:12px;background:#500;display:flex;justify-content:space-between;position:sticky;top:0;z-index:10}
-.tabs{display:flex;gap:4px;overflow:auto;padding:8px;background:#000;position:sticky;top:44px;z-index:9}
-.tab{padding:8px 12px;border-radius:20px;background:#333;color:#fff;border:none;white-space:nowrap;font-size:10px;font-weight:bold}
+.tabs{display:flex;gap:4px;overflow:auto;padding:8px;background:#000;position:sticky;top:44px;z-index:9;white-space:nowrap}
+.tab{padding:8px 10px;border-radius:20px;background:#333;color:#fff;border:none;font-size:9px;font-weight:900;cursor:pointer}
 .tab.active{background:#ff5000}
 .list{padding:10px}
 .card{background:#000;border-radius:12px;padding:10px;margin-bottom:10px;border-left:4px solid #ff5000}
-.btn{padding:6px 10px;border:none;border-radius:20px;font-weight:bold;margin:4px 4px 0 0;font-size:11px}
-.btn-v{background:#28a745;color:#fff}.btn-a{background:#dc3545;color:#fff}
+.btn{padding:6px 10px;border:none;border-radius:20px;font-weight:bold;margin:4px 4px 0 0;font-size:11px;cursor:pointer}
+.btn-v{background:#28a745;color:#fff}.btn-a{background:#dc3545;color:#fff}.btn-img{background:#ff5000;color:#fff}
 small{color:#aaa}
-.badge{padding:2px 6px;border-radius:10px;font-size:10px;font-weight:bold;color:#fff}
+#img-viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;z-index:9999}
+#img-viewer img{max-width:96%;max-height:96%}
 </style>
 </head>
 <body>
+<div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
 <div class="app">
-<div class="top"><b>ADMIN MAYNE</b><span id="count"></span></div>
+<div class="top"><b>ADMIN MAYNE</b><span id="count" style="font-size:10px"></span></div>
 <div class="tabs">
-<button class="tab active" onclick="switchTab('depots')">DÉPÔTS</button>
-<button class="tab" onclick="switchTab('retraits')">RETRAIT PRINCIPAL</button>
-<button class="tab" onclick="switchTab('forfaits')">FORFAITS</button>
-<button class="tab" onclick="switchTab('transfert')">TRANSFERT</button>
+<button class="tab active" onclick="switchTab('virement')">RETRAIT PRINCIPAL=VIREMENT</button>
+<button class="tab" onclick="switchTab('xbet')">1XBET (DEPOT/RETRAIT)</button>
+<button class="tab" onclick="switchTab('forfait')">FORFAIT</button>
+<button class="tab" onclick="switchTab('recharge')">DÉPÔT PRINCIPAL=RECHARGE</button>
 <button class="tab" onclick="switchTab('p2p')">P2P</button>
-<button class="tab" onclick="switchTab('xbet')">1XBET</button>
+<button class="tab" onclick="switchTab('transfert')">TRANSFERT</button>
 <button class="tab" onclick="switchTab('kyc')">KYC</button>
 </div>
-<div id="list-depots" class="list"></div>
-<div id="list-retraits" class="list" style="display:none"></div>
-<div id="list-forfaits" class="list" style="display:none"></div>
-<div id="list-transfert" class="list" style="display:none"></div>
-<div id="list-p2p" class="list" style="display:none"></div>
+
+<div id="list-virement" class="list"></div>
 <div id="list-xbet" class="list" style="display:none"></div>
+<div id="list-forfait" class="list" style="display:none"></div>
+<div id="list-recharge" class="list" style="display:none"></div>
+<div id="list-p2p" class="list" style="display:none"></div>
+<div id="list-transfert" class="list" style="display:none"></div>
 <div id="list-kyc" class="list" style="display:none"></div>
 </div>
+
 <script>
 function switchTab(t){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');document.querySelectorAll('.list').forEach(l=>l.style.display='none');document.getElementById('list-'+t).style.display='block';}
+function openImg(u){document.getElementById('img-viewer-pic').src=u;document.getElementById('img-viewer').style.display='flex';}
 function init(){
   let u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||u.phone.replace(/[^0-9]/g,'')!==ADMIN_UID){alert('Admin only');location.href='index.html';return;}
 
-  // DEPOTS -> crédit + disparaît
-  db.ref('commandes_depots').on('value',s=>{
+  // 1 - RETRAIT PRINCIPAL = VIREMENT (commandes_retraits)
+  db.ref('commandes_retraits').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
-      h=`<div class="card" style="border-left-color:#28a745"><b>DÉPÔT ${v.montant}F ${v.reseau} - ${v.client_id}</b><br><small>Envoyeur: ${v.numero_envoyeur} | ${v.date}</small><br><small>ID: ${v.id_transaction||''}</small><br>${v.capture_url?`<a href="${v.capture_url}" target="_blank" style="color:#ff5000">📷 Voir preuve</a>`:''}<div><button class="btn btn-v" onclick="validerDepot('${k}','${v.client_id}',${v.montant})">✅ Valider + Créditer solde</button><button class="btn btn-a" onclick="annuler('commandes_depots','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
-    }); document.getElementById('list-depots').innerHTML=h||'Aucun'; document.getElementById('count').innerText=c+' en attente';
+      h=`<div class="card" style="border-left-color:#e67e22"><b>VIREMENT ${v.montant}F - ${v.client_id}</b><br><small>${v.email||''} | ${v.date}</small><br><small style="color:#ffeb3b">Réseau: ${v.reseau} → ${v.numero_reception}</small><div><button class="btn btn-v" onclick="validerRetraitPrincipal('${k}','${v.client_id}')">✅ J'ai viré</button><button class="btn btn-a" onclick="annulerRembourse('commandes_retraits','${k}','${v.client_id}')">❌ Annuler + Rembourser</button></div></div>`+h;
+    }); document.getElementById('list-virement').innerHTML=h||'Aucun virement'; document.getElementById('count').innerText=c+' en attente';
   });
 
-  // RETRAIT PRINCIPAL -> commandes_retraits SEULEMENT
-  db.ref('commandes_retraits').on('value',s=>{
+  // 2 - 1XBET DEPOT / RETRAIT
+  db.ref('commandes_1xbet').on('value',s=>{
     let h=''; s.forEach(ch=>{
       const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return;
-      h+=`<div class="card" style="border-left-color:#e67e22"><b>RETRAIT PRINCIPAL ${v.montant}F - ${v.client_id}</b><br>
-      <small>Client: ${v.client_id} | Email: ${v.email||''}</small><br>
-      <small style="color:#ffeb3b">Réseau: ${v.reseau} | Numéro Réception: ${v.numero_reception}</small><br>
-      <small>Date: ${v.date}</small><br>
-      <div><button class="btn btn-v" onclick="validerRetraitPrincipal('${k}','${v.client_id}',${v.montant})">✅ J'ai envoyé l'argent</button>
-      <button class="btn btn-a" onclick="annuler('commandes_retraits','${k}','${v.client_id}')">❌ Annuler + Rembourser</button></div></div>`+h;
-    });
-    document.getElementById('list-retraits').innerHTML=h||'Aucun retrait principal';
+      const isDepot = (v.type||'').toLowerCase().includes('dépôt')||(v.type||'').toLowerCase().includes('depot');
+      h=`<div class="card" style="border-left-color:${isDepot?'#ff5000':'#3498db'}"><b>1XBET ${v.type} ${v.montant}F - ID:${v.id_joueur}</b><br><small>Client: ${v.client_id} | ${v.date}</small><br><small>Code: ${v.code_1xbet_recu||''} | Frais: ${v.frais||0}F</small><br><small>Mode: ${v.mode||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_1xbet','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_1xbet','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
+    }); document.getElementById('list-xbet').innerHTML=h||'Aucun 1xbet';
   });
 
-  db.ref('commandes_forfaits').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; h+=`<div class="card"><b>FORFAIT ${v.montant||''}F ${v.forfait||''} - ${v.client_id}</b><br><small>${v.numero||''} | ${v.date||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_forfaits','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_forfaits','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-forfaits').innerHTML=h||'Aucun';});
+  // 3 - FORFAIT
+  db.ref('commandes_forfaits').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; h+=`<div class="card"><b>FORFAIT ${v.montant||''}F ${v.forfait||''} - ${v.client_id}</b><br><small>${v.numero||''} | ${v.date||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_forfaits','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_forfaits','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-forfait').innerHTML=h||'Aucun forfait';});
 
-  // TRANSFERT -> garde les 2 types Envoi et Retrait transfert
+  // 4 - DÉPÔT PRINCIPAL = RECHARGE
+  db.ref('commandes_depots').on('value',s=>{
+    let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return;
+      h=`<div class="card" style="border-left-color:#28a745"><b>RECHARGE ${v.montant}F ${v.reseau} - ${v.client_id}</b><br><small>Envoyeur: ${v.numero_envoyeur} | ${v.date}</small><br><small>ID Tx: ${v.id_transaction||''}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Voir preuve</button>`:''}<div><button class="btn btn-v" onclick="validerDepot('${k}','${v.client_id}',${v.montant})">✅ Valider + Créditer</button><button class="btn btn-a" onclick="annuler('commandes_depots','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
+    }); document.getElementById('list-recharge').innerHTML=h||'Aucune recharge';
+  });
+
+  // 5 - P2P
+  db.ref('commandes_p2p_p2m').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; h+=`<div class="card"><b>P2P ${v.montant}F ${v.donneur}→${v.receveur} - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur} | ${v.date}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Preuve</button>`:''}<div><button class="btn btn-v" onclick="validerP2P('${k}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_p2p_p2m','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-p2p').innerHTML=h||'Aucun P2P';});
+
+  // 6 - TRANSFERT (Envoi + Retrait transfert - reste séparé du virement principal)
   db.ref('commandes_transferts').on('value',s=>{
     let h=''; s.forEach(ch=>{
       const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return;
       const isRetrait = (v.type||'').toLowerCase().includes('retrait');
-      h+=`<div class="card" style="border-left-color:${isRetrait?'#e67e22':'#3498db'}"><span class="badge" style="background:${isRetrait?'#e67e22':'#3498db'}">${v.type||'TRANSFERT'}</span> <b>${v.montant}F ${v.pays||''} - ${v.client_id}</b><br>
-      <small>${isRetrait? 'Num Décaissement: '+(v.numero_decaissement||''): 'Num Complet: '+(v.numero_complet||'') } | ${v.motif||''}</small><br><small>${v.date}</small><br>
-      <button class="btn btn-v" onclick="validerSimple('commandes_transferts','${k}','${v.client_id}')">✅ Valider ${isRetrait?'retrait transfert':'envoi'}</button><button class="btn btn-a" onclick="annuler('commandes_transferts','${k}','${v.client_id}')">❌</button></div>`+h;
+      h+=`<div class="card" style="border-left-color:${isRetrait?'#e67e22':'#3498db'}"><b>TRANSFERT ${v.type} ${v.montant}F ${v.pays||''} - ${v.client_id}</b><br><small>${isRetrait? 'Décaissement: '+(v.numero_decaissement||''): 'Num: '+(v.numero_complet||'') } | Motif: ${v.motif||''}</small><br><small>${v.date}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_transferts','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_transferts','${k}','${v.client_id}')">❌</button></div></div>`+h;
     }); document.getElementById('list-transfert').innerHTML=h||'Aucun transfert';
   });
 
-  db.ref('commandes_p2p_p2m').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; h+=`<div class="card"><b>P2P ${v.montant}F - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur}</small><div><button class="btn btn-v" onclick="validerP2P('${k}')">✅</button><button class="btn btn-a" onclick="annuler('commandes_p2p_p2m','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-p2p').innerHTML=h||'Aucun';});
-  db.ref('commandes_1xbet').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; h+=`<div class="card"><b>${v.type} ${v.montant}F ID:${v.id_joueur}</b><br><small>${v.client_id} | ${v.date}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_1xbet','${k}','${v.client_id}')">✅</button><button class="btn btn-a" onclick="annuler('commandes_1xbet','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-xbet').innerHTML=h||'Aucun';});
-  db.ref('kyc_demandes').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'')!=='en_attente') return; h+=`<div class="card"><b>${v.nom} ${v.prenom} - ${v.client_id}</b><br><small>${v.piece_type} ${v.numero_piece}</small><div><button class="btn btn-v" onclick="validerKYC('${k}','${v.client_id}')">✅ Vérifier</button><button class="btn btn-a" onclick="annuler('kyc_demandes','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-kyc').innerHTML=h||'Aucun';});
+  // 7 - KYC avec photo
+  db.ref('kyc_demandes').on('value',s=>{
+    let h=''; s.forEach(ch=>{
+      const v=ch.val(),k=ch.key; if((v.statut||'')!=='en_attente') return;
+      h+=`<div class="card" style="border-left-color:#9b59b6"><b>KYC ${v.nom} ${v.prenom} - ${v.client_id}</b><br><small>${v.piece_type} N° ${v.numero_piece} | ${v.date}</small><br><button class="btn btn-img" onclick="openImg('${v.photo}')">📷 Voir CNI / Photo</button><div><button class="btn btn-v" onclick="validerKYC('${k}','${v.client_id}')">✅ Vérifier KYC</button><button class="btn btn-a" onclick="annuler('kyc_demandes','${k}','${v.client_id}')">❌ Rejeter</button></div></div>`+h;
+    }); document.getElementById('list-kyc').innerHTML=h||'Aucune demande KYC';
+  });
 }
-async function validerDepot(k,cId,m){ if(!confirm('Créditer '+m+'F ?')) return; await db.ref('commandes_depots/'+k).update({statut:'validé'}); let s=await db.ref('clients/'+cId).once('value'); await db.ref('clients/'+cId).update({solde:+(s.val()?.solde||0)+Number(m)}); pushJS(cId,'✅ Dépôt validé',m+'F crédité'); }
-async function validerRetraitPrincipal(k,cId,m){
-  if(!confirm('Tu as bien envoyé '+m+'F à ce client sur son numéro ?')) return;
-  await db.ref('commandes_retraits/'+k).update({statut:'validé', validated_at:new Date().toLocaleString('fr-FR')});
-  pushJS(cId,'✅ Retrait envoyé',`Votre retrait de ${m}F a été envoyé`);
-}
-async function validerSimple(p,k,cId){ await db.ref(p+'/'+k).update({statut:'validé'}); if(cId) pushJS(cId,'✅ Validé','Demande validée'); }
+
+async function validerDepot(k,cId,m){ if(!confirm('Créditer '+m+'F à '+cId+' ?')) return; await db.ref('commandes_depots/'+k).update({statut:'validé'}); let s=await db.ref('clients/'+cId).once('value'); await db.ref('clients/'+cId).update({solde:+(s.val()?.solde||0)+Number(m)}); pushJS(cId,'✅ Recharge validée',m+'F crédité sur votre solde'); }
+async function validerRetraitPrincipal(k,cId){ if(!confirm('Tu confirmes avoir envoyé l argent au client ?')) return; await db.ref('commandes_retraits/'+k).update({statut:'validé', validated_at:new Date().toLocaleString('fr-FR')}); pushJS(cId,'✅ Virement envoyé','Votre retrait principal a été envoyé'); }
+async function validerSimple(p,k,cId){ await db.ref(p+'/'+k).update({statut:'validé'}); if(cId) pushJS(cId,'✅ Validé','Votre demande '+p+' validée'); }
 async function validerP2P(k){ let v=(await db.ref('commandes_p2p_p2m/'+k).once('value')).val(); await db.ref('commandes_p2p_p2m/'+k).update({statut:'validé'}); if(v.receveur==='SOLDE PRINCIPAL'){ let t=(v.numero_receveur||'').replace(/[^0-9]/g,''); let s=await db.ref('clients/'+t).once('value'); await db.ref('clients/'+t).update({solde:+(s.val()?.solde||0)+Number(v.montant)});} pushJS(v.client_id,'✅ P2P validé',v.montant+'F'); }
-async function validerKYC(k,cId){ await db.ref('clients/'+cId+'/kyc').update({statut:'verifie'}); await db.ref('kyc_demandes/'+k).update({statut:'verifie'}); pushJS(cId,'✅ KYC vérifié','Compte vérifié'); }
-async function annuler(p,k,cId){
-  if(!confirm('Annuler ? Si c\'est un retrait principal, on va rembourser le client')) return;
-  await db.ref(p+'/'+k).update({statut:'annulé'});
-  if(p==='commandes_retraits' && cId){
-    // remboursement automatique
-    let v=(await db.ref(p+'/'+k).once('value')).val();
-    let s=await db.ref('clients/'+cId).once('value');
-    await db.ref('clients/'+cId).update({solde:+(s.val()?.solde||0)+Number(v.montant||0)});
-    pushJS(cId,'❌ Retrait annulé',`Votre retrait de ${v.montant}F annulé et remboursé`);
-  } else if(cId) pushJS(cId,'❌ Annulé','Demande annulée');
-}
+async function validerKYC(k,cId){ await db.ref('clients/'+cId+'/kyc').update({statut:'verifie', verified_at:Date.now()}); await db.ref('kyc_demandes/'+k).update({statut:'verifie'}); pushJS(cId,'✅ KYC vérifié','Votre compte est vérifié'); }
+async function annuler(p,k,cId){ if(!confirm('Annuler ?')) return; await db.ref(p+'/'+k).update({statut:'annulé'}); if(cId) pushJS(cId,'❌ Annulé','Votre demande annulée'); }
+async function annulerRembourse(p,k,cId){ if(!confirm('Annuler et rembourser le client ?')) return; let v=(await db.ref(p+'/'+k).once('value')).val(); await db.ref(p+'/'+k).update({statut:'annulé'}); let s=await db.ref('clients/'+cId).once('value'); await db.ref('clients/'+cId).update({solde:+(s.val()?.solde||0)+Number(v.montant||0)}); pushJS(cId,'❌ Virement annulé','Votre retrait de '+v.montant+'F remboursé'); }
 window.onload=init;
 </script>
 </body>
