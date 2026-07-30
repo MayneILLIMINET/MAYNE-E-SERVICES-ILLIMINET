@@ -673,13 +673,51 @@ function executerInscription(){
   const phone=i.replace(/\D/g,'');
   const emailKey=e.replace(/\./g,',');
   const pinHache=CryptoJS.MD5(p).toString();
+
+  // Récupère le code parrain depuis le lien ?ref=0158612131
+  let refCode = new URLSearchParams(window.location.search).get('ref');
+  let parrain = refCode ? refCode.replace(/\D/g,'') : '';
+  if(parrain === phone) parrain = ''; // pas auto-parrainage
+
   database.ref('clients/'+phone).once('value').then(s=>{
     if(s.exists()) return showAlert('Numéro déjà utilisé');
     database.ref('emails_index/'+emailKey).once('value').then(se=>{
       if(se.exists()) return showAlert('Email déjà utilisé');
-      database.ref('clients/'+phone).set({nom:n,email:e,pin:pinHache,solde:0,commission:0,recompense:0,email_verified:false})
+      
+      // Création avec parrain
+      database.ref('clients/'+phone).set({
+        nom:n,
+        email:e,
+        pin:pinHache,
+        solde:0,
+        commission:0,
+        recompense:0,
+        email_verified:false,
+        parrain: parrain || '',
+        date_inscription: new Date().toLocaleString('fr-FR'),
+        bonus_parrain: 0
+      })
      .then(()=>{
         database.ref('emails_index/'+emailKey).set(phone).then(()=>{
+
+          // Si parrain existe, on le crédite 100F
+          if(parrain){
+            database.ref('clients/'+parrain).once('value').then(sp=>{
+              if(sp.exists()){
+                let pg = sp.val();
+                database.ref('clients/'+parrain).update({
+                  gain_parrainage: (pg.gain_parrainage||0)+100,
+                  commission: (pg.commission||0)+100
+                });
+                database.ref('notifications/'+parrain).push({
+                  titre:"🎉 Nouveau filleul !",
+                  message:`${n} (${phone}) s'est inscrit avec votre lien. Vous avez gagné 100F`,
+                  date:new Date().toLocaleString('fr-FR')
+                });
+              }
+            });
+          }
+
           tempPhone=phone; tempEmail=e;
           document.getElementById('verify-email-affiche').innerText=e;
           envoyerCodeEmail(e);
@@ -959,4 +997,5 @@ function executerP2P(){const d=document.getElementById('p2p-donneur').value;cons
 <div id="img-viewer" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:99999;align-items:center;justify-content:center" onclick="this.style.display='none'"><img id="img-viewer-pic" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:8px"></div>
 </body>
 </html>
+
 
