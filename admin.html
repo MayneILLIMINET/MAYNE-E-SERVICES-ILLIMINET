@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADMIN MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+const db=firebase.database();
+const ADMIN_UID="0158612131";
+const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+async function pushJS(destId,titre,msg){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId,titre,message:msg})});}catch(e){}}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#111;color:#fff;display:flex;justify-content:center}
+.app{max-width:500px;width:100%;min-height:100vh;background:#1e1e1e;border:2px solid #ff5000}
+.top{padding:12px;background:#500;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.tabs{display:flex;gap:4px;overflow:auto;padding:8px;background:#000;position:sticky;top:48px;z-index:9}
+.tab{padding:8px 12px;border-radius:20px;background:#333;color:#fff;border:none;cursor:pointer;white-space:nowrap;font-size:11px;font-weight:bold}
+.tab.active{background:#ff5000}
+.list{padding:10px}
+.card{background:#000;border-radius:12px;padding:10px;margin-bottom:10px;border-left:4px solid #ffbb00}
+.card.valid{border-left-color:#28a745}.card.annul{border-left-color:#dc3545}
+.btn{padding:6px 10px;border:none;border-radius:20px;font-weight:bold;cursor:pointer;margin-right:6px;font-size:11px}
+.btn-v{background:#28a745;color:#fff}.btn-a{background:#dc3545;color:#fff}.btn-img{background:#ff5000;color:#fff}
+#img-viewer{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:9999}
+#img-viewer img{max-width:96%;max-height:96%;border-radius:10px}
+small{color:#aaa}
+</style>
+</head>
+<body>
+<div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
+<div class="app">
+<div class="top"><b>ADMIN MAYNE</b><span id="count" style="font-size:11px"></span></div>
+<div class="tabs">
+<button class="tab active" onclick="switchTab('depots')">DEPOTS</button>
+<button class="tab" onclick="switchTab('p2p')">P2P</button>
+<button class="tab" onclick="switchTab('xbet')">1XBET</button>
+<button class="tab" onclick="switchTab('transfert')">TRANSFERT</button>
+<button class="tab" onclick="switchTab('kyc')">KYC</button>
+</div>
+<div id="list-depots" class="list"></div>
+<div id="list-p2p" class="list" style="display:none"></div>
+<div id="list-xbet" class="list" style="display:none"></div>
+<div id="list-transfert" class="list" style="display:none"></div>
+<div id="list-kyc" class="list" style="display:none"></div>
+</div>
+
+<script>
+let currentTab='depots';
+function switchTab(t){currentTab=t;document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active');document.querySelectorAll('.list').forEach(l=>l.style.display='none');document.getElementById('list-'+t).style.display='block';}
+function openImg(u){document.getElementById('img-viewer-pic').src=u;document.getElementById('img-viewer').style.display='flex';}
+
+function init(){
+  let u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  if(!u||u.phone.replace(/[^0-9]/g,'')!==ADMIN_UID){alert('Accès admin uniquement');location.href='index.html';return;}
+
+  // DEPOTS
+  db.ref('commandes_depots').orderByChild('date').on('value',s=>{
+    let h=''; let c=0;
+    s.forEach(ch=>{const v=ch.val();const k=ch.key;if((v.statut||'').toLowerCase().includes('en cours'))c++; const st=(v.statut||'').toLowerCase();
+      h=`<div class="card ${st.includes('valid')?'valid':st.includes('annul')?'annul':''}">
+      <b>${v.montant}F - ${v.reseau} - ${v.client_id}</b><br><small>Num: ${v.numero_envoyeur} | ${v.date}</small><br>
+      <small>${v.id_transaction||''}</small> ${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Voir preuve</button>`:''}
+      <div style="margin-top:8px">
+      <button class="btn btn-v" onclick="validerDepot('${k}','${v.client_id}',${v.montant})">✅ Valider + créditer</button>
+      <button class="btn btn-a" onclick="annulerCmd('commandes_depots','${k}','${v.client_id}')">❌ Annuler</button>
+      </div></div>`+h;
+    });
+    document.getElementById('list-depots').innerHTML=h||'Aucun'; document.getElementById('count').innerText=c+' en attente';
+  });
+
+  // P2P
+  db.ref('commandes_p2p_p2m').on('value',s=>{
+    let h=''; s.forEach(ch=>{const v=ch.val();const k=ch.key; if((v.statut||'').toLowerCase().includes('en cours')){ h+=`<div class="card"><b>${v.montant}F ${v.donneur}→${v.receveur} - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur} | ${v.date}</small><br><small>TX: ${v.transaction_id}</small> ${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Preuve</button>`:''}
+      <div style="margin-top:6px"><button class="btn btn-v" onclick="validerP2P('${k}')">✅ Valider</button><button class="btn btn-a" onclick="annulerCmd('commandes_p2p_p2m','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h; } }); document.getElementById('list-p2p').innerHTML=h;
+  });
+
+  // 1XBET
+  db.ref('commandes_1xbet').on('value',s=>{
+    let h=''; s.forEach(ch=>{const v=ch.val();const k=ch.key; if((v.statut||'').toLowerCase().includes('en cours')){ h+=`<div class="card"><b>${v.type} ${v.montant}F ID Joueur:${v.id_joueur} - ${v.client_id}</b><br><small>${v.code_1xbet_recu||''} | ${v.date}</small><br><button class="btn btn-v" onclick="validerSimple('commandes_1xbet','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annulerCmd('commandes_1xbet','${k}','${v.client_id}')">❌ Annuler</button></div>`+h; } }); document.getElementById('list-xbet').innerHTML=h;
+  });
+
+  // TRANSFERT
+  db.ref('commandes_transferts').on('value',s=>{
+    let h=''; s.forEach(ch=>{const v=ch.val();const k=ch.key; if((v.statut||'').toLowerCase().includes('en cours')){ h+=`<div class="card"><b>${v.type} ${v.montant}F ${v.pays||v.numero_decaissement} - ${v.client_id}</b><br><small>${v.numero_complet||v.numero_decaissement} - ${v.motif||''} | ${v.date}</small><br><button class="btn btn-v" onclick="validerSimple('commandes_transferts','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annulerCmd('commandes_transferts','${k}','${v.client_id}')">❌ Annuler</button></div>`+h; } }); document.getElementById('list-transfert').innerHTML=h;
+  });
+
+  // KYC
+  db.ref('kyc_demandes').on('value',s=>{
+    let h=''; s.forEach(ch=>{const v=ch.val();const k=ch.key; if((v.statut||'').includes('en_attente')){ h+=`<div class="card"><b>${v.nom} ${v.prenom} - ${v.client_id}</b><br><small>${v.piece_type} ${v.numero_piece} | ${v.date}</small><br><button class="btn btn-img" onclick="openImg('${v.photo}')">📷 Voir CNI</button><div style="margin-top:6px"><button class="btn btn-v" onclick="validerKYC('${k}','${v.client_id}')">✅ Vérifier</button><button class="btn btn-a" onclick="annulerCmd('kyc_demandes','${k}','${v.client_id}')">❌ Rejeter</button></div></div>`+h; } }); document.getElementById('list-kyc').innerHTML=h;
+  });
+}
+
+async function validerDepot(key,clientId,montant){
+  if(!confirm('Créditer '+montant+'F à '+clientId+' ?')) return;
+  await db.ref('commandes_depots/'+key).update({statut:'validé', validated_at:new Date().toLocaleString('fr-FR')});
+  let snap=await db.ref('clients/'+clientId).once('value'); let cur=+(snap.val()?.solde||0);
+  await db.ref('clients/'+clientId).update({solde:cur+Number(montant)});
+  await db.ref('notifications/'+clientId).push({titre:'Dépôt validé',message:`${montant}F crédité`,date:new Date().toLocaleString('fr-FR')});
+  pushJS(clientId,'✅ Dépôt validé',`${montant}F crédité sur votre solde`);
+}
+
+async function validerP2P(key){
+  await db.ref('commandes_p2p_p2m/'+key).update({statut:'validé', validated_at:new Date().toLocaleString('fr-FR')});
+  let v=(await db.ref('commandes_p2p_p2m/'+key).once('value')).val();
+  if(v.receveur==='SOLDE PRINCIPAL'){
+    let target=(v.numero_receveur||'').replace(/[^0-9]/g,'');
+    let snap=await db.ref('clients/'+target).once('value'); let cur=+(snap.val()?.solde||0);
+    await db.ref('clients/'+target).update({solde:cur+Number(v.montant)});
+    await db.ref('commandes_p2p_p2m/'+key).update({credited:true});
+  }
+  pushJS(v.client_id,'✅ P2P validé',`${v.montant}F validé`);
+}
+
+async function validerSimple(path,key,clientId){
+  await db.ref(path+'/'+key).update({statut:'validé'});
+  pushJS(clientId,'✅ Validé',`Votre commande ${path} validée`);
+}
+
+async function validerKYC(key,clientId){
+  await db.ref('clients/'+clientId+'/kyc').update({statut:'verifie', verified_at:Date.now()});
+  await db.ref('kyc_demandes/'+key).update({statut:'verifie'});
+  pushJS(clientId,'✅ KYC vérifié','Votre compte est vérifié');
+}
+
+async function annulerCmd(path,key,clientId){
+  if(!confirm('Annuler ?')) return;
+  await db.ref(path+'/'+key).update({statut:'annulé'});
+  pushJS(clientId,'❌ Annulé',`Votre commande ${path} annulée`);
+}
+
+window.onload=init;
+</script>
+</body>
+</html>
