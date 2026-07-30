@@ -42,7 +42,6 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <h3>Transfert /RETRAIT-INTERNE</h3>
 <div class="toggle"><button id="tab-envoi" class="select" style="background:#ff5000" onclick="switchMode('envoi')">Envoi</button><button id="tab-retrait" class="select" style="background:#1e1e1e" onclick="switchMode('retrait')">Retrait</button></div>
 
-<!-- ENVOI -->
 <div id="zone-envoi">
 <label style="font-size:12px;color:#aaa">PAYS *</label>
 <select id="transfert-pays" class="select" onchange="updateIndicatif()">
@@ -59,17 +58,16 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <label style="font-size:12px;color:#aaa">NUMERO BENEFICIAIRE *</label>
 <div class="prefix-box"><span id="prefix-affiche" class="prefix">+229</span><input id="transfert-numero" class="input input-with-prefix"></div>
 <label style="font-size:12px;color:#aaa">MONTANT (XOF) *</label><input id="transfert-montant" type="number" class="input">
-<label style="font-size:12px;color:#aaa">MOTIF *</label><input id="transfert-motif" class="input" placeholder="Ex: Loyer">
+<label style="font-size:12px;color:#aaa">MOTIF (facultatif)</label><input id="transfert-motif" class="input" placeholder="Ex: Loyer">
 <label style="font-size:12px;color:#aaa">WhatsApp (facultatif)</label><input id="transfert-wa" class="input">
 <div id="warning-envoi" class="warning-box"><div style="color:#ffeb3b;font-weight:bold">⚠️ CONFIRMER ENVOI</div><div id="detail-envoi" style="font-size:11px;margin-top:6px"></div></div>
 <button id="btn-envoi" class="btn btn-envoi" onclick="handleEnvoi()">Continuer</button>
 </div>
 
-<!-- RETRAIT -->
 <div id="zone-retrait" style="display:none">
 <label style="font-size:12px;color:#aaa">NUMERO DECAISSEMENT *</label><input id="retrait-numero" class="input" placeholder="Numero qui reçoit le décaissement">
 <label style="font-size:12px;color:#aaa">MONTANT *</label><input id="retrait-montant" type="number" class="input" placeholder="Montant">
-<label style="font-size:12px;color:#aaa">MOTIF *</label><input id="retrait-motif" class="input" placeholder="Ex: Retrait famille">
+<label style="font-size:12px;color:#aaa">MOTIF (facultatif)</label><input id="retrait-motif" class="input" placeholder="Ex: Retrait famille">
 <label style="font-size:12px;color:#aaa">WhatsApp (facultatif)</label><input id="retrait-wa" class="input">
 <div id="warning-retrait" class="warning-box"><div style="color:#ffeb3b;font-weight:bold">✅ RETRAIT</div><div id="detail-retrait" style="font-size:11px;margin-top:6px"></div></div>
 <button id="btn-retrait" class="btn btn-retrait" onclick="handleRetrait()">Continuer</button>
@@ -91,13 +89,12 @@ if(!firebase.apps.length)firebase.initializeApp(cfg);
 var db=firebase.database();
 var uid,userNom='Client',solde=0,_lock=false,confirmCallback=null,etapeEnvoi=1,etapeRetrait=1;
 var ADMIN_UID="0158612131";
-var WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 var ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+
 function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-function envoyerAlerte(s,d){try{fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({service:s,id:Date.now(),data:Object.assign({},d,{client_id:uid,client_nom:userNom})})});}catch(e){}}
 function afficherSucces(id){const t=document.getElementById('global-notif');t.innerText='✅ commande envoyée avec succès!';t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText='✅ Envoyé';e.style.display='block';}}
 function proposerSupport(s,d,cb){let det='';for(const[k,v]of Object.entries(d)){det+=`${k}: ${v}\n`; }const txt=`🔔 SERVICE : ${s}\n👤 ${userNom}\n${det}`;showConfirm('Contacter le personnel sur WhatsApp?',y=>{if(y)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 async function pushJS(destId,titre,msg){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId,titre,message:msg})});}catch(e){}}
@@ -120,9 +117,9 @@ async function init(){
 function handleEnvoi(){
   if(etapeEnvoi===1){
     var sel=document.getElementById('transfert-pays'); var pays=sel.options[sel.selectedIndex].getAttribute('data-pays');
-    var num=document.getElementById('transfert-numero').value.trim(); var m=Number(document.getElementById('transfert-montant').value); var motif=document.getElementById('transfert-motif').value.trim();
-    if(!num) return showAlert('Numéro bénéficiaire requis'); if(!m||m<100) return showAlert('Montant >=100'); if(!motif) return showAlert('Motif requis'); if(solde<m) return showAlert('Solde insuffisant');
-    document.getElementById('detail-envoi').innerHTML=`Pays: <b>${pays}</b><br>Numero: <b>+${sel.value}${num}</b><br>Montant: <b>${m}F</b><br>Motif: ${motif}`;
+    var num=document.getElementById('transfert-numero').value.trim(); var m=Number(document.getElementById('transfert-montant').value);
+    if(!num) return showAlert('Numéro bénéficiaire requis'); if(!m||m<100) return showAlert('Montant >=100'); if(solde<m) return showAlert('Solde insuffisant');
+    document.getElementById('detail-envoi').innerHTML=`Pays: <b>${pays}</b><br>Numero: <b>+${sel.value}${num}</b><br>Montant: <b>${m}F</b>`;
     document.getElementById('warning-envoi').style.display='block';document.getElementById('btn-envoi').innerText='Valider Envoi';document.getElementById('btn-envoi').className='btn btn-valid';etapeEnvoi=2;
   } else { executerEnvoi(); }
 }
@@ -133,10 +130,11 @@ async function executerEnvoi(){
   try{
     await db.ref('clients/'+uid).update({solde:solde-montant});
     let numeroComplet='+'+indicatif+numeroSans;
-    let full={type:'Envoi',client_id:uid,pays:paysNom,pays_code:indicatif,reseau:reseau,numero_complet:numeroComplet,montant:montant,motif:motif,whatsapp_client:wa,date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
+    let full={type:'Envoi',client_id:uid,client_nom:userNom,pays:paysNom,pays_code:indicatif,reseau:reseau,numero_complet:numeroComplet,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
-    pushJS(ADMIN_UID,"ENVOI "+montant+"F",`ENVOI ${montant}F ${paysNom} ${numeroComplet} Motif:${motif} Client:${uid}`);
-    envoyerAlerte('transfert',full); proposerSupport('transfert',full,()=>afficherSucces('transfert-status'));
+    let msgEnvoi = `TRANSFERT ENVOI\nCLIENT: ${uid} (${userNom})\nNUM BENEF: ${numeroComplet}\nMONTANT: ${montant}F\nMOTIF: ${motif||'Facultatif'}\nWHATSAPP: ${wa||'Facultatif'}`;
+    pushJS(ADMIN_UID,"ENVOI "+montant+"F - "+uid,msgEnvoi);
+    proposerSupport('transfert',full,()=>afficherSucces('transfert-status'));
     document.getElementById('transfert-numero').value='';document.getElementById('transfert-montant').value='';document.getElementById('transfert-motif').value='';document.getElementById('transfert-wa').value='';
     document.getElementById('warning-envoi').style.display='none';document.getElementById('btn-envoi').innerText='Continuer';document.getElementById('btn-envoi').className='btn btn-envoi';etapeEnvoi=1;
   }catch(e){showAlert(e.message);}finally{_lock=false;}
@@ -144,9 +142,9 @@ async function executerEnvoi(){
 
 function handleRetrait(){
   if(etapeRetrait===1){
-    var num=document.getElementById('retrait-numero').value.trim(); var m=Number(document.getElementById('retrait-montant').value); var motif=document.getElementById('retrait-motif').value.trim();
-    if(!num) return showAlert('Numéro décaissement requis'); if(!m||m<100) return showAlert('Montant >=100'); if(!motif) return showAlert('Motif requis');
-    document.getElementById('detail-retrait').innerHTML=`Numero décaissement: <b>${num}</b><br>Montant: <b>${m}F</b><br>Motif: ${motif}<br><span style="color:#0f0">Retrait gratuit</span>`;
+    var num=document.getElementById('retrait-numero').value.trim(); var m=Number(document.getElementById('retrait-montant').value);
+    if(!num) return showAlert('Numéro décaissement requis'); if(!m||m<100) return showAlert('Montant >=100');
+    document.getElementById('detail-retrait').innerHTML=`Numero décaissement: <b>${num}</b><br>Montant: <b>${m}F</b><br><span style="color:#0f0">Retrait gratuit</span>`;
     document.getElementById('warning-retrait').style.display='block';document.getElementById('btn-retrait').innerText='Valider Retrait';document.getElementById('btn-retrait').className='btn btn-valid';etapeRetrait=2;
   } else { executerRetrait(); }
 }
@@ -154,10 +152,11 @@ async function executerRetrait(){
   var num=document.getElementById('retrait-numero').value.trim(); var montant=Number(document.getElementById('retrait-montant').value); var motif=document.getElementById('retrait-motif').value.trim(); var wa=document.getElementById('retrait-wa').value.trim();
   if(_lock) return; _lock=true; document.getElementById('btn-retrait').innerText='Traitement...';
   try{
-    let full={type:'Retrait',client_id:uid,numero_decaissement:num,montant:montant,motif:motif,whatsapp_client:wa,date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
+    let full={type:'Retrait',client_id:uid,client_nom:userNom,numero_decaissement:num,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
-    pushJS(ADMIN_UID,"RETRAIT TRANSFERT "+montant+"F",`RETRAIT Num:${num} Montant:${montant}F Motif:${motif} Client:${uid} WA:${wa}`);
-    envoyerAlerte('transfert_retrait',full); proposerSupport('transfert_retrait',full,()=>afficherSucces('transfert-status'));
+    let msgRetrait = `TRANSFERT RETRAIT\nCLIENT: ${uid} (${userNom})\nNUM DECAISSEMENT: ${num}\nMONTANT: ${montant}F\nMOTIF: ${motif||'Facultatif'}\nWHATSAPP: ${wa||'Facultatif'}`;
+    pushJS(ADMIN_UID,"RETRAIT "+montant+"F - "+uid,msgRetrait);
+    proposerSupport('transfert_retrait',full,()=>afficherSucces('transfert-status'));
     document.getElementById('retrait-numero').value='';document.getElementById('retrait-montant').value='';document.getElementById('retrait-motif').value='';document.getElementById('retrait-wa').value='';
     document.getElementById('warning-retrait').style.display='none';document.getElementById('btn-retrait').innerText='Continuer';document.getElementById('btn-retrait').className='btn btn-retrait';etapeRetrait=1;
   }catch(e){showAlert(e.message);}finally{_lock=false;}
