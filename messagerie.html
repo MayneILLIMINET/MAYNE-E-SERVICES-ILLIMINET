@@ -9,6 +9,11 @@
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const database=firebase.database();
+const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+async function pushJS(destId,titre,msg){
+  if(!destId) return;
+  try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})}); }catch(e){}
+}
 </script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100dvh;overflow:hidden}body{background:#111;display:flex;justify-content:center;font-family:Arial}
@@ -51,11 +56,23 @@ function getThumb(url,w){ if(!url) return ''; if(url.includes('/upload/')) retur
 function openImage(url){ document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
 function pickImageChat(){ if(window.AppInventor) window.AppInventor.setWebViewString('PICK_CHAT'); }
 function recordAudioChat(){ const b=document.getElementById('btn-rec'); if(!isRecording){ window.AppInventor.setWebViewString('REC_AUDIO_'+window.currentConvId); isRecording=true; b.innerText='⏹️'; } else{ window.AppInventor.setWebViewString('STOP_AUDIO'); isRecording=false; b.innerText='🎙️'; } }
+
 setInterval(()=>{
   if(!window.AppInventor) return;
   let d=window.AppInventor.getWebViewString(); if(!d) return;
-  if(d.startsWith('CHAT_')){ let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString(''); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()}); }
-  else if(d.startsWith('AUDIO_URL_')){ let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString(''); isRecording=false; const b=document.getElementById('btn-rec'); if(b) b.innerText='🎙️'; database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:u,createdAt:Date.now()}); }
+  const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
+  if(d.startsWith('CHAT_')){
+    let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString('');
+    database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()});
+    pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo');
+  }
+  else if(d.startsWith('AUDIO_URL_')){
+    let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString(''); isRecording=false;
+    const b=document.getElementById('btn-rec'); if(b) b.innerText='🎙️';
+    database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:u,createdAt:Date.now()});
+    pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
+  }
+  else if(d==='REC_STOP'){ window.AppInventor.setWebViewString(''); isRecording=false; const b=document.getElementById('btn-rec'); if(b) b.innerText='🎙️'; }
 },400);
 
 function rechercherUtilisateur(){ const q=document.getElementById('recherche-user-input').value.trim().toLowerCase(); const zone=document.getElementById('resultats-recherche'); if(!q){zone.style.display='none';return;} database.ref('clients').once('value').then(s=>{let h='',c=0; s.forEach(ch=>{const cid=ch.key;const nom=ch.val().nom||'';if(cid===currentUserId)return;if(nom.toLowerCase().includes(q)||cid.includes(q)){c++;h+=`<div style="padding:10px;color:#000;border-bottom:1px solid #eee;cursor:pointer;font-weight:bold" onclick="selectionnerUserPourChat('${cid}','${nom.replace(/'/g,"\\'")}')">👤 ${nom} (${cid})</div>`;}}); zone.innerHTML=c?h:'<div style="padding:10px;color:#666">Aucun</div>';zone.style.display='block';});}
@@ -103,6 +120,7 @@ function ouvrirConversation(convId,nom){
   const otherId=convId.split('_').find(id=>id!==currentUserId);
   database.ref('clients/'+otherId+'/status').on('value',s=>{ const el=document.getElementById('online-text'); if(!el) return; const on=s.val()&&s.val().online; el.innerText=on?'en ligne':'hors ligne'; });
   database.ref(`conversations/${convId}/typing`).on('value',s=>{let e=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val())e=true;});const el=document.getElementById('typing-indicator'); if(el) el.style.display=e?'block':'none'; });
+  database.ref(`conversations/${convId}/recording`).on('value',s=>{let e=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val())e=true;});const el=document.getElementById('rec-indicator'); if(el) el.style.display=e?'flex':'none'; });
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value',snap=>{
     const scroll=document.getElementById('chat-scroll'); if(!scroll)return; let html='';
     snap.forEach(m=>{
@@ -110,10 +128,8 @@ function ouvrirConversation(convId,nom){
       const tick=isMe?(v.vu?' <span style="color:#53bdeb">✓✓</span>':' <span style="color:#8696a0">✓</span>'):'';
       const imgUrl = v.url || v.image || v.photo || '';
       if(v.type==='text'){
-        let txt=v.texte||'';
-        // si le texte contient une URL cloudinary, affiche aussi l'image en dessous
-        let extra='';
-        const murl=txt.match(/https:\/\/res\.cloudinary\.com\/[^\s]+\.jpg/);
+        let txt=v.texte||''; let extra='';
+        const murl=txt.match(/https:\/\/res\.cloudinary\.com\/[^\s]+\.(jpg|png|jpeg)/);
         if(murl){ extra=`<img src="${getThumb(murl[0],600)}" onclick="openImage('${getThumb(murl[0],1000)}')" style="margin-top:6px;max-width:220px;border-radius:8px;display:block;cursor:pointer">`; }
         html+=`<div style="display:flex;justify-content:${isMe?'flex-end':'flex-start'}"><div class="msg-bubble ${isMe?'msg-right':'msg-left'}">${txt}${extra}<span class="msg-time">${h}${tick}</span></div></div>`;
       }
@@ -130,7 +146,14 @@ function ouvrirConversation(convId,nom){
     scroll.innerHTML=html; scroll.scrollTop=scroll.scrollHeight;
   });
 }
-function envoyerDirect(cid){const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,createdAt:Date.now()});i.value='';}
+
+function envoyerDirect(cid){
+  const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;
+  const otherId = cid.split('_').find(id=>id!==currentUserId);
+  database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,createdAt:Date.now()});
+  pushJS(otherId, '💬 '+document.getElementById('user-name').innerText, t.substring(0,90));
+  i.value='';
+}
 function jeTape(cid){database.ref(`conversations/${cid}/typing/${currentUserId}`).set(true);clearTimeout(window.typTO);window.typTO=setTimeout(()=>{database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);},1500);}
 function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{document.getElementById('user-name').innerText=v.val()?.nom||currentUserId;});chargerMessagerie();}
 window.onload=init;
