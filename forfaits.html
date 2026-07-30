@@ -81,7 +81,7 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 </div>
 
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="modal-btn btn-yes" style="margin-top:10px" onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="confirm-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
+<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="confirm-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="btn-yes modal-btn" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
 
 <script>
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
@@ -98,11 +98,11 @@ function showConfirm(m,cb){confirmCallback=cb;document.getElementById('confirm-m
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:uid||'',client_nom:userNom,telephone_compte:uid})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
-function proposerSupport(s,d,cb){let details='';for(const[k,v]of Object.entries(d)){details+=`${k}: ${v}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${userNom}\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
+function proposerSupport(s,d,cb){let details='';for(const[k,v]of Object.entries(d)){details+=`${k}: ${v}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${userNom} (${uid})\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
 async function pushJS(destId,titre,fullData){
   if(!destId)return;
   try{
-    let msg = fullData? `📱 ${fullData.operateur} - ${fullData.type}\n📅 ${fullData.date}\n👤 ${fullData.client_id}\n🔢 Num benef: ${fullData.numero_beneficiaire}\n💰 ${fullData.montant}F\n📞 WA: ${fullData.whatsapp_client}\n📌 ${fullData.statut}` : titre;
+    let msg = fullData? `📱 ${fullData.operateur} - ${fullData.type}\n📅 ${fullData.date}\n👤 ${fullData.client_id} (${fullData.client_nom})\n🔢 Num benef: ${fullData.numero_beneficiaire}\n💰 ${fullData.montant}F\n📞 WA: ${fullData.whatsapp_client}\n📌 ${fullData.statut}` : titre;
     await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})});
   }catch(e){}
 }
@@ -134,14 +134,14 @@ async function executerForfait(){
   if(_lock)return;_lock=true;document.getElementById('btnValider').innerText='Traitement...';document.getElementById('btnValider').disabled=true;
   try{
     await db.ref('clients/'+uid).update({solde:solde-montant});
-    let fullData={client_id:uid,operateur:reseau,type:motif,motif:motif,numero_beneficiaire:numero,numero:numero,montant:montant,whatsapp_client:wa||'',date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
+    let fullData={client_id:uid,client_nom:userNom,operateur:reseau,type:motif,motif:motif,numero_beneficiaire:numero,numero:numero,montant:montant,whatsapp_client:wa||'',date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
     await db.ref('commandes_forfaits').push().set(fullData);
     pushJS(ADMIN_UID,"NOUVEAU FORFAIT "+montant+"F",fullData);
-    envoyerAlerte('forfait_credit',fullData);
+    // envoyerAlerte('forfait_credit',fullData); // DÉSACTIVÉ pour n'avoir qu'1 seule notif (celle avec montant + nom)
     db.ref('notifications/'+uid).push({titre:"Forfait en cours",message:`${reseau} ${motif} ${montant}F vers ${numero}`,date:fullData.date});
-    db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Forfait",message:`${montant}F ${reseau} ${motif} Client:${uid}`,date:fullData.date});
+    db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Forfait",message:`${montant}F ${reseau} ${motif} Client:${uid} (${userNom})`,date:fullData.date});
     var convId=[uid,ADMIN_UID].sort().join('_');
-    await db.ref('conversations/'+convId+'/messages').push().set({senderId:uid,senderNom:userNom,type:'text',texte:`📱 FORFAIT\nReseau:${reseau}\nMotif:${motif}\nNumero:${numero}\nMontant:${montant}\nWA:${wa||'non fourni'}`,createdAt:Date.now()});
+    await db.ref('conversations/'+convId+'/messages').push().set({senderId:uid,senderNom:userNom,type:'text',texte:`📱 FORFAIT\nReseau:${reseau}\nMotif:${motif}\nNumero:${numero}\nMontant:${montant}\nClient:${userNom} (${uid})\nWA:${wa||'non fourni'}`,createdAt:Date.now()});
     proposerSupport('forfait_credit',fullData,()=>afficherSucces('forfait-status'));
     document.getElementById('forfait-numero').value='';document.getElementById('forfait-montant').value='';document.getElementById('forfait-wa').value='';
   }catch(e){showAlert('Erreur: '+e.message);}
