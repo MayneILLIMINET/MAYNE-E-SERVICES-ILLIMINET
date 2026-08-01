@@ -6,13 +6,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-if (!window.AppInventor) {
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'OneSignalSDKWorker.js'});
-    const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(u&&u.phone){try{await OneSignal.login(String(u.phone).replace(/\D/g,''));}catch(e){}}
-  });
-}
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
+  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(u&&u.phone){try{await OneSignal.login(String(u.phone).replace(/\D/g,'')); await OneSignal.User.addTags({phone:String(u.phone).replace(/\D/g,'')});}catch(e){}}
+});
 </script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Dépôt - MAYNE</title>
@@ -26,13 +24,11 @@ const database=firebase.database(); const db=database;
 <style>
 body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
 .app-container{width:100%;max-width:430px;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#1e1e1e;border:2px solid #fff;border-radius:10px;color:#fff;box-sizing:border-box;text-align:center;position:relative}
-.input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#aaaa;margin-bottom:4px;font-weight:bold}
 .input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
 .dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
 .btn-submit{width:100%;background:#500;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
 .user-header{background:#aaaa;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}
-.profile-line{font-size:14px;font-weight:bold;margin-bottom:2px;width:65%}
 .solde-val{font-size:18px;font-weight:bold;color:#0f0}
 .btn-logout{position:absolute;top:1px;right:8px;background:#500;color:#fff;border:4px solid #aaa;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
 .service-panel{background:#1e1e1e;color:#fff;padding:10px;border-radius:6px;text-align:left}
@@ -50,27 +46,24 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <body>
 <div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
 <div class="app-container">
-<div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;"></div>
 <div class="user-header">
 <button type="button" class="btn-logout" onclick="location.href='index.html'">← ACCUEIL</button>
-<div class="profile-line" id="user-name">CHARGEMENT...</div>
+<div id="user-name">CHARGEMENT...</div>
 <div style="font-size:10px;color:#e0e0e0;display:flex;justify-content:space-between;align-items:center"><b>SOLDE :</b><span onclick="toggleSolde()" style="cursor:pointer;font-size:20px">👁️</span></div>
 <div class="solde-val"><span id="user-balance">0</span> F</div>
 </div>
 <div class="service-panel">
 <h4 style="color:#fff;border-bottom:2px solid #fff;padding-bottom:5px;margin-bottom:10px">FAIRE UN DÉPÔT</h4>
-<div class="input-group"><select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()"><option value="">-- Réseau --</option><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div>
-<div class="input-group"><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()"></div>
+<div><select id="depot-reseau" class="select-field dark-field" onchange="updateCodeMarchand()"><option value="">-- Réseau --</option><option value="MTN">MTN Bénin</option><option value="MOOV">Moov Africa</option><option value="CELTIS">Celtis Bénin</option></select></div>
+<div><input type="number" id="depot-montant" class="input-field dark-field" placeholder="Montant (Ex: 2000)" oninput="updateCodeMarchand()"></div>
 <div id="zone-code-marchand" style="display:none;margin-bottom:10px;"><label class="input-label" style="color:#fff;">Code à lancer :</label><div id="code-marchand-affiche" class="info-block-code"></div></div>
-<div class="input-group"><label class="input-label">Numéro envoyeur :</label><input type="text" id="depot-numero-envoyeur" class="input-field dark-field" placeholder="Ex: 0197000000"></div>
-
-<div class="input-group" style="background:#1e1e1e;border:2px dashed #ff5000;border-radius:8px;padding:8px">
-<label class="input-label" style="color:#ff5000">Preuve = Capture OU ID de sms reçu:</label>
+<div><label class="input-label">Numéro envoyeur :</label><input type="text" id="depot-numero-envoyeur" class="input-field dark-field" placeholder="Ex: 0197000000"></div>
+<div style="background:#1e1e1e;border:2px dashed #ff5000;border-radius:8px;padding:8px;margin-top:6px">
+<label class="input-label" style="color:#ff5000">Preuve = Capture OU ID sms:</label>
 <input type="file" id="depot-capture-file" class="input-field dark-field" accept="image/*" onchange="previewDepotCapture(this)">
 <img id="depot-capture-preview" class="capture-preview">
-<input type="text" id="depot-id-transaction" class="input-field dark-field" placeholder="ID transaction PSP (si pas de capture)" style="margin-top:6px">
+<input type="text" id="depot-id-transaction" class="input-field dark-field" placeholder="ID transaction (si pas de capture)" style="margin-top:6px">
 </div>
-
 <button type="button" class="btn-submit" style="background:#4CAF50!important;" onclick="envoyerInfosDepot()">Je Confirme Avoir Validé le Dépôt</button>
 <p id="depot-status" class="status-msg"></p>
 <div class="nb-box"><b>NB:</b> ENVOYEZ TOUJOURS UNE CAPTURE OU ID DE VOTRE SMS REÇU APRES PAIEMENT.</div>
@@ -79,21 +72,33 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 </div>
 </div>
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg"></div><button style="margin-top:10px;padding:8px 16px;border-radius:20px" onclick="hideAlert()">OK</button></div></div>
+<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" style="font-weight:bold"></div><div style="margin-top:12px;display:flex;gap:8px"><button style="flex:1;padding:10px;border:none;border-radius:20px;background:#ddd;color:#000" onclick="doConfirm(false)">Plus tard</button><button style="flex:1;padding:10px;border:none;border-radius:20px;background:#25D366;color:#fff;font-weight:bold" onclick="doConfirm(true)">WhatsApp ✅</button></div></div></div>
 
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 const ADMIN_UID="0158612131";
-let currentUserId=null,_lock=false;
+let currentUserId=null,_lock=false,confirmCallback=null;
 let soldeMasque=localStorage.getItem('mayne_hide_solde')==='true';
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
+function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
+function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
 function toggleSolde(){soldeMasque=!soldeMasque;localStorage.setItem('mayne_hide_solde',soldeMasque);const el=document.getElementById('user-balance');if(soldeMasque){if(!el.dataset.vrai) el.dataset.vrai=el.innerText; el.innerText='••••••';}else{if(el.dataset.vrai) el.innerText=el.dataset.vrai;}}
 function updateCodeMarchand(){const r=document.getElementById('depot-reseau').value;const m=document.getElementById('depot-montant').value||'montant';const z=document.getElementById('zone-code-marchand');const a=document.getElementById('code-marchand-affiche');if(!r){z.style.display='none';return;}z.style.display='block';if(r==='MTN')a.innerText='*880*41*340807*'+m+'#';else if(r==='MOOV')a.innerText='*855*4*1*307657*'+m+'#';else if(r==='CELTIS')a.innerText='*889*6*1# (MAY01 puis '+m+')';}
 function previewDepotCapture(i){var p=document.getElementById('depot-capture-preview');if(i.files&&i.files[0]){var r=new FileReader();r.onload=function(e){p.src=e.target.result;p.style.display='block';};r.readAsDataURL(i.files[0]);}}
 function openImage(url){document.getElementById('img-viewer-pic').src=url;document.getElementById('img-viewer').style.display='flex';}
 async function uploadToCloudinary(b){var fd=new FormData();fd.append('file',b);fd.append('upload_preset','mayneaudio');fd.append('folder','depot');var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd});var data=await res.json();if(data.secure_url)return data.secure_url;throw new Error('Upload echoue');}
 async function pushJS(destId,titre,msg){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId,titre,message:msg})});}catch(e){}}
+function envoyerAlerte(service,data){try{let clean={};for(let k in data){if(!k.toLowerCase().includes('whatsapp'))clean[k]=data[k];}const p={service:service,id:Date.now(),data:Object.assign({},clean,{client_id:document.getElementById('user-name').innerText+' ('+currentUserId+')',client_nom:document.getElementById('user-name').innerText,telephone_compte:currentUserId})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
+function proposerSupport(service,data,cb){
+  let details='';for(const[k,v]of Object.entries(data)){details+=`${k}: ${v}\n`;}
+  const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${service}\n👤 CLIENT : ${document.getElementById('user-name').innerText} (${currentUserId})\n💬 DÉTAILS:\n${details}`;
+  showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){
+    if(yes) window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');
+    if(cb) cb();
+  });
+}
 
 function init(){
   let saved=null;try{saved=JSON.parse(localStorage.getItem('mayne_current_user')||'null');}catch{}
@@ -104,13 +109,10 @@ function init(){
     const hb=document.getElementById('depot-historique');
     if(!sh.exists()){hb.innerHTML='Aucun dépôt';return;}
     let h=''; sh.forEach(c=>{
-      const v=c.val();
-      const statut=(v.statut||'en cours').toLowerCase();
-      let coul='#ffbb00'; if(statut.includes('valid')) coul='#28a745'; else if(statut.includes('annul')) coul='#dc3545';
+      const v=c.val(); const statut=(v.statut||'en cours').toLowerCase(); let coul='#ffbb00'; if(statut.includes('valid')) coul='#28a745'; else if(statut.includes('annul')) coul='#dc3545';
       const preuve = v.capture_url? `<span onclick="openImage('${v.capture_url}')" style="color:#ffcc80;text-decoration:underline;cursor:pointer">📷 Voir capture</span>` : `🆔 ID: ${v.id_transaction||'N/A'}`;
       h=`• ${v.montant}F ${v.reseau} | ${v.numero_envoyeur||''} | ${preuve} - ${v.date} - <span style="background:${coul};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${v.statut}</span><br>`+h;
-    });
-    hb.innerHTML=h;
+    }); hb.innerHTML=h;
   });
 }
 
@@ -140,7 +142,12 @@ async function envoyerInfosDepot(){
     if(captureUrl){
       await database.ref('conversations/'+convId+'/messages').push().set({senderId:currentUserId,senderNom:userNom,type:'image',url:captureUrl,texte:'📷 Preuve depot '+data.montant+'F',createdAt:Date.now()+100});
     }
-    pushJS(ADMIN_UID, `DEPOT ${m}F ${r}`, `${m}F ${r} Client:${currentUserId} Num:${numEnv} ID:${idTx} ${captureUrl}`);
+    // Alerte + WhatsApp auto rempli
+    envoyerAlerte('depot', data);
+    pushJS(ADMIN_UID, `DEPOT ${m}F ${r}`, `${m}F ${r} Client:${currentUserId} Num:${numEnv} ID:${idTx}`);
+    proposerSupport('depot', {reseau:r,montant:m,numero_envoyeur:numEnv,id_transaction:idTx||'capture',capture:captureUrl?'oui':'non'}, ()=>{});
+
+    document.getElementById('depot-status').style.display='block';
     document.getElementById('depot-status').innerText='✅ Envoyé! Attente validation';
     document.getElementById('depot-montant').value='';document.getElementById('depot-numero-envoyeur').value='';document.getElementById('depot-id-transaction').value='';document.getElementById('depot-capture-file').value='';document.getElementById('depot-capture-preview').style.display='none';
     setTimeout(()=>document.getElementById('depot-status').style.display='none',4000);
