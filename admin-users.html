@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADMIN USERS - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+const ONESIGNAL_APP_ID="9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1";
+window.OneSignalDeferred=window.OneSignalDeferred||[];
+OneSignalDeferred.push(async function(OneSignal){
+  await OneSignal.init({appId:ONESIGNAL_APP_ID,serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
+  await OneSignal.User.addTags({role:"admin",phone:"0158612131"});
+});
+</script>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}body{background:#111;color:#fff;display:flex;justify-content:center}.app{max-width:700px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000}.top{padding:12px;background:#000;display:flex;justify-content:space-between}.input{width:100%;background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:6px 0}.btn{border:none;border-radius:6px;padding:6px 10px;font-weight:800;cursor:pointer}.btn-save{background:#2b8a3e;color:#fff} table{width:100%;border-collapse:collapse;font-size:11px} th,td{border:1px solid #333;padding:5px} th{background:#ff5000}</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><b>👥 ADMIN USERS</b><span id="cu" style="font-size:11px"></span></div>
+<input id="s-user" class="input" placeholder="🔍 nom / numéro / parrain..." oninput="filtrer()">
+<div style="overflow:auto;max-height:85vh"><table><thead><tr><th>Nom/Parrain</th><th>Num</th><th>Solde</th><th>Com</th><th>Epargne</th><th>Gain Parr</th><th>💾</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</div>
+<script>
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.database(); var ADMIN_UID="0158612131"; var all=[];
+function init(){var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');var uid=u?u.phone.replace(/\D/g,''):'';if(uid!==ADMIN_UID){document.body.innerHTML='⛔ Admin seulement';return}
+db.ref('clients').on('value',s=>{all=[];s.forEach(ch=>{let v=ch.val();all.push({key:ch.key,nom:v.nom||'',solde:v.solde||0,commission:v.commission||0,recompense:v.recompense||0,gain_parrainage:v.gain_parrainage||0,parrain:v.parrain||''});});document.getElementById('cu').innerText=all.length+' users';render(all);});}
+function render(list){let tb=document.getElementById('tbody');tb.innerHTML='';list.slice(0,500).forEach(u=>{tb.innerHTML+=`<tr><td><b>${u.nom}</b><br><small style="color:#ffeb3b">P:${u.parrain}</small></td><td>${u.key}</td><td><input id="s-${u.key}" type="number" value="${u.solde}" style="width:60px;background:#000;color:#0f0;border:1px solid #444"></td><td><input id="c-${u.key}" type="number" value="${u.commission}" style="width:55px;background:#000;color:#ffeb3b;border:1px solid #444"></td><td><input id="r-${u.key}" type="number" value="${u.recompense}" style="width:55px;background:#000;color:#f0f;border:1px solid #444"></td><td><input id="g-${u.key}" type="number" value="${u.gain_parrainage}" style="width:50px;background:#000;color:#0ff;border:1px solid #444"></td><td><button class="btn btn-save" onclick="saveU('${u.key}')">💾</button></td></tr>`;});}
+function saveU(p){let ns=Number(document.getElementById('s-'+p).value),nc=Number(document.getElementById('c-'+p).value),nr=Number(document.getElementById('r-'+p).value),ng=Number(document.getElementById('g-'+p).value);db.ref('clients/'+p).update({solde:ns,commission:nc,recompense:nr,gain_parrainage:ng}).then(()=>alert('✅ '+p+' MAJ '+ns+'F'));}
+function filtrer(){let q=document.getElementById('s-user').value.toLowerCase();render(all.filter(u=>u.nom.toLowerCase().includes(q)||u.key.includes(q)||u.parrain.includes(q)));}
+window.onload=init;
+</script>
+</body>
+</html>
