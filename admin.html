@@ -2,118 +2,170 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN MAYNE</title>
+<title>ADMIN FUSION - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script>
-const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
-if(!firebase.apps.length)firebase.initializeApp(cfg);
-const db=firebase.database();
-const ADMIN_UID="0158612131";
-const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
-async function pushJS(d,t,m){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId:d,titre:t,message:m})});}catch(e){}}
-</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#111;color:#fff;display:flex;justify-content:center}
-.app{max-width:550px;width:100%;min-height:100vh;background:#1e1e1e;border:2px solid #ff5000}
-.top{padding:12px;background:#500;display:flex;justify-content:space-between;position:sticky;top:0;z-index:10}
-.tabs{display:flex;gap:4px;overflow:auto;padding:8px;background:#000;position:sticky;top:44px;z-index:9;white-space:nowrap}
-.tab{padding:8px 10px;border-radius:20px;background:#333;color:#fff;border:none;font-size:9px;font-weight:900;cursor:pointer}
+.app{max-width:750px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000}
+.top{padding:12px;background:#000;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.tabs{display:flex;gap:4px;padding:8px;background:#000;position:sticky;top:48px;z-index:9}
+.tab{flex:1;padding:10px;border:none;border-radius:8px;font-weight:800;cursor:pointer;background:#222;color:#fff}
 .tab.active{background:#ff5000}
-.list{padding:10px}
-.card{background:#000;border-radius:12px;padding:10px;margin-bottom:10px;border-left:4px solid #ff5000}
-.btn{padding:6px 10px;border:none;border-radius:20px;font-weight:bold;margin:4px 4px 0 0;font-size:11px;cursor:pointer}
-.btn-v{background:#28a745;color:#fff}.btn-a{background:#dc3545;color:#fff}.btn-img{background:#ff5000;color:#fff}
-small{color:#aaa}
-#img-viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;z-index:9999}
-#img-viewer img{max-width:96%;max-height:96%}
+.input{width:100%;background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:4px 0}
+.btn{border:none;border-radius:6px;padding:6px 10px;font-weight:800;cursor:pointer}
+.btn-save{background:#2b8a3e;color:#fff}.btn-valid{background:#0f0;color:#000}.btn-annul{background:#c00;color:#fff}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border:1px solid #333;padding:6px;text-align:left}
+th{background:#ff5000;position:sticky;top:0}
+tr:nth-child(even){background:#2a2a2a}
+.section{padding:12px;display:none}.section.active{display:block}
+.item{background:#000;border-radius:10px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.badge{padding:2px 6px;border-radius:100px;font-size:10px;font-weight:800}
+.en-cours{background:#ffbb00;color:#000}.valide{background:#0f0;color:#000}.annule{background:#c00;color:#fff}
 </style>
 </head>
 <body>
-<div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
 <div class="app">
-<div class="top"><b>ADMIN MAYNE</b><span id="count" style="font-size:10px"></span></div>
+<div class="top"><b>👑 ADMIN MAYNE FUSION</b><span id="admin-info" style="font-size:11px"></span></div>
 <div class="tabs">
-<button class="tab active" onclick="switchTab('virement')">RETRAIT PRINCIPAL=VIREMENT</button>
-<button class="tab" onclick="switchTab('xbet')">1XBET (DEPOT/RETRAIT)</button>
-<button class="tab" onclick="switchTab('forfait')">FORFAIT</button>
-<button class="tab" onclick="switchTab('recharge')">DÉPÔT PRINCIPAL=RECHARGE</button>
-<button class="tab" onclick="switchTab('p2p')">P2P</button>
-<button class="tab" onclick="switchTab('transfert')">TRANSFERT</button>
-<button class="tab" onclick="switchTab('kyc')">KYC</button>
+<button class="tab active" id="t1" onclick="switchTab('users')">USERS (<span id="cu">0</span>)</button>
+<button class="tab" id="t2" onclick="switchTab('trans')">TRANSFERTS (<span id="ct">0</span>)</button>
+<button class="tab" id="t3" onclick="switchTab('parrain')">PARRAINAGE</button>
 </div>
 
-<div id="list-virement" class="list"></div>
-<div id="list-xbet" class="list" style="display:none"></div>
-<div id="list-forfait" class="list" style="display:none"></div>
-<div id="list-recharge" class="list" style="display:none"></div>
-<div id="list-p2p" class="list" style="display:none"></div>
-<div id="list-transfert" class="list" style="display:none"></div>
-<div id="list-kyc" class="list" style="display:none"></div>
+<!-- USERS -->
+<div id="sec-users" class="section active">
+<input id="search-user" class="input" placeholder="🔍 Rechercher nom / numéro..." oninput="filtrerUsers()">
+<div style="overflow:auto;max-height:75vh">
+<table><thead><tr><th>Nom/Parrain</th><th>Num</th><th>Solde</th><th>Com</th><th>Gain Parr</th><th>💾</th></tr></thead><tbody id="tbody-users"></tbody></table>
+</div>
+</div>
+
+<!-- TRANSFERTS -->
+<div id="sec-trans" class="section">
+<select id="filter-trans" class="input" onchange="filtrerTrans()"><option value="">Tous</option><option value="en cours">En cours</option><option value="valid">Validé</option><option value="annul">Annulé</option><option value="Retrait">Retrait seulement</option><option value="Envoi">Envoi seulement</option></select>
+<div id="list-trans" style="max-height:75vh;overflow:auto"></div>
+</div>
+
+<!-- PARRAINAGE -->
+<div id="sec-parrain" class="section">
+<div id="list-parrain" style="max-height:75vh;overflow:auto"></div>
+</div>
+
 </div>
 
 <script>
-function switchTab(t){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');document.querySelectorAll('.list').forEach(l=>l.style.display='none');document.getElementById('list-'+t).style.display='block';}
-function openImg(u){document.getElementById('img-viewer-pic').src=u;document.getElementById('img-viewer').style.display='flex';}
+var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+var db=firebase.database();
+var ADMIN_UID="0158612131";
+var allUsers=[], allTrans=[], usersMap={};
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  if(t==='users'){document.getElementById('t1').classList.add('active');document.getElementById('sec-users').classList.add('active');}
+  if(t==='trans'){document.getElementById('t2').classList.add('active');document.getElementById('sec-trans').classList.add('active');}
+  if(t==='parrain'){document.getElementById('t3').classList.add('active');document.getElementById('sec-parrain').classList.add('active');}
+}
+
 function init(){
-  let u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!u||u.phone.replace(/[^0-9]/g,'')!==ADMIN_UID){alert('Admin only');location.href='index.html';return;}
+  var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  var uid = u ? u.phone.replace(/\D/g,'') : '';
+  if(uid !== ADMIN_UID){ document.body.innerHTML='<h2 style="padding:20px;color:#fff">⛔ Accès refusé - Admin seulement</h2>'; return; }
+  document.getElementById('admin-info').innerText=uid;
 
-  // 1 - RETRAIT PRINCIPAL = VIREMENT (commandes_retraits)
-  db.ref('commandes_retraits').on('value',s=>{
-    let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
-      h=`<div class="card" style="border-left-color:#e67e22"><b>VIREMENT ${v.montant}F - ${v.client_id}</b><br><small>${v.email||''} | ${v.date}</small><br><small style="color:#ffeb3b">Réseau: ${v.reseau} → ${v.numero_reception}</small><div><button class="btn btn-v" onclick="validerRetraitPrincipal('${k}','${v.client_id}')">✅ J'ai viré</button><button class="btn btn-a" onclick="annulerRembourse('commandes_retraits','${k}','${v.client_id}')">❌ Annuler + Rembourser</button></div></div>`+h;
-    }); document.getElementById('list-virement').innerHTML=h||'Aucun virement'; document.getElementById('count').innerText=c+' en attente';
+  db.ref('clients').on('value', s=>{
+    allUsers=[]; usersMap={};
+    s.forEach(ch=>{
+      let v=ch.val();
+      let o={key:ch.key, nom:v.nom||'', solde:v.solde||0, commission:v.commission||0, gain_parrainage:v.gain_parrainage||0, parrain:v.parrain||''};
+      allUsers.push(o); usersMap[ch.key]=o;
+    });
+    document.getElementById('cu').innerText=allUsers.length;
+    renderUsers(allUsers);
+    renderParrainage();
   });
 
-  // 2 - 1XBET DEPOT / RETRAIT
-  db.ref('commandes_1xbet').on('value',s=>{
-    let h=''; s.forEach(ch=>{
-      const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return;
-      const isDepot = (v.type||'').toLowerCase().includes('dépôt')||(v.type||'').toLowerCase().includes('depot');
-      h=`<div class="card" style="border-left-color:${isDepot?'#ff5000':'#3498db'}"><b>1XBET ${v.type} ${v.montant}F - ID:${v.id_joueur}</b><br><small>Client: ${v.client_id} | ${v.date}</small><br><small>Code: ${v.code_1xbet_recu||''} | Frais: ${v.frais||0}F</small><br><small>Mode: ${v.mode||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_1xbet','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_1xbet','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
-    }); document.getElementById('list-xbet').innerHTML=h||'Aucun 1xbet';
-  });
-
-  // 3 - FORFAIT
-  db.ref('commandes_forfaits').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; h+=`<div class="card"><b>FORFAIT ${v.montant||''}F ${v.forfait||''} - ${v.client_id}</b><br><small>${v.numero||''} | ${v.date||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_forfaits','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_forfaits','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-forfait').innerHTML=h||'Aucun forfait';});
-
-  // 4 - DÉPÔT PRINCIPAL = RECHARGE
-  db.ref('commandes_depots').on('value',s=>{
-    let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return;
-      h=`<div class="card" style="border-left-color:#28a745"><b>RECHARGE ${v.montant}F ${v.reseau} - ${v.client_id}</b><br><small>Envoyeur: ${v.numero_envoyeur} | ${v.date}</small><br><small>ID Tx: ${v.id_transaction||''}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Voir preuve</button>`:''}<div><button class="btn btn-v" onclick="validerDepot('${k}','${v.client_id}',${v.montant})">✅ Valider + Créditer</button><button class="btn btn-a" onclick="annuler('commandes_depots','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
-    }); document.getElementById('list-recharge').innerHTML=h||'Aucune recharge';
-  });
-
-  // 5 - P2P
-  db.ref('commandes_p2p_p2m').on('value',s=>{let h=''; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; h+=`<div class="card"><b>P2P ${v.montant}F ${v.donneur}→${v.receveur} - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur} | ${v.date}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Preuve</button>`:''}<div><button class="btn btn-v" onclick="validerP2P('${k}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_p2p_p2m','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-p2p').innerHTML=h||'Aucun P2P';});
-
-  // 6 - TRANSFERT (Envoi + Retrait transfert - reste séparé du virement principal)
-  db.ref('commandes_transferts').on('value',s=>{
-    let h=''; s.forEach(ch=>{
-      const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return;
-      const isRetrait = (v.type||'').toLowerCase().includes('retrait');
-      h+=`<div class="card" style="border-left-color:${isRetrait?'#e67e22':'#3498db'}"><b>TRANSFERT ${v.type} ${v.montant}F ${v.pays||''} - ${v.client_id}</b><br><small>${isRetrait? 'Décaissement: '+(v.numero_decaissement||''): 'Num: '+(v.numero_complet||'') } | Motif: ${v.motif||''}</small><br><small>${v.date}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_transferts','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_transferts','${k}','${v.client_id}')">❌</button></div></div>`+h;
-    }); document.getElementById('list-transfert').innerHTML=h||'Aucun transfert';
-  });
-
-  // 7 - KYC avec photo
-  db.ref('kyc_demandes').on('value',s=>{
-    let h=''; s.forEach(ch=>{
-      const v=ch.val(),k=ch.key; if((v.statut||'')!=='en_attente') return;
-      h+=`<div class="card" style="border-left-color:#9b59b6"><b>KYC ${v.nom} ${v.prenom} - ${v.client_id}</b><br><small>${v.piece_type} N° ${v.numero_piece} | ${v.date}</small><br><button class="btn btn-img" onclick="openImg('${v.photo}')">📷 Voir CNI / Photo</button><div><button class="btn btn-v" onclick="validerKYC('${k}','${v.client_id}')">✅ Vérifier KYC</button><button class="btn btn-a" onclick="annuler('kyc_demandes','${k}','${v.client_id}')">❌ Rejeter</button></div></div>`+h;
-    }); document.getElementById('list-kyc').innerHTML=h||'Aucune demande KYC';
+  db.ref('commandes_transferts').on('value', s=>{
+    allTrans=[];
+    s.forEach(ch=>{ allTrans.push({id:ch.key, ...ch.val()}); });
+    allTrans.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+    document.getElementById('ct').innerText=allTrans.length;
+    renderTrans(allTrans);
   });
 }
 
-async function validerDepot(k,cId,m){ if(!confirm('Créditer '+m+'F à '+cId+' ?')) return; await db.ref('commandes_depots/'+k).update({statut:'validé'}); let s=await db.ref('clients/'+cId).once('value'); await db.ref('clients/'+cId).update({solde:+(s.val()?.solde||0)+Number(m)}); pushJS(cId,'✅ Recharge validée',m+'F crédité sur votre solde'); }
-async function validerRetraitPrincipal(k,cId){ if(!confirm('Tu confirmes avoir envoyé l argent au client ?')) return; await db.ref('commandes_retraits/'+k).update({statut:'validé', validated_at:new Date().toLocaleString('fr-FR')}); pushJS(cId,'✅ Virement envoyé','Votre retrait principal a été envoyé'); }
-async function validerSimple(p,k,cId){ await db.ref(p+'/'+k).update({statut:'validé'}); if(cId) pushJS(cId,'✅ Validé','Votre demande '+p+' validée'); }
-async function validerP2P(k){ let v=(await db.ref('commandes_p2p_p2m/'+k).once('value')).val(); await db.ref('commandes_p2p_p2m/'+k).update({statut:'validé'}); if(v.receveur==='SOLDE PRINCIPAL'){ let t=(v.numero_receveur||'').replace(/[^0-9]/g,''); let s=await db.ref('clients/'+t).once('value'); await db.ref('clients/'+t).update({solde:+(s.val()?.solde||0)+Number(v.montant)});} pushJS(v.client_id,'✅ P2P validé',v.montant+'F'); }
-async function validerKYC(k,cId){ await db.ref('clients/'+cId+'/kyc').update({statut:'verifie', verified_at:Date.now()}); await db.ref('kyc_demandes/'+k).update({statut:'verifie'}); pushJS(cId,'✅ KYC vérifié','Votre compte est vérifié'); }
-async function annuler(p,k,cId){ if(!confirm('Annuler ?')) return; await db.ref(p+'/'+k).update({statut:'annulé'}); if(cId) pushJS(cId,'❌ Annulé','Votre demande annulée'); }
-async function annulerRembourse(p,k,cId){ if(!confirm('Annuler et rembourser le client ?')) return; let v=(await db.ref(p+'/'+k).once('value')).val(); await db.ref(p+'/'+k).update({statut:'annulé'}); let s=await db.ref('clients/'+cId).once('value'); await db.ref('clients/'+cId).update({solde:+(s.val()?.solde||0)+Number(v.montant||0)}); pushJS(cId,'❌ Virement annulé','Votre retrait de '+v.montant+'F remboursé'); }
+function renderUsers(list){
+  let tbody=document.getElementById('tbody-users'); tbody.innerHTML='';
+  list.slice(0,300).forEach(u=>{
+    tbody.innerHTML+=`<tr>
+      <td><b>${u.nom}</b><br><small style="color:#ffeb3b">Parrain:${u.parrain||'aucun'}</small></td>
+      <td>${u.key}</td>
+      <td><input id="s-${u.key}" type="number" value="${u.solde}" style="width:70px;background:#000;color:#0f0;border:1px solid #555;padding:4px"></td>
+      <td><input id="c-${u.key}" type="number" value="${u.commission}" style="width:60px;background:#000;color:#ffeb3b;border:1px solid #555;padding:4px"></td>
+      <td><input id="g-${u.key}" type="number" value="${u.gain_parrainage}" style="width:60px;background:#000;color:#0ff;border:1px solid #555;padding:4px"></td>
+      <td><button class="btn btn-save" onclick="saveUser('${u.key}')">💾</button></td>
+    </tr>`;
+  });
+}
+
+function saveUser(phone){
+  let ns=Number(document.getElementById('s-'+phone).value);
+  let nc=Number(document.getElementById('c-'+phone).value);
+  let ng=Number(document.getElementById('g-'+phone).value);
+  db.ref('clients/'+phone).update({solde:ns, commission:nc, gain_parrainage:ng}).then(()=>alert('✅ '+phone+' MAJ'));
+}
+
+function filtrerUsers(){
+  let q=document.getElementById('search-user').value.toLowerCase();
+  let f=allUsers.filter(u=> u.nom.toLowerCase().includes(q) || u.key.includes(q) || (u.parrain||'').includes(q));
+  renderUsers(f);
+}
+
+function renderTrans(list){
+  let div=document.getElementById('list-trans'); div.innerHTML='';
+  list.forEach(t=>{
+    let col = t.statut?.includes('valid') ? 'valide' : t.statut?.includes('annul') ? 'annule' : 'en-cours';
+    div.innerHTML+=`<div class="item"><div><b>${t.type} ${t.methode||''} - ${t.montant}F</b><br><small>${t.client_nom} (${t.client_id})<br>${t.numero_complet||t.numero_decaissement} | ${t.pays||''}<br>${t.date}</small><br><span class="badge ${col}">${t.statut}</span></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-valid" onclick="validTrans('${t.id}')">Valider</button><button class="btn btn-annul" onclick="annulTrans('${t.id}')">Annuler</button></div></div>`;
+  });
+}
+
+function filtrerTrans(){
+  let q=document.getElementById('filter-trans').value.toLowerCase();
+  if(!q) return renderTrans(allTrans);
+  let f=allTrans.filter(t=> (t.statut||'').toLowerCase().includes(q) || (t.type||'').toLowerCase().includes(q));
+  renderTrans(f);
+}
+
+function validTrans(id){ db.ref('commandes_transferts/'+id).update({statut:'validé'}).then(()=>alert('Validé')); }
+function annulTrans(id){ 
+  let t=allTrans.find(x=>x.id===id);
+  if(confirm('Rembourser solde si Envoi?')){
+    if(t.type==='Envoi'){ let cli=t.client_id; let m=Number(t.montant||0); db.ref('clients/'+cli).once('value').then(s=>{ if(s.exists()) db.ref('clients/'+cli).update({solde:(s.val().solde||0)+m}); }); }
+  }
+  db.ref('commandes_transferts/'+id).update({statut:'annulé'}).then(()=>alert('Annulé')); 
+}
+
+function renderParrainage(){
+  // compte filleuls
+  let childCount={};
+  allUsers.forEach(u=>{
+    if(u.parrain){ childCount[u.parrain]=(childCount[u.parrain]||0)+1; }
+  });
+  let sorted = [...allUsers].sort((a,b)=>(childCount[b.key]||0)-(childCount[a.key]||0));
+  let div=document.getElementById('list-parrain'); div.innerHTML='';
+  sorted.slice(0,100).forEach(u=>{
+    let cnt=childCount[u.key]||0;
+    if(cnt===0) return;
+    let filleuls = allUsers.filter(x=>x.parrain===u.key).map(f=>`${f.nom}(${f.key})`).join(', ');
+    div.innerHTML+=`<div class="item" style="flex-direction:column;align-items:flex-start"><b>${u.nom} - ${u.key} → ${cnt} filleuls</b><small style="color:#aaa;margin-top:4px">${filleuls}</small></div>`;
+  });
+  if(!div.innerHTML) div.innerHTML='<small>Aucun parrainage encore</small>';
+}
+
 window.onload=init;
 </script>
 </body>
