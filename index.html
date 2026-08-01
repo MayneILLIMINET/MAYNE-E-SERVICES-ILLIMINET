@@ -8,8 +8,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-// FIX OneSignal - worker absolu + tag phone
-navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>{if(x.scope.includes('MAYNE-E-SERVICES-ILLIMINET'))x.unregister()}));
 window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async function(OneSignal){
   await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
@@ -230,8 +228,27 @@ function executerConnexion(){
     if(!s.exists())return showAlert('Numéro ou mot de passe incorrect');
     const dbPin=String(s.val().pin); if(dbPin!==pinHache&&dbPin!==p)return showAlert('Numéro ou mot de passe incorrect');
     const data=s.val(); if(data.email_verified===false){tempPhone=i;tempEmail=data.email;document.getElementById('verify-email-affiche').innerText=data.email;envoyerCodeEmail(data.email);return showAlert('Vérifie ton email');}
-    currentUserId=i;TinyDB.put('current_user',{phone:i});TinyDB.put('current_user_last',Date.now());localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
-    if(!window.AppInventor){window.OneSignalDeferred.push(async function(OneSignal){await OneSignal.login(i.replace(/\D/g,''));await OneSignal.User.addTags({phone:i.replace(/\D/g,'')});});}
+    
+    currentUserId=i;
+    TinyDB.put('current_user',{phone:i}); 
+    TinyDB.put('current_user_last',Date.now());
+    localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
+
+    // --- FIX ONESIGNAL : enregistre ID + phone comme avant ---
+    if(!window.AppInventor){
+      window.OneSignalDeferred.push(async function(OneSignal){
+        const phone = String(i).replace(/\D/g,'');
+        await OneSignal.login(phone);
+        await OneSignal.User.addTags({phone:phone});
+        const subId = await OneSignal.User.pushSubscription.id;
+        if(subId){
+          database.ref('clients/'+i+'/onesignal_id').set(subId);
+          database.ref('clients/'+i+'/phone').set(phone);
+          console.log('OneSignal sauvé:',phone,subId);
+        }
+      });
+    }
+    
     if(window.AppInventor)window.AppInventor.setWebViewString('USER_'+currentUserId);
     if(dbPin===p)database.ref('clients/'+i).update({pin:pinHache});
     chargerSessionDepuisFirebase(i);
