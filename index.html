@@ -199,15 +199,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
     <div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="reg-id" class="input-field"></div>
     <div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field" placeholder="Ex: jean@gmail.com"></div>
     <div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
-    
-    <!-- CODE PARRAIN VISIBLE -->
-    <div class="input-group" style="border:2px dashed #ffeb3b;border-radius:6px;padding:6px;background:rgba(255,80,0,.15)">
-      <label class="input-label" style="color:#ffeb3b">Code Parrain / Invitation (facultatif) :</label>
-      <input type="text" id="reg-parrain" class="input-field" placeholder="Ex: 0158612131 - Laisse vide si pas de parrain">
-    </div>
-
     <button type="button" class="btn-submit" style="background-color:#ff5000!important;" onclick="executerInscription()">Valider</button>
-    <button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
+<button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
   </div>
 <div id="verify-interface" style="display:none;">
   <h3 style="color:#ffeb3b">VÉRIFIE TON EMAIL</h3>
@@ -222,8 +215,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div id="logged-in-zone" style="display:none;">
   <div class="header-actions">
   <div class="notif-bell"  onclick="location.href='notifications.html'" style="background:#aaa;top:1px;left:38px;padding:1px">🔔<span id="notif-count" class="notif-count">0</span></div>
-    <div class="btn" onclick="location.href='updates.html'" style="background:#aaaa;border:5px solid #1e1e1e;border-left:7px solid #fff;color:#fff;top:1px;left:1px;padding:1px">⬇️MJA </div>
-  <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#aaa;border:5px solid #1e1e1e;border-right:9px solid#c00;border-left:9px solid #ff5000">Profil👤</button>
+    <div class="btn" onclick="location.href='updates.html'" style="background:#aaa;border:5px solid #1e1e1e;border-left:9px solid #fff;color:#fff;top:1px;left:1px;padding:1px">⬇️MJA </div>
+  <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#aaa;border:5px solid #1e1e1e;border-right:9px solid#;border-left:9px solid #fff">Profil👤</button>
   <button class="btn-action-top" onclick="location.href='depot.html'">📥Recharger</button>
   <button class="btn-action-top retrait" onclick="location.href='retrait.html'">📤RETIRER</button>
 </div>
@@ -252,12 +245,12 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
     <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" style="border-left-color:#E91E63" onclick="location.href='messagerie.html'">💬 Messagerie</button>
     <button id="btn-forfait" class="tab-btn btn-full service-btn-new" style="border-left-color:#8BC34A" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
   </div>
-      <footer style="display:none;background:#1e1e1e;color:#500; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
+      <footer style="display:none;background:#500;color:#aaa; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
   <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023</div>
   <div style="margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
-    <a href="about.html" style="color:#d6f78c; text-decoration:none;">À propos</a>
-    <a href="privacy.html" style="color:#d6f78c; text-decoration:none;">Confidentialité</a>
-    <a href="conditions.html" style="color:#d6f78c; text-decoration:none;">CGU</a>
+    <a href="about.html" style="background:#c00;color:#fff;border:5px solid#ff5000;border-left:9px solid#fff; text-decoration:none;">A PROPOS</a>
+    <a href="privacy.html" style="background:#c00;color:#fff;border:5px solid#ff5000;border-left:9px solid#fff;text-decoration:none;">Confidentialité</a>
+    <a href="conditions.html" style="background:#c00;color:#fff;border:5px solid#ff5000;border-left:9px solid#fff;text-decoration:none;">CGU</a>
   </div>
   <div style="margin-top:14px; font-size:10px; color:#aaa; line-height:1.7">
     <b style="color:#fff">Agent commercial marchand agréé MTN - MOOV - CELTIS</b><br>
