@@ -8,100 +8,118 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f5000;color:#fff;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#1e1e1e;padding-bottom:90px;border:5px solid #fff;position:relative}
-.top{display:flex;justify-content:space-between;align-items:center;padding:16px}
-.avatar{width:44px;height:44px;border-radius:50%;background:#feb3;display:flex;align-items:center;justify-content:center;font-weight:800}
-.card{margin:12px 16px;background:#aaaa;border:10px solid #ff5000;border-radius:22px;padding:18px;text-align:left}
-.input{width:100%;background:#1e1e1e;color:#fff;padding:13px;border:1px solid #fff;border-radius:12px;margin:6px 0;text-align:center;font-weight:bold}
-.btn{width:100%;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff;cursor:pointer;margin-top:8px}
-.btn-copy{background:#ff5000}.btn-wa{background:#25D366}.btn-share{background:#2b8a3e}
-.list{padding:16px}.item{background:#000;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#1e1e1e;padding-bottom:90px;border:5px solid #fff}
+.top{padding:16px;display:flex;justify-content:space-between;align-items:center}
+.card{margin:12px 16px;background:#aaaa;border:10px solid #ff5000;border-radius:22px;padding:18px;text-align:center}
+.code{font-size:32px;font-weight:900;letter-spacing:4px;color:#ffeb3b;background:#000;padding:14px;border-radius:12px;border:2px dashed #ff5000;margin:12px 0}
+.btn{width:100%;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff;cursor:pointer;margin-top:10px;background:#ff5000}
+.list{padding:16px}.item{background:#000;border-radius:12px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;font-size:12px}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #333}
 .bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer;padding:8px 12px}
 .bnav.active{background:#ff5000;color:#fff;border-radius:100px;font-weight:700}
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:15px}
-.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
-.stat-box{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
-.stat{background:#000;border-radius:12px;padding:10px;text-align:center}
-.stat b{font-size:20px;color:#ffeb3b;display:block}
+/* SCHEMA ARBRE */
+.tree{padding:12px;background:#000;border-radius:12px;margin-top:10px;text-align:left}
+.tree ul{margin-left:18px;border-left:1px dashed #ff5000;padding-left:12px;list-style:none}
+.tree li{position:relative;padding:6px 0}
+.tree li::before{content:"";position:absolute;left:-13px;top:16px;width:12px;height:1px;background:#ff5000}
+.node{background:#1e1e1e;border:1px solid #ff5000;border-radius:20px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center;font-size:12px}
+.badge{font-size:10px;padding:2px 6px;border-radius:100px;background:#ff5000}
+.lv1.node{border-color:#0f0}.lv2.node{border-color:#ffeb3b}.lv3.node{border-color:#00bfff}
 </style>
 </head>
 <body>
 <div class="app">
-<div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;"></div>
-
-<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">M</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#aaa"></span></div></div><button class="bnav" onclick="location.href='index.html'">🏠</button></div>
+<div class="top"><b>👥 PARRAINAGE</b><button class="bnav" onclick="location.href='index.html'">Retour</button></div>
 
 <div class="card">
-<h3 style="text-align:center">💰 GAGNEZ AVEC VOS AMIS</h3>
-<p style="font-size:12px;margin:8px 0;text-align:center;color:#fff">100F par filleul + 1% de commission à vie sur chaque recharge de vos filleuls</p>
-
-<div class="stat-box">
-<div class="stat"><b id="nb-filleuls">0</b><span style="font-size:11px">Filleuls</span></div>
-<div class="stat"><b id="gain-parrainage" style="color:#0f0">0 F</b><span style="font-size:11px">Gains parrainage</span></div>
-</div>
-
-<label style="font-size:12px">Votre code parrain :</label>
-<input id="code-parrain" class="input" readonly>
-
-<label style="font-size:12px">Votre lien de parrainage :</label>
-<input id="lien-parrain" class="input" readonly style="font-size:11px">
-
-<button class="btn btn-copy" onclick="copyLink()">📋 Copier le lien</button>
-<button class="btn btn-wa" onclick="shareWA()">📲 Partager sur WhatsApp</button>
+<div style="font-size:12px;color:#000;font-weight:700">TON CODE PARRAIN UNIQUE</div>
+<div class="code" id="code-affiche">...</div>
+<button class="btn" onclick="copierCode()">📋 Copier le code</button>
+<div style="margin-top:10px;font-size:11px;color:#000">Gain: <b id="gain">0F</b> | N1: <b id="c1">0</b> | N2: <b id="c2">0</b> | N3: <b id="c3">0</b></div>
 </div>
 
 <div class="list">
-<h3>Mes filleuls (<span id="count">0</span>)</h3>
-<div id="liste-filleuls" style="margin-top:10px">Chargement...</div>
+<h3 style="font-size:14px">📊 Schéma de mon réseau</h3>
+<div class="tree" id="tree">Chargement...</div>
+<h3 style="font-size:14px;margin-top:16px">Mes filleuls directs (<span id="nb">0</span>)</h3>
+<div id="histo">Aucun filleul</div>
+</div>
 </div>
 
-</div>
-
-<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav active">PARRAINAGE👥</button><button class="bnav" onclick="location.href='compte.html'">PROFIL👤</button></div>
-<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="btn btn-copy" style="margin-top:10px" onclick="hideAlert()">OK</button></div></div>
+<div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav active">PARRAINAGE👥</button><button class="bnav" onclick="location.href='transfert.html'">TRANSFERT💸</button></div>
 
 <script>
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 var db=firebase.database();
-var uid,userNom='';
+var uid="";
 
-function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
-function hideAlert(){document.getElementById('custom-alert').style.display='none';}
-function copyLink(){var l=document.getElementById('lien-parrain').value; navigator.clipboard.writeText(l).then(()=>{var n=document.getElementById('global-notif');n.innerText='✅ Lien copié!';n.style.display='block';setTimeout(()=>n.style.display='none',3000);});}
-function shareWA(){var l=document.getElementById('lien-parrain').value;var txt=`🔥 Rejoins MAYNE E-SERVICES, la plateforme la plus fiable pour 1XBET, FORFAIT, TRANSFERT, FACTURES et plus !\n\nInscris-toi avec mon lien et on gagne tous les deux :\n${l}\n\n💰 100% sécurisé et rapide !`;window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');}
-
-async function init(){
+function init(){
   var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||!u.phone){location.href='index.html';return;}
-  uid=u.phone.replace(/[^0-9]/g,''); userNom=u.nom||u.phone;
-  document.getElementById('uname').textContent=userNom;
-  document.getElementById('uemail').textContent=u.phone;
-  document.getElementById('av').textContent=(userNom[0]||'M').toUpperCase();
+  uid=u.phone.replace(/\D/g,'');
+  document.getElementById('code-affiche').innerText=uid;
 
-  var code = uid;
-  var lien = `https://mayneilliminet.github.io/MAYNE-E-SERVICES-ILLIMINET/?ref=${code}`;
-  document.getElementById('code-parrain').value = code;
-  document.getElementById('lien-parrain').value = lien;
-
-  // Stats
   db.ref('clients/'+uid).on('value',s=>{
-    var d=s.val()||{};
-    document.getElementById('gain-parrainage').textContent=(+d.gain_parrainage||0).toLocaleString('fr-FR')+' F';
+    document.getElementById('gain').innerText=(s.val()?.gain_parrainage||0)+'F';
   });
 
-  // Liste filleuls (clients où parrain == uid)
-  db.ref('clients').orderByChild('parrain').equalTo(uid).on('value',s=>{
-    var c=document.getElementById('liste-filleuls');
-    var countEl=document.getElementById('count');
-    var nbEl=document.getElementById('nb-filleuls');
-    if(!s.exists()){c.innerHTML='<div style="text-align:center;padding:20px;color:#aaa">Aucun filleul pour le moment<br><small>Partagez votre lien !</small></div>'; countEl.textContent='0'; nbEl.textContent='0'; return;}
-    var h=''; var n=0;
-    s.forEach(ch=>{n++;var v=ch.val();h+=`<div class="item"><div><b>${v.nom||ch.key}</b><br><small>${ch.key} - ${v.date_inscription||''}</small></div><div style="text-align:right"><b style="color:#0f0">+${v.bonus_parrain||'100'}F</b><br><small style="color:#ffeb3b">${v.solde||0}F de dépôt</small></div></div>`;});
-    c.innerHTML=h; countEl.textContent=n; nbEl.textContent=n;
+  db.ref('clients').on('value',s=>{
+    let all={};
+    s.forEach(ch=>{ all[ch.key] = {key:ch.key, nom:ch.val().nom||'Sans nom', parrain:(ch.val().parrain||'').replace(/\D/g,'')} });
+
+    // Construire arbre
+    let children = {};
+    Object.values(all).forEach(c=>{
+      if(!c.parrain) return;
+      if(!children[c.parrain]) children[c.parrain]=[];
+      children[c.parrain].push(c);
+    });
+
+    let direct = children[uid]||[];
+    document.getElementById('nb').innerText=direct.length;
+    let histo=document.getElementById('histo');
+    histo.innerHTML = direct.length? '' : 'Aucun filleul. Partage ton code!';
+    direct.forEach(d=>{ histo.innerHTML+=`<div class=item><div><b>${d.nom}</b><br><small>${d.key}</small></div><div style="color:#0f0">N1</div></div>`; });
+
+    // Compter niveaux
+    let n2=0,n3=0;
+    direct.forEach(d1=>{
+      let l2 = children[d1.key]||[];
+      n2+=l2.length;
+      l2.forEach(d2=>{
+        let l3 = children[d2.key]||[];
+        n3+=l3.length;
+      });
+    });
+    document.getElementById('c1').innerText=direct.length;
+    document.getElementById('c2').innerText=n2;
+    document.getElementById('c3').innerText=n3;
+
+    // RENDU SCHEMA
+    let treeDiv=document.getElementById('tree');
+    function renderNode(user, level){
+      let cls = level===1?'lv1':level===2?'lv2':'lv3';
+      let html = `<li class="${cls}"><span class="node"><b>${user.nom}</b> <small>${user.key}</small> <span class="badge">N${level}</span></span>`;
+      let childs = children[user.key]||[];
+      if(childs.length && level<3){
+        html+='<ul>';
+        childs.forEach(ch=>{ html+=renderNode(ch, level+1); });
+        html+='</ul>';
+      }
+      html+='</li>';
+      return html;
+    }
+
+    let html=`<ul><li><span class="node" style="background:#ff5000"><b>TOI</b> ${uid} <span class="badge">ROOT</span></span><ul>`;
+    direct.forEach(d=>{ html+=renderNode(d,1); });
+    html+='</ul></li></ul>';
+    if(direct.length===0) html='<small style="color:#aaa">Pas encore de filleuls. Ton schéma apparaîtra ici.</small>';
+    treeDiv.innerHTML=html;
   });
 }
+
+function copierCode(){navigator.clipboard.writeText(uid);alert('Code copié: '+uid);}
 window.onload=init;
 </script>
 </body>
