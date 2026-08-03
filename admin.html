@@ -18,11 +18,15 @@ async function pushJS(d,t,m){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mo
 body{background:#111;color:#fff;display:flex;justify-content:center}
 .app{max-width:550px;width:100%;min-height:100vh;background:#1e1e1e;border:2px solid #ff5000}
 .top{padding:12px;background:#500;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-.top-left{display:flex;gap:8px;align-items:center}
 .btn-home{background:#fff;color:#500;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none}
-.tabs{display:flex;gap:4px;overflow:auto;padding:8px;background:#000;position:sticky;top:44px;z-index:9;white-space:nowrap}
-.tab{padding:8px 10px;border-radius:20px;background:#333;color:#fff;border:none;font-size:9px;font-weight:900;cursor:pointer}
+.tabs{display:flex;gap:6px;overflow:auto;padding:10px 8px;background:#000;position:sticky;top:48px;z-index:9;white-space:nowrap;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 12px;border-radius:20px;background:#333;color:#fff;border:none;font-size:9px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px}
 .tab.active{background:#ff5000}
+.badge{background:#fff;color:#000;min-width:18px;height:18px;padding:0 5px;border-radius:10px;font-size:10px;font-weight:900;display:none;align-items:center;justify-content:center}
+.badge.show{display:flex}
+.tab.active .badge{background:#fff;color:#ff5000;box-shadow:0 0 6px rgba(255,255,255,.6)}
+#count{background:#ff5000;padding:5px 10px;border-radius:12px;font-size:10px;font-weight:900}
 .list{padding:10px}
 .card{background:#000;border-radius:12px;padding:10px;margin-bottom:10px;border-left:4px solid #ff5000}
 .btn{padding:6px 10px;border:none;border-radius:20px;font-weight:bold;margin:4px 4px 0 0;font-size:11px;cursor:pointer}
@@ -35,18 +39,15 @@ small{color:#aaa}
 <body>
 <div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
 <div class="app">
-<div class="top">
-  <div class="top-left"><a href="index.html" class="btn-home">← ACCUEIL</a><b>ADMIN MAYNE</b></div>
-  <span id="count" style="font-size:10px;background:#ff5000;padding:4px 8px;border-radius:12px">0 en attente</span>
-</div>
+<div class="top"><a href="index.html" class="btn-home">← ACCUEIL</a><b>ADMIN MAYNE</b><span id="count">0 en attente</span></div>
 <div class="tabs">
-<button class="tab active" onclick="switchTab('virement')">RETRAIT PRINCIPAL=VIREMENT</button>
-<button class="tab" onclick="switchTab('xbet')">1XBET (DEPOT/RETRAIT)</button>
-<button class="tab" onclick="switchTab('forfait')">FORFAIT</button>
-<button class="tab" onclick="switchTab('recharge')">DÉPÔT PRINCIPAL=RECHARGE</button>
-<button class="tab" onclick="switchTab('p2p')">P2P</button>
-<button class="tab" onclick="switchTab('transfert')">TRANSFERT</button>
-<button class="tab" onclick="switchTab('kyc')">KYC</button>
+<button class="tab active" onclick="switchTab('virement')">VIREMENT <span id="badge-virement" class="badge">0</span></button>
+<button class="tab" onclick="switchTab('xbet')">1XBET <span id="badge-xbet" class="badge">0</span></button>
+<button class="tab" onclick="switchTab('forfait')">FORFAIT <span id="badge-forfait" class="badge">0</span></button>
+<button class="tab" onclick="switchTab('recharge')">RECHARGE <span id="badge-recharge" class="badge">0</span></button>
+<button class="tab" onclick="switchTab('p2p')">P2P <span id="badge-p2p" class="badge">0</span></button>
+<button class="tab" onclick="switchTab('transfert')">TRANSFERT <span id="badge-transfert" class="badge">0</span></button>
+<button class="tab" onclick="switchTab('kyc')">KYC <span id="badge-kyc" class="badge">0</span></button>
 </div>
 
 <div id="list-virement" class="list"></div>
@@ -62,65 +63,60 @@ small{color:#aaa}
 function switchTab(t){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');document.querySelectorAll('.list').forEach(l=>l.style.display='none');document.getElementById('list-'+t).style.display='block';}
 function openImg(u){document.getElementById('img-viewer-pic').src=u;document.getElementById('img-viewer').style.display='flex';}
 
-// GESTION COMPTEUR GLOBAL
 let pendingCounts = {virement:0,xbet:0,forfait:0,recharge:0,p2p:0,transfert:0,kyc:0};
-function updateGlobalCount(){
+function updateBadge(key, count){
+  pendingCounts[key]=count;
+  let el=document.getElementById('badge-'+key);
+  if(el){
+    el.innerText=count;
+    if(count>0){ el.classList.add('show'); } else { el.classList.remove('show'); }
+  }
   let total = Object.values(pendingCounts).reduce((a,b)=>a+b,0);
-  document.getElementById('count').innerText = total + ' en attente';
-  document.getElementById('count').style.background = total>0 ? '#ff5000' : '#333';
+  let g=document.getElementById('count');
+  g.innerText=total+' en attente';
+  g.style.background= total>0 ? '#ff5000' : '#333';
 }
 
 function init(){
   let u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||u.phone.replace(/[^0-9]/g,'')!==ADMIN_UID){alert('Admin only');location.href='index.html';return;}
 
-  // 1 - RETRAIT PRINCIPAL = VIREMENT
   db.ref('commandes_retraits').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       h=`<div class="card" style="border-left-color:#e67e22"><b>VIREMENT ${v.montant}F - ${v.client_id}</b><br><small>${v.email||''} | ${v.date}</small><br><small style="color:#ffeb3b">Réseau: ${v.reseau} → ${v.numero_reception}</small><div><button class="btn btn-v" onclick="validerRetraitPrincipal('${k}','${v.client_id}')">✅ J'ai viré</button><button class="btn btn-a" onclick="annulerRembourse('commandes_retraits','${k}','${v.client_id}')">❌ Annuler + Rembourser</button></div></div>`+h;
-    }); 
-    document.getElementById('list-virement').innerHTML=h||'Aucun virement';
-    pendingCounts.virement=c; updateGlobalCount();
+    }); document.getElementById('list-virement').innerHTML=h||'Aucun virement'; updateBadge('virement',c);
   });
 
-  // 2 - 1XBET
   db.ref('commandes_1xbet').on('value',s=>{
-    let h='',c=0; s.forEach(ch=>{
-      const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
+    let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       const isDepot = (v.type||'').toLowerCase().includes('dépôt')||(v.type||'').toLowerCase().includes('depot');
       h=`<div class="card" style="border-left-color:${isDepot?'#ff5000':'#3498db'}"><b>1XBET ${v.type} ${v.montant}F - ID:${v.id_joueur}</b><br><small>Client: ${v.client_id} | ${v.date}</small><br><small>Code: ${v.code_1xbet_recu||''} | Frais: ${v.frais||0}F</small><br><small>Mode: ${v.mode||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_1xbet','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_1xbet','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
-    }); document.getElementById('list-xbet').innerHTML=h||'Aucun 1xbet';
-    pendingCounts.xbet=c; updateGlobalCount();
+    }); document.getElementById('list-xbet').innerHTML=h||'Aucun 1xbet'; updateBadge('xbet',c);
   });
 
-  // 3 - FORFAIT
-  db.ref('commandes_forfaits').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h=`<div class="card"><b>FORFAIT ${v.montant||''}F ${v.forfait||''} - ${v.client_id}</b><br><small>${v.numero||''} | ${v.date||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_forfaits','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_forfaits','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-forfait').innerHTML=h||'Aucun forfait'; pendingCounts.forfait=c; updateGlobalCount();});
+  db.ref('commandes_forfaits').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h=`<div class="card"><b>FORFAIT ${v.montant||''}F ${v.forfait||''} - ${v.client_id}</b><br><small>${v.numero||''} | ${v.date||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_forfaits','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_forfaits','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-forfait').innerHTML=h||'Aucun forfait'; updateBadge('forfait',c);});
 
-  // 4 - DÉPÔT PRINCIPAL = RECHARGE
   db.ref('commandes_depots').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       h=`<div class="card" style="border-left-color:#28a745"><b>RECHARGE ${v.montant}F ${v.reseau} - ${v.client_id}</b><br><small>Envoyeur: ${v.numero_envoyeur} | ${v.date}</small><br><small>ID Tx: ${v.id_transaction||''}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Voir preuve</button>`:''}<div><button class="btn btn-v" onclick="validerDepot('${k}','${v.client_id}',${v.montant})">✅ Valider + Créditer</button><button class="btn btn-a" onclick="annuler('commandes_depots','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
-    }); document.getElementById('list-recharge').innerHTML=h||'Aucune recharge'; pendingCounts.recharge=c; updateGlobalCount();
+    }); document.getElementById('list-recharge').innerHTML=h||'Aucune recharge'; updateBadge('recharge',c);
   });
 
-  // 5 - P2P
-  db.ref('commandes_p2p_p2m').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h=`<div class="card"><b>P2P ${v.montant}F ${v.donneur}→${v.receveur} - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur} | ${v.date}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Preuve</button>`:''}<div><button class="btn btn-v" onclick="validerP2P('${k}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_p2p_p2m','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-p2p').innerHTML=h||'Aucun P2P'; pendingCounts.p2p=c; updateGlobalCount();});
+  db.ref('commandes_p2p_p2m').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h=`<div class="card"><b>P2P ${v.montant}F ${v.donneur}→${v.receveur} - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur} | ${v.date}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Preuve</button>`:''}<div><button class="btn btn-v" onclick="validerP2P('${k}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_p2p_p2m','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-p2p').innerHTML=h||'Aucun P2P'; updateBadge('p2p',c);});
 
-  // 6 - TRANSFERT
   db.ref('commandes_transferts').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{
       const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       const isRetrait = (v.type||'').toLowerCase().includes('retrait');
       h=`<div class="card" style="border-left-color:${isRetrait?'#e67e22':'#3498db'}"><b>TRANSFERT ${v.type} ${v.montant}F ${v.pays||''} - ${v.client_id}</b><br><small>${isRetrait? 'Décaissement: '+(v.numero_decaissement||''): 'Num: '+(v.numero_complet||'') } | Motif: ${v.motif||''}</small><br><small>${v.date}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_transferts','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_transferts','${k}','${v.client_id}')">❌</button></div></div>`+h;
-    }); document.getElementById('list-transfert').innerHTML=h||'Aucun transfert'; pendingCounts.transfert=c; updateGlobalCount();
+    }); document.getElementById('list-transfert').innerHTML=h||'Aucun transfert'; updateBadge('transfert',c);
   });
 
-  // 7 - KYC
   db.ref('kyc_demandes').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{
       const v=ch.val(),k=ch.key; if((v.statut||'')!=='en_attente') return; c++;
       h+=`<div class="card" style="border-left-color:#9b59b6"><b>KYC ${v.nom} ${v.prenom} - ${v.client_id}</b><br><small>${v.piece_type} N° ${v.numero_piece} | ${v.date}</small><br><button class="btn btn-img" onclick="openImg('${v.photo}')">📷 Voir CNI / Photo</button><div><button class="btn btn-v" onclick="validerKYC('${k}','${v.client_id}')">✅ Vérifier KYC</button><button class="btn btn-a" onclick="annuler('kyc_demandes','${k}','${v.client_id}')">❌ Rejeter</button></div></div>`;
-    }); document.getElementById('list-kyc').innerHTML=h||'Aucune demande KYC'; pendingCounts.kyc=c; updateGlobalCount();
+    }); document.getElementById('list-kyc').innerHTML=h||'Aucune demande KYC'; updateBadge('kyc',c);
   });
 }
 
