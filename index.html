@@ -11,14 +11,17 @@
 window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async function(OneSignal){
   await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
-  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); 
+  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(u&&u.phone){
     try{
       const phone=String(u.phone).replace(/\D/g,'');
       await OneSignal.login(phone);
       await OneSignal.User.addTags({phone:phone});
       const subId=await OneSignal.User.pushSubscription.id;
-      if(subId) database.ref('clients/'+phone+'/onesignal_id').set(subId);
+      if(subId && typeof database!=='undefined'){
+        database.ref('clients/'+phone+'/onesignal_id').set(subId);
+        database.ref('clients/'+phone+'/phone').set(phone);
+      }
     }catch(e){}
   }
 });
@@ -33,18 +36,15 @@ async function activerNotifications(){
       await OS.login(phone);
       await OS.User.addTags({phone:phone});
       const subId=await OS.User.pushSubscription.id;
-      if(subId) database.ref('clients/'+phone+'/onesignal_id').set(subId);
+      if(subId){
+        database.ref('clients/'+phone+'/onesignal_id').set(subId);
+        database.ref('clients/'+phone+'/phone').set(phone);
+      }
     }
     alert('✅ Notifications activées!');
   }else alert('❌ Permission refusée');
 }
 </script>
-<script>(function(){'use strict';if(window.playablesSDK)return;var HANDLER_NAME='playablesGameEventHandler';var ANDROID_BRIDGE_NAME='_MetaPlayablesBridge';var RAF_FRAME_THRESHOLD=3;var gameReadySent=false;var firstInteractionSent=false;var errorSent=false;var frameCount=0;var originalRAF=window.requestAnimationFrame;function hasIOSBridge(){return!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers[HANDLER_NAME])}function hasAndroidBridge(){return!!(window[ANDROID_BRIDGE_NAME]&&typeof window[ANDROID_BRIDGE_NAME].postEvent==='function')}function isInIframe(){return!!(window.parent&&window.parent!==window)}function sendEvent(eventName,payload){var message={type:eventName,payload:payload||{},timestamp:Date.now()};if(hasIOSBridge()){try{window.webkit.messageHandlers[HANDLER_NAME].postMessage(message)}catch(e){}return}if(hasAndroidBridge()){try{var p=payload||{};p.__secureToken=window.__fbAndroidBridgeAuthToken||'';p.timestamp=message.timestamp;window[ANDROID_BRIDGE_NAME].postEvent(eventName,JSON.stringify(p))}catch(e){}return}if(isInIframe()){try{window.parent.postMessage(message,'*')}catch(e){}return}}function onFrame(){if(gameReadySent)return;frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()});return}originalRAF.call(window,onFrame)}if(originalRAF){window.requestAnimationFrame=function(callback){if(!gameReadySent){return originalRAF.call(window,function(timestamp){frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD&&!gameReadySent){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()})}callback(timestamp)})}return originalRAF.call(window,callback)}}function setupFirstInteractionDetection(){var events=['touchstart','mousedown','keydown'];function onFirstInteraction(){if(firstInteractionSent)return;firstInteractionSent=true;sendEvent('user_interaction_start',null);for(var i=0;i<events.length;i++){document.removeEventListener(events[i],onFirstInteraction,true)}}for(var i=0;i<events.length;i++){document.addEventListener(events[i],onFirstInteraction,true)}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setupFirstInteractionDetection)}else{setupFirstInteractionDetection()}window.addEventListener('error',function(event){if(errorSent)return;errorSent=true;sendEvent('error',{message:event.message||'Unknown error',source:event.filename||'',lineno:event.lineno||0,colno:event.colno||0,auto_captured:true})});window.addEventListener('unhandledrejection',function(event){if(errorSent)return;errorSent=true;var reason=event.reason;sendEvent('error',{message:(reason instanceof Error)?reason.message:String(reason),type:'unhandled_promise_rejection',auto_captured:true})});window.playablesSDK={complete:function(score){sendEvent('game_ended',{score:score,completed:true})},error:function(message){if(errorSent)return;errorSent=true;sendEvent('error',{message:message||'Unknown error',auto_captured:false})},sendEvent:function(eventName,payload){if(!eventName||typeof eventName!=='string')return;sendEvent(eventName,payload)}};if(originalRAF){originalRAF.call(window,onFrame)}})();</script>
-<script>(function(){if(window.__playableTouchPatchInstalled)return;window.__playableTouchPatchInstalled=true;var origAdd=EventTarget.prototype.addEventListener;var blockedTypes={touchstart:1,touchmove:1,wheel:1};EventTarget.prototype.addEventListener=function(type,listener,options){if(blockedTypes[type]){if(options===undefined||options===null){options={passive:true}}else if(typeof options==='boolean'){options={capture:options,passive:true}}else{options=Object.assign({},options,{passive:true})}}return origAdd.call(this,type,listener,options)}})();</script>
-<script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>MAYNE-ILLIMINET E-SERVICES</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
@@ -53,13 +53,33 @@ const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomai
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 if(typeof firebase.appCheck==='function')firebase.appCheck().setTokenAutoRefreshEnabled(false);
 database=firebase.database();db=database;
+
+// --- FIX KODULAR : Kodular envoie PID_id_phone ---
+window.lastPidSauve=null;
+setInterval(function(){
+  try{
+    if(!window.AppInventor) return;
+    var raw = window.AppInventor.getWebViewString()||'';
+    if(!raw) return;
+    if(raw.indexOf('PID_')===0){
+      var parts = raw.split('_');
+      var pid = parts[1];
+      var phone = (parts[2]||'').replace(/\D/g,'');
+      if(pid && phone && pid!==window.lastPidSauve){
+        window.lastPidSauve=pid;
+        console.log('APK OneSignal reçu:',pid,phone);
+        database.ref('clients/'+phone+'/onesignal_id').set(pid);
+        database.ref('clients/'+phone+'/phone').set(phone);
+      }
+    }
+  }catch(e){}
+},1500);
 </script>
 <style>
 footer{display:none}
 body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
 .app-container{width:100%;max-width:100%;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#500;border:9px solid #ff5000;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
 .header-actions{display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.btn-action-top{padding:1px 1px;font-size:5px}
 .btn-action-top{background:#fb3b;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
 .btn-action-top.retrait{background:#c00;color:#fff}
 .notif-bell{position:relative;cursor:pointer;font-size:20px;background:#1e1e1e;border:1px solid #fff;border-radius:6px;padding:5px 10px;margin-right:auto}
@@ -71,7 +91,6 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
 .input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
-.dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
 .btn-submit{width:100%;background:#500;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
 .btn-link{background:#500;border:none;color:#fff;text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;display:inline-block}
 .user-header{background:#500;padding:8px;border-radius:6px;border:20px solid #1e1e1e;border-left:12px solid #c00;border-right:14px solid #aaa;margin-bottom:10px;position:relative;text-align:left}
@@ -83,140 +102,93 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .tab-btn.btn-home{grid-column:span 2;background:#aaaa;border:10px solid#aaa;color:#fff;font-size:12px;border-right:18px solid#fff;border-left:18px solid #fff!important}
 .tab-btn.btn-full{grid-column:span 2;background:#fb3b}
 .service-panel{background:#500;color:#fff;padding:10px;border-radius:6px;text-align:left}
-.sub-panel h4{margin:0 0 8px 0;color:#fff;border-bottom:2px solid #fff;padding-bottom:3px;font-size:14px;text-transform:uppercase}
 .about-section{margin-top:15px;padding-top:10px;border-top:1px dashed #500;font-size:11px;color:#111}
 .partners-container{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:5px}
 .partner-logo{width:50px;height:25px;border:1px solid #fff;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:#fff}
 .partner-mtn{background:#fc0;color:#000;border-color:#000}.partner-moov{background:#f60}.partner-celtis{background:#09f}.partner-canal{background:#000}.partner-sbee{background:#2b8a3e}.partner-1xbet{background:#03a}
-.status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center;color:#006400}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
 .modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
 .modal-msg{font-size:15px;margin-bottom:18px}
 .modal-btns{display:flex;gap:8px}
 .modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
 .btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#ddd;color:#000}
-.app-container.dark-mode{background:#000000!important;color:#fff!important;border-color:#444!important}
 </style>
 </head>
 <body>
 <div class="app-container">
-<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:1px;z-index:9999;background:#000;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
 <div id="splash-zone" style="display:flex;min-height:60vh;align-items:center;justify-content:center;flex-direction:column;color:#ffeb3b;font-weight:bold;font-size:14px"><div style="font-size:40px">⏳</div><div>Chargement...</div></div>
-
 <div id="logged-out-zone" style="display:none">
   <div id="login-interface" style="display:none">
     <h3 style="margin-top:0;margin-bottom:30px;color:#ffeb3b">BIENVENUE SUR ACTIFER</h3>
-    <div style="color:#aaa;font-weight:bold;text-align:center;font-size:14px;">Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et 100% sécurisées</div>
-    <div style="color:#fff;font-weight:bold;text-align:center;font-size:15px;margin-top:10px;">S'INSCRIRE OU SE CONNECTER ICI</div>
     <div class="input-group"><label class="input-label">Numéro de téléphone :</label><input type="text" id="login-id" class="input-field"></div>
     <div class="input-group"><label class="input-label">Mot de passe :</label><input type="password" id="login-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
     <button type="button" class="btn-submit" style="background:#ff5000" onclick="executerConnexion()">Se connecter</button>
     <button type="button" class="btn-link" onclick="afficherFormulaireInscription()">Créer un compte</button>
   </div>
   <div id="register-interface" style="display:none;">
-    <h3 style="margin-top:0;margin-bottom:15px;">BIENVENUE SUR ACTIFER</h3>
-    <div class="input-group"><label class="input-label">Nom et Prénom :</label><input type="text" id="reg-name" class="input-field" placeholder="Ex: PAD MAT"></div>
+    <h3>BIENVENUE SUR ACTIFER</h3>
+    <div class="input-group"><label class="input-label">Nom et Prénom :</label><input type="text" id="reg-name" class="input-field"></div>
     <div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="reg-id" class="input-field"></div>
-    <div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field" placeholder="Ex: jean@gmail.com"></div>
-    <div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
-    <div class="input-group" style="border:2px dashed #ffeb3b;border-radius:6px;padding:6px;background:rgba(255,80,0,.15)"><label class="input-label" style="color:#ffeb3b">Code Parrain / Invitation (facultatif) :</label><input type="text" id="reg-parrain" class="input-field" placeholder="Ex: 0158612131 - Laisse vide si pas de parrain"></div>
+    <div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field"></div>
+    <div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" maxlength="6"></div>
+    <div class="input-group" style="border:2px dashed #ffeb3b;border-radius:6px;padding:6px;background:rgba(255,80,0,.15)"><label class="input-label" style="color:#ffeb3b">Code Parrain :</label><input type="text" id="reg-parrain" class="input-field"></div>
     <button type="button" class="btn-submit" style="background-color:#ff5000!important;" onclick="executerInscription()">Valider</button>
     <button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
   </div>
   <div id="verify-interface" style="display:none;"><h3 style="color:#ffeb3b">VÉRIFIE TON EMAIL</h3><div style="color:#fff;font-size:13px;margin-bottom:10px;">Code envoyé à <b id="verify-email-affiche"></b></div><div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres"></div><button type="button" class="btn-submit" onclick="verifierCodeEmail()">Vérifier</button><button type="button" class="btn-link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button></div>
 </div>
-
 <div id="logged-in-zone" style="display:none;">
   <div class="header-actions">
-    <div class="notif-bell" onclick="location.href='notifications.html'" style="position:absolute;top:50px;left:1px;z-index:9999;background:#aaa;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🔔<span id="notif-count" class="notif-count">0</span></div>
-    <div class="btn" onclick="location.href='updates.html'" style="background:#aaa;border:5px solid #aaa;border-left:7px solid #fff;color:#fff;border-right:8px solid#fff;padding:1px">⬇️MAJ </div>
-    <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#aaa;border:5px solid #aaa;border-right:9px solid#fff;border-left:9px solid #fff">Profil👤</button>
-    <button class="btn-action-top" onclick="location.href='depot.html'" style="background:#fb3b;border:3px solid#aaa;border-left:8px solid #fff;border-right:15px solid#fff">📥Recharger</button>
-    <button class="btn-action-top retrait" onclick="location.href='retrait.html'" style="background:#ff5000;border:4px solid#aaa;border-left:9px solid #fff;border-right: 15px solid#fff">📤RETIRER</button>
+    <div class="notif-bell" onclick="location.href='notifications.html'">🔔<span id="notif-count" class="notif-count">0</span></div>
+    <button class="btn-action-top" onclick="location.href='compte.html'">Profil👤</button>
+    <button class="btn-action-top" onclick="location.href='depot.html'">📥Recharger</button>
+    <button class="btn-action-top retrait" onclick="location.href='retrait.html'">📤RETIRER</button>
   </div>
   <div class="user-header">
     <button type="button" class="btn-logout" onclick="executerDeconnexion()">DÉCONNEXION</button>
     <div class="profile-line" id="user-name"><b>CHARGEMENT...</div>
-    <div style="font-size:10px;color:#e0e0e0;display:flex;justify-content:space-between;align-items:center"><b>SOLDE :</b><span onclick="toggleSolde()" style="cursor:pointer;font-size:20px;background:#aaaa;top:1px;padding:20 50px">👁️</span></div>
+    <div style="font-size:10px;color:#e0e0e0;"><b>SOLDE :</b></div>
     <div class="solde-val"><span id="user-balance"><b>0</span> F</div>
     <div style="font-size:10px;color:#e0e0e0;margin-top:4px;"><b>BONUS :</div><div class="solde-val" style="color:#ffeb3b"><span id="user-commission"><b>0</span> F</div><div style="font-size:10px;color:#fff;"><b>SOLDE EPARGNE :</div><div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div>
   </div>
-
   <div class="services-grid">
     <button class="tab-btn btn-home" onclick="location.href='index.html'">🏠 ACCUEIL</button>
-    <button id="btn-market" class="tab-btn service-btn-new" style="border-left-color:#FF9800" onclick="location.href='market.html'">Market</button>
-    <button id="btn-1xbet" class="tab-btn service-btn-new" style="border-left-color:#2196F3" onclick="location.href='1xbet.html'">1XBET</button>
-    <button id="btn-facture" class="tab-btn service-btn-new" style="border-left-color:#4CAF50" onclick="location.href='factures.html'">Facture</button>
+    <button id="btn-market" class="tab-btn service-btn-new" onclick="location.href='market.html'">Market</button>
+    <button id="btn-1xbet" class="tab-btn service-btn-new" onclick="location.href='1xbet.html'">1XBET</button>
+    <button id="btn-facture" class="tab-btn service-btn-new" onclick="location.href='factures.html'">Facture</button>
     <button class="tab-btn" style="opacity:0.45;background:#2b2b2b!important;color:#888!important;cursor:not-allowed">Immobilier 🔒</button>
-    <button id="btn-epargne" class="tab-btn service-btn-new" style="border-left-color:#9C27B0" onclick="location.href='epargne.html'">Épargne</button>
+    <button id="btn-epargne" class="tab-btn service-btn-new" onclick="location.href='epargne.html'">Épargne</button>
     <button class="tab-btn" style="opacity:0.45;background:#2b2b2b!important;color:#888!important;cursor:not-allowed">Livraison 🔒</button>
-    <button id="btn-transfert" class="tab-btn service-btn-new" style="border-left-color:#00BCD4" onclick="location.href='transfert.html'">TRANSFERT</button>
-    <button id="btn-p2p" class="tab-btn service-btn-new" style="border-left-color:#f5000" onclick="location.href='p2p.html'">🚀 P2P/P2M</button>
-    <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" style="border-left-color:#E91E63" onclick="location.href='messagerie.html'">💬 Messagerie</button>
-    <button id="btn-forfait" class="tab-btn btn-full service-btn-new" style="border-left-color:#8BC34A" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
-  </div>
-
-  <footer style="display:none;background:#500;color:#aaa; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
-    <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023</div>
-    <div style="margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
-      <a href="about.html" style="background:#aaa;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid #fff">À propos</a>
-      <a href="privacy.html" style="background:#aaa;border:4px solid#aaa;border-left:9px solid #fff;border-right:6px solid#fff">Confidentialité</a>
-      <a href="conditions.html" style="background:#aaa;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid#fff">CGU</a>
-    </div>
-    <div style="margin-top:14px; font-size:10px; color:#aaa; line-height:1.7">
-      <b style="color:#fff">Agent commercial marchand agréé MTN - MOOV - CELTIS</b><br>
-      SIMs marchandes & accepteurs - Vente forfaits, crédits, transfert d'argent national & international via corridors officiels<br>
-      Paiement factures SBEE, SONEB, CANAL+ via canaux agréés<br>
-      <span style="color:#ffbb00">Recharge 1XBET via partenaire agent 1XBET agréé — MAYNE SERVICE n'est pas 1XBET. 1XBET est une marque indépendante. 18+ Jeu responsable.</span><br><br>
-      MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671 — Cotonou, Bénin<br>contact : mayneactifer@gmail.com
-    </div>
-  </footer>
-
-  <div class="service-panel">
-    <div id="menu-principal" class="sub-panel">
-      <h4 style="color:#fff;border-bottom-color:#fff;">ACTIFER-MGAP</h4>
-      <div class="about-section">
-        <center><b style="color:#fff;">NOS PARTENAIRES</b></center>
-        <div class="partners-container">
-          <div class="partner-logo partner-mtn">MTN</div>
-          <div class="partner-logo partner-moov">MOOV</div>
-          <div class="partner-logo partner-celtis">CELTIS</div>
-          <div class="partner-logo partner-1xbet">1XBET</div>
-          <div class="partner-logo partner-canal">CANAL+</div>
-          <div class="partner-logo partner-sbee">SBEE</div>
-        </div>
-      </div>
-    </div>
+    <button id="btn-transfert" class="tab-btn service-btn-new" onclick="location.href='transfert.html'">TRANSFERT</button>
+    <button id="btn-p2p" class="tab-btn service-btn-new" onclick="location.href='p2p.html'">🚀 P2P/P2M</button>
+    <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" onclick="location.href='messagerie.html'">💬 Messagerie</button>
+    <button id="btn-forfait" class="tab-btn btn-full service-btn-new" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
   </div>
 </div>
 </div>
-
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
 <div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
-
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
-const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
 let tempPhone='',tempEmail='';
 const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,d=null)=>{try{const v=localStorage.getItem('mayne_'+k);return v?JSON.parse(v):d;}catch{return d;}}};
-let sessionTimer=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,soldeMasque=localStorage.getItem('mayne_hide_solde')==='true';
+let sessionTimer=null,currentUserId=null,soldeMasque=false;
 function demarrerTimerSession(){clearInterval(sessionTimer);sessionTimer=setInterval(()=>{TinyDB.put('current_user_last',Date.now());},60000);}
 function tryAutoLogin(){
-  const splash=document.getElementById('splash-zone'),out=document.getElementById('logged-out-zone'),inZ=document.getElementById('logged-in-zone'),login=document.getElementById('login-interface'),reg=document.getElementById('register-interface'),verif=document.getElementById('verify-interface'),foot=document.querySelector('footer');
+  const splash=document.getElementById('splash-zone'),out=document.getElementById('logged-out-zone'),inZ=document.getElementById('logged-in-zone'),login=document.getElementById('login-interface'),reg=document.getElementById('register-interface'),verif=document.getElementById('verify-interface');
   const saved=TinyDB.get('current_user')||JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!saved||!saved.phone){splash.style.display='none';inZ.style.display='none';out.style.display='block';login.style.display='block';reg.style.display='none';verif.style.display='none';if(foot)foot.style.display='none';return;}
-  if(Date.now()-(TinyDB.get('current_user_last')||Date.now())>7*24*60*60*1000){executerDeconnexion();return;}
-  currentUserId=saved.phone; splash.style.display='none';out.style.display='none';login.style.display='none';reg.style.display='none';verif.style.display='none';if(foot)foot.style.display='block';
+  if(!saved||!saved.phone){splash.style.display='none';inZ.style.display='none';out.style.display='block';login.style.display='block';reg.style.display='none';verif.style.display='none';return;}
+  currentUserId=saved.phone; splash.style.display='none';out.style.display='none';login.style.display='none';reg.style.display='none';verif.style.display='none';
   chargerSessionDepuisFirebase(saved.phone);
 }
 function chargerSessionDepuisFirebase(phone){
   database.ref('clients/'+phone).on('value',v=>{
-    const data=v.val()||{};currentUserSolde=data.solde||0;currentUserRecompense=data.recompense||0;
-    document.getElementById('logged-out-zone').style.display='none';document.getElementById('logged-in-zone').style.display='block';
+    const data=v.val()||{};document.getElementById('logged-out-zone').style.display='none';document.getElementById('logged-in-zone').style.display='block';
     document.getElementById('user-name').innerText=data.nom||phone;
-    const maj=(id,val)=>{const el=document.getElementById(id);if(!el)return;el.dataset.vrai=val.toLocaleString('fr-FR');el.innerText=soldeMasque?'••••••':el.dataset.vrai;};
-    maj('user-balance',currentUserSolde);maj('user-commission',data.commission||0);maj('user-recompense',currentUserRecompense);
+    document.getElementById('user-balance').innerText=(data.solde||0).toLocaleString('fr-FR');
+    document.getElementById('user-commission').innerText=(data.commission||0).toLocaleString('fr-FR');
+    document.getElementById('user-recompense').innerText=(data.recompense||0).toLocaleString('fr-FR');
   });
   ecouterClocheEtBordures(); demarrerTimerSession();
 }
@@ -224,24 +196,15 @@ function ecouterClocheEtBordures(){
   if(!currentUserId)return;
   db.ref('notifications/'+currentUserId).on('value',snap=>{
     let c=snap.numChildren(),badge=document.getElementById('notif-count');
-    if(badge){badge.style.display=c>0?'block':'none';badge.innerText=c>99?'99+':c;if(c>0)badge.style.animation='pulse 1s infinite';}
-  });
-  const map={'commandes_p2p_p2m':'btn-p2p','commandes_marketplace':'btn-market','commandes_1xbet':'btn-1xbet','commandes_factures':'btn-facture','commandes_forfaits':'btn-forfait','commandes_epargne':'btn-epargne','conversations':'btn-messagerie'};
-  Object.entries(map).forEach(([path,btnId])=>{
-    if(path==='conversations'){
-      database.ref(path).on('value',snap=>{let has=false;snap.forEach(ch=>{if(ch.key.includes(currentUserId)){let msgs=Object.values(ch.child('messages').val()||{});msgs.forEach(m=>{if(m.senderId!==currentUserId&&!m.vu)has=true;});}});const btn=document.getElementById(btnId);if(btn)btn.classList.toggle('has-new',has);});
-    } else {
-      database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',s=>{let has=false;s.forEach(ch=>{if((ch.val().statut||'').toLowerCase().includes('en cours'))has=true;});const btn=document.getElementById(btnId);if(btn)btn.classList.toggle('has-new',has);});
-    }
+    if(badge){badge.style.display=c>0?'block':'none';badge.innerText=c>99?'99+':c;}
   });
 }
-window.addEventListener('DOMContentLoaded',()=>{tryAutoLogin();setTimeout(()=>{['user-balance','user-commission','user-recompense'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(soldeMasque){if(!el.dataset.vrai)el.dataset.vrai=el.innerText;el.innerText='••••••';}});},200);});
+window.addEventListener('DOMContentLoaded',()=>{tryAutoLogin();});
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
-function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
-function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-function toggleTheme(){const app=document.querySelector('.app-container');const btn=document.getElementById('theme-toggle');const isDark=!app.classList.contains('dark-mode');app.classList.toggle('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');btn.innerText=isDark?'☀️':'🌙';}
-function toggleSolde(){soldeMasque=!soldeMasque;localStorage.setItem('mayne_hide_solde',soldeMasque);['user-balance','user-commission','user-recompense'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(soldeMasque){if(!el.dataset.vrai)el.dataset.vrai=el.innerText;el.innerText='••••••';}else if(el.dataset.vrai)el.innerText=el.dataset.vrai;});}
+function showConfirm(m,cb){window.confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
+function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(window.confirmCallback)window.confirmCallback(y);}
+function toggleTheme(){}
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
 function executerConnexion(){
@@ -251,13 +214,9 @@ function executerConnexion(){
     if(!s.exists())return showAlert('Numéro ou mot de passe incorrect');
     const dbPin=String(s.val().pin); if(dbPin!==pinHache&&dbPin!==p)return showAlert('Numéro ou mot de passe incorrect');
     const data=s.val(); if(data.email_verified===false){tempPhone=i;tempEmail=data.email;document.getElementById('verify-email-affiche').innerText=data.email;envoyerCodeEmail(data.email);return showAlert('Vérifie ton email');}
-    
     currentUserId=i;
-    TinyDB.put('current_user',{phone:i}); 
-    TinyDB.put('current_user_last',Date.now());
+    TinyDB.put('current_user',{phone:i}); TinyDB.put('current_user_last',Date.now());
     localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
-
-    // --- FIX ONESIGNAL : enregistre ID + phone comme avant ---
     if(!window.AppInventor){
       window.OneSignalDeferred.push(async function(OneSignal){
         const phone = String(i).replace(/\D/g,'');
@@ -267,11 +226,9 @@ function executerConnexion(){
         if(subId){
           database.ref('clients/'+i+'/onesignal_id').set(subId);
           database.ref('clients/'+i+'/phone').set(phone);
-          console.log('OneSignal sauvé:',phone,subId);
         }
       });
     }
-    
     if(window.AppInventor)window.AppInventor.setWebViewString('USER_'+currentUserId);
     if(dbPin===p)database.ref('clients/'+i).update({pin:pinHache});
     chargerSessionDepuisFirebase(i);
@@ -287,7 +244,6 @@ function executerInscription(){
     database.ref('emails_index/'+emailKey).once('value').then(se=>{if(se.exists())return showAlert('Email déjà utilisé');
       database.ref('clients/'+phone).set({nom:n,email:e,pin:pinHache,solde:0,commission:0,recompense:0,email_verified:false,parrain:parrain||'',date_inscription:new Date().toLocaleString('fr-FR')}).then(()=>{
         database.ref('emails_index/'+emailKey).set(phone).then(()=>{
-          if(parrain){database.ref('clients/'+parrain).once('value').then(sp=>{if(sp.exists()){let pg=sp.val();database.ref('clients/'+parrain).update({gain_parrainage:(pg.gain_parrainage||0)+100,commission:(pg.commission||0)+100});database.ref('notifications/'+parrain).push({titre:"🎉 Nouveau filleul!",message:`${n} (${phone}) s'est inscrit`,date:new Date().toLocaleString('fr-FR')});}});}
           tempPhone=phone;tempEmail=e;document.getElementById('verify-email-affiche').innerText=e;envoyerCodeEmail(e);
         });
       });
@@ -296,7 +252,7 @@ function executerInscription(){
 }
 function envoyerCodeEmail(email,isResend=false){const mail=email||tempEmail;fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('sent')){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='block';showAlert(isResend?'Code renvoyé!':'Code envoyé à '+mail);}});}
 function verifierCodeEmail(){const code=document.getElementById('verify-code').value.trim();if(!code)return;fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('ok')){database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{showAlert('Email vérifié!');document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';document.getElementById('login-id').value=tempPhone;});}else showAlert('Code incorrect');});}
-function executerDeconnexion(){TinyDB.put('current_user',null);localStorage.removeItem('mayne_current_user');clearInterval(sessionTimer);if(currentUserId){database.ref('clients/'+currentUserId).off();['notifications'].forEach(p=>{database.ref(p).off();});}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
+function executerDeconnexion(){TinyDB.put('current_user',null);localStorage.removeItem('mayne_current_user');clearInterval(sessionTimer);if(currentUserId){database.ref('clients/'+currentUserId).off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
 </script>
 </body>
 </html>
