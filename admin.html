@@ -1,6 +1,216 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<!-- Playables SDK -->
+<script>// Playables SDK v1.0.0
+// Game lifecycle bridge: rAF-based game-ready detection + event communication
+(function() {
+  'use strict';
+
+  // Idempotency: skip if already initialized (e.g., server-side injection
+  // followed by client-side inject-javascript via the Bloks webview component).
+  if (window.playablesSDK) return;
+
+  var HANDLER_NAME = 'playablesGameEventHandler';
+  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
+  var RAF_FRAME_THRESHOLD = 3;
+
+  var gameReadySent = false;
+  var firstInteractionSent = false;
+  var errorSent = false;
+  var frameCount = 0;
+  var originalRAF = window.requestAnimationFrame;
+
+  // --- Transport Layer ---
+
+  function hasIOSBridge() {
+    return !!(window.webkit &&
+              window.webkit.messageHandlers &&
+              window.webkit.messageHandlers[HANDLER_NAME]);
+  }
+
+  function hasAndroidBridge() {
+    return !!(window[ANDROID_BRIDGE_NAME] &&
+              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
+  }
+
+  function isInIframe() {
+    return !!(window.parent && window.parent !== window);
+  }
+
+  function sendEvent(eventName, payload) {
+    var message = {
+      type: eventName,
+      payload: payload || {},
+      timestamp: Date.now()
+    };
+
+    if (hasIOSBridge()) {
+      try {
+        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (hasAndroidBridge()) {
+    try {
+      var p = payload || {};
+      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
+      p.timestamp = message.timestamp;
+      window[ANDROID_BRIDGE_NAME].postEvent(
+        eventName,
+        JSON.stringify(p)
+      );
+    } catch (e) { /* ignore */ }
+    return;
+  }
+
+    if (isInIframe()) {
+      try {
+        window.parent.postMessage(message, '*');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+  }
+
+  // --- rAF Game-Ready Detection ---
+
+  function onFrame() {
+    if (gameReadySent) return;
+
+    frameCount++;
+    if (frameCount >= RAF_FRAME_THRESHOLD) {
+      gameReadySent = true;
+      sendEvent('game_ready', {
+        frame_count: frameCount,
+        detected_at: Date.now()
+      });
+      return;
+    }
+
+    originalRAF.call(window, onFrame);
+  }
+
+  if (originalRAF) {
+    window.requestAnimationFrame = function(callback) {
+      if (!gameReadySent) {
+        return originalRAF.call(window, function(timestamp) {
+          frameCount++;
+          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
+            gameReadySent = true;
+            sendEvent('game_ready', {
+              frame_count: frameCount,
+              detected_at: Date.now()
+            });
+          }
+          callback(timestamp);
+        });
+      }
+      return originalRAF.call(window, callback);
+    };
+  }
+
+  // --- First User Interaction Detection ---
+
+  function setupFirstInteractionDetection() {
+    var events = ['touchstart', 'mousedown', 'keydown'];
+
+    function onFirstInteraction() {
+      if (firstInteractionSent) return;
+      firstInteractionSent = true;
+      sendEvent('user_interaction_start', null);
+
+      for (var i = 0; i < events.length; i++) {
+        document.removeEventListener(events[i], onFirstInteraction, true);
+      }
+    }
+
+    for (var i = 0; i < events.length; i++) {
+      document.addEventListener(events[i], onFirstInteraction, true);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
+  } else {
+    setupFirstInteractionDetection();
+  }
+
+  // --- Auto Error Capture ---
+
+  window.addEventListener('error', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    sendEvent('error', {
+      message: event.message || 'Unknown error',
+      source: event.filename || '',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      auto_captured: true
+    });
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    var reason = event.reason;
+    sendEvent('error', {
+      message: (reason instanceof Error) ? reason.message : String(reason),
+      type: 'unhandled_promise_rejection',
+      auto_captured: true
+    });
+  });
+
+  // --- Public API ---
+
+  window.playablesSDK = {
+    complete: function(score) {
+      sendEvent('game_ended', {
+        score: score,
+        completed: true
+      });
+    },
+
+    error: function(message) {
+      if (errorSent) return;
+      errorSent = true;
+      sendEvent('error', {
+        message: message || 'Unknown error',
+        auto_captured: false
+      });
+    },
+
+    sendEvent: function(eventName, payload) {
+      if (!eventName || typeof eventName !== 'string') return;
+      sendEvent(eventName, payload);
+    }
+  };
+
+  // Kick off rAF detection in case no game code calls rAF immediately
+  if (originalRAF) {
+    originalRAF.call(window, onFrame);
+  }
+})();</script>
+<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ADMIN MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -17,16 +227,15 @@ async function pushJS(d,t,m){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mo
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#111;color:#fff;display:flex;justify-content:center}
 .app{max-width:550px;width:100%;min-height:100vh;background:#1e1e1e;border:2px solid #ff5000}
-.top{padding:12px;background:#500;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.top{padding:12px;background:#500;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;gap:8px}
+.top-left{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .btn-home{background:#fff;color:#500;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none}
-.tabs{display:flex;gap:6px;overflow:auto;padding:10px 8px;background:#000;position:sticky;top:48px;z-index:9;white-space:nowrap;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{padding:8px 12px;border-radius:20px;background:#333;color:#fff;border:none;font-size:9px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-users{background:#000;color:#fff;border:1px solid #ff5000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none}
+.tabs{display:flex;gap:4px;overflow:auto;padding:8px;background:#000;position:sticky;top:44px;z-index:9;white-space:nowrap}
+.tab{padding:8px 10px;border-radius:20px;background:#333;color:#fff;border:none;font-size:9px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 .tab.active{background:#ff5000}
-.badge{background:#fff;color:#000;min-width:18px;height:18px;padding:0 5px;border-radius:10px;font-size:10px;font-weight:900;display:none;align-items:center;justify-content:center}
-.badge.show{display:flex}
-.tab.active .badge{background:#fff;color:#ff5000;box-shadow:0 0 6px rgba(255,255,255,.6)}
-#count{background:#ff5000;padding:5px 10px;border-radius:12px;font-size:10px;font-weight:900}
+.badge{background:#fff;color:#000;min-width:16px;height:16px;padding:0 4px;border-radius:10px;font-size:10px;font-weight:900;display:none;align-items:center;justify-content:center}
+.badge.show{display:inline-flex}
 .list{padding:10px}
 .card{background:#000;border-radius:12px;padding:10px;margin-bottom:10px;border-left:4px solid #ff5000}
 .btn{padding:6px 10px;border:none;border-radius:20px;font-weight:bold;margin:4px 4px 0 0;font-size:11px;cursor:pointer}
@@ -39,15 +248,15 @@ small{color:#aaa}
 <body>
 <div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
 <div class="app">
-<div class="top"><a href="index.html" class="btn-home">← ACCUEIL</a><b>ADMIN MAYNE</b><span id="count">0 en attente</span></div>
+<div class="top"><div class="top-left"><a href="index.html" class="btn-home">← ACCUEIL</a><a href="admin-users.html" class="btn-users">👥 UTILISATEURS</a><b>ADMIN MAYNE</b></div><span id="count" style="font-size:10px"></span></div>
 <div class="tabs">
-<button class="tab active" onclick="switchTab('virement')">VIREMENT <span id="badge-virement" class="badge">0</span></button>
-<button class="tab" onclick="switchTab('xbet')">1XBET <span id="badge-xbet" class="badge">0</span></button>
-<button class="tab" onclick="switchTab('forfait')">FORFAIT <span id="badge-forfait" class="badge">0</span></button>
-<button class="tab" onclick="switchTab('recharge')">RECHARGE <span id="badge-recharge" class="badge">0</span></button>
-<button class="tab" onclick="switchTab('p2p')">P2P <span id="badge-p2p" class="badge">0</span></button>
-<button class="tab" onclick="switchTab('transfert')">TRANSFERT <span id="badge-transfert" class="badge">0</span></button>
-<button class="tab" onclick="switchTab('kyc')">KYC <span id="badge-kyc" class="badge">0</span></button>
+<button class="tab active" onclick="switchTab('virement')">RETRAIT PRINCIPAL=VIREMENT <span id="badge-virement" class="badge"></span></button>
+<button class="tab" onclick="switchTab('xbet')">1XBET (DEPOT/RETRAIT) <span id="badge-xbet" class="badge"></span></button>
+<button class="tab" onclick="switchTab('forfait')">FORFAIT <span id="badge-forfait" class="badge"></span></button>
+<button class="tab" onclick="switchTab('recharge')">DÉPÔT PRINCIPAL=RECHARGE <span id="badge-recharge" class="badge"></span></button>
+<button class="tab" onclick="switchTab('p2p')">P2P <span id="badge-p2p" class="badge"></span></button>
+<button class="tab" onclick="switchTab('transfert')">TRANSFERT <span id="badge-transfert" class="badge"></span></button>
+<button class="tab" onclick="switchTab('kyc')">KYC <span id="badge-kyc" class="badge"></span></button>
 </div>
 
 <div id="list-virement" class="list"></div>
@@ -63,60 +272,64 @@ small{color:#aaa}
 function switchTab(t){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');document.querySelectorAll('.list').forEach(l=>l.style.display='none');document.getElementById('list-'+t).style.display='block';}
 function openImg(u){document.getElementById('img-viewer-pic').src=u;document.getElementById('img-viewer').style.display='flex';}
 
+// Compteur global + badges
 let pendingCounts = {virement:0,xbet:0,forfait:0,recharge:0,p2p:0,transfert:0,kyc:0};
-function updateBadge(key, count){
+function setBadge(key, count){
   pendingCounts[key]=count;
-  let el=document.getElementById('badge-'+key);
-  if(el){
-    el.innerText=count;
-    if(count>0){ el.classList.add('show'); } else { el.classList.remove('show'); }
-  }
-  let total = Object.values(pendingCounts).reduce((a,b)=>a+b,0);
-  let g=document.getElementById('count');
-  g.innerText=total+' en attente';
-  g.style.background= total>0 ? '#ff5000' : '#333';
+  let b=document.getElementById('badge-'+key);
+  if(b){ b.textContent=count; if(count>0) b.classList.add('show'); else b.classList.remove('show'); }
+  let total=Object.values(pendingCounts).reduce((a,b)=>a+b,0);
+  document.getElementById('count').innerText= total>0 ? total+' en attente' : '0 en attente';
 }
 
 function init(){
   let u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||u.phone.replace(/[^0-9]/g,'')!==ADMIN_UID){alert('Admin only');location.href='index.html';return;}
 
+  // 1 - RETRAIT PRINCIPAL = VIREMENT (commandes_retraits) - CODE ORIGINAL
   db.ref('commandes_retraits').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       h=`<div class="card" style="border-left-color:#e67e22"><b>VIREMENT ${v.montant}F - ${v.client_id}</b><br><small>${v.email||''} | ${v.date}</small><br><small style="color:#ffeb3b">Réseau: ${v.reseau} → ${v.numero_reception}</small><div><button class="btn btn-v" onclick="validerRetraitPrincipal('${k}','${v.client_id}')">✅ J'ai viré</button><button class="btn btn-a" onclick="annulerRembourse('commandes_retraits','${k}','${v.client_id}')">❌ Annuler + Rembourser</button></div></div>`+h;
-    }); document.getElementById('list-virement').innerHTML=h||'Aucun virement'; updateBadge('virement',c);
+    }); document.getElementById('list-virement').innerHTML=h||'Aucun virement'; setBadge('virement',c);
   });
 
+  // 2 - 1XBET DEPOT / RETRAIT - CODE ORIGINAL
   db.ref('commandes_1xbet').on('value',s=>{
-    let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
+    let h='',c=0; s.forEach(ch=>{
+      const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       const isDepot = (v.type||'').toLowerCase().includes('dépôt')||(v.type||'').toLowerCase().includes('depot');
       h=`<div class="card" style="border-left-color:${isDepot?'#ff5000':'#3498db'}"><b>1XBET ${v.type} ${v.montant}F - ID:${v.id_joueur}</b><br><small>Client: ${v.client_id} | ${v.date}</small><br><small>Code: ${v.code_1xbet_recu||''} | Frais: ${v.frais||0}F</small><br><small>Mode: ${v.mode||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_1xbet','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_1xbet','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
-    }); document.getElementById('list-xbet').innerHTML=h||'Aucun 1xbet'; updateBadge('xbet',c);
+    }); document.getElementById('list-xbet').innerHTML=h||'Aucun 1xbet'; setBadge('xbet',c);
   });
 
-  db.ref('commandes_forfaits').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h=`<div class="card"><b>FORFAIT ${v.montant||''}F ${v.forfait||''} - ${v.client_id}</b><br><small>${v.numero||''} | ${v.date||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_forfaits','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_forfaits','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-forfait').innerHTML=h||'Aucun forfait'; updateBadge('forfait',c);});
+  // 3 - FORFAIT - CODE ORIGINAL
+  db.ref('commandes_forfaits').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h+=`<div class="card"><b>FORFAIT ${v.montant||''}F ${v.forfait||''} - ${v.client_id}</b><br><small>${v.numero||''} | ${v.date||''}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_forfaits','${k}','${v.client_id}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_forfaits','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-forfait').innerHTML=h||'Aucun forfait'; setBadge('forfait',c);});
 
+  // 4 - DÉPÔT PRINCIPAL = RECHARGE - CODE ORIGINAL
   db.ref('commandes_depots').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       h=`<div class="card" style="border-left-color:#28a745"><b>RECHARGE ${v.montant}F ${v.reseau} - ${v.client_id}</b><br><small>Envoyeur: ${v.numero_envoyeur} | ${v.date}</small><br><small>ID Tx: ${v.id_transaction||''}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Voir preuve</button>`:''}<div><button class="btn btn-v" onclick="validerDepot('${k}','${v.client_id}',${v.montant})">✅ Valider + Créditer</button><button class="btn btn-a" onclick="annuler('commandes_depots','${k}','${v.client_id}')">❌ Annuler</button></div></div>`+h;
-    }); document.getElementById('list-recharge').innerHTML=h||'Aucune recharge'; updateBadge('recharge',c);
+    }); document.getElementById('list-recharge').innerHTML=h||'Aucune recharge'; setBadge('recharge',c);
   });
 
-  db.ref('commandes_p2p_p2m').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h=`<div class="card"><b>P2P ${v.montant}F ${v.donneur}→${v.receveur} - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur} | ${v.date}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Preuve</button>`:''}<div><button class="btn btn-v" onclick="validerP2P('${k}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_p2p_p2m','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-p2p').innerHTML=h||'Aucun P2P'; updateBadge('p2p',c);});
+  // 5 - P2P - CODE ORIGINAL
+  db.ref('commandes_p2p_p2m').on('value',s=>{let h='',c=0; s.forEach(ch=>{const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++; h+=`<div class="card"><b>P2P ${v.montant}F ${v.donneur}→${v.receveur} - ${v.client_id}</b><br><small>${v.numero_donneur} → ${v.numero_receveur} | ${v.date}</small><br>${v.capture_url?`<button class="btn btn-img" onclick="openImg('${v.capture_url}')">📷 Preuve</button>`:''}<div><button class="btn btn-v" onclick="validerP2P('${k}')">✅ Valider</button><button class="btn btn-a" onclick="annuler('commandes_p2p_p2m','${k}','${v.client_id}')">❌</button></div></div>`+h;}); document.getElementById('list-p2p').innerHTML=h||'Aucun P2P'; setBadge('p2p',c);});
 
+  // 6 - TRANSFERT - CODE ORIGINAL
   db.ref('commandes_transferts').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{
       const v=ch.val(),k=ch.key; if((v.statut||'').toLowerCase()!=='en cours') return; c++;
       const isRetrait = (v.type||'').toLowerCase().includes('retrait');
-      h=`<div class="card" style="border-left-color:${isRetrait?'#e67e22':'#3498db'}"><b>TRANSFERT ${v.type} ${v.montant}F ${v.pays||''} - ${v.client_id}</b><br><small>${isRetrait? 'Décaissement: '+(v.numero_decaissement||''): 'Num: '+(v.numero_complet||'') } | Motif: ${v.motif||''}</small><br><small>${v.date}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_transferts','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_transferts','${k}','${v.client_id}')">❌</button></div></div>`+h;
-    }); document.getElementById('list-transfert').innerHTML=h||'Aucun transfert'; updateBadge('transfert',c);
+      h+=`<div class="card" style="border-left-color:${isRetrait?'#e67e22':'#3498db'}"><b>TRANSFERT ${v.type} ${v.montant}F ${v.pays||''} - ${v.client_id}</b><br><small>${isRetrait? 'Décaissement: '+(v.numero_decaissement||''): 'Num: '+(v.numero_complet||'') } | Motif: ${v.motif||''}</small><br><small>${v.date}</small><div><button class="btn btn-v" onclick="validerSimple('commandes_transferts','${k}','${v.client_id}')">✅ Valider ${v.type}</button><button class="btn btn-a" onclick="annuler('commandes_transferts','${k}','${v.client_id}')">❌</button></div></div>`+h;
+    }); document.getElementById('list-transfert').innerHTML=h||'Aucun transfert'; setBadge('transfert',c);
   });
 
+  // 7 - KYC - CODE ORIGINAL
   db.ref('kyc_demandes').on('value',s=>{
     let h='',c=0; s.forEach(ch=>{
       const v=ch.val(),k=ch.key; if((v.statut||'')!=='en_attente') return; c++;
-      h+=`<div class="card" style="border-left-color:#9b59b6"><b>KYC ${v.nom} ${v.prenom} - ${v.client_id}</b><br><small>${v.piece_type} N° ${v.numero_piece} | ${v.date}</small><br><button class="btn btn-img" onclick="openImg('${v.photo}')">📷 Voir CNI / Photo</button><div><button class="btn btn-v" onclick="validerKYC('${k}','${v.client_id}')">✅ Vérifier KYC</button><button class="btn btn-a" onclick="annuler('kyc_demandes','${k}','${v.client_id}')">❌ Rejeter</button></div></div>`;
-    }); document.getElementById('list-kyc').innerHTML=h||'Aucune demande KYC'; updateBadge('kyc',c);
+      h+=`<div class="card" style="border-left-color:#9b59b6"><b>KYC ${v.nom} ${v.prenom} - ${v.client_id}</b><br><small>${v.piece_type} N° ${v.numero_piece} | ${v.date}</small><br><button class="btn btn-img" onclick="openImg('${v.photo}')">📷 Voir CNI / Photo</button><div><button class="btn btn-v" onclick="validerKYC('${k}','${v.client_id}')">✅ Vérifier KYC</button><button class="btn btn-a" onclick="annuler('kyc_demandes','${k}','${v.client_id}')">❌ Rejeter</button></div></div>`+h;
+    }); document.getElementById('list-kyc').innerHTML=h||'Aucune demande KYC'; setBadge('kyc',c);
   });
 }
 
