@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<link rel="manifest" href="./manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <script>if(localStorage.getItem('mayne_pin_enabled')==='true' &&!sessionStorage.getItem('mayne_unlocked')){location.href='lock.html';}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
@@ -21,6 +20,7 @@ OneSignalDeferred.push(async function(OneSignal){
       if(subId && typeof database!=='undefined'){
         database.ref('clients/'+phone+'/onesignal_id').set(subId);
         database.ref('clients/'+phone+'/phone').set(phone);
+        try{fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(subId)});}catch(e){}
       }
     }catch(e){}
   }
@@ -36,7 +36,11 @@ async function activerNotifications(){
       await OS.login(phone);
       await OS.User.addTags({phone:phone});
       const subId=await OS.User.pushSubscription.id;
-      if(subId) database.ref('clients/'+phone+'/onesignal_id').set(subId);
+      if(subId){
+        database.ref('clients/'+phone+'/onesignal_id').set(subId);
+        database.ref('clients/'+phone+'/phone').set(phone);
+        try{fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(subId)});}catch(e){}
+      }
     }
     alert('✅ Notifications activées!');
   }else alert('❌ Permission refusée');
@@ -58,7 +62,7 @@ if(typeof firebase.appCheck==='function')firebase.appCheck().setTokenAutoRefresh
 database=firebase.database();db=database;
 </script>
 <script>
-// --- FIX KODULAR -> JS : Kodular envoie PID_id_phone ---
+// --- FIX KODULAR -> JS + ONESIGNAL.COM ---
 window.lastPidSauve=null;
 setInterval(function(){
   try{
@@ -72,6 +76,7 @@ setInterval(function(){
       window.lastPidSauve=pid;
       database.ref('clients/'+phone+'/onesignal_id').set(pid);
       database.ref('clients/'+phone+'/phone').set(phone);
+      try{fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(pid)});}catch(e){}
       console.log('APK OneSignal sauvé:',phone,pid);
     }
   }catch(e){}
@@ -273,6 +278,7 @@ function executerConnexion(){
         if(subId){
           database.ref('clients/'+i+'/onesignal_id').set(subId);
           database.ref('clients/'+i+'/phone').set(phone);
+          try{fetch(ONESIGNAL_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(subId)});}catch(e){}
         }
       });
     }
