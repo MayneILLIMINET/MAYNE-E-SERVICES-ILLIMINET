@@ -1,27 +1,354 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<!-- Playables SDK -->
+<script>// Playables SDK v1.0.0
+// Game lifecycle bridge: rAF-based game-ready detection + event communication
+(function() {
+  'use strict';
+
+  // Idempotency: skip if already initialized (e.g., server-side injection
+  // followed by client-side inject-javascript via the Bloks webview component).
+  if (window.playablesSDK) return;
+
+  var HANDLER_NAME = 'playablesGameEventHandler';
+  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
+  var RAF_FRAME_THRESHOLD = 3;
+
+  var gameReadySent = false;
+  var firstInteractionSent = false;
+  var errorSent = false;
+  var frameCount = 0;
+  var originalRAF = window.requestAnimationFrame;
+
+  // --- Transport Layer ---
+
+  function hasIOSBridge() {
+    return !!(window.webkit &&
+              window.webkit.messageHandlers &&
+              window.webkit.messageHandlers[HANDLER_NAME]);
+  }
+
+  function hasAndroidBridge() {
+    return !!(window[ANDROID_BRIDGE_NAME] &&
+              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
+  }
+
+  function isInIframe() {
+    return !!(window.parent && window.parent !== window);
+  }
+
+  function sendEvent(eventName, payload) {
+    var message = {
+      type: eventName,
+      payload: payload || {},
+      timestamp: Date.now()
+    };
+
+    if (hasIOSBridge()) {
+      try {
+        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (hasAndroidBridge()) {
+    try {
+      var p = payload || {};
+      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
+      p.timestamp = message.timestamp;
+      window[ANDROID_BRIDGE_NAME].postEvent(
+        eventName,
+        JSON.stringify(p)
+      );
+    } catch (e) { /* ignore */ }
+    return;
+  }
+
+    if (isInIframe()) {
+      try {
+        window.parent.postMessage(message, '*');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+  }
+
+  // --- rAF Game-Ready Detection ---
+
+  function onFrame() {
+    if (gameReadySent) return;
+
+    frameCount++;
+    if (frameCount >= RAF_FRAME_THRESHOLD) {
+      gameReadySent = true;
+      sendEvent('game_ready', {
+        frame_count: frameCount,
+        detected_at: Date.now()
+      });
+      return;
+    }
+
+    originalRAF.call(window, onFrame);
+  }
+
+  if (originalRAF) {
+    window.requestAnimationFrame = function(callback) {
+      if (!gameReadySent) {
+        return originalRAF.call(window, function(timestamp) {
+          frameCount++;
+          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
+            gameReadySent = true;
+            sendEvent('game_ready', {
+              frame_count: frameCount,
+              detected_at: Date.now()
+            });
+          }
+          callback(timestamp);
+        });
+      }
+      return originalRAF.call(window, callback);
+    };
+  }
+
+  // --- First User Interaction Detection ---
+
+  function setupFirstInteractionDetection() {
+    var events = ['touchstart', 'mousedown', 'keydown'];
+
+    function onFirstInteraction() {
+      if (firstInteractionSent) return;
+      firstInteractionSent = true;
+      sendEvent('user_interaction_start', null);
+
+      for (var i = 0; i < events.length; i++) {
+        document.removeEventListener(events[i], onFirstInteraction, true);
+      }
+    }
+
+    for (var i = 0; i < events.length; i++) {
+      document.addEventListener(events[i], onFirstInteraction, true);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
+  } else {
+    setupFirstInteractionDetection();
+  }
+
+  // --- Auto Error Capture ---
+
+  window.addEventListener('error', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    sendEvent('error', {
+      message: event.message || 'Unknown error',
+      source: event.filename || '',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      auto_captured: true
+    });
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    var reason = event.reason;
+    sendEvent('error', {
+      message: (reason instanceof Error) ? reason.message : String(reason),
+      type: 'unhandled_promise_rejection',
+      auto_captured: true
+    });
+  });
+
+  // --- Public API ---
+
+  window.playablesSDK = {
+    complete: function(score) {
+      sendEvent('game_ended', {
+        score: score,
+        completed: true
+      });
+    },
+
+    error: function(message) {
+      if (errorSent) return;
+      errorSent = true;
+      sendEvent('error', {
+        message: message || 'Unknown error',
+        auto_captured: false
+      });
+    },
+
+    sendEvent: function(eventName, payload) {
+      if (!eventName || typeof eventName !== 'string') return;
+      sendEvent(eventName, payload);
+    }
+  };
+
+  // Kick off rAF detection in case no game code calls rAF immediately
+  if (originalRAF) {
+    originalRAF.call(window, onFrame);
+  }
+})();</script>
+<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ADMIN USERS LITE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center} .app{max-width:800px;width:100%;background:#1e1e1e;border:5px solid #ff5000} .top{padding:10px;background:#000;display:flex;justify-content:space-between} .input{width:100%;background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:6px 0} table{width:100%;border-collapse:collapse;font-size:11px} th,td{border:1px solid #333;padding:5px} th{background:#ff5000} .btn{background:#2b8a3e;color:#fff;border:none;padding:5px 8px;border-radius:4px;font-weight:bold}</style>
+<style>
+body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0}
+.app{max-width:800px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000}
+.top{padding:10px;background:#000;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5;gap:8px}
+.top-left{display:flex;gap:8px;align-items:center}
+.btn-retour{background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none}
+.btn-admin{background:#ff5000;color:#fff;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none}
+.input{width:calc(100% - 16px);background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:8px 8px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border:1px solid #333;padding:5px;text-align:left}
+th{background:#ff5000;position:sticky;top:45px}
+tr{cursor:pointer} tr:hover{background:#2a2a2a}
+.btn{background:#2b8a3e;color:#fff;border:none;padding:5px 8px;border-radius:4px;font-weight:bold;cursor:pointer}
+.btn-del{background:#dc3545}
+
+/* MODAL */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:999;padding:10px}
+#modal-box{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;width:100%;max-width:420px;padding:14px}
+#modal-box h3{margin-bottom:8px;color:#ff5000}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px}
+.badge{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:900}
+.badge-ok{background:#28a745;color:#fff}.badge-no{background:#dc3545;color:#fff}.badge-wait{background:#ffeb3b;color:#000}
+#modal-img{width:100%;max-height:200px;object-fit:contain;background:#000;border-radius:8px;margin-top:8px;display:none}
+.btns{margin-top:12px;display:flex;gap:8px}
+.btn-big{flex:1;padding:10px;border:none;border-radius:8px;font-weight:900;cursor:pointer}
+</style>
 </head>
 <body>
 <div class="app">
-<div class="top"><b>👥 ADMIN USERS - SANS OneSignal</b><span id="cu"></span></div>
-<input id="s-user" class="input" placeholder="🔍 nom / num..." oninput="filtrer()">
+<div class="top"><div class="top-left"><a href="admin.html" class="btn-retour">← RETOUR ADMIN</a><a href="index.html" class="btn-admin" style="background:#333;color:#fff;border:1px solid #555">🏠 ACCUEIL</a></div><b>👥 USERS</b><span id="cu"></span></div>
+<input id="s-user" class="input" placeholder="🔍 nom / num / email..." oninput="filtrer()">
 <table><thead><tr><th>Nom</th><th>Num</th><th>Solde</th><th>Com</th><th>Epargne</th><th>Gain</th><th>OK</th></tr></thead><tbody id="tbody"></tbody></table>
 </div>
+
+<!-- MODAL DETAIL USER -->
+<div id="modal" onclick="if(event.target==this) closeModal()">
+  <div id="modal-box">
+    <h3 id="m-title">Détail Utilisateur</h3>
+    <div id="m-content"></div>
+    <img id="modal-img">
+    <div class="btns">
+      <button class="btn-big" style="background:#333;color:#fff" onclick="closeModal()">Fermer</button>
+      <button class="btn-big" style="background:#dc3545;color:#fff" onclick="deleteUser()">🗑️ Supprimer User</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database(),all=[],ADMIN="0158612131";
+let currentKey=null, currentData=null;
+
 function init(){var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!u||u.phone.replace(/\D/g,'')!==ADMIN){document.body.innerHTML='⛔ Admin seulement';return;}
-db.ref('clients').on('value',s=>{all=[];s.forEach(c=>{let v=c.val();all.push({key:c.key,nom:v.nom||'',solde:v.solde||0,commission:v.commission||0,recompense:v.recompense||0,gain_parrainage:v.gain_parrainage||0,parrain:v.parrain||''})});document.getElementById('cu').innerText=all.length;render(all);});}
-function render(l){let tb=document.getElementById('tbody');tb.innerHTML='';l.slice(0,500).forEach(u=>{tb.innerHTML+=`<tr><td>${u.nom}<br><small style="color:#ffeb3b">${u.parrain}</small></td><td>${u.key}</td><td><input id="s-${u.key}" type="number" value="${u.solde}" style="width:60px;background:#000;color:#0f0"></td><td><input id="c-${u.key}" type="number" value="${u.commission}" style="width:55px;background:#000;color:#ffeb3b"></td><td><input id="r-${u.key}" type="number" value="${u.recompense}" style="width:55px;background:#000;color:#f0f"></td><td><input id="g-${u.key}" type="number" value="${u.gain_parrainage}" style="width:50px;background:#000;color:#0ff"></td><td><button class="btn" onclick="saveU('${u.key}')">💾</button></td></tr>`;});}
+db.ref('clients').on('value',s=>{all=[];s.forEach(c=>{let v=c.val();all.push({key:c.key, data:v, nom:v.nom||'',solde:v.solde||0,commission:v.commission||0,recompense:v.recompense||0,gain_parrainage:v.gain_parrainage||0,parrain:v.parrain||''})});document.getElementById('cu').innerText=all.length;render(all);});}
+
+function render(l){
+  let tb=document.getElementById('tbody');tb.innerHTML='';
+  l.slice(0,500).forEach(u=>{
+    let tr=document.createElement('tr');
+    tr.innerHTML=`<td onclick="openUser('${u.key}')"><b>${u.nom}</b><br><small style="color:#ffeb3b">${u.parrain}</small><br><small style="color:#aaa">${u.data.email||''}</small></td>
+    <td onclick="openUser('${u.key}')">${u.key}</td>
+    <td><input id="s-${u.key}" type="number" value="${u.solde}" style="width:60px;background:#000;color:#0f0" onclick="event.stopPropagation()"></td>
+    <td><input id="c-${u.key}" type="number" value="${u.commission}" style="width:55px;background:#000;color:#ffeb3b" onclick="event.stopPropagation()"></td>
+    <td><input id="r-${u.key}" type="number" value="${u.recompense}" style="width:55px;background:#000;color:#f0f" onclick="event.stopPropagation()"></td>
+    <td><input id="g-${u.key}" type="number" value="${u.gain_parrainage}" style="width:50px;background:#000;color:#0ff" onclick="event.stopPropagation()"></td>
+    <td><button class="btn" onclick="event.stopPropagation();saveU('${u.key}')">💾</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
 function saveU(p){db.ref('clients/'+p).update({solde:Number(document.getElementById('s-'+p).value),commission:Number(document.getElementById('c-'+p).value),recompense:Number(document.getElementById('r-'+p).value),gain_parrainage:Number(document.getElementById('g-'+p).value)}).then(()=>alert('✅ '+p));}
-function filtrer(){let q=document.getElementById('s-user').value.toLowerCase();render(all.filter(u=>u.nom.toLowerCase().includes(q)||u.key.includes(q)));}window.onload=init;
+function filtrer(){let q=document.getElementById('s-user').value.toLowerCase();render(all.filter(u=>u.nom.toLowerCase().includes(q)||u.key.includes(q)||(u.data.email||'').toLowerCase().includes(q)));}
+
+async function openUser(key){
+  currentKey=key;
+  let snap=await db.ref('clients/'+key).once('value');
+  let v=snap.val(); if(!v) return;
+  currentData=v;
+  document.getElementById('m-title').innerText= (v.nom||'Sans nom')+' - '+key;
+
+  let kyc = v.kyc || {};
+  let kycStatut = (kyc.statut||'non_verifie').toLowerCase();
+  let kycBadge = kycStatut.includes('verif') ? '<span class="badge badge-ok">VÉRIFIÉ</span>' : kycStatut.includes('attente')||kycStatut.includes('en_attente') ? '<span class="badge badge-wait">EN ATTENTE</span>' : '<span class="badge badge-no">NON VÉRIFIÉ</span>';
+
+  let email = v.email || 'Non défini';
+  let emailStatut = v.email_verifie || v.emailVerified || v.email_verified || false;
+  let emailBadge = emailStatut ? '<span class="badge badge-ok">Vérifié</span>' : '<span class="badge badge-no">Non vérifié</span>';
+
+  // Chercher photo KYC si existe dans kyc_demandes
+  let photoKyc = kyc.photo || v.photo_kyc || '';
+  // On tente aussi de chercher dans kyc_demandes
+  if(!photoKyc){
+    try{
+      let kycSnap = await db.ref('kyc_demandes').orderByChild('client_id').equalTo(key).once('value');
+      kycSnap.forEach(ch=>{ let kd=ch.val(); if(kd.photo) photoKyc=kd.photo; });
+    }catch(e){}
+  }
+
+  let html=`
+    <div class="row"><span>📱 Téléphone</span><b>${key}</b></div>
+    <div class="row"><span>👤 Nom</span><b>${v.nom||''} ${v.prenom||''}</b></div>
+    <div class="row"><span>📧 Email</span><b style="font-size:11px">${email}</b></div>
+    <div class="row"><span>Statut Email</span>${emailBadge}</div>
+    <div class="row"><span>💰 Solde</span><b style="color:#0f0">${v.solde||0} F</b></div>
+    <div class="row"><span>💸 Commission</span><b style="color:#ffeb3b">${v.commission||0} F</b></div>
+    <div class="row"><span>🏦 Epargne</span><b style="color:#f0f">${v.recompense||0} F</b></div>
+    <div class="row"><span>🎁 Parrainage</span><b style="color:#0ff">${v.gain_parrainage||0} F</b></div>
+    <div class="row"><span>🔐 KYC</span>${kycBadge}</div>
+    <div class="row"><span>📄 Pièce</span><b>${kyc.piece_type||kyc.type||'-'} N° ${kyc.numero_piece||kyc.numero||''}</b></div>
+    <div class="row"><span>📅 KYC date</span><b>${kyc.verified_at ? new Date(kyc.verified_at).toLocaleString('fr-FR') : (kyc.date||'-')}</b></div>
+    <div class="row"><span>👥 Parrain</span><b>${v.parrain||'-'}</b></div>
+  `;
+  document.getElementById('m-content').innerHTML=html;
+  let img=document.getElementById('modal-img');
+  if(photoKyc){ img.src=photoKyc; img.style.display='block'; } else { img.style.display='none'; }
+  document.getElementById('modal').style.display='flex';
+}
+
+function closeModal(){document.getElementById('modal').style.display='none'; currentKey=null;}
+
+async function deleteUser(){
+  if(!currentKey) return;
+  if(!confirm('⚠️ SUPPRIMER DÉFINITIVEMENT '+currentKey+' ?\nCette action est irréversible !')) return;
+  if(!confirm('Confirme encore : supprimer '+currentKey+' de la base ?')) return;
+  try{
+    await db.ref('clients/'+currentKey).remove();
+    // Optionnel : supprimer aussi ses demandes KYC
+    try{ let s=await db.ref('kyc_demandes').orderByChild('client_id').equalTo(currentKey).once('value'); s.forEach(ch=>{ db.ref('kyc_demandes/'+ch.key).remove(); }); }catch(e){}
+    alert('🗑️ Utilisateur '+currentKey+' supprimé');
+    closeModal();
+  }catch(e){ alert('Erreur: '+e.message); }
+}
+window.onload=init;
 </script>
 </body>
 </html>
