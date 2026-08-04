@@ -5,6 +5,7 @@
 <title>P2P / P2M MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f5000;color:#fff;display:flex;justify-content:center}
@@ -279,7 +280,10 @@ async function executerP2P(){
   }catch(e){showAlert('Erreur: '+e.message);}
   finally{_lock=false;document.getElementById('btnValider').innerText='Valider le transfert';document.getElementById('btnValider').disabled=false;}
 }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
