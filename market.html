@@ -6,6 +6,7 @@
 <title>Market - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -76,7 +77,10 @@ function toggleLike(postId){ const ref=db.ref('likes/'+postId+'/'+currentUserId)
 function listenLikes(postId){ db.ref('likes/'+postId).on('value',snap=>{ const c=snap.numChildren(); const ce=document.getElementById('like-'+postId); const btn=document.getElementById('btn-like-'+postId); const likers=document.getElementById('likers-'+postId); if(ce) ce.innerText=c; if(btn) btn.classList.toggle('like-active', snap.hasChild(currentUserId)); if(likers){ if(c===0){ likers.innerText=''; } else { let noms=[]; snap.forEach(ch=>{ const v=ch.val(); if(v&&v.nom) noms.push(v.nom); }); likers.innerText=`❤️ ${c} j'aime · ${noms.slice(0,2).join(', ')}${c>2?' +'+(c-2):''}`; likers.onclick=()=>showAlert(noms.join('\n')); } } }); }
 function ouvrirChat(dId,dNom){ if(dId===currentUserId) return showAlert("C'est toi :)"); showInput('Message à '+dNom+' :', function(txt){ if(!txt) return; const cId=[currentUserId,dId].sort().join('_'); database.ref(`conversations/${cId}/messages`).push().set({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:txt,createdAt:Date.now()}).then(()=>location.href='messagerie.html'); }); }
 function init(){ let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(!s){ location.href='index.html'; return; } currentUserId=s.phone.replace(/[^0-9]/g,''); database.ref('clients/'+currentUserId).once('value').then(v=>{ document.getElementById('user-name').innerText=v.val()?.nom||currentUserId; }); chargerFeed(); }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
