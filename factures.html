@@ -4,6 +4,7 @@
 <title>Factures - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const database=firebase.database();</script>
 <style>body{margin:0;padding:5px;font-family:Arial;background:#aaaa;display:flex;justify-content:center}.app-container{width:100%;max-width:430px;background:#1e1e1e;border:2px solid #fff;border-radius:10px;color:#fff;padding:12px}.input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;background:#aaaa;color:#fff;text-align:center;font-weight:bold;margin-bottom:8px}.dark-field{background:#1e1e1e!important;border:2px solid #fff!important}.btn-submit{width:100%;background:#008000;color:#fff;border:5px solid #aaaa;padding:10px;font-weight:bold;border-radius:4px;margin-top:5px}.user-header{background:#aaaa;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}.history-box{background:#1e1e1e;color:#fff;font-family:monospace;padding:6px;border-radius:4px;max-height:140px;overflow-y:auto;font-size:10px;margin-top:5px}.status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center}.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px}.modal-box{background:#500;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}.modal-msg{font-size:15px;margin-bottom:18px}.modal-btns{display:flex;gap:8px}.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}.btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#ddd;color:#000}</style>
 </head><body><div class="app-container">
@@ -68,5 +69,8 @@ function payerFacture(){
     database.ref('commandes_factures').push().set({...dataFull,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
   });
 }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script></body></html>
