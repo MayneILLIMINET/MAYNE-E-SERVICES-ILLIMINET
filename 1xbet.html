@@ -5,6 +5,7 @@
 <title>1XBET MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -113,7 +114,10 @@ async function executerRetrait(){
     document.getElementById('warning-retrait').style.display='none';document.getElementById('btn-retrait').innerText='Continuer';document.getElementById('btn-retrait').className='btn btn-retrait';etapeRetrait=1;
   }catch(e){showAlert(e.message);}finally{_lock=false;}
 }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
