@@ -5,6 +5,7 @@
 <title>Epargne MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#500;color:#fff;display:flex;justify-content:center}
@@ -94,8 +95,10 @@ db.ref('clients/'+uid).once('value').then(function(s){var c=s.val()||{};return d
 function retirer(){
 var mt=Number(document.getElementById('rmont').value);if(!mt)return showAlert('Montant');var b=Math.min(blockedTotal,soldeEpargne);var d=Math.max(0,soldeEpargne-b);if(mt>d)return showAlert('Max dispo '+d);
 db.ref('epargne/'+uid).once('value').then(function(snap){var reste=mt,upd={};snap.forEach(function(ch){if(reste<=0)return;var v=ch.val(),k=ch.key;if(v.type==='Retrait'||v.bloque)return;var col=+(v.montantCollecte||0);if(col<=0)return;var take=Math.min(col,reste);upd['epargne/'+uid+'/'+k+'/montantCollecte']=col-take;reste-=take;});return db.ref().update(upd);}).then(function(){return db.ref('clients/'+uid).once('value');}).then(function(s){var c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});}).then(function(){notifEpargne("Retrait epargne","Retrait direct "+mt+" XOF");showAlert('Retrait '+mt+' XOF');closeM();});
-}
-window.onload=init;
+}firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
