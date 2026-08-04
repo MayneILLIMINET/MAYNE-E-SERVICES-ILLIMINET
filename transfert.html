@@ -5,6 +5,7 @@
 <title>Transfert - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f5000;color:#fff;display:flex;justify-content:center}
@@ -161,7 +162,10 @@ async function executerRetrait(){
     document.getElementById('warning-retrait').style.display='none';document.getElementById('btn-retrait').innerText='Continuer';document.getElementById('btn-retrait').className='btn btn-retrait';etapeRetrait=1;
   }catch(e){showAlert(e.message);}finally{_lock=false;}
 }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
