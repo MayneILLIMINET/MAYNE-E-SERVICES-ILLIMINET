@@ -404,16 +404,25 @@ function doDelete(ids){
   ids.forEach(id=>selected.delete(id));
   render(); updateBadge();
 }
+let pendingConfirmAction=null;
+function showMyConfirm(msg, cb){
+  document.getElementById('confirm-msg').innerText=msg;
+  document.getElementById('myConfirm').style.display='flex';
+  pendingConfirmAction=cb;
+}
+function closeMyConfirm(ok){
+  document.getElementById('myConfirm').style.display='none';
+  if(ok && pendingConfirmAction) pendingConfirmAction();
+  pendingConfirmAction=null;
+}
 function supprimerSelection(){
   if(selected.size===0) return;
-  if(!confirm('Supprimer '+selected.size+' notification(s) ?')) return;
-  doDelete(Array.from(selected));
+  showMyConfirm('Supprimer '+selected.size+' notification(s) ?', ()=>doDelete(Array.from(selected)));
 }
 function toutSupprimer(){
   const visible=allNotifs.filter(n=>!getDelIds().includes(n.id));
   if(visible.length===0) return;
-  if(!confirm('Tout supprimer ? Cette action supprime toutes tes notifications de Firebase.')) return;
-  doDelete(visible.map(n=>n.id));
+  showMyConfirm('Tout supprimer ? Cette action supprime toutes tes notifications.', ()=>doDelete(visible.map(n=>n.id)));
 }
 function marquerToutLu(){
   const visible=allNotifs.filter(n=>!getDelIds().includes(n.id)).map(n=>n.id);
@@ -435,5 +444,11 @@ firebase.auth().onAuthStateChanged(function(user){
   else { firebase.auth().signInAnonymously(); }
 });
 </script>
+
+<div id="myConfirm" class="overlay" style="display:none;z-index:200"><div class="box" style="text-align:center">
+<p id="confirm-msg" style="font-size:15px;margin-bottom:16px;font-weight:600"></p>
+<div style="display:flex;gap:10px"><button class="btn" style="background:#ddd;color:#000" onclick="closeMyConfirm(false)">ANNULER</button><button class="btn" onclick="closeMyConfirm(true)">OK</button></div>
+</div></div>
 </body>
+
 </html>
