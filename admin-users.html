@@ -215,6 +215,7 @@
 <title>ADMIN USERS LITE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
 body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0}
 .app{max-width:800px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000}
@@ -348,7 +349,10 @@ async function deleteUser(){
     closeModal();
   }catch(e){ alert('Erreur: '+e.message); }
 }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
