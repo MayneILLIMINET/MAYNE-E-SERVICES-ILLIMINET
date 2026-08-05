@@ -10,14 +10,6 @@
 window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async function(OneSignal){
   await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
-  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(u&&u.phone){
-    try{
-      const phone=String(u.phone).replace(/\D/g,'');
-      await OneSignal.login(phone);
-      await OneSignal.User.addTags({phone:phone});
-    }catch(e){}
-  }
 });
 async function activerNotifications(){
   if(window.AppInventor){alert('✅ Notifications APK actives');return;}
@@ -223,11 +215,17 @@ function chargerSessionDepuisFirebase(phone){
     maj('user-balance',currentUserSolde);maj('user-commission',data.commission||0);maj('user-recompense',currentUserRecompense);
   });
 window.OneSignalDeferred.push(async function(OneSignal){
-  const subId = await OneSignal.User.pushSubscription.id;
-  if(subId){
-    database.ref('clients/'+phone+'/onesignal_id').set(subId);
-    database.ref('clients/'+phone+'/phone').set(phone);
-  }
+  try{
+    const ph=String(phone).replace(/\D/g,'');
+    await OneSignal.login(ph);
+    await OneSignal.User.addTags({phone:ph});
+    const subId=await OneSignal.User.pushSubscription.id;
+    if(subId){
+      database.ref('clients/'+ph+'/onesignal_id').set(subId);
+      database.ref('clients/'+ph+'/phone').set(ph);
+      fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(ph)+'&playerId='+encodeURIComponent(subId)});
+    }
+  }catch(e){}
 });
   ecouterClocheEtBordures(); demarrerTimerSession();
 }
