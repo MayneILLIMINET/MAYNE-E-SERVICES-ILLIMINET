@@ -1,6 +1,216 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<!-- Playables SDK -->
+<script>// Playables SDK v1.0.0
+// Game lifecycle bridge: rAF-based game-ready detection + event communication
+(function() {
+  'use strict';
+
+  // Idempotency: skip if already initialized (e.g., server-side injection
+  // followed by client-side inject-javascript via the Bloks webview component).
+  if (window.playablesSDK) return;
+
+  var HANDLER_NAME = 'playablesGameEventHandler';
+  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
+  var RAF_FRAME_THRESHOLD = 3;
+
+  var gameReadySent = false;
+  var firstInteractionSent = false;
+  var errorSent = false;
+  var frameCount = 0;
+  var originalRAF = window.requestAnimationFrame;
+
+  // --- Transport Layer ---
+
+  function hasIOSBridge() {
+    return !!(window.webkit &&
+              window.webkit.messageHandlers &&
+              window.webkit.messageHandlers[HANDLER_NAME]);
+  }
+
+  function hasAndroidBridge() {
+    return !!(window[ANDROID_BRIDGE_NAME] &&
+              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
+  }
+
+  function isInIframe() {
+    return !!(window.parent && window.parent !== window);
+  }
+
+  function sendEvent(eventName, payload) {
+    var message = {
+      type: eventName,
+      payload: payload || {},
+      timestamp: Date.now()
+    };
+
+    if (hasIOSBridge()) {
+      try {
+        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (hasAndroidBridge()) {
+    try {
+      var p = payload || {};
+      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
+      p.timestamp = message.timestamp;
+      window[ANDROID_BRIDGE_NAME].postEvent(
+        eventName,
+        JSON.stringify(p)
+      );
+    } catch (e) { /* ignore */ }
+    return;
+  }
+
+    if (isInIframe()) {
+      try {
+        window.parent.postMessage(message, '*');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+  }
+
+  // --- rAF Game-Ready Detection ---
+
+  function onFrame() {
+    if (gameReadySent) return;
+
+    frameCount++;
+    if (frameCount >= RAF_FRAME_THRESHOLD) {
+      gameReadySent = true;
+      sendEvent('game_ready', {
+        frame_count: frameCount,
+        detected_at: Date.now()
+      });
+      return;
+    }
+
+    originalRAF.call(window, onFrame);
+  }
+
+  if (originalRAF) {
+    window.requestAnimationFrame = function(callback) {
+      if (!gameReadySent) {
+        return originalRAF.call(window, function(timestamp) {
+          frameCount++;
+          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
+            gameReadySent = true;
+            sendEvent('game_ready', {
+              frame_count: frameCount,
+              detected_at: Date.now()
+            });
+          }
+          callback(timestamp);
+        });
+      }
+      return originalRAF.call(window, callback);
+    };
+  }
+
+  // --- First User Interaction Detection ---
+
+  function setupFirstInteractionDetection() {
+    var events = ['touchstart', 'mousedown', 'keydown'];
+
+    function onFirstInteraction() {
+      if (firstInteractionSent) return;
+      firstInteractionSent = true;
+      sendEvent('user_interaction_start', null);
+
+      for (var i = 0; i < events.length; i++) {
+        document.removeEventListener(events[i], onFirstInteraction, true);
+      }
+    }
+
+    for (var i = 0; i < events.length; i++) {
+      document.addEventListener(events[i], onFirstInteraction, true);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
+  } else {
+    setupFirstInteractionDetection();
+  }
+
+  // --- Auto Error Capture ---
+
+  window.addEventListener('error', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    sendEvent('error', {
+      message: event.message || 'Unknown error',
+      source: event.filename || '',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      auto_captured: true
+    });
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    var reason = event.reason;
+    sendEvent('error', {
+      message: (reason instanceof Error) ? reason.message : String(reason),
+      type: 'unhandled_promise_rejection',
+      auto_captured: true
+    });
+  });
+
+  // --- Public API ---
+
+  window.playablesSDK = {
+    complete: function(score) {
+      sendEvent('game_ended', {
+        score: score,
+        completed: true
+      });
+    },
+
+    error: function(message) {
+      if (errorSent) return;
+      errorSent = true;
+      sendEvent('error', {
+        message: message || 'Unknown error',
+        auto_captured: false
+      });
+    },
+
+    sendEvent: function(eventName, payload) {
+      if (!eventName || typeof eventName !== 'string') return;
+      sendEvent(eventName, payload);
+    }
+  };
+
+  // Kick off rAF detection in case no game code calls rAF immediately
+  if (originalRAF) {
+    originalRAF.call(window, onFrame);
+  }
+})();</script>
+<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <script>if(localStorage.getItem('mayne_pin_enabled')==='true' && !sessionStorage.getItem('mayne_unlocked')){location.href='lock.html';}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
@@ -28,19 +238,22 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .app-container{width:100%;max-width:430px;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#1e1e1e;border:2px solid #fff;border-radius:10px;color:#fff;box-sizing:border-box;text-align:center;position:relative}
 .input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
-.input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
-.dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
-.btn-submit{width:100%;background:#500;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
+.input-field,.select-field{width:100%;padding:12px;border-radius:8px;border:2px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#2a2a2a;color:#fff}
+.btn-submit{width:100%;background:#500;color:#fff;border:none;padding:13px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:100px;margin-top:8px;display:block}
+.btn-secondary{width:100%;background:#333;color:#fff;border:1px solid #555;padding:10px;font-size:12px;border-radius:100px;margin-top:8px;cursor:pointer}
 .user-header{background:#aaaa;padding:8px;border-radius:6px;border:20px solid #aaaa;margin-bottom:10px;position:relative;text-align:left}
 .profile-line{font-size:14px;font-weight:bold;margin-bottom:2px;width:65%}
 .solde-val{font-size:18px;font-weight:bold;color:#0f0}
 .btn-logout{position:absolute;top:1px;right:8px;background:#500;color:#fff;border:4px solid #aaa;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
-.service-panel{background:#1e1e1e;color:#fff;padding:10px;border-radius:6px;text-align:left}
+.service-panel{background:#1e1e1e;color:#fff;padding:12px;border-radius:10px;text-align:left}
 .status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center;color:#006400}
 .history-box{background:#1e1e1e;color:#fff;font-family:monospace;padding:6px;border-radius:4px;max-height:120px;overflow-y:auto;font-size:10px;margin-top:5px}
 .nb-box{background:#fff;color:#000;padding:10px;border-radius:8px;font-size:11px;line-height:1.4;margin-top:12px;text-align:left;border-left:4px solid #2b8a3e}
 .btn-kyc{display:inline-block;margin-top:8px;background:#500;color:#fff;border:3px solid #ff5000;padding:8px 14px;border-radius:100px;font-weight:800;cursor:pointer;text-decoration:none;font-size:11px}
-.otp-box{background:#1e1e1e;border:1px dashed #ff5000;padding:10px;border-radius:8px;margin-top:12px}
+.otp-box{background:#252525;border:1px dashed #ff5000;padding:14px;border-radius:12px;margin-top:12px;display:none}
+.otp-box.show{display:block}
+.step-badge{display:inline-block;background:#ff5000;color:#fff;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;margin-bottom:8px}
+.summary-box{background:#2e2e2e;padding:10px;border-radius:8px;margin:8px 0;font-size:12px;border-left:3px solid #ff5000}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
 .modal-box{background:#ff5000;color:#000;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
 .modal-msg{font-size:15px;margin-bottom:18px}
@@ -63,40 +276,51 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 <div class="service-panel">
 <h4 style="color:#fff;border-bottom:2px solid #fff;padding-bottom:5px;margin-bottom:10px">RETIRER DE L'ARGENT</h4>
 
-<!-- VERIFICATION EMAIL OTP COMME INDEX.HTML -->
-<div class="otp-box" id="otp-zone">
-<div style="font-size:12px;font-weight:bold;color:#ffeb3b">VÉRIFICATION EMAIL OBLIGATOIRE</div>
-<div style="font-size:11px;margin:6px 0">Un code sera envoyé à <span id="email-affiche" style="font-weight:bold;color:#fff">...</span></div>
-<button type="button" class="btn-submit" style="background:#ff5000!important;padding:8px" onclick="envoyerCodeEmailRetrait()">Envoyer le code</button>
-<div class="input-group" style="margin-top:8px"><input type="text" id="verify-code-retrait" class="input-field dark-field" placeholder="Code à 6 chiffres"></div>
-<button type="button" class="btn-submit" style="background:#2b8a3e!important;padding:8px" onclick="verifierCodeEmailRetrait()">Vérifier le code</button>
-<div id="otp-status" style="font-size:11px;font-weight:bold;margin-top:6px;color:#0f0"></div>
+<!-- ETAPE 1 : FORMULAIRE -->
+<div id="step1">
+<div class="step-badge">ÉTAPE 1 / 2 - DÉTAILS</div>
+<div class="input-group"><label class="input-label">Montant à retirer</label><input type="number" id="retrait-montant" class="input-field" placeholder="Ex: 5000"></div>
+<div class="input-group"><label class="input-label">Numéro de réception</label><input type="text" id="retrait-numero" class="input-field" placeholder="01XXXXXXXX"></div>
+<div class="input-group"><label class="input-label">Réseau</label><select id="retrait-reseau" class="select-field"><option value="">-- Choix Réseau --</option><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div>
+<button type="button" class="btn-submit" style="background:#ff5000" onclick="passerVerification()">Continuer → Vérification Email</button>
 </div>
 
-<div class="input-group"><input type="number" id="retrait-montant" class="input-field dark-field" placeholder="Montant à retirer"></div>
-<div class="input-group"><input type="text" id="retrait-numero" class="input-field dark-field" placeholder="Numéro de réception"></div>
-<div class="input-group"><select id="retrait-reseau" class="select-field dark-field"><option value="">-- Choix Réseau --</option><option value="MTN">MTN</option><option value="MOOV">MOOV</option><option value="CELTIS">CELTIS</option></select></div>
-<button type="button" class="btn-submit" style="background:#cc0000!important;" onclick="validerRetrait()">Valider le retrait</button>
+<!-- ETAPE 2 : VERIFICATION EMAIL - CACHÉE AU DÉBUT -->
+<div class="otp-box" id="otp-zone">
+<div class="step-badge">ÉTAPE 2 / 2 - SÉCURITÉ</div>
+<div id="resume-retrait" class="summary-box"></div>
+<div style="font-size:12px;font-weight:bold;color:#ffeb3b;margin-top:8px">VÉRIFICATION EMAIL OBLIGATOIRE</div>
+<div style="font-size:11px;margin:6px 0">Un code sera envoyé à <span id="email-affiche" style="font-weight:bold;color:#fff">...</span></div>
+<button type="button" class="btn-submit" style="background:#ff5000;padding:10px" id="btn-envoi-code" onclick="envoyerCodeEmailRetrait()">📧 Envoyer le code</button>
+<div class="input-group" style="margin-top:10px"><label class="input-label">Code reçu (6 chiffres)</label><input type="text" id="verify-code-retrait" class="input-field" placeholder="••••••"></div>
+<button type="button" class="btn-submit" style="background:#2b8a3e;padding:10px" id="btn-verif-code" onclick="verifierCodeEmailRetrait()">✅ Vérifier le code</button>
+<div id="otp-status" style="font-size:11px;font-weight:bold;margin-top:8px;color:#0f0;text-align:center"></div>
+<button type="button" class="btn-submit" style="background:#cc0000;display:none" id="btn-valider-final" onclick="validerRetrait()">💸 VALIDER LE RETRAIT MAINTENANT</button>
+<button type="button" class="btn-secondary" onclick="retourEtape1()">← Modifier les infos</button>
+</div>
+
 <p id="retrait-status" class="status-msg"></p>
 
 <div class="nb-box">
 <b>NB:</b> Pour nous aider dans la lutte contre les fraudes, nous vous invitons à vérifier votre identité KYC.<br>
 <a href="kyc.html" class="btn-kyc">VÉRIFIER MON IDENTITÉ</a>
-<div style="margin-top:6px;font-size:10px;color:#555">Facultatif. Si vous avez déjà fait votre KYC, vous pouvez retirer directement après vérification email.</div>
 </div>
 
 <div style="color:#fff;font-weight:bold;text-align:center;font-size:14px;margin-top:15px">MES RETRAITS</div>
 <div id="retrait-historique" class="history-box">Aucun retrait</div>
 </div>
 </div>
+
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
 <div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
+
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
 let currentUserId=null,currentUserSolde=0,currentUserEmail='',confirmCallback=null,_lock=false;
 let soldeMasque=localStorage.getItem('mayne_hide_solde')==='true';
 let isEmailVerifiedRetrait=false;
+let pendingRetrait=null;
 const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,def=null)=>{try{const v=localStorage.getItem('mayne_'+k);return v?JSON.parse(v):def;}catch{return def;}}};
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
@@ -117,7 +341,6 @@ function init(){
     document.getElementById('user-email').innerText=currentUserEmail||'Aucun email';
     document.getElementById('email-affiche').innerText=currentUserEmail||'';
     const el=document.getElementById('user-balance'); el.dataset.vrai=currentUserSolde.toLocaleString('fr-FR'); el.innerText=soldeMasque?'••••••':el.dataset.vrai;
-    // Si déjà vérifié dans DB on auto-valide l'OTP pour ce retrait? Non, on impose quand même un code frais pour la sécurité
   });
   database.ref('commandes_retraits').orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{
     const hb=document.getElementById('retrait-historique'); if(!sh.exists()){hb.innerHTML='Aucun retrait';return;}
@@ -125,43 +348,81 @@ function init(){
   });
 }
 
-function envoyerCodeEmailRetrait(){
-  if(!currentUserEmail) return showAlert('Aucun email trouvé sur ton compte');
-  fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(currentUserEmail),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
-  .then(r=>r.text()).then(t=>{
-    if(t.includes('sent')){document.getElementById('otp-status').innerText='✅ Code envoyé à '+currentUserEmail; showAlert('Code envoyé à '+currentUserEmail);}
-    else{showAlert('Erreur envoi: '+t);}
-  });
-}
-function verifierCodeEmailRetrait(){
-  const code=document.getElementById('verify-code-retrait').value.trim();
-  if(!code) return showAlert('Entre le code');
-  fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(currentUserEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}})
-  .then(r=>r.text()).then(t=>{
-    if(t.includes('ok')){
-      isEmailVerifiedRetrait=true;
-      document.getElementById('otp-status').innerText='✅ Email vérifié - tu peux retirer';
-      document.getElementById('otp-zone').style.background='#0a3d0a';
-      showAlert('✅ Email vérifié ! Tu peux maintenant valider ton retrait');
-    } else {showAlert('Code incorrect ou expiré');}
-  });
-}
-
-function validerRetrait(){
-  if(!isEmailVerifiedRetrait){return showAlert('⛔ Vérifie ton email OTP d\'abord. Envoie le code et valide.');}
+function passerVerification(){
   const m=Number(document.getElementById('retrait-montant').value);
   const n=document.getElementById('retrait-numero').value.trim();
   const r=document.getElementById('retrait-reseau').value;
-  if(!m||!n||!r)return showAlert('Remplis tous les champs');
-  if(currentUserSolde<m)return showAlert('Solde insuffisant : '+currentUserSolde+'F');
-  if(_lock)return;_lock=true;setTimeout(()=>_lock=false,10000);
-  const d={montant:m,numero_reception:n,reseau:r,email:currentUserEmail};
-  database.ref('clients/'+currentUserId).update({solde:currentUserSolde-m}).then(()=>{
+  if(!m||!n||!r) return showAlert('Remplis tous les champs : montant, numéro et réseau');
+  if(m<500) return showAlert('Montant minimum 500F');
+  if(currentUserSolde<m) return showAlert('Solde insuffisant : '+currentUserSolde+'F disponible');
+  if(!currentUserEmail) return showAlert('Aucun email sur ton compte, va dans Profil');
+
+  pendingRetrait={montant:m, numero_reception:n, reseau:r, email:currentUserEmail};
+
+  document.getElementById('resume-retrait').innerHTML=`<b>Résumé :</b><br>💰 ${m.toLocaleString()}F<br>📱 ${n} (${r})<br>📧 ${currentUserEmail}`;
+  document.getElementById('step1').style.display='none';
+  document.getElementById('otp-zone').classList.add('show');
+  document.getElementById('otp-status').innerText='';
+  isEmailVerifiedRetrait=false;
+  document.getElementById('btn-valider-final').style.display='none';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function retourEtape1(){
+  document.getElementById('otp-zone').classList.remove('show');
+  document.getElementById('step1').style.display='block';
+  isEmailVerifiedRetrait=false;
+}
+
+function envoyerCodeEmailRetrait(){
+  if(!currentUserEmail) return showAlert('Aucun email trouvé');
+  const btn=document.getElementById('btn-envoi-code');
+  btn.innerText='⏳ Envoi...'; btn.disabled=true;
+  fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(currentUserEmail),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+  .then(r=>r.text()).then(t=>{
+    btn.innerText='📧 Envoyer le code'; btn.disabled=false;
+    if(t.includes('sent')){document.getElementById('otp-status').innerText='✅ Code envoyé à '+currentUserEmail;}
+    else{showAlert('Erreur envoi: '+t);}
+  }).catch(()=>{btn.innerText='📧 Envoyer le code'; btn.disabled=false; showAlert('Erreur réseau');});
+}
+
+function verifierCodeEmailRetrait(){
+  const code=document.getElementById('verify-code-retrait').value.trim();
+  if(!code) return showAlert('Entre le code à 6 chiffres');
+  const btn=document.getElementById('btn-verif-code');
+  btn.innerText='⏳ Vérification...'; btn.disabled=true;
+  fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(currentUserEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+  .then(r=>r.text()).then(t=>{
+    btn.innerText='✅ Vérifier le code'; btn.disabled=false;
+    if(t.includes('ok')){
+      isEmailVerifiedRetrait=true;
+      document.getElementById('otp-status').innerText='✅ Email vérifié - Retrait autorisé';
+      document.getElementById('otp-zone').style.background='#0a3d0a';
+      document.getElementById('btn-valider-final').style.display='block';
+      showAlert('✅ Email vérifié ! Clique sur VALIDER pour lancer le retrait');
+    } else {showAlert('Code incorrect ou expiré');}
+  }).catch(()=>{btn.innerText='✅ Vérifier le code'; btn.disabled=false; showAlert('Erreur réseau');});
+}
+
+function validerRetrait(){
+  if(!pendingRetrait) return retourEtape1();
+  if(!isEmailVerifiedRetrait){return showAlert('⛔ Vérifie ton email OTP d'abord.');}
+  if(_lock) return; _lock=true; setTimeout(()=>_lock=false,10000);
+  const d=pendingRetrait;
+  database.ref('clients/'+currentUserId).update({solde:currentUserSolde-d.montant}).then(()=>{
     envoyerAlerte('retrait',d);
     proposerSupport('retrait',d,()=>afficherSucces('retrait-status'));
     database.ref('commandes_retraits').push().set({...d,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours'});
+    document.getElementById('otp-zone').classList.remove('show');
+    document.getElementById('step1').style.display='block';
+    document.getElementById('retrait-montant').value='';
+    document.getElementById('retrait-numero').value='';
+    document.getElementById('retrait-reseau').value='';
+    isEmailVerifiedRetrait=false;
+    pendingRetrait=null;
   });
 }
+
 firebase.auth().onAuthStateChanged(function(user){
   if(user){ init(); } 
   else { firebase.auth().signInAnonymously(); }
