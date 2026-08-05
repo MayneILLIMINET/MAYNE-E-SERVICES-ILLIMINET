@@ -32,6 +32,7 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
@@ -59,7 +60,10 @@ cont.innerHTML=data.map(v=>`
 </div>`).join('');
 }
 function filter(t,el){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');render(t);}
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
