@@ -215,6 +215,7 @@
 <title>ADMIN MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
@@ -340,7 +341,10 @@ async function validerP2P(k){ let v=(await db.ref('commandes_p2p_p2m/'+k).once('
 async function validerKYC(k,cId){ await db.ref('clients/'+cId+'/kyc').update({statut:'verifie', verified_at:Date.now()}); await db.ref('kyc_demandes/'+k).update({statut:'verifie'}); pushJS(cId,'✅ KYC vérifié','Votre compte est vérifié'); }
 async function annuler(p,k,cId){ if(!confirm('Annuler ?')) return; await db.ref(p+'/'+k).update({statut:'annulé'}); if(cId) pushJS(cId,'❌ Annulé','Votre demande annulée'); }
 async function annulerRembourse(p,k,cId){ if(!confirm('Annuler et rembourser le client ?')) return; let v=(await db.ref(p+'/'+k).once('value')).val(); await db.ref(p+'/'+k).update({statut:'annulé'}); let s=await db.ref('clients/'+cId).once('value'); await db.ref('clients/'+cId).update({solde:+(s.val()?.solde||0)+Number(v.montant||0)}); pushJS(cId,'❌ Virement annulé','Votre retrait de '+v.montant+'F remboursé'); }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
