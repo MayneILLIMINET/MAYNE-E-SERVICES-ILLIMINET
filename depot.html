@@ -5,13 +5,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
-  await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
-  const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null'); if(u&&u.phone){try{await OneSignal.login(String(u.phone).replace(/\D/g,'')); await OneSignal.User.addTags({phone:String(u.phone).replace(/\D/g,'')});}catch(e){}}
-});
-</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Dépôt - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -113,7 +106,22 @@ function init(){
   let saved=null;try{saved=JSON.parse(localStorage.getItem('mayne_current_user')||'null');}catch{}
   if(!saved||!saved.phone){location.href='index.html';return;}
   currentUserId=(saved.phone||'').replace(/[^0-9]/g,'');
-  database.ref('clients/'+currentUserId).on('value',v=>{const d=v.val()||{}; document.getElementById('user-name').innerText=d.nom||currentUserId; const el=document.getElementById('user-balance'); el.dataset.vrai=(d.solde||0).toLocaleString('fr-FR'); el.innerText=soldeMasque?'••••••':el.dataset.vrai;});
+   // FIX ONESIGNAL APRES AUTH
+  if(window.OneSignalDeferred){
+    window.OneSignalDeferred.push(async function(OneSignal){
+      try{
+        await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
+        const phone = String(currentUserId).replace(/\D/g,'');
+        await OneSignal.login(phone);
+        await OneSignal.User.addTags({phone:phone});
+        const subId = await OneSignal.User.pushSubscription.id;
+        if(subId){
+          database.ref('clients/'+phone+'/onesignal_id').set(subId);
+          database.ref('clients/'+phone+'/phone').set(phone);
+        }
+      }catch(e){ console.log("OneSignal err", e); }
+    });
+  } database.ref('clients/'+currentUserId).on('value',v=>{const d=v.val()||{}; document.getElementById('user-name').innerText=d.nom||currentUserId; const el=document.getElementById('user-balance'); el.dataset.vrai=(d.solde||0).toLocaleString('fr-FR'); el.innerText=soldeMasque?'••••••':el.dataset.vrai;});
   database.ref('commandes_depots').orderByChild('client_id').equalTo(currentUserId).on('value',sh=>{
     const hb=document.getElementById('depot-historique');
     if(!sh.exists()){hb.innerHTML='Aucun dépôt';return;}
