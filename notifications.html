@@ -1,6 +1,216 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<!-- Playables SDK -->
+<script>// Playables SDK v1.0.0
+// Game lifecycle bridge: rAF-based game-ready detection + event communication
+(function() {
+  'use strict';
+
+  // Idempotency: skip if already initialized (e.g., server-side injection
+  // followed by client-side inject-javascript via the Bloks webview component).
+  if (window.playablesSDK) return;
+
+  var HANDLER_NAME = 'playablesGameEventHandler';
+  var ANDROID_BRIDGE_NAME = '_MetaPlayablesBridge';
+  var RAF_FRAME_THRESHOLD = 3;
+
+  var gameReadySent = false;
+  var firstInteractionSent = false;
+  var errorSent = false;
+  var frameCount = 0;
+  var originalRAF = window.requestAnimationFrame;
+
+  // --- Transport Layer ---
+
+  function hasIOSBridge() {
+    return !!(window.webkit &&
+              window.webkit.messageHandlers &&
+              window.webkit.messageHandlers[HANDLER_NAME]);
+  }
+
+  function hasAndroidBridge() {
+    return !!(window[ANDROID_BRIDGE_NAME] &&
+              typeof window[ANDROID_BRIDGE_NAME].postEvent === 'function');
+  }
+
+  function isInIframe() {
+    return !!(window.parent && window.parent !== window);
+  }
+
+  function sendEvent(eventName, payload) {
+    var message = {
+      type: eventName,
+      payload: payload || {},
+      timestamp: Date.now()
+    };
+
+    if (hasIOSBridge()) {
+      try {
+        window.webkit.messageHandlers[HANDLER_NAME].postMessage(message);
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (hasAndroidBridge()) {
+    try {
+      var p = payload || {};
+      p.__secureToken = window.__fbAndroidBridgeAuthToken || '';
+      p.timestamp = message.timestamp;
+      window[ANDROID_BRIDGE_NAME].postEvent(
+        eventName,
+        JSON.stringify(p)
+      );
+    } catch (e) { /* ignore */ }
+    return;
+  }
+
+    if (isInIframe()) {
+      try {
+        window.parent.postMessage(message, '*');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+  }
+
+  // --- rAF Game-Ready Detection ---
+
+  function onFrame() {
+    if (gameReadySent) return;
+
+    frameCount++;
+    if (frameCount >= RAF_FRAME_THRESHOLD) {
+      gameReadySent = true;
+      sendEvent('game_ready', {
+        frame_count: frameCount,
+        detected_at: Date.now()
+      });
+      return;
+    }
+
+    originalRAF.call(window, onFrame);
+  }
+
+  if (originalRAF) {
+    window.requestAnimationFrame = function(callback) {
+      if (!gameReadySent) {
+        return originalRAF.call(window, function(timestamp) {
+          frameCount++;
+          if (frameCount >= RAF_FRAME_THRESHOLD && !gameReadySent) {
+            gameReadySent = true;
+            sendEvent('game_ready', {
+              frame_count: frameCount,
+              detected_at: Date.now()
+            });
+          }
+          callback(timestamp);
+        });
+      }
+      return originalRAF.call(window, callback);
+    };
+  }
+
+  // --- First User Interaction Detection ---
+
+  function setupFirstInteractionDetection() {
+    var events = ['touchstart', 'mousedown', 'keydown'];
+
+    function onFirstInteraction() {
+      if (firstInteractionSent) return;
+      firstInteractionSent = true;
+      sendEvent('user_interaction_start', null);
+
+      for (var i = 0; i < events.length; i++) {
+        document.removeEventListener(events[i], onFirstInteraction, true);
+      }
+    }
+
+    for (var i = 0; i < events.length; i++) {
+      document.addEventListener(events[i], onFirstInteraction, true);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupFirstInteractionDetection);
+  } else {
+    setupFirstInteractionDetection();
+  }
+
+  // --- Auto Error Capture ---
+
+  window.addEventListener('error', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    sendEvent('error', {
+      message: event.message || 'Unknown error',
+      source: event.filename || '',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      auto_captured: true
+    });
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    if (errorSent) return;
+    errorSent = true;
+    var reason = event.reason;
+    sendEvent('error', {
+      message: (reason instanceof Error) ? reason.message : String(reason),
+      type: 'unhandled_promise_rejection',
+      auto_captured: true
+    });
+  });
+
+  // --- Public API ---
+
+  window.playablesSDK = {
+    complete: function(score) {
+      sendEvent('game_ended', {
+        score: score,
+        completed: true
+      });
+    },
+
+    error: function(message) {
+      if (errorSent) return;
+      errorSent = true;
+      sendEvent('error', {
+        message: message || 'Unknown error',
+        auto_captured: false
+      });
+    },
+
+    sendEvent: function(eventName, payload) {
+      if (!eventName || typeof eventName !== 'string') return;
+      sendEvent(eventName, payload);
+    }
+  };
+
+  // Kick off rAF detection in case no game code calls rAF immediately
+  if (originalRAF) {
+    originalRAF.call(window, onFrame);
+  }
+})();</script>
+<!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Notifications - MAYNE</title>
@@ -16,15 +226,21 @@ const db=firebase.database();
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 html,body{overflow-x:hidden}
 body{background:#500;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:90px}
-.head{padding:16px;display:flex;align-items:center;justify-content:space-between;background:#500;color:#fff;position:sticky;top:0;z-index:5}
+.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:110px}
+.head{padding:16px;display:flex;align-items:center;justify-content:space-between;background:#500;color:#fff;position:sticky;top:0;z-index:10}
 .back{width:44px;height:44px;background:#fff;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold}
-.notif{display:flex;gap:12px;padding:14px 16px;background:#fff;margin:8px 12px;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative}
-.notif.unread{border-left:4px solid #ff5000}
-.ico{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.toolbar{display:flex;gap:6px;padding:8px 12px;background:#fff;position:sticky;top:68px;z-index:9;border-bottom:1px solid #eee;align-items:center;flex-wrap:wrap}
+.tool-btn{padding:8px 10px;border-radius:20px;border:1px solid #ddd;background:#f5f5f5;font-size:12px;font-weight:700;cursor:pointer}
+.tool-btn.active{background:#500;color:#fff;border-color:#500}
+.tool-btn.danger{background:#ff3b30;color:#fff;border-color:#ff3b30}
+.tool-btn:disabled{opacity:.4}
+.notif{display:flex;gap:10px;padding:12px 12px;background:#fff;margin:8px 12px;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;align-items:center}
+.notif.unread{border-left:4px solid #ff5000;background:#fff8f0}
+.ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .ico.green{background:#d6f78c}.ico.red{background:#ffcccc}.ico.blue{background:#cce5ff}.ico.yellow{background:#fff3cd}
 .dot{width:8px;height:8px;background:#ff0000;border-radius:50%;position:absolute;top:12px;right:12px}
-.date-group{padding:8px 16px;font-size:11px;font-weight:800;color:#888;text-transform:uppercase;margin-top:4px}
+.cb{width:18px;height:18px;flex-shrink:0}
+.date-group{padding:8px 16px;font-size:11px;font-weight:800;color:#888;text-transform:uppercase;margin-top:4px;display:flex;justify-content:space-between}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;z-index:5}
 .bnav{border:none;background:none;color:#fff;font-size:11px;cursor:pointer}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:99;padding:20px}
@@ -35,7 +251,15 @@ body{background:#500;display:flex;justify-content:center}
 </head>
 <body>
 <div class="app">
-<div class="head"><div class="back" onclick="location.href='index.html'">‹</div><b>Notifications</b><div class="back" onclick="location.reload()">↻</div></div>
+<div class="head"><div class="back" onclick="location.href='index.html'">‹</div><b id="title-count">Notifications</b><div class="back" onclick="location.reload()">↻</div></div>
+
+<div class="toolbar">
+  <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700"><input id="checkAll" type="checkbox" onchange="toggleAll(this)"> Tout</label>
+  <button class="tool-btn" onclick="marquerToutLu()">✓ Tout lu</button>
+  <button class="tool-btn danger" id="btnDelSel" onclick="supprimerSelection()" disabled>🗑️ Supprimer (<span id="selCount">0</span>)</button>
+  <button class="tool-btn danger" onclick="toutSupprimer()">🗑️ Tout supprimer</button>
+</div>
+
 <div id="notif-list"></div>
 </div>
 <div class="bottom"><button class="bnav" onclick="location.href='index.html'">🔙ACCUEIL</button><button class="bnav" onclick="marquerToutLu()">✓ TOUT LU</button><button class="bnav" onclick="location.href='compte.html'">INFOS👤</button></div>
@@ -52,6 +276,8 @@ body{background:#500;display:flex;justify-content:center}
 
 <script>
 let uid=null, allNotifs=[], currentOpenId=null;
+let selected = new Set();
+
 function getReadKey(){ return 'mayne_notif_read_'+uid; }
 function getDelKey(){ return 'mayne_notif_del_'+uid; }
 function getReadIds(){ try{return JSON.parse(localStorage.getItem(getReadKey())||'[]')}catch(e){return[]} }
@@ -89,26 +315,60 @@ function render(){
   allNotifs.sort((a,b)=> (b.ts||0) - (a.ts||0));
   const c=document.getElementById('notif-list');
   const readIds=getReadIds();
+  const delIds=getDelIds();
   let h='', lastGroup='';
+  let visible=0;
   allNotifs.forEach(v=>{
-    if(getDelIds().includes(v.id)) return;
+    if(delIds.includes(v.id)) return;
+    visible++;
     const group=formatGroup(v.ts);
-    if(group!==lastGroup){ h+=`<div class="date-group">${group}</div>`; lastGroup=group; }
+    if(group!==lastGroup){ h+=`<div class="date-group"><span>${group}</span></div>`; lastGroup=group; }
     const unread=!readIds.includes(v.id);
-    h+=`<div class="notif ${unread?'unread':''}" onclick="openNotif('${v.id}')">
+    const isSel=selected.has(v.id);
+    h+=`<div class="notif ${unread?'unread':''}" >
+      <input type="checkbox" class="cb" ${isSel?'checked':''} onclick="event.stopPropagation();toggleSel('${v.id}',this.checked)">
       <div class="ico ${v.color}">${v.icon}</div>
-      <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.titre}</b><small style="color:#999;font-size:10px">${v.date||''}</small></div>
-      <p style="font-size:13px;margin-top:4px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.message}</p>
-      ${v.montant?`<b style="font-size:12px;color:#0f3d2e">${v.montant} XOF</b>`:''}
+      <div style="flex:1;min-width:0" onclick="openNotif('${v.id}')">
+        <div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.titre}</b><small style="color:#999;font-size:10px">${v.date||''}</small></div>
+        <p style="font-size:13px;margin-top:4px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.message}</p>
+        ${v.montant?`<b style="font-size:12px;color:#0f3d2e">${v.montant} XOF</b>`:''}
       </div>${unread?'<div class="dot"></div>':''}
     </div>`;
   });
   c.innerHTML=h||'<div style="text-align:center;padding:40px;color:#888">Aucune notification</div>';
+  document.getElementById('title-count').innerText = visible? `Notifications (${visible})` : 'Notifications';
+  updateToolbar();
 }
+function updateToolbar(){
+  document.getElementById('selCount').innerText=selected.size;
+  document.getElementById('btnDelSel').disabled=selected.size===0;
+  const allVisible = allNotifs.filter(n=>!getDelIds().includes(n.id)).map(n=>n.id);
+  const checkAll=document.getElementById('checkAll');
+  if(checkAll){
+    checkAll.checked = allVisible.length>0 && allVisible.every(id=>selected.has(id));
+    checkAll.indeterminate = selected.size>0 && selected.size < allVisible.length;
+  }
+}
+function toggleSel(id, checked){
+  if(checked) selected.add(id); else selected.delete(id);
+  updateToolbar();
+  document.getElementById('selCount').innerText=selected.size;
+  document.getElementById('btnDelSel').disabled=selected.size===0;
+}
+function toggleAll(el){
+  const allVisible = allNotifs.filter(n=>!getDelIds().includes(n.id)).map(n=>n.id);
+  if(el.checked){ allVisible.forEach(id=>selected.add(id)); }
+  else { selected.clear(); }
+  render(); updateToolbar(); updateBadge();
+}
+
 function updateBadge(){
-  const unread=allNotifs.filter(n=>!getReadIds().includes(n.id) &&!getDelIds().includes(n.id)).length;
+  const read=getReadIds();
+  const del=getDelIds();
+  const unread=allNotifs.filter(n=>!read.includes(n.id) && !del.includes(n.id)).length;
   localStorage.setItem('mayne_notif_unread', unread);
   localStorage.setItem('mayne_notif_unread_'+uid, unread);
+  localStorage.setItem('mayne_notif_total_'+uid, allNotifs.filter(n=>!del.includes(n.id)).length);
 }
 
 function openNotif(id){
@@ -121,7 +381,6 @@ function openNotif(id){
   document.getElementById('d-mont').textContent=v.montant? v.montant+' XOF' : '';
   document.getElementById('detail').style.display='flex';
   document.body.style.overflow='hidden';
-  // MARQUE LU - CORRIGE
   let read=getReadIds();
   if(!read.includes(id)){ read.push(id); localStorage.setItem(getReadKey(), JSON.stringify(read)); }
   render(); updateBadge();
@@ -129,18 +388,36 @@ function openNotif(id){
 function closeDetail(){document.getElementById('detail').style.display='none'; document.body.style.overflow='';}
 function supprimerNotif(){
   if(!currentOpenId) return;
-  let del=getDelIds(); if(!del.includes(currentOpenId)) del.push(currentOpenId);
+  doDelete([currentOpenId]);
+  closeDetail();
+}
+function doDelete(ids){
+  let del=getDelIds();
+  ids.forEach(id=>{
+    if(!del.includes(id)) del.push(id);
+    if(id.startsWith('not_')){
+      db.ref('notifications/'+uid+'/'+id.replace('not_','')).remove();
+    }
+  });
   localStorage.setItem(getDelKey(), JSON.stringify(del));
-  // si c'est une vraie notif système, supprime aussi de Firebase
-  if(currentOpenId.startsWith('not_')){
-    db.ref('notifications/'+uid+'/'+currentOpenId.replace('not_','')).remove();
-  }
-  allNotifs=allNotifs.filter(n=>n.id!==currentOpenId);
-  closeDetail(); render(); updateBadge();
+  allNotifs=allNotifs.filter(n=>!ids.includes(n.id));
+  ids.forEach(id=>selected.delete(id));
+  render(); updateBadge();
+}
+function supprimerSelection(){
+  if(selected.size===0) return;
+  if(!confirm('Supprimer '+selected.size+' notification(s) ?')) return;
+  doDelete(Array.from(selected));
+}
+function toutSupprimer(){
+  const visible=allNotifs.filter(n=>!getDelIds().includes(n.id));
+  if(visible.length===0) return;
+  if(!confirm('Tout supprimer ? Cette action supprime toutes tes notifications de Firebase.')) return;
+  doDelete(visible.map(n=>n.id));
 }
 function marquerToutLu(){
-  const ids=allNotifs.map(n=>n.id);
-  localStorage.setItem(getReadKey(), JSON.stringify(ids));
+  const visible=allNotifs.filter(n=>!getDelIds().includes(n.id)).map(n=>n.id);
+  localStorage.setItem(getReadKey(), JSON.stringify([...new Set([...getReadIds(), ...visible])]));
   render(); updateBadge();
 }
 
