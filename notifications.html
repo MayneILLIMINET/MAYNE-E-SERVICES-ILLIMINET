@@ -6,6 +6,7 @@
 <title>Notifications - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
@@ -152,7 +153,10 @@ async function init(){
   db.ref('notifications/'+uid).on('value',snap=>{ snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'not_'+ch.key, titre:v.titre||'Info', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date)||v.createdAt||Date.now(), icon:'🔔', color:'yellow'}); }); });
   db.ref('transactions/'+uid).limitToLast(50).on('value',snap=>{ snap.forEach(ch=>{ const v=ch.val(); pushNotif({id:'tr_'+ch.key, titre:v.titre||v.type||'Commande', message:v.message||'', date:v.date||'', ts:parseFRDate(v.date), icon:'🛒', color:'blue', montant:v.montant||''}); }); });
 }
-window.onload=init;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
