@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mon Compte - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 const firebaseConfig = {apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
@@ -93,6 +94,10 @@ async function chargerInfosCompte(){
 }
 
 window.onload = chargerInfosCompte;
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
