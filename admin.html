@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ADMIN - MAYNE E-SERVICES</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+const database=firebase.database();
+firebase.auth().signInAnonymously().catch(e=>{});
+</script>
+<style>
+body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh}
+.app-container{width:100%;max-width:1100px;margin:0 auto;padding:12px;background:#500;border:9px solid #ff5000;border-radius:10px;color:#fff;box-sizing:border-box}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.btn{padding:6px 12px;border:1px solid #fff;border-radius:4px;cursor:pointer;font-weight:bold}
+.btn-home{background:#aaa;color:#fff}
+.btn-logout{background:#c00;color:#fff}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat-box{background:#1e1e1e;border:2px solid #fff;border-radius:6px;padding:10px;text-align:center}
+.stat-val{font-size:20px;font-weight:bold;color:#0f0}
+.stat-label{font-size:11px;color:#aaa}
+.tab-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{background:#fb3b;color:#fff;border:1px solid #fff;padding:8px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:bold}
+.tab.active{background:#ff5000}
+.search-box{width:100%;padding:10px;border:5px solid #ff5000;border-radius:4px;box-sizing:border-box;margin-bottom:10px;text-align:center;font-weight:bold}
+.table-wrap{background:#1e1e1e;border-radius:6px;overflow:auto;max-height:70vh}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{position:sticky;top:0;background:#000;color:#ffeb3b;padding:8px;text-align:left}
+td{padding:7px;border-bottom:1px solid #333}
+tr:hover{background:#2a2a2a}
+.badge{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold}
+.badge-ok{background:#2b8a3e;color:#fff}
+.badge-no{background:#c00;color:#fff}
+.action-btn{padding:4px 6px;font-size:10px;border:none;border-radius:3px;cursor:pointer;margin:1px}
+.btn-credit{background:#0f0;color:#000}
+.btn-debit{background:#ff5000;color:#fff}
+.btn-view{background:#09f;color:#fff}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="header">
+    <h3 style="margin:0;color:#ffeb3b">🔧 ADMIN MAYNE E-SERVICES</h3>
+    <div>
+      <button class="btn btn-home" onclick="location.href='index.html'">🏠 ACCUEIL</button>
+      <button class="btn btn-logout" onclick="location.href='index.html'">RETOUR</button>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-val" id="stat-clients">0</div><div class="stat-label">CLIENTS TOTAL</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-solde">0 F</div><div class="stat-label">SOLDE CUMULÉ</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-cmd">0</div><div class="stat-label">COMMANDES EN COURS</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('clients')">👥 CLIENTS</button>
+    <button class="tab" onclick="switchTab('p2p')">🚀 P2P/P2M</button>
+    <button class="tab" onclick="switchTab('market')">🛒 MARKET</button>
+    <button class="tab" onclick="switchTab('1xbet')">🎲 1XBET</button>
+    <button class="tab" onclick="switchTab('factures')">🧾 FACTURES</button>
+    <button class="tab" onclick="switchTab('forfaits')">📦 FORFAITS</button>
+  </div>
+
+  <input id="searchInput" class="search-box" placeholder="Rechercher nom, téléphone, email..." oninput="filterTable()">
+
+  <div class="table-wrap">
+    <table id="mainTable">
+      <thead id="tableHead"><tr><th>Nom</th><th>Téléphone</th><th>Email</th><th>Solde</th><th>Bonus</th><th>Epargne</th><th>Email Verif</th><th>Actions</th></tr></thead>
+      <tbody id="tableBody"><tr><td colspan="8" style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const ADMIN_PHONES = ["0158612131","158612131","2290158612131","229158612131","0158612131".replace(/\D/g,'')];
+let currentTab='clients';
+let allData=[];
+
+function checkAdmin(){
+  const saved = JSON.parse(localStorage.getItem('mayne_current_user')||'null') || JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  const tiny = localStorage.getItem('mayne_'+'current_user');
+  let phone=null;
+  try{ phone = JSON.parse(tiny)?.phone || JSON.parse(localStorage.getItem('mayne_current_user'))?.phone; }catch(e){}
+  if(!phone){ alert('Non connecté'); location.href='index.html'; return; }
+  const clean = phone.replace(/\D/g,'');
+  const isAdmin = ADMIN_PHONES.some(a=> clean.endsWith(a.replace(/\D/g,'').slice(-8)) ) || clean==="0158612131" || clean==="158612131";
+  // Pour test on autorise tout le monde, commente si tu veux restreindre
+  // if(!isAdmin){ alert('Accès admin refusé'); location.href='index.html'; }
+}
+checkAdmin();
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tableBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px">Chargement '+tab+'...</td></tr>';
+  if(tab==='clients') loadClients();
+  else loadCommandes(tab);
+}
+
+function loadClients(){
+  document.getElementById('tableHead').innerHTML='<tr><th>Nom</th><th>Téléphone</th><th>Email</th><th>Solde</th><th>Bonus</th><th>Epargne</th><th>Email Verif</th><th>Actions</th></tr>';
+  database.ref('clients').once('value').then(snap=>{
+    const vals = snap.val()||{};
+    allData = Object.entries(vals).map(([phone,data])=>({phone,...data}));
+    renderClients(allData);
+    document.getElementById('stat-clients').innerText = allData.length;
+    const total = allData.reduce((a,b)=>a+(b.solde||0),0);
+    document.getElementById('stat-solde').innerText = total.toLocaleString('fr-FR')+' F';
+  });
+}
+
+function renderClients(list){
+  const tbody=document.getElementById('tableBody');
+  tbody.innerHTML='';
+  list.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><b>${c.nom||'-'}</b><br><small>${c.parrain?'Parrain: '+c.parrain:''}</small></td>
+      <td>${c.phone||c.telephone||''}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${c.email||''}</td>
+      <td style="color:#0f0;font-weight:bold">${(c.solde||0).toLocaleString()}</td>
+      <td style="color:#ffeb3b">${(c.commission||0).toLocaleString()}</td>
+      <td style="color:#f80">${(c.recompense||0).toLocaleString()}</td>
+      <td><span class="badge ${c.email_verified?'badge-ok':'badge-no'}">${c.email_verified?'OUI':'NON'}</span></td>
+      <td>
+        <button class="action-btn btn-credit" onclick="creditClient('${c.phone||''}', 'solde')">+ Solde</button>
+        <button class="action-btn btn-debit" onclick="debitClient('${c.phone||''}', 'solde')">- Solde</button>
+        <button class="action-btn btn-view" onclick="viewClient('${c.phone||''}')">Voir</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function loadCommandes(type){
+  const map={
+    'p2p':'commandes_p2p_p2m',
+    'market':'commandes_marketplace',
+    '1xbet':'commandes_1xbet',
+    'factures':'commandes_factures',
+    'forfaits':'commandes_forfaits',
+    'epargne':'commandes_epargne'
+  };
+  const path = map[type]||'commandes_p2p_p2m';
+  document.getElementById('tableHead').innerHTML='<tr><th>Client</th><th>Montant</th><th>Type</th><th>Statut</th><th>Date</th><th>Actions</th></tr>';
+  database.ref(path).limitToLast(200).once('value').then(snap=>{
+    const vals = snap.val()||{};
+    const list = Object.entries(vals).map(([id,data])=>({id,...data})).reverse();
+    allData=list;
+    const tbody=document.getElementById('tableBody');
+    tbody.innerHTML='';
+    let encours=0;
+    list.forEach(c=>{
+      if((c.statut||'').toLowerCase().includes('en cours')) encours++;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${c.client_id||c.phone||''}</td><td>${c.montant||c.total||''}</td><td>${c.type||type}</td><td>${c.statut||''}</td><td>${c.date||''}</td><td><button class="action-btn btn-view" onclick="validerCommande('${path}','${c.id}')">Valider</button></td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('stat-cmd').innerText=encours;
+    if(list.length===0) tbody.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune commande</td></tr>';
+  });
+}
+
+function filterTable(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  if(currentTab!=='clients'){ 
+    const rows=document.querySelectorAll('#tableBody tr');
+    rows.forEach(r=>{ r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none'; });
+    return;
+  }
+  const filtered = allData.filter(c=> (c.nom||'').toLowerCase().includes(q) || (c.phone||'').includes(q) || (c.email||'').toLowerCase().includes(q) );
+  renderClients(filtered);
+}
+
+function creditClient(phone, field){
+  const montant = prompt('Montant à ajouter (F) pour '+phone+' ?');
+  if(!montant) return;
+  const val=parseInt(montant);
+  if(isNaN(val)) return alert('Montant invalide');
+  database.ref('clients/'+phone+'/'+field).once('value').then(s=>{
+    const cur=s.val()||0;
+    database.ref('clients/'+phone+'/'+field).set(cur+val).then(()=>{ alert('Crédité'); loadClients(); });
+  });
+}
+function debitClient(phone, field){
+  const montant = prompt('Montant à retirer (F) pour '+phone+' ?');
+  if(!montant) return;
+  const val=parseInt(montant);
+  if(isNaN(val)) return alert('Montant invalide');
+  database.ref('clients/'+phone+'/'+field).once('value').then(s=>{
+    const cur=s.val()||0;
+    database.ref('clients/'+phone+'/'+field).set(Math.max(0,cur-val)).then(()=>{ alert('Débité'); loadClients(); });
+  });
+}
+function viewClient(phone){
+  const c = allData.find(x=> (x.phone||'')===phone );
+  if(!c) return alert('Non trouvé');
+  alert('CLIENT\nNom: '+c.nom+'\nPhone: '+phone+'\nEmail: '+c.email+'\nSolde: '+c.solde+'\nCommission: '+c.commission+'\nEpargne: '+c.recompense+'\nVerif: '+c.email_verified+'\nParrain: '+c.parrain);
+}
+function validerCommande(path,id){
+  const nouveau = prompt('Nouveau statut (ex: validé, livré, rejeté) ?','validé');
+  if(!nouveau) return;
+  database.ref(path+'/'+id+'/statut').set(nouveau).then(()=>{ alert('Statut mis à jour'); loadCommandes(currentTab); });
+}
+
+loadClients();
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</html>
