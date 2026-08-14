@@ -64,7 +64,6 @@ firebase.auth().onAuthStateChanged(function(user){
 if(typeof firebase.appCheck==='function')firebase.appCheck().setTokenAutoRefreshEnabled(false);
 </script>
 <script>
-// --- FIX KODULAR -> JS + ONESIGNAL.COM ---
 window.lastPidSauve=null;
 setInterval(function(){
   try{
@@ -154,12 +153,13 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
   </div>
   <div id="verify-interface" style="display:none;">
     <h3 style="color:#ffeb3b">VÉRIFICATION EMAIL FACULTATIVE</h3>
-    <div style="color:#fff;font-size:13px;margin-bottom:12px;">Code envoyé à <b id="verify-email-affiche" style="color:#ffeb3b"></b><br>Tu peux vérifier maintenant ou passer.</div>
-    <div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres (si reçu)"></div>
+    <div style="color:#fff;font-size:13px;margin-bottom:10px;">Code envoyé à <b id="verify-email-affiche" style="color:#ffeb3b"></b></div>
+    <div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres si reçu"></div>
     <button type="button" class="btn-submit" style="background:#2b8a3e" onclick="verifierCodeEmail()">✅ Vérifier le code</button>
-    <button type="button" class="btn-submit" style="background:#ff5000;margin-top:8px" onclick="passerVerificationEtConnecter()">➡️ Passer et Se Connecter Directement</button>
-    <button type="button" class="btn-link" onclick="envoyerCodeEmail(null,true)" style="margin-top:12px">📧 Renvoyer le code</button>
-    <div style="color:#aaa;font-size:11px;margin-top:10px">Tu pourras vérifier plus tard obligatoirement dans Retrait pour sécuriser tes retraits.</div>
+    <button type="button" class="btn-submit" style="background:#ff5000;margin-top:8px" onclick="passerVerificationEtConnecter()">➡️ Passer et Se Connecter</button>
+    <button type="button" class="btn-link" onclick="envoyerCodeEmail(null,true)">📧 Renvoyer le code</button>
+    <button type="button" class="btn-link" onclick="passerVerificationEtConnecter()" style="margin-top:8px">Déjà un compte ? Se connecter sans code (vérif plus tard dans Retrait)</button>
+    <div style="color:#aaa;font-size:11px;margin-top:8px">Tu pourras vérifier plus tard dans Retrait, obligatoire pour retirer.</div>
   </div>
 </div>
 <div id="logged-in-zone" style="display:none;">
@@ -290,8 +290,6 @@ function toggleTheme(){const app=document.querySelector('.app-container');const 
 function toggleSolde(){soldeMasque=!soldeMasque;localStorage.setItem('mayne_hide_solde',soldeMasque);['user-balance','user-commission','user-recompense'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(soldeMasque){if(!el.dataset.vrai)el.dataset.vrai=el.innerText;el.innerText='••••••';}else if(el.dataset.vrai)el.innerText=el.dataset.vrai;});}
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
-
-// CONNEXION SANS VERIFICATION OBLIGATOIRE A L'INSCRIPTION (vérif obligatoire seulement dans retirer.html)
 function executerConnexion(){
   const i=document.getElementById('login-id').value.trim(),p=document.getElementById('login-pin').value.trim();if(!i||!p)return;
   const pinHache=CryptoJS.MD5(p).toString();
@@ -299,7 +297,7 @@ function executerConnexion(){
     if(!s.exists())return showAlert('Numéro ou mot de passe incorrect');
     const dbPin=String(s.val().pin); if(dbPin!==pinHache&&dbPin!==p)return showAlert('Numéro ou mot de passe incorrect');
     const data=s.val();
-    // On autorise la connexion même si email_verified=false, la vérif sera demandée dans retirer.html
+    // Vérif email non bloquante ici, sera obligatoire dans retirer.html seulement
     currentUserId=i;
     TinyDB.put('current_user',{phone:i});
     TinyDB.put('current_user_last',Date.now());
@@ -322,8 +320,6 @@ function executerConnexion(){
     chargerSessionDepuisFirebase(i);
   });
 }
-
-// INSCRIPTION AVEC VERIFICATION FACULTATIVE
 function executerInscription(){
   const n=document.getElementById('reg-name').value.trim(),i=document.getElementById('reg-id').value.trim(),e=document.getElementById('reg-email').value.trim().toLowerCase(),p=document.getElementById('reg-pin').value.trim();
   if(!n||!i||!e||!p)return showAlert('Remplis tout');
@@ -332,35 +328,28 @@ function executerInscription(){
   const regParrainInput=document.getElementById('reg-parrain').value.trim().replace(/\D/g,''); if(regParrainInput)parrain=regParrainInput;
   database.ref('clients/'+phone).once('value').then(s=>{if(s.exists())return showAlert('Numéro déjà utilisé');
     database.ref('emails_index/'+emailKey).once('value').then(se=>{if(se.exists())return showAlert('Email déjà utilisé');
-      // On crée avec email_verified:false mais on ne bloque pas la connexion
       database.ref('clients/'+phone).set({nom:n,email:e,pin:pinHache,solde:0,commission:0,recompense:0,email_verified:false,parrain:parrain||'',date_inscription:new Date().toLocaleString('fr-FR')}).then(()=>{
         database.ref('emails_index/'+emailKey).set(phone).then(()=>{
           if(parrain){database.ref('clients/'+parrain).once('value').then(sp=>{if(sp.exists()){let pg=sp.val();database.ref('clients/'+parrain).update({gain_parrainage:(pg.gain_parrainage||0)+100,commission:(pg.commission||0)+100});database.ref('notifications/'+parrain).push({titre:"🎉 Nouveau filleul!",message:`${n} (${phone}) s'est inscrit`,date:new Date().toLocaleString('fr-FR')});}});}
-          tempPhone=phone;tempEmail=e;
-          document.getElementById('verify-email-affiche').innerText=e;
-          // Envoi code en arrière plan et affiche écran vérif facultative
-          envoyerCodeEmail(e);
+          tempPhone=phone;tempEmail=e;document.getElementById('verify-email-affiche').innerText=e;envoyerCodeEmail(e);
         });
       });
     });
   });
 }
-
+function envoyerCodeEmail(email,isResend=false){const mail=email||tempEmail;fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('sent')){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='block';showAlert(isResend?'Code renvoyé!':'Code envoyé à '+mail);}});}
+function verifierCodeEmail(){const code=document.getElementById('verify-code').value.trim();if(!code)return;fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('ok')){database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{showAlert('Email vérifié! Connexion...'); currentUserId=tempPhone; TinyDB.put('current_user',{phone:tempPhone}); TinyDB.put('current_user_last',Date.now()); localStorage.setItem('mayne_current_user',JSON.stringify({phone:tempPhone})); if(window.AppInventor)window.AppInventor.setWebViewString('USER_'+tempPhone); chargerSessionDepuisFirebase(tempPhone);});}else showAlert('Code incorrect');});}
 function passerVerificationEtConnecter(){
-  // L'utilisateur passe la vérif à l'inscription, il pourra vérifier plus tard dans retirer.html
-  if(!tempPhone) return afficherFormulaireConnexion();
+  if(!tempPhone){ afficherFormulaireConnexion(); return; }
   currentUserId=tempPhone;
   TinyDB.put('current_user',{phone:tempPhone});
   TinyDB.put('current_user_last',Date.now());
   localStorage.setItem('mayne_current_user',JSON.stringify({phone:tempPhone}));
   if(window.AppInventor)window.AppInventor.setWebViewString('USER_'+tempPhone);
   document.getElementById('verify-interface').style.display='none';
-  showAlert('✅ Compte créé ! Tu es connecté. Vérification email à faire plus tard dans Retrait.');
+  showAlert('✅ Connecté ! Tu pourras vérifier ton email plus tard dans Retrait.');
   chargerSessionDepuisFirebase(tempPhone);
 }
-
-function envoyerCodeEmail(email,isResend=false){const mail=email||tempEmail;fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('sent')){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='block';showAlert(isResend?'Code renvoyé!':'Code envoyé à '+mail);}});}
-function verifierCodeEmail(){const code=document.getElementById('verify-code').value.trim();if(!code)return;fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('ok')){database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{showAlert('Email vérifié!');document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';document.getElementById('login-id').value=tempPhone;});}else showAlert('Code incorrect');});}
 function executerDeconnexion(){TinyDB.put('current_user',null);localStorage.removeItem('mayne_current_user');clearInterval(sessionTimer);if(currentUserId){database.ref('clients/'+currentUserId).off();['notifications'].forEach(p=>{database.ref(p).off();});}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
 </script>
 <script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
