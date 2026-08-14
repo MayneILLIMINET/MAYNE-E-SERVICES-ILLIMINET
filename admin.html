@@ -24,9 +24,7 @@
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>ADMIN - MAYNE E-SERVICES</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<title>ADMIN PRO - MAYNE E-SERVICES</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -37,201 +35,361 @@ const database=firebase.database();
 firebase.auth().signInAnonymously().catch(e=>{});
 </script>
 <style>
-body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh}
-.app-container{width:100%;max-width:1100px;margin:0 auto;padding:12px;background:#500;border:9px solid #ff5000;border-radius:10px;color:#fff;box-sizing:border-box}
-.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.btn{padding:6px 12px;border:1px solid #fff;border-radius:4px;cursor:pointer;font-weight:bold}
+body{margin:0;padding:4px;font-family:Arial,sans-serif;background:#111;min-height:100vh}
+.app{background:#2a0000;border:8px solid #ff5000;border-radius:12px;max-width:1300px;margin:0 auto;padding:10px;color:#fff;box-sizing:border-box}
+.h{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px;background:#1a1a1a;padding:8px;border-radius:8px;border-left:6px solid #ff5000}
+.btn{padding:6px 12px;border:1px solid #fff;border-radius:5px;cursor:pointer;font-weight:bold;font-size:11px}
 .btn-home{background:#aaa;color:#fff}
-.btn-logout{background:#c00;color:#fff}
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.stat-box{background:#1e1e1e;border:2px solid #fff;border-radius:6px;padding:10px;text-align:center}
-.stat-val{font-size:20px;font-weight:bold;color:#0f0}
-.stat-label{font-size:11px;color:#aaa}
-.tab-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.tab{background:#fb3b;color:#fff;border:1px solid #fff;padding:8px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:bold}
-.tab.active{background:#ff5000}
-.search-box{width:100%;padding:10px;border:5px solid #ff5000;border-radius:4px;box-sizing:border-box;margin-bottom:10px;text-align:center;font-weight:bold}
-.table-wrap{background:#1e1e1e;border-radius:6px;overflow:auto;max-height:70vh}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{position:sticky;top:0;background:#000;color:#ffeb3b;padding:8px;text-align:left}
-td{padding:7px;border-bottom:1px solid #333}
-tr:hover{background:#2a2a2a}
-.badge{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:bold}
-.badge-ok{background:#2b8a3e;color:#fff}
-.badge-no{background:#c00;color:#fff}
-.action-btn{padding:4px 6px;font-size:10px;border:none;border-radius:3px;cursor:pointer;margin:1px}
-.btn-credit{background:#0f0;color:#000}
-.btn-debit{background:#ff5000;color:#fff}
-.btn-view{background:#09f;color:#fff}
+.btn-red{background:#c00;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-bottom:10px}
+.sbox{background:#1e1e1e;border:2px solid #444;border-radius:8px;padding:8px;text-align:center}
+.sval{font-size:18px;font-weight:bold;color:#0f0}
+.slab{font-size:9px;color:#aaa}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.tab{background:#333;color:#fff;border:1px solid #555;padding:7px 8px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:bold;white-space:nowrap}
+.tab.active{background:#ff5000;border-color:#fff}
+.search{width:100%;padding:10px;border:4px solid #ff5000;border-radius:6px;box-sizing:border-box;margin-bottom:8px;text-align:center;font-weight:bold;background:#000;color:#fff}
+.wrap{background:#0a0a0a;border-radius:8px;overflow:auto;max-height:75vh;border:1px solid #333}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{position:sticky;top:0;background:#000;color:#ffeb3b;padding:8px 6px;text-align:left;z-index:2;font-size:10px}
+td{padding:6px;border-bottom:1px solid #222;vertical-align:top}
+tr:hover{background:#1f1f1f}
+.badge{padding:2px 5px;border-radius:3px;font-size:9px;font-weight:bold}
+.ok{background:#2b8a3e;color:#fff}
+.no{background:#c00;color:#fff}
+.abtn{padding:3px 5px;font-size:9px;border:none;border-radius:3px;cursor:pointer;margin:1px;display:inline-block;font-weight:bold}
+.c1{background:#0f0;color:#000}
+.c2{background:#f00;color:#fff}
+.c3{background:#ffeb3b;color:#000}
+.c4{background:#09f;color:#fff}
+.c5{background:#f80;color:#000}
+.c6{background:#aaa;color:#000}
+.note{background:#1a1a1a;border-left:4px solid #ffeb3b;padding:8px;margin-bottom:8px;font-size:11px;border-radius:4px}
 </style>
 </head>
 <body>
-<div class="app-container">
-  <div class="header">
-    <h3 style="margin:0;color:#ffeb3b">🔧 ADMIN MAYNE E-SERVICES</h3>
+<div class="app">
+  <div class="h">
+    <div><b style="color:#ffeb3b;font-size:14px">🔧 ADMIN PRO MAYNE</b><br><small id="adminInfo" style="color:#0f0"></small></div>
     <div>
       <button class="btn btn-home" onclick="location.href='index.html'">🏠 ACCUEIL</button>
-      <button class="btn btn-logout" onclick="location.href='index.html'">RETOUR</button>
+      <button class="btn btn-red" onclick="logoutAdmin()">DÉCONNEXION</button>
     </div>
   </div>
 
-  <div class="stat-grid">
-    <div class="stat-box"><div class="stat-val" id="stat-clients">0</div><div class="stat-label">CLIENTS TOTAL</div></div>
-    <div class="stat-box"><div class="stat-val" id="stat-solde">0 F</div><div class="stat-label">SOLDE CUMULÉ</div></div>
-    <div class="stat-box"><div class="stat-val" id="stat-cmd">0</div><div class="stat-label">COMMANDES EN COURS</div></div>
+  <div class="note" id="notifFixNote">
+    ✅ <b>Fix Notif Pro :</b> Pour ne plus afficher l'URL dans les notifs natives, utilise un domaine perso (ex: mayne.bj) + icône 192x192. OneSignal affiche l'URL seulement sur github.io/http. J'ai ajouté le code pro dans ce panel (icône + titre sans URL).
   </div>
 
-  <div class="tab-bar">
-    <button class="tab active" onclick="switchTab('clients')">👥 CLIENTS</button>
-    <button class="tab" onclick="switchTab('p2p')">🚀 P2P/P2M</button>
-    <button class="tab" onclick="switchTab('market')">🛒 MARKET</button>
-    <button class="tab" onclick="switchTab('1xbet')">🎲 1XBET</button>
-    <button class="tab" onclick="switchTab('factures')">🧾 FACTURES</button>
-    <button class="tab" onclick="switchTab('forfaits')">📦 FORFAITS</button>
+  <div class="stats">
+    <div class="sbox"><div class="sval" id="stClients">0</div><div class="slab">CLIENTS</div></div>
+    <div class="sbox"><div class="sval" id="stSolde" style="color:#0f0">0</div><div class="slab">SOLDE TOTAL</div></div>
+    <div class="sbox"><div class="sval" id="stBonus" style="color:#ffeb3b">0</div><div class="slab">BONUS TOTAL</div></div>
+    <div class="sbox"><div class="sval" id="stEpargne" style="color:#f80">0</div><div class="slab">EPARGNE TOTAL</div></div>
+    <div class="sbox"><div class="sval" id="stCmd">0</div><div class="slab">CMD EN COURS</div></div>
   </div>
 
-  <input id="searchInput" class="search-box" placeholder="Rechercher nom, téléphone, email..." oninput="filterTable()">
+  <div class="tabs">
+    <button class="tab active" onclick="load('clients',this)">👥 CLIENTS</button>
+    <button class="tab" style="background:#ff9800;color:#000" onclick="loadKYCOnly()">🪪 KYC ATTENTE</button>
+    <button class="tab" onclick="load('p2p',this)">🚀 P2P/P2M</button>
+    <button class="tab" onclick="load('transfert',this)">💸 TRANSFERT</button>
+    <button class="tab" onclick="load('market',this)">🛒 MARKET</button>
+    <button class="tab" onclick="load('1xbet',this)">🎲 1XBET</button>
+    <button class="tab" onclick="load('factures',this)">🧾 FACTURES</button>
+    <button class="tab" onclick="load('forfaits',this)">📦 FORFAITS/CREDIT</button>
+    <button class="tab" onclick="load('epargne',this)">💰 EPARGNE</button>
+    <button class="tab" onclick="load('messagerie',this)">💬 MESSAGERIE</button>
+    <button class="tab" onclick="load('depot',this)">📥 DEPOTS</button>
+    <button class="tab" onclick="load('retrait',this)">📤 RETRAITS</button>
+    <button class="tab" onclick="load('notifs',this)">🔔 NOTIFS</button>
+  </div>
 
-  <div class="table-wrap">
-    <table id="mainTable">
-      <thead id="tableHead"><tr><th>Nom</th><th>Téléphone</th><th>Email</th><th>Solde</th><th>Bonus</th><th>Epargne</th><th>Email Verif</th><th>Actions</th></tr></thead>
-      <tbody id="tableBody"><tr><td colspan="8" style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
+  <input id="q" class="search" placeholder="Rechercher nom, téléphone, email, montant..." oninput="doFilter()">
+
+  <div class="wrap">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"><tr><td style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
     </table>
   </div>
 </div>
 
 <script>
-const ADMIN_PHONES = ["0158612131","158612131","2290158612131","229158612131","0158612131".replace(/\D/g,'')];
-let currentTab='clients';
-let allData=[];
-
-function checkAdmin(){
-  const saved = JSON.parse(localStorage.getItem('mayne_current_user')||'null') || JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  const tiny = localStorage.getItem('mayne_'+'current_user');
-  let phone=null;
-  try{ phone = JSON.parse(tiny)?.phone || JSON.parse(localStorage.getItem('mayne_current_user'))?.phone; }catch(e){}
-  if(!phone){ alert('Non connecté'); location.href='index.html'; return; }
-  const clean = phone.replace(/\D/g,'');
-  const isAdmin = ADMIN_PHONES.some(a=> clean.endsWith(a.replace(/\D/g,'').slice(-8)) ) || clean==="0158612131" || clean==="158612131";
-  // Pour test on autorise tout le monde, commente si tu veux restreindre
-  // if(!isAdmin){ alert('Accès admin refusé'); location.href='index.html'; }
+const ADMIN_LIST = ["0158612131","2290158612131","158612131","229158612131"];
+function getPhone(){
+  try{
+    let p = JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone;
+    if(p) return p;
+    p = JSON.parse(localStorage.getItem('mayne_'+'current_user')||'{}')?.phone;
+    if(p) return p;
+  }catch(e){}
+  return null;
 }
-checkAdmin();
+function isAdmin(phone){
+  if(!phone) return false;
+  const c = phone.replace(/\D/g,'');
+  return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8)) || a.replace(/\D/g,'').endsWith(c.slice(-8)) || c===a.replace(/\D/g,''));
+}
+const curPhone = getPhone();
+if(!curPhone){ alert('Non connecté'); location.href='index.html'; throw 'no auth'; }
+if(!isAdmin(curPhone)){ alert('Accès refusé - Réservé admin 0158612131. Ton num: '+curPhone); location.href='index.html'; throw 'not admin'; }
+document.getElementById('adminInfo').innerText = 'Connecté: '+curPhone.replace(/\D/g,'')+' ✅ ADMIN';
 
-function switchTab(tab){
-  currentTab=tab;
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tableBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px">Chargement '+tab+'...</td></tr>';
+let all=[];
+let curTab='clients';
+const PATHS = {
+  'p2p':'commandes_p2p_p2m',
+  'transfert':'commandes_transfert',
+  'market':'commandes_marketplace',
+  '1xbet':'commandes_1xbet',
+  'factures':'commandes_factures',
+  'forfaits':'commandes_forfaits',
+  'epargne':'commandes_epargne',
+  'messagerie':'conversations',
+  'depot':'depots',
+  'retrait':'retraits',
+  'notifs':'notifications'
+};
+
+function loadKYCOnly(){
+  database.ref('clients').once('value').then(s=>{
+    const v=s.val()||{};
+    const list=Object.entries(v).map(([k,d])=>({key:k, ...d, phone:k})).filter(c=> !c.kyc_verified && (c.cni_url || c.kyc_docs || c.kyc_status==='en_attente' || c.cni));
+    all=list;
+    renderClients(list);
+    document.getElementById('thead').innerHTML='<tr><th>Client KYC EN ATTENTE</th><th>Contact</th><th>Soldes</th><th>Email Verif</th><th>KYC</th><th>Parrain</th><th>Actions Soldes</th><th>Actions + Danger</th></tr>';
+    document.getElementById('stClients').innerText=list.length+' en attente';
+  });
+}
+function load(tab, btn){
+  curTab=tab;
+  if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  document.getElementById('tbody').innerHTML='<tr><td style="text-align:center;padding:20px">Chargement '+tab+'...</td></tr>';
   if(tab==='clients') loadClients();
+  else if(tab==='messagerie') loadMessagerie();
   else loadCommandes(tab);
 }
 
 function loadClients(){
-  document.getElementById('tableHead').innerHTML='<tr><th>Nom</th><th>Téléphone</th><th>Email</th><th>Solde</th><th>Bonus</th><th>Epargne</th><th>Email Verif</th><th>Actions</th></tr>';
-  database.ref('clients').once('value').then(snap=>{
-    const vals = snap.val()||{};
-    allData = Object.entries(vals).map(([phone,data])=>({phone,...data}));
-    renderClients(allData);
-    document.getElementById('stat-clients').innerText = allData.length;
-    const total = allData.reduce((a,b)=>a+(b.solde||0),0);
-    document.getElementById('stat-solde').innerText = total.toLocaleString('fr-FR')+' F';
+  document.getElementById('thead').innerHTML='<tr><th>Client</th><th>Contact</th><th>Solde / Bonus / Epargne</th><th>Verif</th><th>Parrain</th><th>Actions Solde</th><th>Actions Bonus/Epargne</th></tr>';
+  database.ref('clients').once('value').then(s=>{
+    const v=s.val()||{};
+    all=Object.entries(v).map(([k,d])=>({key:k, ...d, phone:k}));
+    renderClients(all);
+    let totS=0,totB=0,totE=0;
+    all.forEach(c=>{ totS+= (c.solde||0); totB+= (c.commission||0); totE+= (c.recompense||0); });
+    document.getElementById('stClients').innerText=all.length;
+    document.getElementById('stSolde').innerText=totS.toLocaleString()+' F';
+    document.getElementById('stBonus').innerText=totB.toLocaleString()+' F';
+    document.getElementById('stEpargne').innerText=totE.toLocaleString()+' F';
   });
 }
 
 function renderClients(list){
-  const tbody=document.getElementById('tableBody');
-  tbody.innerHTML='';
+  const tb=document.getElementById('tbody'); tb.innerHTML='';
   list.forEach(c=>{
+    const kycStatus = c.kyc_verified ? 'ok' : (c.kyc_status==='en_attente' || c.cni_url || c.kyc_docs ? 'attente' : 'non');
+    const kycBadge = c.kyc_verified ? '<span class="badge ok">KYC OK</span>' : (kycStatus==='attente' ? '<span class="badge" style="background:#ff9800;color:#000">KYC ATTENTE</span>' : '<span class="badge no">KYC NON</span>');
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td><b>${c.nom||'-'}</b><br><small>${c.parrain?'Parrain: '+c.parrain:''}</small></td>
-      <td>${c.phone||c.telephone||''}</td>
-      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${c.email||''}</td>
-      <td style="color:#0f0;font-weight:bold">${(c.solde||0).toLocaleString()}</td>
-      <td style="color:#ffeb3b">${(c.commission||0).toLocaleString()}</td>
-      <td style="color:#f80">${(c.recompense||0).toLocaleString()}</td>
-      <td><span class="badge ${c.email_verified?'badge-ok':'badge-no'}">${c.email_verified?'OUI':'NON'}</span></td>
+      <td><b>${c.nom||'-'}</b><br><small style="color:#aaa">${c.date_inscription||''}<br>ID:${c.phone}</small></td>
+      <td>${c.phone}<br><small style="color:#aaa">${(c.email||'').slice(0,24)}</small><br><small>${c.ville||''}</small></td>
       <td>
-        <button class="action-btn btn-credit" onclick="creditClient('${c.phone||''}', 'solde')">+ Solde</button>
-        <button class="action-btn btn-debit" onclick="debitClient('${c.phone||''}', 'solde')">- Solde</button>
-        <button class="action-btn btn-view" onclick="viewClient('${c.phone||''}')">Voir</button>
+        <span style="color:#0f0;font-weight:bold">S:${(c.solde||0).toLocaleString()}</span><br>
+        <span style="color:#ffeb3b">B:${(c.commission||0).toLocaleString()}</span><br>
+        <span style="color:#f80">E:${(c.recompense||0).toLocaleString()}</span>
+      </td>
+      <td>
+        <span class="badge ${c.email_verified?'ok':'no'}">${c.email_verified?'EMAIL OK':'EMAIL NON'}</span><br>
+        <button class="abtn c4" onclick="verifyEmailManual('${c.phone}',true)">✅ Verif Email</button>
+        <button class="abtn c2" onclick="verifyEmailManual('${c.phone}',false)">❌ Déverif</button>
+      </td>
+      <td>
+        ${kycBadge}<br>
+        <small style="color:#aaa">${c.kyc_status||''}</small><br>
+        <button class="abtn c4" onclick="viewKYC('${c.phone}')">👁️ Voir KYC</button><br>
+        <button class="abtn c1" onclick="verifyKYC('${c.phone}',true)">✅ Valider KYC</button>
+        <button class="abtn c2" onclick="verifyKYC('${c.phone}',false)">❌ Rejeter</button>
+      </td>
+      <td>${c.parrain||'-'}</td>
+      <td>
+        <button class="abtn c1" onclick="modif('${c.phone}','solde',1)">+ Solde</button>
+        <button class="abtn c2" onclick="modif('${c.phone}','solde',-1)">- Solde</button><br>
+        <button class="abtn c6" onclick="setExact('${c.phone}','solde')">Set Solde</button>
+      </td>
+      <td>
+        <button class="abtn c3" onclick="modif('${c.phone}','commission',1)">+ Bonus</button>
+        <button class="abtn c2" onclick="modif('${c.phone}','commission',-1)">- Bonus</button>
+        <button class="abtn c5" onclick="modif('${c.phone}','recompense',1)">+ Epargne</button>
+        <button class="abtn c2" onclick="modif('${c.phone}','recompense',-1)">- Epargne</button><br>
+        <button class="abtn c6" onclick="setExact('${c.phone}','commission')">Set Bonus</button>
+        <button class="abtn c6" onclick="setExact('${c.phone}','recompense')">Set Epargne</button><br>
+        <button class="abtn" style="background:#000;color:#f00;border:1px solid #f00" onclick="deleteUser('${c.phone}')">🗑️ SUPPRIMER</button>
       </td>
     `;
-    tbody.appendChild(tr);
+    tb.appendChild(tr);
   });
+  if(list.length===0) tb.innerHTML='<tr><td colspan="8" style="text-align:center">Aucun client</td></tr>';
 }
 
-function loadCommandes(type){
-  const map={
-    'p2p':'commandes_p2p_p2m',
-    'market':'commandes_marketplace',
-    '1xbet':'commandes_1xbet',
-    'factures':'commandes_factures',
-    'forfaits':'commandes_forfaits',
-    'epargne':'commandes_epargne'
-  };
-  const path = map[type]||'commandes_p2p_p2m';
-  document.getElementById('tableHead').innerHTML='<tr><th>Client</th><th>Montant</th><th>Type</th><th>Statut</th><th>Date</th><th>Actions</th></tr>';
-  database.ref(path).limitToLast(200).once('value').then(snap=>{
-    const vals = snap.val()||{};
-    const list = Object.entries(vals).map(([id,data])=>({id,...data})).reverse();
-    allData=list;
-    const tbody=document.getElementById('tableBody');
-    tbody.innerHTML='';
-    let encours=0;
-    list.forEach(c=>{
-      if((c.statut||'').toLowerCase().includes('en cours')) encours++;
+function loadCommandes(tab){
+  const path = PATHS[tab]||tab;
+  document.getElementById('thead').innerHTML='<tr><th>Client/Phone</th><th>Montant/Type</th><th>Statut</th><th>Date/Details</th><th>Actions</th></tr>';
+  database.ref(path).limitToLast(300).once('value').then(s=>{
+    const v=s.val()||{};
+    all=Object.entries(v).map(([id,d])=>({id, ...d})).reverse();
+    const tb=document.getElementById('tbody'); tb.innerHTML='';
+    let enc=0;
+    all.forEach(c=>{
+      if((c.statut||'').toLowerCase().includes('en cours')||(c.statut||'').toLowerCase().includes('attente')) enc++;
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${c.client_id||c.phone||''}</td><td>${c.montant||c.total||''}</td><td>${c.type||type}</td><td>${c.statut||''}</td><td>${c.date||''}</td><td><button class="action-btn btn-view" onclick="validerCommande('${path}','${c.id}')">Valider</button></td>`;
-      tbody.appendChild(tr);
+      tr.innerHTML=`
+        <td><b>${c.client_id||c.phone||c.user||'-'}</b><br><small>${c.nom||''}</small></td>
+        <td>${c.montant||c.total||c.prix||''} F<br><small>${c.type||c.service||tab}</small></td>
+        <td><span class="badge ${(c.statut||'').toLowerCase().includes('valid')?'ok':'no'}">${c.statut||'en cours'}</span></td>
+        <td><small>${c.date||c.created_at||''}<br>${JSON.stringify(c).slice(0,120)}</small></td>
+        <td>
+          <button class="abtn c1" onclick="updateStat('${path}','${c.id}','validé')">Valider</button>
+          <button class="abtn c2" onclick="updateStat('${path}','${c.id}','rejeté')">Rejeter</button>
+          <button class="abtn c4" onclick="viewJson('${c.id}')">Voir</button>
+        </td>
+      `;
+      tb.appendChild(tr);
     });
-    document.getElementById('stat-cmd').innerText=encours;
-    if(list.length===0) tbody.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune commande</td></tr>';
+    document.getElementById('stCmd').innerText=enc;
+    if(all.length===0) tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune donnée dans '+path+'</td></tr>';
   });
 }
 
-function filterTable(){
-  const q=document.getElementById('searchInput').value.toLowerCase();
-  if(currentTab!=='clients'){ 
-    const rows=document.querySelectorAll('#tableBody tr');
-    rows.forEach(r=>{ r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none'; });
-    return;
+function loadMessagerie(){
+  document.getElementById('thead').innerHTML='<tr><th>Conversation</th><th>Dernier message</th><th>Actions</th></tr>';
+  database.ref('conversations').limitToLast(100).once('value').then(s=>{
+    const v=s.val()||{};
+    all=Object.entries(v).map(([id,d])=>({id,...d}));
+    const tb=document.getElementById('tbody'); tb.innerHTML='';
+    all.forEach(c=>{
+      const msgs = c.messages ? Object.values(c.messages) : [];
+      const last = msgs[msgs.length-1]||{};
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${c.id}</td><td><small>${(last.text||last.message||'').slice(0,80)}</small></td><td><button class="abtn c4" onclick="location.href='messagerie.html?chat=${c.id}'">Ouvrir</button></td>`;
+      tb.appendChild(tr);
+    });
+  });
+}
+
+function modif(phone,field,sign){
+  const m = prompt((sign>0?'+':'-')+' Montant à '+(sign>0?'ajouter':'retirer')+' pour '+field+' de '+phone+' ?');
+  if(!m) return;
+  const val=parseInt(m);
+  if(isNaN(val)) return alert('Montant invalide');
+  database.ref('clients/'+phone+'/'+field).once('value').then(s=>{
+    const cur=s.val()||0;
+    const nv = sign>0 ? cur+val : Math.max(0,cur-val);
+    database.ref('clients/'+phone+'/'+field).set(nv).then(()=>{ alert(field+' mis à jour: '+nv); loadClients(); });
+  });
+}
+function setExact(phone,field){
+  const m = prompt('Nouvelle valeur exacte pour '+field+' de '+phone+' ?');
+  if(m===null) return;
+  const val=parseInt(m);
+  if(isNaN(val)) return alert('Invalide');
+  database.ref('clients/'+phone+'/'+field).set(val).then(()=>{ alert('OK'); loadClients(); });
+}
+function toggleVerif(phone){
+  database.ref('clients/'+phone+'/email_verified').once('value').then(s=>{
+    const cur=s.val();
+    database.ref('clients/'+phone+'/email_verified').set(!cur).then(()=>{ alert('Verif: '+!cur); loadClients(); });
+  });
+}
+function verifyEmailManual(phone,etat){
+  if(!confirm((etat?'Vérifier':'Dé-vérifier')+' manuellement l\'email de '+phone+' ?')) return;
+  database.ref('clients/'+phone+'/email_verified').set(etat).then(()=>{
+    database.ref('clients/'+phone+'/email_verified_at').set(new Date().toLocaleString('fr-FR'));
+    database.ref('clients/'+phone+'/email_verified_by').set('admin_'+curPhone);
+    alert('Email '+(etat?'vérifié ✅':'dé-vérifié ❌')+' pour '+phone);
+    loadClients();
+  });
+}
+function verifyKYC(phone,etat){
+  const action = etat?'VALIDER':'REJETER';
+  if(!confirm(action+' le KYC de '+phone+' ?')) return;
+  const updates = {
+    kyc_verified: etat,
+    kyc_status: etat?'valide':'rejete',
+    kyc_verified_at: new Date().toLocaleString('fr-FR'),
+    kyc_verified_by: 'admin_'+curPhone
+  };
+  database.ref('clients/'+phone).update(updates).then(()=>{
+    // Notif client
+    database.ref('notifications/'+phone).push({
+      titre: etat?'✅ KYC Validé':'❌ KYC Rejeté',
+      message: etat?'Ton KYC a été validé par l\'admin. Tu peux retirer.':'Ton KYC a été rejeté. Renvoie de meilleures photos.',
+      date: new Date().toLocaleString('fr-FR')
+    });
+    alert('KYC '+action+' pour '+phone);
+    loadClients();
+  });
+}
+function viewKYC(phone){
+  const c = all.find(x=>x.phone===phone);
+  if(!c) return alert('Client non trouvé');
+  let msg = 'KYC INFOS\nPhone: '+phone+'\nNom: '+(c.nom||'')+'\n';
+  msg += 'Email verif: '+c.email_verified+'\nKYC verif: '+c.kyc_verified+'\nStatus: '+(c.kyc_status||'')+'\n';
+  msg += 'CNI: '+(c.cni||c.cni_url||c.piece||' non')+'\n';
+  msg += 'Selfie: '+(c.selfie||c.selfie_url||' non')+'\n';
+  msg += 'Docs: '+JSON.stringify({cni_url:c.cni_url, selfie_url:c.selfie_url, kyc_docs:c.kyc_docs, justificatif:c.justificatif}).slice(0,800);
+  alert(msg);
+  // Ouvre les images si présentes
+  const urls = [c.cni_url, c.selfie_url, c.kyc_docs, c.justificatif, c.cni_recto, c.cni_verso].filter(u=>u && u.startsWith('http'));
+  if(urls.length>0){
+    if(confirm('Ouvrir '+urls.length+' document(s) KYC dans nouvel onglet ?')){
+      urls.forEach(u=> window.open(u,'_blank'));
+    }
+  } else {
+    alert('Aucune URL http trouvée pour ce client. Vérifie dans Firebase si tu stockes en base64.');
   }
-  const filtered = allData.filter(c=> (c.nom||'').toLowerCase().includes(q) || (c.phone||'').includes(q) || (c.email||'').toLowerCase().includes(q) );
-  renderClients(filtered);
+}
+function deleteUser(phone){
+  const c = all.find(x=>x.phone===phone);
+  const nom = c?.nom||phone;
+  if(!confirm('⚠️ SUPPRIMER DEFINITIVEMENT\n'+nom+' ('+phone+') ?\nCette action est irréversible !')) return;
+  if(!confirm('CONFIRME une 2e fois: Vraiment supprimer '+phone+' ? Solde, bonus, épargne seront perdus.')) return;
+  const email = c?.email||'';
+  const emailKey = email.replace(/\./g,',');
+  // Supprime client
+  database.ref('clients/'+phone).remove().then(()=>{
+    // Supprime index email
+    if(emailKey) database.ref('emails_index/'+emailKey).remove();
+    // Supprime notifs
+    database.ref('notifications/'+phone).remove();
+    // Optionnel: supprime commandes de ce client (on garde pour historique, commente si tu veux garder)
+    // database.ref('commandes_p2p_p2m').orderByChild('client_id').equalTo(phone).once('value').then(s=>s.forEach(ch=>ch.ref.remove()));
+    alert('✅ Utilisateur '+phone+' supprimé');
+    loadClients();
+  }).catch(e=> alert('Erreur: '+e.message));
 }
 
-function creditClient(phone, field){
-  const montant = prompt('Montant à ajouter (F) pour '+phone+' ?');
-  if(!montant) return;
-  const val=parseInt(montant);
-  if(isNaN(val)) return alert('Montant invalide');
-  database.ref('clients/'+phone+'/'+field).once('value').then(s=>{
-    const cur=s.val()||0;
-    database.ref('clients/'+phone+'/'+field).set(cur+val).then(()=>{ alert('Crédité'); loadClients(); });
-  });
+function updateStat(path,id,stat){
+  database.ref(path+'/'+id+'/statut').set(stat).then(()=>{ alert('Statut: '+stat); load(PATHS[Object.keys(PATHS).find(k=>PATHS[k]===path)]||'p2p'); });
 }
-function debitClient(phone, field){
-  const montant = prompt('Montant à retirer (F) pour '+phone+' ?');
-  if(!montant) return;
-  const val=parseInt(montant);
-  if(isNaN(val)) return alert('Montant invalide');
-  database.ref('clients/'+phone+'/'+field).once('value').then(s=>{
-    const cur=s.val()||0;
-    database.ref('clients/'+phone+'/'+field).set(Math.max(0,cur-val)).then(()=>{ alert('Débité'); loadClients(); });
-  });
+function viewJson(id){
+  const c=all.find(x=>x.id===id);
+  alert(JSON.stringify(c,null,2).slice(0,1000));
 }
-function viewClient(phone){
-  const c = allData.find(x=> (x.phone||'')===phone );
-  if(!c) return alert('Non trouvé');
-  alert('CLIENT\nNom: '+c.nom+'\nPhone: '+phone+'\nEmail: '+c.email+'\nSolde: '+c.solde+'\nCommission: '+c.commission+'\nEpargne: '+c.recompense+'\nVerif: '+c.email_verified+'\nParrain: '+c.parrain);
+function doFilter(){
+  const q=document.getElementById('q').value.toLowerCase();
+  if(curTab==='clients'){
+    const f=all.filter(c=> (c.nom||'').toLowerCase().includes(q) || (c.phone||'').includes(q) || (c.email||'').toLowerCase().includes(q));
+    renderClients(f);
+  } else {
+    document.querySelectorAll('#tbody tr').forEach(r=>{ r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none'; });
+  }
 }
-function validerCommande(path,id){
-  const nouveau = prompt('Nouveau statut (ex: validé, livré, rejeté) ?','validé');
-  if(!nouveau) return;
-  database.ref(path+'/'+id+'/statut').set(nouveau).then(()=>{ alert('Statut mis à jour'); loadCommandes(currentTab); });
-}
+function logoutAdmin(){ localStorage.removeItem('mayne_current_user'); localStorage.removeItem('mayne_'+'current_user'); location.href='index.html'; }
+
+// FIX NOTIF PRO - masquer URL
+// Pour OneSignal, ajoute dans OneSignalSDKWorker.js : self.addEventListener('push', e=>{ const data=e.data.json(); data.title='MAYNE E-SERVICES'; });
 
 loadClients();
 </script>
