@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ADMIN SERVICES - MAYNE - Statuts</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0}
+.app{max-width:900px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000}
+.top{padding:10px;background:#000;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;gap:8px;flex-wrap:wrap}
+.top-left{display:flex;gap:8px;align-items:center}
+.btn-retour{background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none}
+.input{width:calc(100% - 16px);background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:8px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:#000}
+.tab{background:#222;color:#fff;border:1px solid #444;padding:6px 9px;border-radius:20px;font-size:10px;font-weight:800;cursor:pointer}
+.tab.active{background:#ff5000;color:#fff;border-color:#fff}
+.tab .count{background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:4px;font-size:9px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#000;margin:0 8px 8px 8px;border-radius:8px}
+.sval{font-weight:900;font-size:14px}
+.slab{font-size:8px;color:#aaa}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border:1px solid #333;padding:6px;text-align:left;vertical-align:top}
+th{background:#ff5000;position:sticky;top:108px;z-index:2;font-size:10px}
+tr:hover{background:#2a2a2a}
+.badge{padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900}
+.ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}.prog{background:#0d6efd;color:#fff}
+.btn{border:none;padding:5px 8px;border-radius:5px;font-weight:800;cursor:pointer;font-size:10px;margin:1px}
+.btn-val{background:#28a745;color:#fff}
+.btn-ann{background:#dc3545;color:#fff}
+.btn-view{background:#333;color:#fff;border:1px solid #555}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
+#mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:500px;width:100%;padding:14px;max-height:90vh;overflow:auto}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top">
+  <div class="top-left">
+    <a href="admin.html" class="btn-retour">← ADMIN</a>
+    <a href="index.html" class="btn-retour" style="background:#333;color:#fff;border:1px solid #555">🏠 ACCUEIL</a>
+  </div>
+  <b style="color:#ffeb3b">📊 SERVICES STATUS</b>
+  <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:11px"></span>
+</div>
+
+<div class="stats">
+  <div><div class="sval" id="stEnCours" style="color:#ffeb3b">0</div><div class="slab">EN COURS</div></div>
+  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS</div></div>
+  <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS</div></div>
+  <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<input id="search" class="input" placeholder="🔍 Rechercher client, phone, montant, statut..." oninput="filtrer()">
+
+<table>
+<thead><tr><th>Service</th><th>Client / Montant</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+<tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
+</table>
+</div>
+
+<div id="modal" onclick="if(event.target==this) closeModal()">
+  <div id="mBox">
+    <h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail Commande</h3>
+    <div id="mContent"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      <button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER</button>
+      <button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER / REJETER</button>
+      <button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button>
+      <button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier Client</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.database();
+const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
+function getPhone(){
+  try{
+    let p = JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone;
+    if(p) return p;
+    p = JSON.parse(localStorage.getItem('mayne_'+'current_user')||'{}')?.phone;
+    if(p) return p;
+  }catch(e){} return null;
+}
+function isAdmin(phone){ if(!phone) return false; const c=phone.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8)) ); }
+if(!isAdmin(getPhone())){ document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin 0158612131 seulement<br><a href="index.html" style="color:#ff5000">Retour</a></div>'; throw 'not admin'; }
+
+const SERVICES = [
+  {key:'all', label:'TOUS', path:null},
+  {key:'p2p', label:'P2P/P2M', path:'commandes_p2p_p2m'},
+  {key:'transfert', label:'TRANSFERT', path:'commandes_transfert'},
+  {key:'market', label:'MARKET', path:'commandes_marketplace'},
+  {key:'1xbet', label:'1XBET', path:'commandes_1xbet'},
+  {key:'factures', label:'FACTURES', path:'commandes_factures'},
+  {key:'forfaits', label:'FORFAITS', path:'commandes_forfaits'},
+  {key:'epargne', label:'EPARGNE', path:'commandes_epargne'},
+  {key:'depot', label:'DEPOTS', path:'depots'},
+  {key:'retrait', label:'RETRAITS', path:'retraits'},
+  {key:'kyc', label:'KYC', path:'kyc_demandes'}
+];
+
+let allData=[], filtered=[], currentTab='all', currentItem=null;
+let counts={};
+
+function initTabs(){
+  const cont=document.getElementById('tabs');
+  cont.innerHTML='';
+  SERVICES.forEach(s=>{
+    const b=document.createElement('button');
+    b.className='tab'+(s.key===currentTab?' active':'');
+    b.id='tab-'+s.key;
+    b.innerHTML=s.label+' <span class="count" id="count-'+s.key+'">0</span>';
+    b.onclick=()=> switchTab(s.key);
+    cont.appendChild(b);
+  });
+}
+
+async function loadAll(){
+  allData=[];
+  counts={};
+  SERVICES.forEach(s=> counts[s.key]=0);
+  const promises = SERVICES.filter(s=>s.path).map(s=> 
+    db.ref(s.path).limitToLast(300).once('value').then(snap=>{
+      snap.forEach(ch=>{
+        const v=ch.val();
+        allData.push({
+          id: ch.key,
+          path: s.path,
+          service: s.key,
+          serviceLabel: s.label,
+          client_id: v.client_id||v.phone||v.user||v.client||'',
+          phone: v.phone||v.client_id||'',
+          montant: v.montant||v.total||v.prix||v.amount||0,
+          statut: (v.statut||v.status||'en cours').toLowerCase(),
+          date: v.date||v.created_at||v.timestamp||'',
+          data: v
+        });
+        counts[s.key]++;
+      });
+    })
+  );
+  await Promise.all(promises);
+  allData.sort((a,b)=> (b.date||'').toString().localeCompare((a.date||'').toString()));
+  // Update counts
+  SERVICES.forEach(s=>{
+    const el=document.getElementById('count-'+s.key);
+    if(el) el.innerText = s.key==='all' ? allData.length : (counts[s.key]||0);
+  });
+  document.getElementById('totalCount').innerText = allData.length+' commandes';
+  updateStats(allData);
+  render(allData);
+}
+
+function updateStats(list){
+  let en=0,val=0,rej=0;
+  list.forEach(i=>{
+    const st=i.statut;
+    if(st.includes('en cours')||st.includes('attente')||st.includes('pending')) en++;
+    else if(st.includes('valid')||st.includes('succes')||st.includes('paye')||st.includes('livre')) val++;
+    else if(st.includes('rejet')||st.includes('annul')||st.includes('echec')) rej++;
+  });
+  document.getElementById('stEnCours').innerText=en;
+  document.getElementById('stValide').innerText=val;
+  document.getElementById('stRejete').innerText=rej;
+  document.getElementById('stTotal').innerText=list.length;
+}
+
+function switchTab(key){
+  currentTab=key;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+key)?.classList.add('active');
+  let list = key==='all' ? allData : allData.filter(d=>d.service===key);
+  updateStats(list);
+  render(list);
+}
+
+function render(list){
+  filtered=list;
+  const tb=document.getElementById('tbody'); tb.innerHTML='';
+  if(list.length===0){ tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px">Aucune commande</td></tr>'; return; }
+  list.slice(0,400).forEach(item=>{
+    let badgeClass='wait';
+    if(item.statut.includes('valid')||item.statut.includes('succes')) badgeClass='ok';
+    else if(item.statut.includes('rejet')||item.statut.includes('annul')) badgeClass='no';
+    else if(item.statut.includes('en cours')||item.statut.includes('attente')) badgeClass='wait';
+    else badgeClass='prog';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><b style="color:#ffeb3b">${item.serviceLabel}</b><br><small style="color:#aaa">${item.path}</small></td>
+      <td><b>${item.client_id||item.phone}</b><br><span style="color:#0f0;font-weight:900">${item.montant} F</span><br><small>${(item.data.type||item.data.service||'').slice(0,30)}</small></td>
+      <td><span class="badge ${badgeClass}">${item.statut}</span></td>
+      <td><small>${(item.date||'').toString().slice(0,19)}</small></td>
+      <td>
+        <button class="btn btn-val" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><br>
+        <button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅ Valider</button>
+        <button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌ Annuler</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+function filtrer(){
+  const q=document.getElementById('search').value.toLowerCase();
+  if(!q){ render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab)); return; }
+  const f = (currentTab==='all'?allData:allData.filter(d=>d.service===currentTab)).filter(i=> 
+    (i.client_id||'').toLowerCase().includes(q) ||
+    (i.phone||'').toLowerCase().includes(q) ||
+    (i.montant||'').toString().includes(q) ||
+    (i.statut||'').toLowerCase().includes(q) ||
+    JSON.stringify(i.data).toLowerCase().includes(q)
+  );
+  render(f);
+}
+
+function openDetail(path,id){
+  const item = allData.find(x=> x.path===path && x.id===id);
+  if(!item) return;
+  currentItem=item;
+  document.getElementById('mTitle').innerText = item.serviceLabel+' - '+id;
+  let html='';
+  html+=`<div class="row"><span>Service</span><b>${item.serviceLabel} (${item.path})</b></div>`;
+  html+=`<div class="row"><span>Client</span><b>${item.client_id||item.phone}</b></div>`;
+  html+=`<div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div>`;
+  html+=`<div class="row"><span>Statut</span><b>${item.statut}</b></div>`;
+  html+=`<div class="row"><span>Date</span><b>${item.date}</b></div>`;
+  html+=`<div style="margin-top:8px;background:#000;padding:8px;border-radius:6px;max-height:200px;overflow:auto"><pre style="white-space:pre-wrap;font-size:10px;color:#aaa">${JSON.stringify(item.data,null,2).slice(0,2000)}</pre></div>`;
+  document.getElementById('mContent').innerHTML=html;
+  document.getElementById('modal').style.display='flex';
+}
+function closeModal(){ document.getElementById('modal').style.display='none'; currentItem=null; }
+
+function quickAction(path,id,newStatut){
+  if(!confirm(newStatut.toUpperCase()+' cette commande '+id+' ?')) return;
+  db.ref(path+'/'+id+'/statut').set(newStatut).then(()=>{
+    db.ref(path+'/'+id+'/status').set(newStatut);
+    db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString());
+    db.ref(path+'/'+id+'/updated_by').set('admin_'+getPhone());
+    // Notif client
+    const item = allData.find(x=> x.path===path && x.id===id);
+    const clientPhone = item?.client_id || item?.phone;
+    if(clientPhone){
+      db.ref('notifications/'+clientPhone).push({
+        titre: newStatut==='validé' ? '✅ Commande Validée' : '❌ Commande Annulée',
+        message: `Ta commande ${item.serviceLabel} de ${item.montant} F est ${newStatut}`,
+        date: new Date().toLocaleString('fr-FR'),
+        service: item.serviceLabel
+      });
+    }
+    alert('✅ Statut mis à '+newStatut);
+    loadAll();
+    if(currentTab!=='all') switchTab(currentTab);
+  });
+}
+function validerCurrent(){ if(!currentItem) return; quickAction(currentItem.path, currentItem.id, 'validé'); closeModal(); }
+function annulerCurrent(){ if(!currentItem) return; quickAction(currentItem.path, currentItem.id, 'annulé'); closeModal(); }
+function notifierCurrent(){
+  if(!currentItem) return;
+  let titre=prompt('Titre notif:', currentItem.serviceLabel+' - Mise à jour');
+  if(!titre) return;
+  let msg=prompt('Message:', 'Ta commande est en cours de traitement');
+  if(!msg) return;
+  const phone=currentItem.client_id||currentItem.phone;
+  db.ref('notifications/'+phone).push({titre, message:msg, date:new Date().toLocaleString('fr-FR')}).then(()=> alert('Notif envoyée à '+phone));
+}
+
+initTabs();
+loadAll();
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</html>
