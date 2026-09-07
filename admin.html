@@ -23,10 +23,10 @@
 }
 </style>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN FINAL - MAYNE E-SERVICES</title>
+<title>ADMIN FINAL FIX - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 body{background:#0a0a0a;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0;padding:4px}
 .app{max-width:1000px;width:100%;min-height:100vh;background:#1e1e1e;border:6px solid #ff5000;border-radius:12px;overflow:hidden}
@@ -62,60 +62,57 @@ tr:hover{background:#2a2a2a}
 .sbox{background:#000;border:1px solid #333;border-radius:8px;padding:8px;text-align:center}
 .sval{font-weight:900;font-size:14px;color:#0f0}
 .slab{font-size:8px;color:#aaa}
+.debug{background:#000;border:1px dashed #ff5000;padding:8px;margin:8px 10px;border-radius:6px;font-size:10px;color:#aaa}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="top">
-  <div><b style="color:#ffeb3b">🔧 ADMIN FINAL MAYNE</b><br><small id="adminPhone" style="color:#0f0;font-size:10px"></small></div>
+  <div><b style="color:#ffeb3b">🔧 ADMIN FINAL MAYNE - FIX</b><br><small id="adminPhone" style="color:#0f0;font-size:10px"></small></div>
   <div style="display:flex;gap:6px">
     <a href="index.html" class="btn btn-home">🏠 ACCUEIL</a>
-    <button class="btn btn-orange" onclick="location.reload()">🔄 RELOAD</button>
+    <button class="btn btn-orange" onclick="loadAllCounts(true)">🔄 RE-SCANNER</button>
   </div>
 </div>
 
 <div class="tabs">
   <button class="tab active" id="tab-users" onclick="switchMain('users')">👥 TOUS LES USERS</button>
-  <button class="tab" id="tab-cmd" onclick="switchMain('cmd')">📦 COMMANDES EN COURS <span class="bubble" id="bubble-all">0</span></button>
+  <button class="tab" id="tab-cmd" onclick="switchMain('cmd')">📦 COMMANDES <span class="bubble" id="bubble-all">0</span></button>
 </div>
 
-<!-- SECTION USERS -->
 <div id="sec-users" class="section">
   <div class="h2">1/ TOUS LES USERS (Nom, Prénom, Solde éditable, Commission éditable, Epargne éditable, Numéro, Email)</div>
   <input id="searchUser" class="input" placeholder="🔍 Rechercher nom, prénom, numéro, email..." oninput="filterUsers()">
   <div class="stats">
     <div class="sbox"><div class="sval" id="uCount">0</div><div class="slab">USERS</div></div>
-    <div class="sbox"><div class="sval" id="uSolde" style="color:#0f0">0</div><div class="slab">SOLDE TOTAL</div></div>
-    <div class="sbox"><div class="sval" id="uCom" style="color:#ffeb3b">0</div><div class="slab">COMMISSION TOTAL</div></div>
-    <div class="sbox"><div class="sval" id="uEp" style="color:#f0f">0</div><div class="slab">EPARGNE TOTAL</div></div>
+    <div class="sbox"><div class="sval" id="uSolde" style="color:#0f0">0</div><div class="slab">SOLDE</div></div>
+    <div class="sbox"><div class="sval" id="uCom" style="color:#ffeb3b">0</div><div class="slab">COMMISSION</div></div>
+    <div class="sbox"><div class="sval" id="uEp" style="color:#f0f">0</div><div class="slab">EPARGNE</div></div>
   </div>
   <div class="wrap">
     <table>
-      <thead><tr><th>Nom</th><th>Prénom</th><th>Numéro</th><th>Email</th><th>Solde F</th><th>Commission F</th><th>Epargne F</th><th>💾</th></tr></thead>
-      <tbody id="tbodyUsers"><tr><td colspan="8" style="text-align:center;padding:20px">Chargement users...</td></tr></tbody>
+      <thead><tr><th>Nom</th><th>Prénom</th><th>Numéro</th><th>Email</th><th>Solde</th><th>Com</th><th>Epargne</th><th>💾</th></tr></thead>
+      <tbody id="tbodyUsers"><tr><td colspan="8" style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
     </table>
   </div>
 </div>
 
-<!-- SECTION COMMANDES -->
 <div id="sec-cmd" class="section" style="display:none">
-  <div class="h2">2/ TOUTES LES COMMANDES EN COURS - Clique sur un service pour voir détails</div>
+  <div class="h2">2/ COMMANDES EN COURS - Auto-détection des vrais noms Firebase</div>
+  <div class="debug" id="debugRoot">Scan des nœuds Firebase en cours...</div>
   <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 10px" id="cmdButtons"></div>
   <div style="margin:8px 10px;display:flex;gap:6px">
-    <input id="searchCmd" class="input" style="margin:0;flex:1" placeholder="🔍 Rechercher dans commandes..." oninput="filterCmd()">
-    <button class="btn btn-orange" onclick="loadAllCounts()">🔄 Compter</button>
+    <input id="searchCmd" class="input" style="margin:0;flex:1" placeholder="🔍 Rechercher client, montant, statut..." oninput="filterCmd()">
   </div>
   <div class="wrap">
     <table>
-      <thead><tr><th>Service</th><th>Client / Phone</th><th>Montant</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
-      <tbody id="tbodyCmd"><tr><td colspan="6" style="text-align:center;padding:20px">Clique sur un service ci-dessus pour voir les détails</td></tr></tbody>
+      <thead><tr><th>Service</th><th>Client</th><th>Montant</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody id="tbodyCmd"><tr><td colspan="6" style="text-align:center;padding:20px">Clique sur un service pour voir les détails</td></tr></tbody>
     </table>
   </div>
 </div>
-
 </div>
 
-<!-- MODAL -->
 <div id="modal" onclick="if(event.target==this) closeModal()">
   <div id="mBox">
     <h3 id="mTitle" style="color:#ff5000;margin:0 0 8px 0">Détail</h3>
@@ -133,21 +130,22 @@ const ADMIN_LIST=["0158612131","2290158612131","158612131"];
 function getPhone(){ try{ let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; p=JSON.parse(localStorage.getItem('mayne_'+'current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
 function isAdmin(p){ if(!p) return false; const c=p.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8))); }
 const curPhone=getPhone();
-if(!isAdmin(curPhone)){ document.body.innerHTML='<div style="padding:40px;text-align:center;color:#fff">⛔ Accès réservé admin 0158612131<br>Connecté: '+(curPhone||'non')+'<br><br><a href="index.html" style="color:#ff5000">Retour accueil</a></div>'; throw 'not admin'; }
+if(!isAdmin(curPhone)){ document.body.innerHTML='<div style="padding:40px;text-align:center;color:#fff">⛔ Admin 0158612131 seulement<br>'+ (curPhone||'non connecté')+'<br><a href="index.html" style="color:#ff5000">Retour</a></div>'; throw 'not admin'; }
 document.getElementById('adminPhone').innerText='Admin: '+curPhone+' ✅';
 
-const CMD_SERVICES = [
-  {key:'recharge', label:'RECHARGE', paths:['depots','commandes_recharge','recharges'], color:'#0f0'},
-  {key:'retirer', label:'RETIRER', paths:['retraits','commandes_retrait','retrait'], color:'#f80'},
-  {key:'1xbet_depot', label:'1XBET DÉPÔT', paths:['commandes_1xbet_depot','commandes_1xbet','1xbet_depot'], filter: d=>{ const t=(d.type||d.service||'').toLowerCase(); return t.includes('depot')||t.includes('dépôt')||!t; }},
-  {key:'1xbet_retrait', label:'1XBET RETRAIT', paths:['commandes_1xbet_retrait','commandes_1xbet','1xbet_retrait'], filter: d=>{ const t=(d.type||'').toLowerCase(); return t.includes('retrait'); }},
-  {key:'transfert', label:'TRANSFERT', paths:['commandes_transfert','commandes_p2p_p2m','transferts'], color:'#0ff'},
-  {key:'forfait', label:'FORFAIT', paths:['commandes_forfaits','forfaits','commandes_forfait']},
-  {key:'facture', label:'FACTURE', paths:['commandes_factures','factures']},
-  {key:'epargne', label:'EPARGNE', paths:['commandes_epargne','epargne']}
+// DEFINITION SERVICES AVEC TOUS LES NOMS POSSIBLES
+const SERVICES_DEF = [
+  {key:'recharge', label:'RECHARGE', possible:['depots','depot','commandes_depot','recharges','commandes_recharge','demandes_depot','recharge','commandes_recharges']},
+  {key:'retirer', label:'RETIRER', possible:['retraits','retrait','commandes_retrait','commandes_retraits','demandes_retrait','retrait']},
+  {key:'1xbet_depot', label:'1XBET DÉPÔT', possible:['commandes_1xbet','commandes_1xbet_depot','1xbet_depot','1xbet'], filter: d=>{ const t=((d.type||d.service||'')+'').toLowerCase(); return t.includes('depot')||t.includes('dépôt')|| t==='' || !d.type; }},
+  {key:'1xbet_retrait', label:'1XBET RETRAIT', possible:['commandes_1xbet_retrait','commandes_1xbet','1xbet_retrait'], filter: d=>{ const t=((d.type||'')+'').toLowerCase(); return t.includes('retrait')||t.includes('withdraw'); }},
+  {key:'transfert', label:'TRANSFERT', possible:['commandes_transfert','commandes_p2p_p2m','transfert','transferts','p2p','commandes_transfert_national']},
+  {key:'forfait', label:'FORFAIT', possible:['commandes_forfaits','commandes_forfait','forfaits','forfait','commandes_forfait_credit']},
+  {key:'facture', label:'FACTURE', possible:['commandes_factures','factures','commandes_facture','facture']},
+  {key:'epargne', label:'EPARGNE', possible:['commandes_epargne','epargne','commandes_epargnes']}
 ];
 
-let allUsers=[], filteredUsers=[], allCmd=[], currentCmdService=null, currentItem=null;
+let allUsers=[], allCmd=[], currentCmdService=null, rootKeys=[], countsMap={};
 
 function switchMain(tab){
   document.getElementById('sec-users').style.display = tab==='users' ? 'block' : 'none';
@@ -157,25 +155,13 @@ function switchMain(tab){
   if(tab==='cmd') loadAllCounts();
 }
 
-// USERS
 function loadUsers(){
   db.ref('clients').on('value', snap=>{
     allUsers=[];
     let totS=0,totC=0,totE=0;
     snap.forEach(ch=>{
-      const v=ch.val();
-      const phone=ch.key;
-      allUsers.push({
-        key:phone,
-        nom: v.nom||'',
-        prenom: v.prenom||'',
-        phone: phone,
-        email: v.email||'',
-        solde: v.solde||0,
-        commission: v.commission||0,
-        recompense: v.recompense||0,
-        data: v
-      });
+      const v=ch.val(); const phone=ch.key;
+      allUsers.push({key:phone, nom:v.nom||'', prenom:v.prenom||'', phone, email:v.email||'', solde:v.solde||0, commission:v.commission||0, recompense:v.recompense||0, data:v});
       totS+= (v.solde||0); totC+= (v.commission||0); totE+= (v.recompense||0);
     });
     document.getElementById('uCount').innerText=allUsers.length;
@@ -186,197 +172,116 @@ function loadUsers(){
   });
 }
 function renderUsers(list){
-  filteredUsers=list;
   const tb=document.getElementById('tbodyUsers'); tb.innerHTML='';
   list.slice(0,500).forEach(u=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td><b>${u.nom}</b></td>
-      <td>${u.prenom}</td>
-      <td><b style="color:#ffeb3b">${u.phone}</b></td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;font-size:10px">${u.email}</td>
-      <td><input id="solde-${u.key}" type="number" value="${u.solde}" style="width:80px;background:#000;color:#0f0;border:1px solid #333;border-radius:4px;padding:4px"></td>
-      <td><input id="com-${u.key}" type="number" value="${u.commission}" style="width:80px;background:#000;color:#ffeb3b;border:1px solid #333;border-radius:4px;padding:4px"></td>
-      <td><input id="ep-${u.key}" type="number" value="${u.recompense}" style="width:80px;background:#000;color:#f0f;border:1px solid #333;border-radius:4px;padding:4px"></td>
-      <td>
-        <button class="btn-sm btn-save" onclick="saveUser('${u.key}')">💾 Sauver</button>
-        <button class="btn-sm btn-del" onclick="viewUser('${u.key}')">👁️</button>
-      </td>
-    `;
+    tr.innerHTML=`<td><b>${u.nom}</b></td><td>${u.prenom}</td><td><b style="color:#ffeb3b">${u.phone}</b></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;font-size:10px">${u.email}</td><td><input id="solde-${u.key}" type="number" value="${u.solde}" style="width:75px;background:#000;color:#0f0;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="com-${u.key}" type="number" value="${u.commission}" style="width:75px;background:#000;color:#ffeb3b;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="ep-${u.key}" type="number" value="${u.recompense}" style="width:75px;background:#000;color:#f0f;border:1px solid #333;border-radius:4px;padding:3px"></td><td><button class="btn-sm btn-save" onclick="saveUser('${u.key}')">💾</button></td>`;
     tb.appendChild(tr);
   });
 }
-function filterUsers(){
-  const q=document.getElementById('searchUser').value.toLowerCase();
-  renderUsers(allUsers.filter(u=> (u.nom||'').toLowerCase().includes(q) || (u.prenom||'').toLowerCase().includes(q) || u.phone.includes(q) || (u.email||'').toLowerCase().includes(q)));
-}
-function saveUser(phone){
-  const s=Number(document.getElementById('solde-'+phone).value);
-  const c=Number(document.getElementById('com-'+phone).value);
-  const e=Number(document.getElementById('ep-'+phone).value);
-  db.ref('clients/'+phone).update({solde:s, commission:c, recompense:e}).then(()=>{ alert('✅ '+phone+' sauvegardé\nSolde:'+s+' Com:'+c+' Ep:'+e); });
-}
-function viewUser(phone){
-  const u=allUsers.find(x=>x.key===phone);
-  if(!u) return;
-  currentItem=u;
-  document.getElementById('mTitle').innerText='USER: '+u.nom+' '+u.prenom+' - '+phone;
-  document.getElementById('mContent').innerHTML=`
-    <div class="row"><span>Nom</span><b>${u.nom}</b></div>
-    <div class="row"><span>Prénom</span><b>${u.prenom}</b></div>
-    <div class="row"><span>Phone</span><b>${u.phone}</b></div>
-    <div class="row"><span>Email</span><b>${u.email}</b></div>
-    <div class="row"><span>Solde</span><b style="color:#0f0">${u.solde}</b></div>
-    <div class="row"><span>Commission</span><b style="color:#ffeb3b">${u.commission}</b></div>
-    <div class="row"><span>Epargne</span><b style="color:#f0f">${u.recompense}</b></div>
-    <div class="row"><span>Verif Email</span><b>${u.data.email_verified?'OUI ✅':'NON ❌'}</b></div>
-    <div class="row"><span>KYC</span><b>${u.data.kyc_verified?'OK ✅':'NON ❌'}</b></div>
-  `;
-  document.getElementById('mActions').innerHTML=`
-    <button class="btn-sm btn-val" style="padding:10px" onclick="saveUser('${phone}'); closeModal()">💾 Sauver modifs</button>
-    <button class="btn-sm btn-del" style="padding:10px" onclick="deleteUser('${phone}')">🗑️ Supprimer</button>
-    <button class="btn-sm" style="padding:10px;background:#28a745;color:#fff" onclick="verifyEmailUser('${phone}',true)">✅ Verif Email</button>
-    <button class="btn-sm" style="padding:10px;background:#ff9800;color:#000" onclick="verifyKYCUser('${phone}',true)">🪪 Valider KYC</button>
-  `;
-  document.getElementById('modal').style.display='flex';
-}
+function filterUsers(){ const q=document.getElementById('searchUser').value.toLowerCase(); renderUsers(allUsers.filter(u=> (u.nom||'').toLowerCase().includes(q) || (u.prenom||'').toLowerCase().includes(q) || u.phone.includes(q) || (u.email||'').toLowerCase().includes(q))); }
+function saveUser(phone){ const s=Number(document.getElementById('solde-'+phone).value); const c=Number(document.getElementById('com-'+phone).value); const e=Number(document.getElementById('ep-'+phone).value); db.ref('clients/'+phone).update({solde:s, commission:c, recompense:e}).then(()=> alert('✅ '+phone+' sauvegardé')); }
 
-// COMMANDES
-async function loadAllCounts(){
-  const container=document.getElementById('cmdButtons'); container.innerHTML='Chargement compteurs...';
-  let totalEnCours=0;
-  const counts={};
-  for(const svc of CMD_SERVICES){
+// COMMANDES - AUTO DETECTION
+async function loadAllCounts(force){
+  document.getElementById('debugRoot').innerText='🔍 Scan Firebase root...';
+  // 1. Lister toutes les clés root
+  const rootSnap = await db.ref('/').once('value');
+  const rootVal = rootSnap.val()||{};
+  rootKeys = Object.keys(rootVal);
+  document.getElementById('debugRoot').innerHTML='📂 Nœuds trouvés: <b>'+rootKeys.join(', ')+'</b><br>Recherche des commandes en cours...';
+
+  allCmd=[];
+  countsMap={};
+  let total=0;
+
+  for(const svc of SERVICES_DEF){
     let count=0;
-    for(const path of svc.paths){
+    let foundPaths=[];
+    for(const path of svc.possible){
+      if(!(path in rootVal)) continue;
+      foundPaths.push(path);
       try{
         const snap=await db.ref(path).once('value');
         snap.forEach(ch=>{
           const v=ch.val();
-          const statut=(v.statut||v.status||'en cours').toLowerCase();
-          const isEnCours = statut.includes('en cours')||statut.includes('attente')||statut.includes('pending');
+          const statut=((v.statut||v.status||'en cours')+'').toLowerCase();
+          const isEnCours = statut.includes('en cours')||statut.includes('encours')||statut.includes('attente')||statut.includes('pending')||statut.includes('en_attente')||statut==='0'||statut===''||statut==='en-cours';
           if(!isEnCours) return;
           if(svc.filter && !svc.filter(v)) return;
           count++;
+          allCmd.push({id:ch.key, path, service:svc.key, label:svc.label, client:v.client_id||v.phone||v.user||'', montant:v.montant||v.total||v.prix||0, statut, date:v.date||v.created_at||'', data:v});
         });
       }catch(e){}
     }
-    counts[svc.key]=count;
-    totalEnCours+=count;
+    countsMap[svc.key]={count, paths:foundPaths};
+    total+=count;
   }
-  document.getElementById('bubble-all').innerText=totalEnCours;
-  document.getElementById('bubble-all').className='bubble '+(totalEnCours>0?'has':'');
-  container.innerHTML='';
-  CMD_SERVICES.forEach(svc=>{
-    const c=counts[svc.key]||0;
+
+  // Si aucun trouvé, essaie aussi de scanner toutes les clés contenant 'commande', 'depot', 'retrait', etc.
+  if(total===0){
+    for(const key of rootKeys){
+      const low=key.toLowerCase();
+      if(low.includes('commande')||low.includes('depot')||low.includes('retrait')||low.includes('transfert')||low.includes('forfait')||low.includes('facture')||low.includes('epargne')||low.includes('1xbet')){
+        try{
+          const snap=await db.ref(key).once('value');
+          let c=0;
+          snap.forEach(ch=>{
+            const v=ch.val();
+            const st=((v.statut||v.status||'')+'').toLowerCase();
+            if(st.includes('en cours')||st.includes('attente')||st==='') c++;
+          });
+          if(c>0){
+            document.getElementById('debugRoot').innerHTML+='<br>⚠️ Trouvé '+c+' en cours dans <b>'+key+'</b> (non listé)';
+            // ajoute aux résultats
+            const snap2=await db.ref(key).once('value');
+            snap2.forEach(ch=>{
+              const v=ch.val(); const st=((v.statut||v.status||'en cours')+'').toLowerCase();
+              if(st.includes('en cours')||st.includes('attente')||st==='') allCmd.push({id:ch.key, path:key, service:'custom', label:key.toUpperCase(), client:v.client_id||v.phone||'', montant:v.montant||0, statut:st, date:v.date||'', data:v});
+            });
+          }
+        }catch(e){}
+      }
+    }
+  }
+
+  document.getElementById('bubble-all').innerText=allCmd.length;
+  document.getElementById('bubble-all').className='bubble '+(allCmd.length>0?'has':'');
+
+  const container=document.getElementById('cmdButtons'); container.innerHTML='';
+  SERVICES_DEF.forEach(svc=>{
+    const info=countsMap[svc.key]||{count:0, paths:[]};
     const btn=document.createElement('button');
-    btn.className='tab'+(currentCmdService===svc.key?' active':'');
-    btn.style.borderColor= c>0 ? '#ff5000' : '#444';
-    btn.innerHTML=`${svc.label} <span class="bubble ${c>0?'has':''}">[${c}]</span>`;
+    btn.className='tab';
+    btn.style.borderColor = info.count>0 ? '#ff5000' : '#444';
+    btn.innerHTML=`${svc.label} <span class="bubble ${info.count>0?'has':''}">[${info.count}]</span><br><small style="font-size:7px;color:#aaa">${info.paths.join(',')||'aucun'}</small>`;
     btn.onclick=()=> loadService(svc.key);
     container.appendChild(btn);
   });
-  // Auto load first service with count >0
-  const firstWith = CMD_SERVICES.find(s=> counts[s.key]>0);
-  if(firstWith && !currentCmdService) loadService(firstWith.key);
-}
 
-async function loadService(key){
-  currentCmdService=key;
-  const svc = CMD_SERVICES.find(s=>s.key===key);
-  if(!svc) return;
-  document.querySelectorAll('#cmdButtons .tab').forEach(b=> b.classList.remove('active'));
-  // highlight
-  const tb=document.getElementById('tbodyCmd'); tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px">Chargement '+svc.label+'...</td></tr>';
-  let list=[];
-  for(const path of svc.paths){
-    try{
-      const snap=await db.ref(path).limitToLast(300).once('value');
-      snap.forEach(ch=>{
-        const v=ch.val();
-        const statut=(v.statut||v.status||'en cours').toLowerCase();
-        const isEnCours = statut.includes('en cours')||statut.includes('attente')||statut.includes('pending')||statut.includes('en_attente');
-        if(!isEnCours) return;
-        if(svc.filter && !svc.filter(v)) return;
-        list.push({id:ch.key, path, service:svc.key, label:svc.label, data:v, client:v.client_id||v.phone||v.user||'', montant:v.montant||v.total||v.prix||0, statut, date:v.date||v.created_at||''});
-      });
-    }catch(e){}
+  if(allCmd.length===0){
+    document.getElementById('tbodyCmd').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px">Aucune commande en cours trouvée.<br>Vérifie que tes commandes ont bien statut = "en cours"<br><br>Nœuds scannés: '+rootKeys.join(', ')+'</td></tr>';
   }
-  allCmd=list;
-  renderCmd(list);
 }
 
-function renderCmd(list){
+function loadService(key){
+  currentCmdService=key;
+  const list = allCmd.filter(c=> c.service===key);
   const tb=document.getElementById('tbodyCmd'); tb.innerHTML='';
-  if(list.length===0){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:15px">Aucune commande en cours pour ce service</td></tr>'; return; }
+  if(list.length===0){ tb.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune commande en cours pour '+key.toUpperCase()+'</td></tr>'; return; }
   list.forEach(item=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td><b style="color:#ffeb3b">${item.label}</b><br><small>${item.path}</small></td>
-      <td><b>${item.client}</b><br><small style="color:#aaa">${(item.data.nom||'').slice(0,20)}</small></td>
-      <td><b style="color:#0f0">${item.montant} F</b></td>
-      <td><span class="badge wait">${item.statut}</span></td>
-      <td><small>${(item.date||'').toString().slice(0,16)}</small></td>
-      <td>
-        <button class="btn-sm btn-val" onclick="openCmd('${item.path}','${item.id}')">👁️ Détail</button>
-        <button class="btn-sm btn-val" onclick="actionCmd('${item.path}','${item.id}','validé')">✅ Valider</button>
-        <button class="btn-sm btn-ann" onclick="actionCmd('${item.path}','${item.id}','annulé')">❌ Annuler</button>
-      </td>
-    `;
+    tr.innerHTML=`<td><b style="color:#ffeb3b">${item.label}</b><br><small>${item.path}</small></td><td><b>${item.client}</b></td><td><b style="color:#0f0">${item.montant} F</b></td><td><span class="badge wait">${item.statut}</span></td><td><small>${(item.date||'').toString().slice(0,16)}</small></td><td><button class="btn-sm btn-val" onclick="actionCmd('${item.path}','${item.id}','validé')">✅</button><button class="btn-sm btn-ann" onclick="actionCmd('${item.path}','${item.id}','annulé')">❌</button><button class="btn-sm btn-save" onclick="openCmd('${item.path}','${item.id}')">👁️</button></td>`;
     tb.appendChild(tr);
   });
 }
-function filterCmd(){
-  const q=document.getElementById('searchCmd').value.toLowerCase();
-  renderCmd(allCmd.filter(i=> (i.client||'').toLowerCase().includes(q) || (i.montant||'').toString().includes(q) || (i.statut||'').includes(q) || JSON.stringify(i.data).toLowerCase().includes(q)));
-}
-function openCmd(path,id){
-  const item=allCmd.find(x=>x.path===path && x.id===id);
-  if(!item) return;
-  currentItem=item;
-  document.getElementById('mTitle').innerText=item.label+' - '+id;
-  document.getElementById('mContent').innerHTML=`
-    <div class="row"><span>Service</span><b>${item.label}</b></div>
-    <div class="row"><span>Path</span><b>${item.path}</b></div>
-    <div class="row"><span>Client</span><b>${item.client}</b></div>
-    <div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div>
-    <div class="row"><span>Statut</span><b>${item.statut}</b></div>
-    <div class="row"><span>Date</span><b>${item.date}</b></div>
-    <div style="background:#000;padding:8px;border-radius:6px;max-height:200px;overflow:auto;margin-top:8px"><pre style="white-space:pre-wrap;font-size:10px;color:#aaa">${JSON.stringify(item.data,null,2).slice(0,2000)}</pre></div>
-  `;
-  document.getElementById('mActions').innerHTML=`
-    <button class="btn-sm btn-val" style="padding:12px" onclick="actionCmd('${path}','${id}','validé'); closeModal()">✅ VALIDER</button>
-    <button class="btn-sm btn-ann" style="padding:12px" onclick="actionCmd('${path}','${id}','annulé'); closeModal()">❌ ANNULER</button>
-  `;
-  document.getElementById('modal').style.display='flex';
-}
-function actionCmd(path,id,newStatut){
-  if(!confirm(newStatut.toUpperCase()+' commande '+id+' ?')) return;
-  db.ref(path+'/'+id+'/statut').set(newStatut).then(()=>{
-    db.ref(path+'/'+id+'/status').set(newStatut);
-    db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString());
-    db.ref(path+'/'+id+'/updated_by').set('admin_'+curPhone);
-    const item=allCmd.find(x=>x.path===path && x.id===id);
-    const phone=item?.client||item?.data?.phone;
-    if(phone){
-      db.ref('notifications/'+phone).push({titre: newStatut==='validé'?'✅ Commande Validée':'❌ Commande Annulée', message:`Ta commande ${item.label} de ${item.montant} F est ${newStatut}`, date:new Date().toLocaleString('fr-FR')});
-    }
-    alert('✅ '+newStatut);
-    loadService(currentCmdService);
-    loadAllCounts();
-  });
-}
-function closeModal(){ document.getElementById('modal').style.display='none'; currentItem=null; }
-function deleteUser(phone){ if(!confirm('Supprimer '+phone+' ?')) return; if(!confirm('Confirme suppression définitive')) return; db.ref('clients/'+phone).remove().then(()=>{ alert('Supprimé'); closeModal(); }); }
-function verifyEmailUser(phone,etat){ db.ref('clients/'+phone+'/email_verified').set(etat).then(()=>{ alert('Email '+(etat?'vérifié':'dé-vérifié')); }); }
-function verifyKYCUser(phone,etat){ db.ref('clients/'+phone+'/kyc_verified').set(etat); db.ref('clients/'+phone+'/kyc_status').set(etat?'valide':'rejete'); alert('KYC '+(etat?'validé':'rejeté')); }
+function filterCmd(){ const q=document.getElementById('searchCmd').value.toLowerCase(); const list = allCmd.filter(c=> currentCmdService ? c.service===currentCmdService : true).filter(i=> (i.client||'').toLowerCase().includes(q) || (i.montant||'').toString().includes(q)); const tb=document.getElementById('tbodyCmd'); tb.innerHTML=''; list.forEach(item=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${item.label}</td><td>${item.client}</td><td>${item.montant}</td><td>${item.statut}</td><td>${item.date}</td><td><button class="btn-sm btn-val" onclick="actionCmd('${item.path}','${item.id}','validé')">✅</button><button class="btn-sm btn-ann" onclick="actionCmd('${item.path}','${item.id}','annulé')">❌</button></td>`; tb.appendChild(tr); }); }
+function openCmd(path,id){ const item=allCmd.find(x=>x.path===path && x.id===id); if(!item) return; document.getElementById('mTitle').innerText=item.label+' - '+id; document.getElementById('mContent').innerHTML=`<div class="row"><span>Path</span><b>${path}</b></div><div class="row"><span>Client</span><b>${item.client}</b></div><div class="row"><span>Montant</span><b>${item.montant}</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div><pre style="background:#000;padding:8px;border-radius:6px;max-height:200px;overflow:auto;font-size:10px">${JSON.stringify(item.data,null,2).slice(0,2000)}</pre>`; document.getElementById('mActions').innerHTML=`<button class="btn-sm btn-val" style="padding:10px" onclick="actionCmd('${path}','${id}','validé'); closeModal()">✅ VALIDER</button><button class="btn-sm btn-ann" style="padding:10px" onclick="actionCmd('${path}','${id}','annulé'); closeModal()">❌ ANNULER</button>`; document.getElementById('modal').style.display='flex'; }
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+function actionCmd(path,id,newStatut){ if(!confirm(newStatut.toUpperCase()+' '+id+' ?')) return; db.ref(path+'/'+id+'/statut').set(newStatut).then(()=>{ db.ref(path+'/'+id+'/status').set(newStatut); db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString()); const item=allCmd.find(x=>x.path===path && x.id===id); const phone=item?.client; if(phone){ db.ref('notifications/'+phone).push({titre:newStatut==='validé'?'✅ Validé':'❌ Annulé', message:`Ta commande ${item.label} ${item.montant}F est ${newStatut}`, date:new Date().toLocaleString('fr-FR')}); } alert('✅ '+newStatut); loadAllCounts(true); if(currentCmdService) setTimeout(()=>loadService(currentCmdService),500); }); }
 
 loadUsers();
 loadAllCounts();
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();
-firebase.auth().onAuthStateChanged(function(user){
-  if(user){ init(); } 
-  else { firebase.auth().signInAnonymously(); }
-});</script></body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
