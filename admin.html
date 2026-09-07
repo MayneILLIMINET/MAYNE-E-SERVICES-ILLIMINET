@@ -23,7 +23,7 @@
 }
 </style>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN FINAL FIX - MAYNE</title>
+<title>ADMIN FINAL - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -50,11 +50,10 @@ th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:10px}
 tr:hover{background:#2a2a2a}
 .badge{padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900}
 .ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
-.btn-sm{border:none;padding:4px 7px;border-radius:4px;font-weight:800;cursor:pointer;font-size:10px;margin:1px}
+.btn-sm{border:none;padding:5px 8px;border-radius:4px;font-weight:800;cursor:pointer;font-size:10px;margin:1px}
 .btn-val{background:#28a745;color:#fff}
 .btn-ann{background:#dc3545;color:#fff}
 .btn-save{background:#0d6efd;color:#fff}
-.btn-del{background:#000;color:#f00;border:1px solid #f00}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
 #mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:500px;width:100%;padding:14px;max-height:90vh;overflow:auto}
 .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
@@ -62,16 +61,15 @@ tr:hover{background:#2a2a2a}
 .sbox{background:#000;border:1px solid #333;border-radius:8px;padding:8px;text-align:center}
 .sval{font-weight:900;font-size:14px;color:#0f0}
 .slab{font-size:8px;color:#aaa}
-.debug{background:#000;border:1px dashed #ff5000;padding:8px;margin:8px 10px;border-radius:6px;font-size:10px;color:#aaa}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="top">
-  <div><b style="color:#ffeb3b">🔧 ADMIN FINAL MAYNE - FIX</b><br><small id="adminPhone" style="color:#0f0;font-size:10px"></small></div>
+  <div><b style="color:#ffeb3b">🔧 ADMIN FINAL MAYNE</b><br><small id="adminPhone" style="color:#0f0;font-size:10px"></small></div>
   <div style="display:flex;gap:6px">
     <a href="index.html" class="btn btn-home">🏠 ACCUEIL</a>
-    <button class="btn btn-orange" onclick="loadAllCounts(true)">🔄 RE-SCANNER</button>
+    <button class="btn btn-orange" onclick="loadAllCounts()">🔄 RELOAD</button>
   </div>
 </div>
 
@@ -98,16 +96,13 @@ tr:hover{background:#2a2a2a}
 </div>
 
 <div id="sec-cmd" class="section" style="display:none">
-  <div class="h2">2/ COMMANDES EN COURS - Auto-détection des vrais noms Firebase</div>
-  <div class="debug" id="debugRoot">Scan des nœuds Firebase en cours...</div>
+  <div class="h2">2/ COMMANDES EN COURS - Tes vrais services Firebase</div>
   <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 10px" id="cmdButtons"></div>
-  <div style="margin:8px 10px;display:flex;gap:6px">
-    <input id="searchCmd" class="input" style="margin:0;flex:1" placeholder="🔍 Rechercher client, montant, statut..." oninput="filterCmd()">
-  </div>
+  <input id="searchCmd" class="input" placeholder="🔍 Rechercher client, montant..." oninput="filterCmd()" style="margin:8px 10px;width:calc(100% - 20px)">
   <div class="wrap">
     <table>
-      <thead><tr><th>Service</th><th>Client</th><th>Montant</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
-      <tbody id="tbodyCmd"><tr><td colspan="6" style="text-align:center;padding:20px">Clique sur un service pour voir les détails</td></tr></tbody>
+      <thead><tr><th>Service</th><th>Client / Phone</th><th>Montant</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody id="tbodyCmd"><tr><td colspan="6" style="text-align:center;padding:20px">Clique sur un service ci-dessus</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -133,19 +128,19 @@ const curPhone=getPhone();
 if(!isAdmin(curPhone)){ document.body.innerHTML='<div style="padding:40px;text-align:center;color:#fff">⛔ Admin 0158612131 seulement<br>'+ (curPhone||'non connecté')+'<br><a href="index.html" style="color:#ff5000">Retour</a></div>'; throw 'not admin'; }
 document.getElementById('adminPhone').innerText='Admin: '+curPhone+' ✅';
 
-// DEFINITION SERVICES AVEC TOUS LES NOMS POSSIBLES
-const SERVICES_DEF = [
-  {key:'recharge', label:'RECHARGE', possible:['depots','depot','commandes_depot','recharges','commandes_recharge','demandes_depot','recharge','commandes_recharges']},
-  {key:'retirer', label:'RETIRER', possible:['retraits','retrait','commandes_retrait','commandes_retraits','demandes_retrait','retrait']},
-  {key:'1xbet_depot', label:'1XBET DÉPÔT', possible:['commandes_1xbet','commandes_1xbet_depot','1xbet_depot','1xbet'], filter: d=>{ const t=((d.type||d.service||'')+'').toLowerCase(); return t.includes('depot')||t.includes('dépôt')|| t==='' || !d.type; }},
-  {key:'1xbet_retrait', label:'1XBET RETRAIT', possible:['commandes_1xbet_retrait','commandes_1xbet','1xbet_retrait'], filter: d=>{ const t=((d.type||'')+'').toLowerCase(); return t.includes('retrait')||t.includes('withdraw'); }},
-  {key:'transfert', label:'TRANSFERT', possible:['commandes_transfert','commandes_p2p_p2m','transfert','transferts','p2p','commandes_transfert_national']},
-  {key:'forfait', label:'FORFAIT', possible:['commandes_forfaits','commandes_forfait','forfaits','forfait','commandes_forfait_credit']},
-  {key:'facture', label:'FACTURE', possible:['commandes_factures','factures','commandes_facture','facture']},
-  {key:'epargne', label:'EPARGNE', possible:['commandes_epargne','epargne','commandes_epargnes']}
+// TES VRAIS NOMS FIREBASE D'APRES TA CAPTURE
+const SERVICES = [
+  {key:'depots', label:'Dépôts', path:'commandes_depots'},
+  {key:'retraits', label:'Retrait', path:'commandes_retraits'},
+  {key:'epargne', label:'Épargne', path:'epargne'},
+  {key:'1xbet', label:'1XBET', path:'commandes_1xbet'},
+  {key:'forfaits', label:'FORFAIT', path:'commandes_forfaits'},
+  {key:'factures', label:'Facture', path:'commandes_factures'},
+  {key:'transferts', label:'Transfert', path:'commandes_transferts'},
+  {key:'echanges', label:'Echanges', path:'commandes_echanges'}
 ];
 
-let allUsers=[], allCmd=[], currentCmdService=null, rootKeys=[], countsMap={};
+let allUsers=[], allCmd=[], currentService=null;
 
 function switchMain(tab){
   document.getElementById('sec-users').style.display = tab==='users' ? 'block' : 'none';
@@ -157,8 +152,7 @@ function switchMain(tab){
 
 function loadUsers(){
   db.ref('clients').on('value', snap=>{
-    allUsers=[];
-    let totS=0,totC=0,totE=0;
+    allUsers=[]; let totS=0,totC=0,totE=0;
     snap.forEach(ch=>{
       const v=ch.val(); const phone=ch.key;
       allUsers.push({key:phone, nom:v.nom||'', prenom:v.prenom||'', phone, email:v.email||'', solde:v.solde||0, commission:v.commission||0, recompense:v.recompense||0, data:v});
@@ -175,110 +169,81 @@ function renderUsers(list){
   const tb=document.getElementById('tbodyUsers'); tb.innerHTML='';
   list.slice(0,500).forEach(u=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td><b>${u.nom}</b></td><td>${u.prenom}</td><td><b style="color:#ffeb3b">${u.phone}</b></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;font-size:10px">${u.email}</td><td><input id="solde-${u.key}" type="number" value="${u.solde}" style="width:75px;background:#000;color:#0f0;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="com-${u.key}" type="number" value="${u.commission}" style="width:75px;background:#000;color:#ffeb3b;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="ep-${u.key}" type="number" value="${u.recompense}" style="width:75px;background:#000;color:#f0f;border:1px solid #333;border-radius:4px;padding:3px"></td><td><button class="btn-sm btn-save" onclick="saveUser('${u.key}')">💾</button></td>`;
+    tr.innerHTML=`<td><b>${u.nom}</b></td><td>${u.prenom}</td><td><b style="color:#ffeb3b">${u.phone}</b></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;font-size:10px">${u.email}</td><td><input id="solde-${u.key}" type="number" value="${u.solde}" style="width:70px;background:#000;color:#0f0;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="com-${u.key}" type="number" value="${u.commission}" style="width:70px;background:#000;color:#ffeb3b;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="ep-${u.key}" type="number" value="${u.recompense}" style="width:70px;background:#000;color:#f0f;border:1px solid #333;border-radius:4px;padding:3px"></td><td><button class="btn-sm btn-save" onclick="saveUser('${u.key}')">💾</button></td>`;
     tb.appendChild(tr);
   });
 }
 function filterUsers(){ const q=document.getElementById('searchUser').value.toLowerCase(); renderUsers(allUsers.filter(u=> (u.nom||'').toLowerCase().includes(q) || (u.prenom||'').toLowerCase().includes(q) || u.phone.includes(q) || (u.email||'').toLowerCase().includes(q))); }
 function saveUser(phone){ const s=Number(document.getElementById('solde-'+phone).value); const c=Number(document.getElementById('com-'+phone).value); const e=Number(document.getElementById('ep-'+phone).value); db.ref('clients/'+phone).update({solde:s, commission:c, recompense:e}).then(()=> alert('✅ '+phone+' sauvegardé')); }
 
-// COMMANDES - AUTO DETECTION
-async function loadAllCounts(force){
-  document.getElementById('debugRoot').innerText='🔍 Scan Firebase root...';
-  // 1. Lister toutes les clés root
-  const rootSnap = await db.ref('/').once('value');
-  const rootVal = rootSnap.val()||{};
-  rootKeys = Object.keys(rootVal);
-  document.getElementById('debugRoot').innerHTML='📂 Nœuds trouvés: <b>'+rootKeys.join(', ')+'</b><br>Recherche des commandes en cours...';
-
-  allCmd=[];
-  countsMap={};
-  let total=0;
-
-  for(const svc of SERVICES_DEF){
-    let count=0;
-    let foundPaths=[];
-    for(const path of svc.possible){
-      if(!(path in rootVal)) continue;
-      foundPaths.push(path);
-      try{
-        const snap=await db.ref(path).once('value');
-        snap.forEach(ch=>{
-          const v=ch.val();
-          const statut=((v.statut||v.status||'en cours')+'').toLowerCase();
-          const isEnCours = statut.includes('en cours')||statut.includes('encours')||statut.includes('attente')||statut.includes('pending')||statut.includes('en_attente')||statut==='0'||statut===''||statut==='en-cours';
-          if(!isEnCours) return;
-          if(svc.filter && !svc.filter(v)) return;
-          count++;
-          allCmd.push({id:ch.key, path, service:svc.key, label:svc.label, client:v.client_id||v.phone||v.user||'', montant:v.montant||v.total||v.prix||0, statut, date:v.date||v.created_at||'', data:v});
-        });
-      }catch(e){}
-    }
-    countsMap[svc.key]={count, paths:foundPaths};
-    total+=count;
+async function loadAllCounts(){
+  const container=document.getElementById('cmdButtons'); container.innerHTML='Scan...';
+  allCmd=[]; let total=0;
+  const counts={};
+  for(const svc of SERVICES){
+    try{
+      const snap=await db.ref(svc.path).once('value');
+      let countEnCours=0;
+      snap.forEach(ch=>{
+        const v=ch.val();
+        const statut=((v.statut||v.status||'')+'').toLowerCase();
+        // Compte comme en cours si pas validé/rejeté/annulé
+        const isValide = statut.includes('valid')||statut.includes('succes')||statut.includes('payé')||statut.includes('paye');
+        const isRejete = statut.includes('rejet')||statut.includes('annul')||statut.includes('echec');
+        const isEnCours = !isValide && !isRejete; // tout ce qui n'est pas validé ou rejeté est en cours
+        if(isEnCours){
+          countEnCours++;
+          allCmd.push({id:ch.key, path:svc.path, service:svc.key, label:svc.label, client:v.client_id||v.phone||v.user||'', montant:v.montant||v.total||v.prix||v.amount||0, statut: statut||'en cours', date:v.date||v.created_at||'', data:v});
+        }
+      });
+      counts[svc.key]=countEnCours;
+      total+=countEnCours;
+    }catch(e){ counts[svc.key]=0; }
   }
-
-  // Si aucun trouvé, essaie aussi de scanner toutes les clés contenant 'commande', 'depot', 'retrait', etc.
-  if(total===0){
-    for(const key of rootKeys){
-      const low=key.toLowerCase();
-      if(low.includes('commande')||low.includes('depot')||low.includes('retrait')||low.includes('transfert')||low.includes('forfait')||low.includes('facture')||low.includes('epargne')||low.includes('1xbet')){
-        try{
-          const snap=await db.ref(key).once('value');
-          let c=0;
-          snap.forEach(ch=>{
-            const v=ch.val();
-            const st=((v.statut||v.status||'')+'').toLowerCase();
-            if(st.includes('en cours')||st.includes('attente')||st==='') c++;
-          });
-          if(c>0){
-            document.getElementById('debugRoot').innerHTML+='<br>⚠️ Trouvé '+c+' en cours dans <b>'+key+'</b> (non listé)';
-            // ajoute aux résultats
-            const snap2=await db.ref(key).once('value');
-            snap2.forEach(ch=>{
-              const v=ch.val(); const st=((v.statut||v.status||'en cours')+'').toLowerCase();
-              if(st.includes('en cours')||st.includes('attente')||st==='') allCmd.push({id:ch.key, path:key, service:'custom', label:key.toUpperCase(), client:v.client_id||v.phone||'', montant:v.montant||0, statut:st, date:v.date||'', data:v});
-            });
-          }
-        }catch(e){}
-      }
-    }
-  }
-
-  document.getElementById('bubble-all').innerText=allCmd.length;
-  document.getElementById('bubble-all').className='bubble '+(allCmd.length>0?'has':'');
-
-  const container=document.getElementById('cmdButtons'); container.innerHTML='';
-  SERVICES_DEF.forEach(svc=>{
-    const info=countsMap[svc.key]||{count:0, paths:[]};
+  document.getElementById('bubble-all').innerText=total;
+  document.getElementById('bubble-all').className='bubble '+(total>0?'has':'');
+  container.innerHTML='';
+  SERVICES.forEach(svc=>{
+    const c=counts[svc.key]||0;
     const btn=document.createElement('button');
     btn.className='tab';
-    btn.style.borderColor = info.count>0 ? '#ff5000' : '#444';
-    btn.innerHTML=`${svc.label} <span class="bubble ${info.count>0?'has':''}">[${info.count}]</span><br><small style="font-size:7px;color:#aaa">${info.paths.join(',')||'aucun'}</small>`;
+    btn.style.borderColor = c>0 ? '#ff5000' : '#444';
+    btn.innerHTML=`${svc.label} <span class="bubble ${c>0?'has':''}">[${c}]</span><br><small style="font-size:7px;color:#aaa">${svc.path}</small>`;
     btn.onclick=()=> loadService(svc.key);
     container.appendChild(btn);
   });
-
-  if(allCmd.length===0){
-    document.getElementById('tbodyCmd').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px">Aucune commande en cours trouvée.<br>Vérifie que tes commandes ont bien statut = "en cours"<br><br>Nœuds scannés: '+rootKeys.join(', ')+'</td></tr>';
-  }
+  // Affiche tout par défaut
+  renderCmd(allCmd);
 }
 
 function loadService(key){
-  currentCmdService=key;
+  currentService=key;
   const list = allCmd.filter(c=> c.service===key);
+  renderCmd(list);
+}
+function renderCmd(list){
   const tb=document.getElementById('tbodyCmd'); tb.innerHTML='';
-  if(list.length===0){ tb.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune commande en cours pour '+key.toUpperCase()+'</td></tr>'; return; }
+  if(list.length===0){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:15px">Aucune commande en cours pour ce service</td></tr>'; return; }
   list.forEach(item=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td><b style="color:#ffeb3b">${item.label}</b><br><small>${item.path}</small></td><td><b>${item.client}</b></td><td><b style="color:#0f0">${item.montant} F</b></td><td><span class="badge wait">${item.statut}</span></td><td><small>${(item.date||'').toString().slice(0,16)}</small></td><td><button class="btn-sm btn-val" onclick="actionCmd('${item.path}','${item.id}','validé')">✅</button><button class="btn-sm btn-ann" onclick="actionCmd('${item.path}','${item.id}','annulé')">❌</button><button class="btn-sm btn-save" onclick="openCmd('${item.path}','${item.id}')">👁️</button></td>`;
+    tr.innerHTML=`<td><b style="color:#ffeb3b">${item.label}</b></td><td><b>${item.client}</b></td><td><b style="color:#0f0">${item.montant} F</b></td><td><span class="badge wait">${item.statut}</span></td><td><small>${(item.date||'').toString().slice(0,16)}</small></td><td><button class="btn-sm btn-val" onclick="actionCmd('${item.path}','${item.id}','validé')">✅ Valider</button><button class="btn-sm btn-ann" onclick="actionCmd('${item.path}','${item.id}','annulé')">❌ Annuler</button></td>`;
     tb.appendChild(tr);
   });
 }
-function filterCmd(){ const q=document.getElementById('searchCmd').value.toLowerCase(); const list = allCmd.filter(c=> currentCmdService ? c.service===currentCmdService : true).filter(i=> (i.client||'').toLowerCase().includes(q) || (i.montant||'').toString().includes(q)); const tb=document.getElementById('tbodyCmd'); tb.innerHTML=''; list.forEach(item=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${item.label}</td><td>${item.client}</td><td>${item.montant}</td><td>${item.statut}</td><td>${item.date}</td><td><button class="btn-sm btn-val" onclick="actionCmd('${item.path}','${item.id}','validé')">✅</button><button class="btn-sm btn-ann" onclick="actionCmd('${item.path}','${item.id}','annulé')">❌</button></td>`; tb.appendChild(tr); }); }
-function openCmd(path,id){ const item=allCmd.find(x=>x.path===path && x.id===id); if(!item) return; document.getElementById('mTitle').innerText=item.label+' - '+id; document.getElementById('mContent').innerHTML=`<div class="row"><span>Path</span><b>${path}</b></div><div class="row"><span>Client</span><b>${item.client}</b></div><div class="row"><span>Montant</span><b>${item.montant}</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div><pre style="background:#000;padding:8px;border-radius:6px;max-height:200px;overflow:auto;font-size:10px">${JSON.stringify(item.data,null,2).slice(0,2000)}</pre>`; document.getElementById('mActions').innerHTML=`<button class="btn-sm btn-val" style="padding:10px" onclick="actionCmd('${path}','${id}','validé'); closeModal()">✅ VALIDER</button><button class="btn-sm btn-ann" style="padding:10px" onclick="actionCmd('${path}','${id}','annulé'); closeModal()">❌ ANNULER</button>`; document.getElementById('modal').style.display='flex'; }
+function filterCmd(){ const q=document.getElementById('searchCmd').value.toLowerCase(); renderCmd(allCmd.filter(i=> (i.client||'').toLowerCase().includes(q) || (i.montant||'').toString().includes(q) || i.label.toLowerCase().includes(q))); }
+function actionCmd(path,id,newStatut){
+  if(!confirm(newStatut.toUpperCase()+' '+id+' ?')) return;
+  db.ref(path+'/'+id+'/statut').set(newStatut).then(()=>{
+    db.ref(path+'/'+id+'/status').set(newStatut);
+    db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString());
+    db.ref(path+'/'+id+'/updated_by').set('admin_'+curPhone);
+    const item=allCmd.find(x=>x.path===path && x.id===id);
+    const phone=item?.client;
+    if(phone){ db.ref('notifications/'+phone).push({titre:newStatut==='validé'?'✅ Validé':'❌ Annulé', message:`Ta commande ${item.label} ${item.montant}F est ${newStatut}`, date:new Date().toLocaleString('fr-FR')}); }
+    alert('✅ '+newStatut); loadAllCounts();
+  });
+}
 function closeModal(){ document.getElementById('modal').style.display='none'; }
-function actionCmd(path,id,newStatut){ if(!confirm(newStatut.toUpperCase()+' '+id+' ?')) return; db.ref(path+'/'+id+'/statut').set(newStatut).then(()=>{ db.ref(path+'/'+id+'/status').set(newStatut); db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString()); const item=allCmd.find(x=>x.path===path && x.id===id); const phone=item?.client; if(phone){ db.ref('notifications/'+phone).push({titre:newStatut==='validé'?'✅ Validé':'❌ Annulé', message:`Ta commande ${item.label} ${item.montant}F est ${newStatut}`, date:new Date().toLocaleString('fr-FR')}); } alert('✅ '+newStatut); loadAllCounts(true); if(currentCmdService) setTimeout(()=>loadService(currentCmdService),500); }); }
 
 loadUsers();
 loadAllCounts();
