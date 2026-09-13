@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NETTOYEUR FIREBASE - MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+body{background:#0a0a0a;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0;padding:4px}
+.app{max-width:1000px;width:100%;min-height:100vh;background:#1e1e1e;border:6px solid #ff5000;border-radius:12px}
+.top{padding:12px;background:#000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:3px solid #ff5000}
+.btn{padding:8px 14px;border-radius:20px;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;border:1px solid #fff}
+.btn-home{background:#fff;color:#000}
+.btn-orange{background:#ff5000;color:#fff}
+.btn-green{background:#28a745;color:#fff}
+.btn-red{background:#dc3545;color:#fff}
+.section{padding:10px}
+.h2{color:#ffeb3b;font-size:12px;font-weight:900;margin:10px 0;border-left:4px solid #ff5000;padding-left:8px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 10px}
+.sbox{background:#000;border:1px solid #333;border-radius:8px;padding:10px;text-align:center}
+.sval{font-weight:900;font-size:16px}
+.slab{font-size:8px;color:#aaa}
+.wrap{background:#0f0f0f;border-radius:8px;overflow:auto;max-height:70vh;border:1px solid #333;margin:0 10px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{border:1px solid #333;padding:6px;text-align:left}
+th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:10px}
+tr:hover{background:#2a2a2a}
+.badge{padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900}
+.ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
+.check{width:16px;height:16px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top">
+  <div><b style="color:#ffeb3b">🧹 NETTOYEUR FIREBASE MAYNE</b><br><small id="adminPhone" style="color:#0f0;font-size:10px"></small><br><small style="color:#aaa;font-size:9px">Supprime les commandes déjà validées/annulées</small></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <a href="admin.html" class="btn btn-home">← ADMIN</a>
+    <a href="index.html" class="btn btn-home" style="background:#333;color:#fff">🏠 ACCUEIL</a>
+  </div>
+</div>
+
+<div class="section">
+  <div class="h2">1/ SCAN - Commandes déjà traitées (validé / annulé / rejeté)</div>
+  <div class="stats">
+    <div class="sbox"><div class="sval" id="totalValide" style="color:#28a745">0</div><div class="slab">VALIDÉES</div></div>
+    <div class="sbox"><div class="sval" id="totalAnnule" style="color:#dc3545">0</div><div class="slab">ANNULÉES/REJETÉES</div></div>
+    <div class="sbox"><div class="sval" id="totalAll" style="color:#fff">0</div><div class="slab">TOTAL À NETTOYER</div></div>
+  </div>
+
+  <div style="display:flex;gap:6px;margin:8px 10px;flex-wrap:wrap">
+    <button class="btn btn-orange" onclick="scan()">🔍 SCANNER TOUT</button>
+    <button class="btn btn-green" onclick="exportCSV()">📥 EXPORTER CSV AVANT SUPPRESSION</button>
+    <button class="btn btn-red" onclick="deleteSelected()">🗑️ SUPPRIMER SÉLECTION</button>
+    <button class="btn btn-red" style="background:#000;color:#f00;border:1px solid #f00" onclick="deleteAllValide()">⚠️ SUPPRIMER TOUT VALIDÉ/ANNULÉ</button>
+  </div>
+
+  <div style="margin:8px 10px;display:flex;gap:6px;align-items:center">
+    <input type="checkbox" id="checkAll" onchange="toggleAll(this.checked)"><label for="checkAll" style="font-size:11px">Tout cocher</label>
+    <span style="font-size:10px;color:#aaa;margin-left:10px">Coche les commandes que tu veux supprimer manuellement</span>
+  </div>
+
+  <div class="wrap">
+    <table>
+      <thead><tr><th>☑️</th><th>Service / Path</th><th>Client</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
+      <tbody id="tbody"><tr><td colspan="6" style="text-align:center;padding:20px">Clique sur SCANNER TOUT</td></tr></tbody>
+    </table>
+  </div>
+
+  <div style="margin:12px 10px;background:#000;border:1px solid #333;padding:10px;border-radius:8px;font-size:10px;color:#aaa">
+    <b style="color:#ff5000">⚠️ Sécurité :</b><br>
+    1. Clique SCANNER TOUT pour voir tout ce qui est déjà validé/annulé<br>
+    2. Clique EXPORTER CSV pour sauvegarder avant de supprimer (très important)<br>
+    3. Coche seulement ce que tu veux supprimer, puis SUPPRIMER SÉLECTION<br>
+    4. Les commandes EN COURS ne sont JAMAIS affichées ici, seulement validé/annulé<br>
+  </div>
+</div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.database();
+const ADMIN_LIST=["0158612131","2290158612131","158612131"];
+function getPhone(){ try{ let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; p=JSON.parse(localStorage.getItem('mayne_'+'current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
+function isAdmin(p){ if(!p) return false; const c=p.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8))); }
+const curPhone=getPhone();
+if(!isAdmin(curPhone)){ document.body.innerHTML='<div style="padding:40px;text-align:center;color:#fff">⛔ Admin 0158612131 seulement<br>'+ (curPhone||'non')+'</div>'; throw 'not admin'; }
+document.getElementById('adminPhone').innerText='Admin: '+curPhone+' ✅';
+
+const PATHS = ['commandes_depots','commandes_retraits','commandes_1xbet','commandes_forfaits','commandes_factures','commandes_transferts','commandes_echanges','epargne','commandes_p2p_p2m','commandes_marketplace'];
+let toClean=[];
+
+async function scan(){
+  const tb=document.getElementById('tbody'); tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px">Scan en cours...</td></tr>';
+  toClean=[]; let valide=0, annule=0;
+  for(const path of PATHS){
+    try{
+      const snap=await db.ref(path).once('value');
+      snap.forEach(ch=>{
+        const v=ch.val();
+        const statut=((v.statut||v.status||'')+'').toLowerCase();
+        const isValide = statut.includes('valid')||statut.includes('succes')||statut.includes('paye')||statut.includes('livre');
+        const isAnnule = statut.includes('annul')||statut.includes('rejet')||statut.includes('echec');
+        if(isValide||isAnnule){
+          toClean.push({id:ch.key, path, client:v.client_id||v.phone||'', montant:v.montant||v.total||0, statut, date:v.date||v.created_at||'', data:v});
+          if(isValide) valide++; else annule++;
+        }
+      });
+    }catch(e){}
+  }
+  document.getElementById('totalValide').innerText=valide;
+  document.getElementById('totalAnnule').innerText=annule;
+  document.getElementById('totalAll').innerText=toClean.length;
+  tb.innerHTML='';
+  if(toClean.length===0){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px">✅ Aucune commande validée/annulée à nettoyer. Tout est propre !</td></tr>'; return; }
+  toClean.sort((a,b)=> (b.date||'').toString().localeCompare((a.date||'').toString()));
+  toClean.forEach((item,idx)=>{
+    const tr=document.createElement('tr');
+    const badge = item.statut.includes('valid') ? 'ok' : 'no';
+    tr.innerHTML=`<td><input type="checkbox" class="check" data-idx="${idx}" checked></td><td><b style="color:#ffeb3b">${item.path}</b></td><td>${item.client}</td><td>${item.montant} F</td><td><span class="badge ${badge}">${item.statut}</span></td><td><small>${(item.date||'').toString().slice(0,16)}</small></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function toggleAll(checked){
+  document.querySelectorAll('.check').forEach(c=> c.checked=checked);
+}
+
+function exportCSV(){
+  if(toClean.length===0){ alert('Scanne d abord'); return; }
+  let csv='path,id,client,montant,statut,date,json\n';
+  toClean.forEach(i=>{
+    const json = JSON.stringify(i.data).replace(/"/g,'""');
+    csv+=`"${i.path}","${i.id}","${i.client}","${i.montant}","${i.statut}","${i.date}","${json}"\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='mayne_backup_commandes_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  alert('✅ CSV exporté : '+toClean.length+' lignes sauvegardées. Garde ce fichier !');
+}
+
+async function deleteSelected(){
+  const checks=document.querySelectorAll('.check:checked');
+  if(checks.length===0){ alert('Coche au moins une commande'); return; }
+  if(!confirm('⚠️ SUPPRIMER '+checks.length+' commandes validées/annulées ?\nCette action est irréversible !\nAs-tu exporté en CSV ?')) return;
+  if(!confirm('Confirme 2e fois : supprimer définitivement '+checks.length+' commandes ?')) return;
+  let deleted=0;
+  for(const chk of checks){
+    const idx=Number(chk.dataset.idx);
+    const item=toClean[idx];
+    if(!item) continue;
+    try{
+      await db.ref(item.path+'/'+item.id).remove();
+      deleted++;
+    }catch(e){ console.log('Erreur suppression',item,e); }
+  }
+  alert('🗑️ '+deleted+' commandes supprimées');
+  scan();
+}
+
+async function deleteAllValide(){
+  if(toClean.length===0){ alert('Scanne d abord'); return; }
+  if(!confirm('⚠️⚠️⚠️ DANGER : SUPPRIMER TOUTES les '+toClean.length+' commandes validées/annulées de TOUT ton Firebase ?\nCeci va nettoyer tous les historiques !')) return;
+  if(!confirm('Dernière confirmation : Tu vas supprimer '+toClean.length+' commandes. Export CSV fait ? Tape OK pour continuer.')) return;
+  let deleted=0;
+  for(const item of toClean){
+    try{ await db.ref(item.path+'/'+item.id).remove(); deleted++; }catch(e){}
+  }
+  alert('✅ Nettoyage terminé : '+deleted+' commandes supprimées');
+  scan();
+}
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});</script></body>
+</html>
