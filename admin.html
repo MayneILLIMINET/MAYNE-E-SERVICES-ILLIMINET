@@ -1,11 +1,32 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ADMIN FINAL - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 body{background:#0a0a0a;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0;padding:4px}
 .app{max-width:1000px;width:100%;min-height:100vh;background:#1e1e1e;border:6px solid #ff5000;border-radius:12px;overflow:hidden}
@@ -22,19 +43,20 @@ body{background:#0a0a0a;color:#fff;font-family:system-ui;display:flex;justify-co
 .bubble{background:#000;color:#ffeb3b;padding:1px 6px;border-radius:10px;margin-left:5px;font-size:10px;border:1px solid #ff5000}
 .bubble.has{background:#ff5000;color:#fff;animation:pulse 1s infinite}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
-.wrap{background:#0f0f0f;border-radius:8px;overflow:auto;max-height:70vh;border:1px solid #333;margin:0 10px}
+.wrap{background:#0f0f0f;border-radius:8px;overflow:auto;max-height:65vh;border:1px solid #333;margin:0 10px}
 table{width:100%;border-collapse:collapse;font-size:11px}
 th,td{border:1px solid #333;padding:6px;text-align:left}
 th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:10px}
 tr:hover{background:#2a2a2a}
+.badge{padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900}
+.ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
 .btn-sm{border:none;padding:5px 8px;border-radius:4px;font-weight:800;cursor:pointer;font-size:10px;margin:1px}
+.btn-val{background:#28a745;color:#fff}
+.btn-ann{background:#dc3545;color:#fff}
 .btn-save{background:#0d6efd;color:#fff}
-.btn-edit{background:#ff9800;color:#000}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
-#mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:520px;width:100%;padding:14px;max-height:92vh;overflow:auto}
-.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #333;font-size:12px;gap:8px;flex-wrap:wrap}
-.row label{font-size:10px;color:#aaa;width:80px}
-.row input{flex:1;background:#000;color:#fff;border:1px solid #555;border-radius:6px;padding:7px;font-size:12px;min-width:120px}
+#mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:500px;width:100%;padding:14px;max-height:90vh;overflow:auto}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 10px}
 .sbox{background:#000;border:1px solid #333;border-radius:8px;padding:8px;text-align:center}
 .sval{font-weight:900;font-size:14px;color:#0f0}
@@ -50,65 +72,184 @@ tr:hover{background:#2a2a2a}
     <button class="btn btn-orange" onclick="loadAllCounts()">🔄 RELOAD</button>
   </div>
 </div>
+
 <div class="tabs">
   <button class="tab active" id="tab-users" onclick="switchMain('users')">👥 TOUS LES USERS</button>
   <button class="tab" id="tab-cmd" onclick="switchMain('cmd')">📦 COMMANDES <span class="bubble" id="bubble-all">0</span></button>
 </div>
+
 <div id="sec-users" class="section">
-  <div class="h2">1/ TOUS LES USERS</div>
-  <input id="searchUser" class="input" placeholder="🔍 Rechercher..." oninput="filterUsers()">
+  <div class="h2">1/ TOUS LES USERS (Nom, Prénom, Solde éditable, Commission éditable, Epargne éditable, Numéro, Email)</div>
+  <input id="searchUser" class="input" placeholder="🔍 Rechercher nom, prénom, numéro, email..." oninput="filterUsers()">
   <div class="stats">
     <div class="sbox"><div class="sval" id="uCount">0</div><div class="slab">USERS</div></div>
     <div class="sbox"><div class="sval" id="uSolde" style="color:#0f0">0</div><div class="slab">SOLDE</div></div>
-    <div class="sbox"><div class="sval" id="uCom" style="color:#ffeb3b">0</div><div class="slab">COM</div></div>
+    <div class="sbox"><div class="sval" id="uCom" style="color:#ffeb3b">0</div><div class="slab">COMMISSION</div></div>
     <div class="sbox"><div class="sval" id="uEp" style="color:#f0f">0</div><div class="slab">EPARGNE</div></div>
   </div>
-  <div class="wrap"><table><thead><tr><th>Nom</th><th>Prénom</th><th>Numéro</th><th>Email</th><th>Solde</th><th>Com</th><th>Epargne</th><th>💾</th></tr></thead><tbody id="tbodyUsers"></tbody></table></div>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Nom</th><th>Prénom</th><th>Numéro</th><th>Email</th><th>Solde</th><th>Com</th><th>Epargne</th><th>💾</th></tr></thead>
+      <tbody id="tbodyUsers"><tr><td colspan="8" style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
+    </table>
+  </div>
 </div>
+
 <div id="sec-cmd" class="section" style="display:none">
-  <div class="h2">2/ COMMANDES - 5 dernières (plus récente en haut)</div>
+  <div class="h2">2/ COMMANDES EN COURS - Tes vrais services Firebase</div>
   <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 10px" id="cmdButtons"></div>
-  <input id="searchCmd" class="input" placeholder="🔍 Rechercher..." oninput="filterCmd()" style="margin:8px 10px;width:calc(100% - 20px)">
-  <div class="wrap"><table><thead><tr><th>Service</th><th>Client</th><th>Montant</th><th>Statut (éditable)</th><th>Date</th><th>Actions</th></tr></thead><tbody id="tbodyCmd"><tr><td colspan="6" style="text-align:center;padding:20px">Clique un service</td></tr></tbody></table></div>
+  <input id="searchCmd" class="input" placeholder="🔍 Rechercher client, montant..." oninput="filterCmd()" style="margin:8px 10px;width:calc(100% - 20px)">
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Service</th><th>Client / Phone</th><th>Montant</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody id="tbodyCmd"><tr><td colspan="6" style="text-align:center;padding:20px">Clique sur un service ci-dessus</td></tr></tbody>
+    </table>
+  </div>
 </div>
 </div>
-<div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000">Détail</h3><div id="mContent"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn-sm" style="padding:12px;background:#28a745;color:#fff" onclick="saveModalChanges()">💾 SAUVEGARDER</button><button class="btn-sm" style="padding:12px;background:#dc3545;color:#fff" onclick="deleteCurrentCmd()">🗑️ SUPPRIMER</button></div><button class="btn" style="width:100%;margin-top:8px;background:#333;color:#fff" onclick="closeModal()">Fermer</button></div></div>
+
+<div id="modal" onclick="if(event.target==this) closeModal()">
+  <div id="mBox">
+    <h3 id="mTitle" style="color:#ff5000;margin:0 0 8px 0">Détail</h3>
+    <div id="mContent"></div>
+    <div id="mActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"></div>
+    <button class="btn" style="width:100%;margin-top:8px;background:#333;color:#fff" onclick="closeModal()">Fermer</button>
+  </div>
+</div>
+
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
-if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);var db=firebase.database();
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.database();
 const ADMIN_LIST=["0158612131","2290158612131","158612131"];
-function getPhone(){try{let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone;if(p)return p;p=JSON.parse(localStorage.getItem('mayne_'+'current_user')||'{}')?.phone;if(p)return p;}catch(e){}return null;}
-function isAdmin(p){if(!p)return false;const c=p.replace(/\D/g,'');return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8)));}
-const curPhone=getPhone();if(!isAdmin(curPhone)){document.body.innerHTML='⛔ Admin 0158612131 seulement';throw 'not admin';}document.getElementById('adminPhone').innerText='Admin: '+curPhone+' ✅';
-const SERVICES=[
-  {key:'depots',label:'Dépôts',possible:['commandes_depots','depots']},
-  {key:'retraits',label:'Retrait',possible:['commandes_retraits','retraits']},
-  {key:'epargne',label:'Épargne',possible:['epargne','commandes_epargne','commandes_epargnes']},
-  {key:'1xbet',label:'1XBET',possible:['commandes_1xbet']},
-  {key:'forfaits',label:'FORFAIT',possible:['commandes_forfaits']},
-  {key:'factures',label:'Facture',possible:['commandes_factures']},
-  {key:'transferts',label:'Transfert',possible:['commandes_transferts','commandes_echanges']},
-  {key:'echanges',label:'Echanges',possible:['commandes_echanges']}
+function getPhone(){ try{ let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; p=JSON.parse(localStorage.getItem('mayne_'+'current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
+function isAdmin(p){ if(!p) return false; const c=p.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8))); }
+const curPhone=getPhone();
+if(!isAdmin(curPhone)){ document.body.innerHTML='<div style="padding:40px;text-align:center;color:#fff">⛔ Admin 0158612131 seulement<br>'+ (curPhone||'non connecté')+'<br><a href="index.html" style="color:#ff5000">Retour</a></div>'; throw 'not admin'; }
+document.getElementById('adminPhone').innerText='Admin: '+curPhone+' ✅';
+
+// TES VRAIS NOMS FIREBASE D'APRES TA CAPTURE
+const SERVICES = [
+  {key:'depots', label:'Dépôts', path:'commandes_depots'},
+  {key:'retraits', label:'Retrait', path:'commandes_retraits'},
+  {key:'epargne', label:'Épargne', path:'epargne'},
+  {key:'1xbet', label:'1XBET', path:'commandes_1xbet'},
+  {key:'forfaits', label:'FORFAIT', path:'commandes_forfaits'},
+  {key:'factures', label:'Facture', path:'commandes_factures'},
+  {key:'transferts', label:'Transfert', path:'commandes_transferts'},
+  {key:'echanges', label:'Echanges', path:'commandes_echanges'}
 ];
-let allUsers=[],currentService=null,currentModalItem=null;
-function switchMain(tab){document.getElementById('sec-users').style.display=tab==='users'?'block':'none';document.getElementById('sec-cmd').style.display=tab==='cmd'?'block':'none';document.getElementById('tab-users').classList.toggle('active',tab==='users');document.getElementById('tab-cmd').classList.toggle('active',tab==='cmd');if(tab==='cmd')loadAllCounts();}
-function loadUsers(){db.ref('clients').on('value',snap=>{allUsers=[];let totS=0,totC=0,totE=0;snap.forEach(ch=>{const v=ch.val();const phone=ch.key;allUsers.push({key:phone,nom:v.nom||'',prenom:v.prenom||'',phone,email:v.email||'',solde:v.solde||0,commission:v.commission||0,recompense:v.recompense||0});totS+=(v.solde||0);totC+=(v.commission||0);totE+=(v.recompense||0);});document.getElementById('uCount').innerText=allUsers.length;document.getElementById('uSolde').innerText=totS.toLocaleString()+' F';document.getElementById('uCom').innerText=totC.toLocaleString()+' F';document.getElementById('uEp').innerText=totE.toLocaleString()+' F';renderUsers(allUsers);});}
-function renderUsers(list){const tb=document.getElementById('tbodyUsers');tb.innerHTML='';list.slice(0,500).forEach(u=>{const tr=document.createElement('tr');tr.innerHTML=`<td><b>${u.nom}</b></td><td>${u.prenom}</td><td><b style="color:#ffeb3b">${u.phone}</b></td><td style="max-width:120px;overflow:hidden;font-size:10px">${u.email}</td><td><input id="solde-${u.key}" type="number" value="${u.solde}" style="width:70px;background:#000;color:#0f0;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="com-${u.key}" type="number" value="${u.commission}" style="width:70px;background:#000;color:#ffeb3b;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="ep-${u.key}" type="number" value="${u.recompense}" style="width:70px;background:#000;color:#f0f;border:1px solid #333;border-radius:4px;padding:3px"></td><td><button class="btn-sm btn-save" onclick="saveUser('${u.key}')">💾</button></td>`;tb.appendChild(tr);});}
-function filterUsers(){const q=document.getElementById('searchUser').value.toLowerCase();renderUsers(allUsers.filter(u=>(u.nom||'').toLowerCase().includes(q)||(u.prenom||'').toLowerCase().includes(q)||u.phone.includes(q)||(u.email||'').toLowerCase().includes(q)));}
-function saveUser(phone){const s=Number(document.getElementById('solde-'+phone).value);const c=Number(document.getElementById('com-'+phone).value);const e=Number(document.getElementById('ep-'+phone).value);db.ref('clients/'+phone).update({solde:s,commission:c,recompense:e}).then(()=>alert('✅ '+phone));}
-async function loadAllCounts(){const container=document.getElementById('cmdButtons');container.innerHTML='Scan...';let total=0;const counts={};for(const svc of SERVICES){let cnt=0;for(const path of svc.possible){try{const snap=await db.ref(path).once('value');if(!snap.exists())continue;snap.forEach(ch=>{const v=ch.val();const st=((v.statut||v.status||'')+'').toLowerCase();const isVal=st.includes('valid')||st.includes('succes');const isRej=st.includes('rejet')||st.includes('annul');if(!isVal&&!isRej)cnt++;});svc.foundPath=path;break;}catch(e){}}counts[svc.key]=cnt;total+=cnt;}document.getElementById('bubble-all').innerText=total;container.innerHTML='';SERVICES.forEach(svc=>{const c=counts[svc.key]||0;const btn=document.createElement('button');btn.className='tab';btn.style.borderColor=c>0?'#ff5000':'#444';const found=svc.foundPath?`<small style="font-size:7px;color:#0f0">${svc.foundPath}</small>`:`<small style="font-size:7px;color:#f00">non trouvé</small>`;btn.innerHTML=`${svc.label} <span class="bubble ${c>0?'has':''}">[${c}]</span><br>${found}`;btn.onclick=()=>loadService(svc.key);container.appendChild(btn);});}
-async function loadService(key){currentService=key;const svc=SERVICES.find(s=>s.key===key);const tb=document.getElementById('tbodyCmd');tb.innerHTML='<tr><td colspan="6" style="text-align:center">Chargement 5 dernières '+svc.label+'...</td></tr>';let all=[];for(const path of svc.possible){try{const snap=await db.ref(path).limitToLast(20).once('value');snap.forEach(ch=>{const v=ch.val();all.push({id:ch.key,path,label:svc.label,client:v.client_id||v.phone||'',montant:v.montant||v.total||0,statut:v.statut||v.status||'en cours',date:v.date||v.created_at||'',data:v});});}catch(e){}}all.sort((a,[STRIPPED] da=(a.date||'').toString();const db2=(b.date||'').toString();if(da&&db2)return db2.localeCompare(da);return b.id.localeCompare(a.id);});const last5=all.slice(0,5);renderCmd(last5);}
-function renderCmd(list){const tb=document.getElementById('tbodyCmd');tb.innerHTML='';if(list.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune</td></tr>';return;}list.forEach(item=>{const safe=item.id.replace(/[^a-zA-Z0-9]/g,'_');const tr=document.createElement('tr');tr.innerHTML=`<td onclick="openDetail('${item.path}','${item.id}')"><b style="color:#ffeb3b">${item.label}</b></td><td onclick="openDetail('${item.path}','${item.id}')"><b>${item.client}</b></td><td><b style="color:#0f0">${item.montant} F</b></td><td><input id="statut-${safe}" type="text" value="${item.statut}" style="width:100px;background:#000;color:#ffeb3b;border:1px solid #555;border-radius:4px;padding:4px;font-size:10px"><button class="btn-sm btn-save" onclick="saveStatut('${item.path}','${item.id}','${safe}')">💾</button></td><td><small>${(item.date||'').toString().slice(0,16)}</small></td><td><button class="btn-sm btn-edit" onclick="openDetail('${item.path}','${item.id}')">👁️ Modifier tout</button></td>`;tb.appendChild(tr);});}
-function filterCmd(){const q=document.getElementById('searchCmd').value.toLowerCase();document.querySelectorAll('#tbodyCmd tr').forEach(r=>r.style.display=r.innerText.toLowerCase().includes(q)?'':'none');}
-function saveStatut(path,id,safe){const ns=document.getElementById('statut-'+safe).value;if(!ns)return;db.ref(path+'/'+id+'/statut').set(ns).then(()=>{db.ref(path+'/'+id+'/status').set(ns);db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString());alert('✅ Statut: '+ns);});}
-function openDetail(path,id){db.ref(path+'/'+id).once('value').then(snap=>{const v=snap.val();if(!v)return;currentModalItem={path,id,data:[STRIPPED]'mTitle').innerText=path+' - '+id;let html='';html+=`<div class="row"><label>Client</label><input id="edit-client" value="${v.client_id||v.phone||''}"></div>`;html+=`<div class="row"><label>Montant</label><input id="edit-montant" type="number" value="${v.montant||v.total||0}"></div>`;html+=`<div class="row"><label>Statut</label><input id="edit-statut" value="${v.statut||v.status||''}" placeholder="validé, rejeté..."></div>`;html+=`<div class="row"><label>Date</label><input id="edit-date" value="${v.date||''}"></div>`;html+=`<div class="row"><label>Type</label><input id="edit-type" value="${v.type||''}"></div>`;document.getElementById('mContent').innerHTML=html;document.getElementById('modal').style.display='flex';});}
-function saveModalChanges(){if(!currentModalItem)return;const {path,id}=currentModalItem;const nc=document.getElementById('edit-client').value;const nm=Number(document.getElementById('edit-montant').value);const ns=document.getElementById('edit-statut').value;const nd=document.getElementById('edit-date').value;const nt=document.getElementById('edit-type').value;db.ref(path+'/'+id).update({client_id:nc,phone:nc,montant:nm,total:nm,statut:ns,status:ns,date:nd,type:nt,updated_at:new Date().toISOString(),updated_by:'admin_'+curPhone}).then(()=>{alert('✅ Modifié: '+ns);closeModal();loadService(currentService);});}
-function deleteCurrentCmd(){if(!currentModalItem)return;if(!confirm('Supprimer '+currentModalItem.id+' ?'))return;db.ref(currentModalItem.path+'/'+currentModalItem.id).remove().then(()=>{alert('Supprimée');closeModal();loadService(currentService);});}
-function closeModal(){document.getElementById('modal').style.display='none';}
-loadUsers();loadAllCounts();firebase.auth().onAuthStateChanged(function(user){
+
+let allUsers=[], allCmd=[], currentService=null;
+
+function switchMain(tab){
+  document.getElementById('sec-users').style.display = tab==='users' ? 'block' : 'none';
+  document.getElementById('sec-cmd').style.display = tab==='cmd' ? 'block' : 'none';
+  document.getElementById('tab-users').classList.toggle('active', tab==='users');
+  document.getElementById('tab-cmd').classList.toggle('active', tab==='cmd');
+  if(tab==='cmd') loadAllCounts();
+}
+
+function loadUsers(){
+  db.ref('clients').on('value', snap=>{
+    allUsers=[]; let totS=0,totC=0,totE=0;
+    snap.forEach(ch=>{
+      const v=ch.val(); const phone=ch.key;
+      allUsers.push({key:phone, nom:v.nom||'', prenom:v.prenom||'', phone, email:v.email||'', solde:v.solde||0, commission:v.commission||0, recompense:v.recompense||0, data:v});
+      totS+= (v.solde||0); totC+= (v.commission||0); totE+= (v.recompense||0);
+    });
+    document.getElementById('uCount').innerText=allUsers.length;
+    document.getElementById('uSolde').innerText=totS.toLocaleString()+' F';
+    document.getElementById('uCom').innerText=totC.toLocaleString()+' F';
+    document.getElementById('uEp').innerText=totE.toLocaleString()+' F';
+    renderUsers(allUsers);
+  });
+}
+function renderUsers(list){
+  const tb=document.getElementById('tbodyUsers'); tb.innerHTML='';
+  list.slice(0,500).forEach(u=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b>${u.nom}</b></td><td>${u.prenom}</td><td><b style="color:#ffeb3b">${u.phone}</b></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;font-size:10px">${u.email}</td><td><input id="solde-${u.key}" type="number" value="${u.solde}" style="width:70px;background:#000;color:#0f0;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="com-${u.key}" type="number" value="${u.commission}" style="width:70px;background:#000;color:#ffeb3b;border:1px solid #333;border-radius:4px;padding:3px"></td><td><input id="ep-${u.key}" type="number" value="${u.recompense}" style="width:70px;background:#000;color:#f0f;border:1px solid #333;border-radius:4px;padding:3px"></td><td><button class="btn-sm btn-save" onclick="saveUser('${u.key}')">💾</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function filterUsers(){ const q=document.getElementById('searchUser').value.toLowerCase(); renderUsers(allUsers.filter(u=> (u.nom||'').toLowerCase().includes(q) || (u.prenom||'').toLowerCase().includes(q) || u.phone.includes(q) || (u.email||'').toLowerCase().includes(q))); }
+function saveUser(phone){ const s=Number(document.getElementById('solde-'+phone).value); const c=Number(document.getElementById('com-'+phone).value); const e=Number(document.getElementById('ep-'+phone).value); db.ref('clients/'+phone).update({solde:s, commission:c, recompense:e}).then(()=> alert('✅ '+phone+' sauvegardé')); }
+
+async function loadAllCounts(){
+  const container=document.getElementById('cmdButtons'); container.innerHTML='Scan...';
+  allCmd=[]; let total=0;
+  const counts={};
+  for(const svc of SERVICES){
+    try{
+      const snap=await db.ref(svc.path).once('value');
+      let countEnCours=0;
+      snap.forEach(ch=>{
+        const v=ch.val();
+        const statut=((v.statut||v.status||'')+'').toLowerCase();
+        // Compte comme en cours si pas validé/rejeté/annulé
+        const isValide = statut.includes('valid')||statut.includes('succes')||statut.includes('payé')||statut.includes('paye');
+        const isRejete = statut.includes('rejet')||statut.includes('annul')||statut.includes('echec');
+        const isEnCours = !isValide && !isRejete; // tout ce qui n'est pas validé ou rejeté est en cours
+        if(isEnCours){
+          countEnCours++;
+          allCmd.push({id:ch.key, path:svc.path, service:svc.key, label:svc.label, client:v.client_id||v.phone||v.user||'', montant:v.montant||v.total||v.prix||v.amount||0, statut: statut||'en cours', date:v.date||v.created_at||'', data:v});
+        }
+      });
+      counts[svc.key]=countEnCours;
+      total+=countEnCours;
+    }catch(e){ counts[svc.key]=0; }
+  }
+  document.getElementById('bubble-all').innerText=total;
+  document.getElementById('bubble-all').className='bubble '+(total>0?'has':'');
+  container.innerHTML='';
+  SERVICES.forEach(svc=>{
+    const c=counts[svc.key]||0;
+    const btn=document.createElement('button');
+    btn.className='tab';
+    btn.style.borderColor = c>0 ? '#ff5000' : '#444';
+    btn.innerHTML=`${svc.label} <span class="bubble ${c>0?'has':''}">[${c}]</span><br><small style="font-size:7px;color:#aaa">${svc.path}</small>`;
+    btn.onclick=()=> loadService(svc.key);
+    container.appendChild(btn);
+  });
+  // Affiche tout par défaut
+  renderCmd(allCmd);
+}
+
+function loadService(key){
+  currentService=key;
+  const list = allCmd.filter(c=> c.service===key);
+  renderCmd(list);
+}
+function renderCmd(list){
+  const tb=document.getElementById('tbodyCmd'); tb.innerHTML='';
+  if(list.length===0){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:15px">Aucune commande en cours pour ce service</td></tr>'; return; }
+  list.forEach(item=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b style="color:#ffeb3b">${item.label}</b></td><td><b>${item.client}</b></td><td><b style="color:#0f0">${item.montant} F</b></td><td><span class="badge wait">${item.statut}</span></td><td><small>${(item.date||'').toString().slice(0,16)}</small></td><td><button class="btn-sm btn-val" onclick="actionCmd('${item.path}','${item.id}','validé')">✅ Valider</button><button class="btn-sm btn-ann" onclick="actionCmd('${item.path}','${item.id}','annulé')">❌ Annuler</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function filterCmd(){ const q=document.getElementById('searchCmd').value.toLowerCase(); renderCmd(allCmd.filter(i=> (i.client||'').toLowerCase().includes(q) || (i.montant||'').toString().includes(q) || i.label.toLowerCase().includes(q))); }
+function actionCmd(path,id,newStatut){
+  if(!confirm(newStatut.toUpperCase()+' '+id+' ?')) return;
+  db.ref(path+'/'+id+'/statut').set(newStatut).then(()=>{
+    db.ref(path+'/'+id+'/status').set(newStatut);
+    db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString());
+    db.ref(path+'/'+id+'/updated_by').set('admin_'+curPhone);
+    const item=allCmd.find(x=>x.path===path && x.id===id);
+    const phone=item?.client;
+    if(phone){ db.ref('notifications/'+phone).push({titre:newStatut==='validé'?'✅ Validé':'❌ Annulé', message:`Ta commande ${item.label} ${item.montant}F est ${newStatut}`, date:new Date().toLocaleString('fr-FR')}); }
+    alert('✅ '+newStatut); loadAllCounts();
+  });
+}
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+
+loadUsers();
+loadAllCounts();
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();firebase.auth().onAuthStateChanged(function(user){
   if(user){ init(); } 
   else { firebase.auth().signInAnonymously(); }
-});
-</script>
-</body>
+});</script></body>
 </html>
