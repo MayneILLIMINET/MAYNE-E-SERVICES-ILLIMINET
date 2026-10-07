@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Foot - MAYNE ILLIMINET</title>
+<title>Live Foot - ACTIFER</title>
 <style>
-body{margin:0; font-family:Arial; background:#f4f8ff;}
-.header{background:#0a3d8f; color:white; padding:12px; text-align:center; position:sticky; top:0; z-index:10;}
+body{margin:0; font-family:Arial; background:#1f1f1f;border:10px solid#ffc}
+.header{background:#010; color:white; padding:12px; text-align:center; position:sticky; top:0; z-index:10;}
 .header a{color:white; text-decoration:none; background:rgba(255,255,255,0.2); padding:7px 12px; border-radius:20px; margin:3px; display:inline-block; font-size:12px;}
-.tabs{display:flex; gap:6px; overflow-x:auto; padding:10px; background:white; position:sticky; top:52px; z-index:9; border-bottom:1px solid #ddd;}
-.tab{padding:8px 14px; border-radius:20px; border:1px solid #0a3d8f; background:white; color:#0a3d8f; font-weight:bold; white-space:nowrap; cursor:pointer; font-size:13px;}
-.tab.active{background:#0a3d8f; color:white;}
+.tabs{display:flex; gap:6px; overflow-x:auto; padding:10px; background:#010; position:sticky; top:52px; z-index:9; border-bottom:1px solid #ddd;}
+.tab{padding:8px 14px; border-radius:20px; border:1px solid #fff; background:green; color:black; font-weight:bold; white-space:nowrap; cursor:pointer; font-size:13px;}
+.tab.active{background:red; color:white;}
 .container{max-width:850px; margin:auto; padding:10px;}
-.league-title{background:#e8efff; padding:8px 12px; border-radius:8px; margin:15px 0 8px 0; font-weight:bold; color:#0a3d8f; font-size:13px;}
-.card{background:white; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.league-title{background:#ffc; padding:8px 12px; border-radius:8px; margin:15px 0 8px 0; font-weight:bold; color:#000; font-size:13px;}
+.card{background:#ffc; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.06);}
 .team{width:50px; text-align:center;} .team img{width:32px; height:32px; object-fit:contain;}
-.badge{padding:3px 8px; border-radius:12px; color:white; font-size:10px; background:#888;}
+.badge{padding:3px 8px; border-radius:12px; color:white; font-size:10px; background:red;}
 .badge.live{background:red; animation:blink 1s infinite;}
 .badge.fini{background:#666;}
 @keyframes blink{50%{opacity:0.5}}
@@ -23,13 +23,13 @@ body{margin:0; font-family:Arial; background:#f4f8ff;}
 </head>
 <body>
 <div class="header">
-  <h2 style="margin:5px; font-size:18px;">MAYNE ILLIMINET - LIVE FOOT</h2>
-  <a href="index.html">← Accueil</a> <span id="status" style="font-size:11px; margin-left:10px;">Auto 30s</span>
+  <h2 style="margin:5px; font-size:18px;">ACTIFER - LIVE FOOT</h2>
+  <a href="index.html">← Accueil</a> <span id="status" style="font-size:11px; margin-left:10px;">live🟢 </span>
 </div>
 
 <div class="tabs">
   <button class="tab active" onclick="loadAll(this)">Tout / Récents</button>
-  <button class="tab" onclick="load('fifa.friendly',this)">Amicaux - Bénin</button>
+  <button class="tab" onclick="load('fifa.friendly',this)">Amicaux</button>
   <button class="tab" onclick="load('eng.1',this)">Premier League</button>
   <button class="tab" onclick="load('esp.1',this)">LaLiga</button>
   <button class="tab" onclick="load('fra.1',this)">Ligue 1</button>
@@ -124,7 +124,7 @@ function renderCard(g){
 }
 
 // auto refresh
-setInterval(()=>{ if(currentMode==='all') loadAll(); else load(currentMode, null); }, 30000);
+setInterval(()=>{ if(currentMode==='all') loadAll(); else load(currentMode, null); }, 200000);
 loadAll();
 </script>
 </body>
