@@ -6,55 +6,126 @@
 <title>Live Foot - MAYNE ILLIMINET</title>
 <style>
 body{margin:0; font-family:Arial; background:#f4f8ff;}
-.header{background:#0a3d8f; color:white; padding:15px; text-align:center;}
-.header a{color:white; text-decoration:none; background:rgba(255,255,255,0.2); padding:8px 14px; border-radius:20px; margin:5px; display:inline-block;}
-.container{max-width:800px; margin:auto; padding:15px;}
-.card{background:white; border-radius:10px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.07);}
-.team{width:50px; text-align:center;}.team img{width:36px; height:36px;}
-.badge{padding:3px 8px; border-radius:15px; color:white; font-size:11px; background:#0a3d8f;}
+.header{background:#0a3d8f; color:white; padding:12px; text-align:center; position:sticky; top:0; z-index:10;}
+.header a{color:white; text-decoration:none; background:rgba(255,255,255,0.2); padding:7px 12px; border-radius:20px; margin:3px; display:inline-block; font-size:12px;}
+.tabs{display:flex; gap:6px; overflow-x:auto; padding:10px; background:white; position:sticky; top:52px; z-index:9; border-bottom:1px solid #ddd;}
+.tab{padding:8px 14px; border-radius:20px; border:1px solid #0a3d8f; background:white; color:#0a3d8f; font-weight:bold; white-space:nowrap; cursor:pointer; font-size:13px;}
+.tab.active{background:#0a3d8f; color:white;}
+.container{max-width:850px; margin:auto; padding:10px;}
+.league-title{background:#e8efff; padding:8px 12px; border-radius:8px; margin:15px 0 8px 0; font-weight:bold; color:#0a3d8f; font-size:13px;}
+.card{background:white; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.team{width:50px; text-align:center;} .team img{width:32px; height:32px; object-fit:contain;}
+.badge{padding:3px 8px; border-radius:12px; color:white; font-size:10px; background:#888;}
+.badge.live{background:red; animation:blink 1s infinite;}
+.badge.fini{background:#666;}
+@keyframes blink{50%{opacity:0.5}}
 </style>
 </head>
 <body>
 <div class="header">
-  <h2>MAYNE ILLIMINET - LIVE FOOT</h2>
-  <a href="index.html">← Accueil</a>
-  <a href="#" onclick="location.reload()">🔄 Actualiser</a>
+  <h2 style="margin:5px; font-size:18px;">MAYNE ILLIMINET - LIVE FOOT</h2>
+  <a href="index.html">← Accueil</a> <span id="status" style="font-size:11px; margin-left:10px;">Auto 30s</span>
 </div>
-<div class="container"><div id="box">Chargement...</div></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="loadAll(this)">Tout / Récents</button>
+  <button class="tab" onclick="load('fifa.friendly',this)">Amicaux - Bénin</button>
+  <button class="tab" onclick="load('eng.1',this)">Premier League</button>
+  <button class="tab" onclick="load('esp.1',this)">LaLiga</button>
+  <button class="tab" onclick="load('fra.1',this)">Ligue 1</button>
+  <button class="tab" onclick="load('ita.1',this)">Serie A</button>
+  <button class="tab" onclick="load('ger.1',this)">Bundesliga</button>
+  <button class="tab" onclick="load('usa.1',this)">MLS</button>
+</div>
+
+<div class="container"><div id="box">Chargement des matchs amicaux...</div></div>
 
 <script>
-async function load(){
-  const box=document.getElementById('box');
+const LEAGUES = {
+  'fifa.friendly': 'Matchs Amicaux Internationaux',
+  'eng.1': 'Premier League',
+  'esp.1': 'LaLiga',
+  'fra.1': 'Ligue 1',
+  'ita.1': 'Serie A',
+  'ger.1': 'Bundesliga',
+  'usa.1': 'Major League Soccer'
+};
+let currentMode='all';
+
+async function fetchLeague(lg){
   try{
-    // On ne prend qu'1 ligue pour ne pas bloquer
-    const r=await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard');
-    if(!r.ok) throw new Error('api');
+    const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg}/scoreboard`);
     const d=await r.json();
-    const events=d.events||[];
-    if(events.length===0){ box.innerHTML='<p style="text-align:center;">Pas de match aujourd\'hui en Premier League. Reviens samedi.</p>'; return; }
-    box.innerHTML=events.map(g=>{
-      const c=g.competitions[0];
-      const h=c.competitors.find(x=>x.homeAway==='home');
-      const a=c.competitors.find(x=>x.homeAway==='away');
-      return `<div class="card">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div class="team"><img src="${a.team.logo}"><br><small>${a.team.abbreviation}</small></div>
-          <div><b>${a.team.shortDisplayName} vs ${h.team.shortDisplayName}</b><br><small>${g.status.type.detail}</small></div>
-          <div class="team"><img src="${h.team.logo}"><br><small>${h.team.abbreviation}</small></div>
-        </div>
-        <div style="text-align:right;"><span class="badge">${g.status.type.shortDetail}</span><br><b style="font-size:20px;">${a.score} - ${h.score}</b></div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    box.innerHTML=`<div style="text-align:center; background:white; padding:20px; border-radius:10px;">
-    <p>⚠️ Connexion lente. Voici les matchs prévus :</p>
-    <div class="card"><div><b>Leeds vs Arsenal</b><br><small>Sam 10 Oct - 07:30</small></div><b>0-0</b></div>
-    <div class="card"><div><b>Brentford vs Aston Villa</b><br><small>Sam 10 Oct - 10:00</small></div><b>0-0</b></div>
-    <div class="card"><div><b>Bournemouth vs Chelsea</b><br><small>Sam 10 Oct - 10:00</small></div><b>0-0</b></div>
-    <p><small>La version live s'affichera dès que la connexion est meilleure.</small></p></div>`;
-  }
+    return (d.events||[]).map(e=>({...e, _lg:lg}));
+  }catch(e){ return []; }
 }
-load();
+
+async function loadAll(btn){
+  if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  currentMode='all';
+  const box=document.getElementById('box');
+  box.innerHTML='Chargement de tous les matchs...';
+  
+  const results = await Promise.all(Object.keys(LEAGUES).map(l=>fetchLeague(l)));
+  let all = results.flat();
+  
+  if(all.length===0){ box.innerHTML='<p style="text-align:center;">Pas de match aujourd\'hui.</p>'; return; }
+
+  // Tri : LIVE en haut, puis Terminé récent, puis à venir
+  all.sort((a,b)=>{
+    const sA = a.status.type.state==='in'?0 : a.status.type.state==='post'?1:2;
+    const sB = b.status.type.state==='in'?0 : b.status.type.state==='post'?1:2;
+    return sA-sB;
+  });
+
+  // Grouper par ligue
+  let html='';
+  let grouped={};
+  all.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); });
+
+  for(let lg of Object.keys(grouped)){
+    if(grouped[lg].length===0) continue;
+    html+=`<div class="league-title">⚽ ${LEAGUES[lg]} - ${grouped[lg].length} matchs</div>`;
+    html+= grouped[lg].map(g=>renderCard(g)).join('');
+  }
+  box.innerHTML=html;
+}
+
+async function load(league, btn){
+  if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  currentMode=league;
+  const box=document.getElementById('box');
+  box.innerHTML='Chargement...';
+  const events=await fetchLeague(league);
+  if(events.length===0){ box.innerHTML=`<p style="text-align:center;">Pas de match dans ${LEAGUES[league]} aujourd'hui.<br><small>Essaie l'onglet "Tout / Récents" pour voir Bénin, Colombie, USA etc.</small></p>`; return; }
+  events.sort((a,b)=>(a.status.type.state==='in'?0:1)-(b.status.type.state==='in'?0:1));
+  box.innerHTML=`<div class="league-title">⚽ ${LEAGUES[league]}</div>`+events.map(g=>renderCard(g)).join('');
+}
+
+function renderCard(g){
+  const c=g.competitions[0];
+  const h=c.competitors.find(x=>x.homeAway==='home');
+  const a=c.competitors.find(x=>x.homeAway==='away');
+  const isLive=g.status.type.state==='in';
+  const isFini=g.status.type.state==='post';
+  const badge = isLive?'<span class="badge live">🔴 LIVE '+ (g.status.displayClock||'') +'</span>': isFini?'<span class="badge fini">Terminé</span>':`<span class="badge" style="background:#0a3d8f;">${g.status.type.shortDetail}</span>`;
+  return `<div class="card" style="border-left:4px solid ${isLive?'red':isFini?'#999':'#0a3d8f'}">
+    <div style="display:flex; align-items:center; gap:8px; flex:1;">
+      <div class="team"><img src="${a.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px; font-weight:bold;">${a.team.abbreviation||a.team.shortDisplayName.substring(0,3)}</small></div>
+      <div style="flex:1; font-size:13px;">
+        <div style="display:flex; justify-content:space-between;"><span>${a.team.shortDisplayName}</span><b>${a.score}</b></div>
+        <div style="display:flex; justify-content:space-between;"><span>${h.team.shortDisplayName}</span><b>${h.score}</b></div>
+        <small style="color:#888;">${g.status.type.detail||''}</small>
+      </div>
+      <div class="team"><img src="${h.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px; font-weight:bold;">${h.team.abbreviation||h.team.shortDisplayName.substring(0,3)}</small></div>
+    </div>
+    <div style="text-align:right; min-width:70px; margin-left:8px;">${badge}</div>
+  </div>`;
+}
+
+// auto refresh
+setInterval(()=>{ if(currentMode==='all') loadAll(); else load(currentMode, null); }, 30000);
+loadAll();
 </script>
 </body>
 </html>
