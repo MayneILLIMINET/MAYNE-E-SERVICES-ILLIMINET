@@ -1,0 +1,44 @@
+<!-- SECTION LIVE SCORE MAYNE - Début -->
+<section style="padding:40px 15px; background:#f4f8ff;">
+  <div style="max-width:900px; margin:auto;">
+    <h2 style="text-align:center; color:#0a3d8f; margin-bottom:10px;">🔴 LIVE FOOTBALL - MAYNE ILLIMINET</h2>
+    <p style="text-align:center; color:#666; margin-bottom:20px;">Scores en direct pour nos clients - Actualisation auto</p>
+    <div id="mayne-live" style="display:grid; gap:12px;">Chargement des matchs en live...</div>
+  </div>
+</section>
+
+<script>
+async function mayneLive(){
+  const box = document.getElementById('mayne-live');
+  try{
+    // API 100% gratuite sans clé
+    const res = await fetch('https://www.thesportsdb.com/api/v1/json/3/livescore.php?l=English%20Premier%20League');
+    const data = await res.json();
+    let matches = data.events || [];
+
+    // Si pas de Premier League en live, on prend tous les lives
+    if(matches.length === 0){
+      const r2 = await fetch('https://www.thesportsdb.com/api/v1/json/3/latestsoccer.php');
+      const d2 = await r2.json();
+      matches = (d2.teams && d2.teams.Match) ? d2.teams.Match.slice(0,8) : [];
+      box.innerHTML = matches.map(m => `
+        <div style="background:white; padding:15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:4px solid #0a3d8f;">
+          <div><b>${m.HomeTeam || m.home || 'Domicile'}</b> vs <b>${m.AwayTeam || m.away || 'Extérieur'}</b><br><small style="color:#666;">${m.League || 'Match récent'}</small></div>
+          <div style="text-align:right;"><span style="background:#0a3d8f; color:white; padding:3px 8px; border-radius:20px; font-size:12px;">${m.Time || 'FT'}</span><br><b style="font-size:18px;">${m.HomeGoals ?? ''} - ${m.AwayGoals ?? ''}</b></div>
+        </div>`).join('');
+      return;
+    }
+
+    box.innerHTML = matches.map(m => `
+      <div style="background:white; padding:15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:4px solid red;">
+        <div><b>${m.strHomeTeam} vs ${m.strAwayTeam}</b><br><small style="color:#666;">${m.strLeague}</small></div>
+        <div style="text-align:right;"><span style="background:red; color:white; padding:3px 8px; border-radius:20px; font-size:12px; animation: pulse 1s infinite;">${m.strProgress}' LIVE</span><br><b style="font-size:18px;">${m.intHomeScore} - ${m.intAwayScore}</b></div>
+      </div>`).join('');
+  }catch(e){
+    box.innerHTML = '<p style="text-align:center;">Les lives reviennent à 15h. Revenez plus tard !</p>';
+  }
+}
+mayneLive();
+setInterval(mayneLive, 60000);
+</script>
+<!-- SECTION LIVE SCORE MAYNE - Fin -->
