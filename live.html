@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Foot - MAYNE ILLIMINET</title>
+<style>
+body{margin:0; font-family:Arial; background:#f4f8ff;}
+.header{background:#0a3d8f; color:white; padding:15px; text-align:center;}
+.header a{color:white; text-decoration:none; background:rgba(255,255,255,0.2); padding:8px 14px; border-radius:20px; margin:5px; display:inline-block;}
+.container{max-width:800px; margin:auto; padding:15px;}
+.card{background:white; border-radius:10px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+.team{width:50px; text-align:center;}.team img{width:36px; height:36px;}
+.badge{padding:3px 8px; border-radius:15px; color:white; font-size:11px; background:#0a3d8f;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h2>MAYNE ILLIMINET - LIVE FOOT</h2>
+  <a href="index.html">← Accueil</a>
+  <a href="#" onclick="location.reload()">🔄 Actualiser</a>
+</div>
+<div class="container"><div id="box">Chargement...</div></div>
+
+<script>
+async function load(){
+  const box=document.getElementById('box');
+  try{
+    // On ne prend qu'1 ligue pour ne pas bloquer
+    const r=await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard');
+    if(!r.ok) throw new Error('api');
+    const d=await r.json();
+    const events=d.events||[];
+    if(events.length===0){ box.innerHTML='<p style="text-align:center;">Pas de match aujourd\'hui en Premier League. Reviens samedi.</p>'; return; }
+    box.innerHTML=events.map(g=>{
+      const c=g.competitions[0];
+      const h=c.competitors.find(x=>x.homeAway==='home');
+      const a=c.competitors.find(x=>x.homeAway==='away');
+      return `<div class="card">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="team"><img src="${a.team.logo}"><br><small>${a.team.abbreviation}</small></div>
+          <div><b>${a.team.shortDisplayName} vs ${h.team.shortDisplayName}</b><br><small>${g.status.type.detail}</small></div>
+          <div class="team"><img src="${h.team.logo}"><br><small>${h.team.abbreviation}</small></div>
+        </div>
+        <div style="text-align:right;"><span class="badge">${g.status.type.shortDetail}</span><br><b style="font-size:20px;">${a.score} - ${h.score}</b></div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    box.innerHTML=`<div style="text-align:center; background:white; padding:20px; border-radius:10px;">
+    <p>⚠️ Connexion lente. Voici les matchs prévus :</p>
+    <div class="card"><div><b>Leeds vs Arsenal</b><br><small>Sam 10 Oct - 07:30</small></div><b>0-0</b></div>
+    <div class="card"><div><b>Brentford vs Aston Villa</b><br><small>Sam 10 Oct - 10:00</small></div><b>0-0</b></div>
+    <div class="card"><div><b>Bournemouth vs Chelsea</b><br><small>Sam 10 Oct - 10:00</small></div><b>0-0</b></div>
+    <p><small>La version live s'affichera dès que la connexion est meilleure.</small></p></div>`;
+  }
+}
+load();
+</script>
+</body>
+</html>
