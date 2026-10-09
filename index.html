@@ -65,11 +65,11 @@ setInterval(function(){
 </script>
 <style>
 footer{display:none}
-body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
-.app-container{width:100%;max-width:100%;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#500;border:9px solid #ff5000;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
+body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#010;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
+.app-container{width:100%;max-width:100%;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#010;border:9px solid #ffc;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
 .header-actions{display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .btn-action-top{padding:1px 1px;font-size:5px}
-.btn-action-top{background:#fb3b;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
+.btn-action-top{background:#ff5000;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
 .btn-action-top.retrait{background:#c00;color:#fff}
 .notif-bell{position:relative;cursor:pointer;font-size:20px;background:#1e1e1e;border:1px solid #fff;border-radius:6px;padding:5px 10px;margin-right:auto}
 .notif-count{position:absolute;top:-8px;right:-8px;background:#ff5000;color:#fff;font-size:11px;font-weight:bold;border-radius:50%;padding:2px 6px;min-width:18px;text-align:center;display:none}
@@ -79,21 +79,21 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 .service-btn-new.has-new{border-left-color:#ff5000!important;animation:borderPulse 1.2s infinite}
 .input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
-.input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#aaaa;color:#fff}
+.input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#ff5000;color:#fff}
 .dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
-.btn-submit{width:100%;background:#500;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
+.btn-submit{width:100%;background:#ff5000;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
 .btn-link{background:#500;border:none;color:#fff;text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;display:inline-block}
-.user-header{background:#500;padding:8px;border-radius:6px;border:20px solid #1e1e1e;border-left:12px solid #c00;border-right:14px solid #aaa;margin-bottom:10px;position:relative;text-align:left}
+.user-header{background:#010;padding:8px;border-radius:6px;border:20px solid #1e1e1e;border-left:12px solid #c00;border-right:14px solid #aaa;margin-bottom:10px;position:relative;text-align:left}
 .profile-line{font-size:14px;font-weight:bold;margin-bottom:2px;width:65%}
 .solde-val{font-size:18px;font-weight:bold;color:#0f0}
-.btn-logout{position:absolute;top:1px;right:8px;background:#aaa;color:#c00;border:4px solid #aaa;border-left:12px solid#fff;border-right:6px solid#fff;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
+.btn-logout{position:absolute;top:1px;right:8px;background:#010;color:#c00;border:4px solid #aaa;border-left:12px solid#fff;border-right:6px solid#fff;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
 .services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px}
 .tab-btn{padding:10px 4px;font-size:10px;font-weight:bold;background:#fb3b;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;text-transform:uppercase}
-.tab-btn.btn-home{grid-column:span 2;background:#aaaa;border:10px solid#aaa;color:#fff;font-size:12px;border-right:18px solid#fff;border-left:18px solid #fff!important}
+.tab-btn.btn-home{grid-column:span 2;background:#010;border:10px solid#aaa;color:#fff;font-size:12px;border-right:18px solid#fff;border-left:18px solid #fff!important}
 .tab-btn.btn-full{grid-column:span 2;background:#fb3b}
-.service-panel{background:#500;color:#fff;padding:10px;border-radius:6px;text-align:left}
+.service-panel{background:#010;color:#fff;padding:10px;border-radius:6px;text-align:left}
 .sub-panel h4{margin:0 0 8px 0;color:#fff;border-bottom:2px solid #fff;padding-bottom:3px;font-size:14px;text-transform:uppercase}
-.about-section{margin-top:15px;padding-top:10px;border-top:1px dashed #500;font-size:11px;color:#111}
+.about-section{margin-top:15px;padding-top:10px;border-top:1px dashed #666;font-size:11px;background:#010}
 .partners-container{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:5px}
 .partner-logo{width:50px;height:25px;border:1px solid #fff;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:#fff}
 .partner-mtn{background:#fc0;color:#000;border-color:#000}.partner-moov{background:#f60}.partner-celtis{background:#09f}.partner-canal{background:#000}.partner-sbee{background:#2b8a3e}.partner-1xbet{background:#03a}
@@ -135,10 +135,10 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
 </div>
 <div id="logged-in-zone" style="display:none;">
   <div class="header-actions">
-    <div class="notif-bell" onclick="location.href='notifications.html'" style="position:absolute;top:50px;left:1px;z-index:9999;background:#aaa;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🔔<span id="notif-count" class="notif-count">0</span></div>
-    <div class="btn" onclick="location.href='updates.html'" style="background:#aaa;border:5px solid #aaa;border-left:7px solid #fff;color:#fff;border-right:8px solid#fff;padding:1px">⬇️MAJ </div>
-    <div class="btn" onclick="location.href='admin.html'" style="background:#aaa;border:5px solid #aaa;border-left:7px solid #fff;color:#fff;border-right:8px solid#fff;padding:1px">AD</div>
-    <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#aaa;border:5px solid #aaa;border-right:9px solid#fff;border-left:9px solid #fff">Profil👤</button>
+    <div class="notif-bell" onclick="location.href='notifications.html'" style="position:absolute;top:50px;left:1px;z-index:9999;background:#010;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🔔<span id="notif-count" class="notif-count">0</span></div>
+    <div class="btn" onclick="location.href='updates.html'" style="background:#010;border:5px solid #aaa;border-left:7px solid #fff;color:#fff;border-right:8px solid#fff;padding:1px">⬇️MAJ </div>
+    <div class="btn" onclick="location.href='admin.html'" style="background:#010;border:5px solid #aaa;border-left:7px solid #fff;color:#fff;border-right:8px solid#fff;padding:1px">PUB</div>
+    <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#010;border:5px solid #aaa;border-right:9px solid#fff;border-left:9px solid #fff">Profil👤</button>
     <button class="btn-action-top" onclick="location.href='depot.html'" style="background:#fb3b;border:3px solid#aaa;border-left:8px solid #fff;border-right:15px solid#fff">📥Recharger</button>
     <button class="btn-action-top retrait" onclick="location.href='retrait.html'" style="background:#ff5000;border:4px solid#aaa;border-left:9px solid #fff;border-right: 15px solid#fff">📤RETIRER</button>
   </div>
@@ -162,12 +162,12 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#aaaa;min-heig
     <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" style="border-left-color:#E91E63" onclick="location.href='messagerie.html'">💬 Messagerie</button>
     <button id="btn-forfait" class="tab-btn btn-full service-btn-new" style="border-left-color:#8BC34A" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
   </div>
-  <footer style="display:none;background:#500;color:#aaa; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
+  <footer style="display:none;background:#010;color:#aaa; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
     <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023</div>
     <div style="margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
-      <a href="about.html" style="background:#aaa;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid #fff">À propos</a>
-      <a href="privacy.html" style="background:#aaa;border:4px solid#aaa;border-left:9px solid #fff;border-right:6px solid#fff">Confidentialité</a>
-      <a href="conditions.html" style="background:#aaa;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid#fff">CGU</a>
+      <a href="about.html" style="background:#010;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid #fff">À propos</a>
+      <a href="privacy.html" style="background:#010;border:4px solid#aaa;border-left:9px solid #fff;border-right:6px solid#fff">Confidentialité</a>
+      <a href="conditions.html" style="background:#010;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid#fff">CGU</a>
     </div>
   <div style="margin-top:14px; font-size:10px; color:#aaa; line-height:1.7">
     <b style="color:#fff">Agent commercial marchand agréé MTN - MOOV - CELTIS</b><br>
