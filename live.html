@@ -8,139 +8,264 @@
 body{margin:0; font-family:Arial; background:#1f1f1f;border:10px solid #ffc}
 .header{background:#010; color:white; padding:12px; text-align:center; position:sticky; top:0; z-index:10;}
 .header a{color:white; text-decoration:none; background:rgba(255,255,255,0.2); padding:7px 12px; border-radius:20px; margin:3px; display:inline-block; font-size:12px;}
-.tabs{display:flex; gap:6px; overflow-x:auto; padding:10px; background:#010; position:sticky; top:52px; z-index:9; border-bottom:1px solid #ddd;}
+.tabs{display:flex; gap:6px; overflow-x:auto; padding:10px; background:#010; position:sticky; top:52px; z-index:9;}
 .tab{padding:8px 14px; border-radius:20px; border:1px solid #fff; background:green; color:white; font-weight:bold; white-space:nowrap; cursor:pointer; font-size:13px;}
-.tab.active{background:red; color:white;}
+.tab.active{background:red;}
 .container{max-width:850px; margin:auto; padding:10px;}
 .league-title{background:#ffc; padding:8px 12px; border-radius:8px; margin:15px 0 8px 0; font-weight:bold; color:#000; font-size:13px;}
-.card{background:#ffc; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.06); cursor:pointer;}
+.card{background:#ffc; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; flex-direction:column; cursor:pointer;}
+.card-top{display:flex; justify-content:space-between; align-items:center; width:100%;}
 .team{width:50px; text-align:center;}.team img{width:32px; height:32px; object-fit:contain;}
-.badge{padding:4px 10px; border-radius:12px; color:white; font-size:11px; font-weight:bold;}
-.badge.live{background:red; animation:blink 1s infinite;}
+.badge{padding:5px 10px; border-radius:12px; color:white; font-size:11px; font-weight:bold; min-width:80px; text-align:center;}
+.badge.live{background:red; animation:blink 0.8s infinite;}
+.badge.ht{background:orange; color:#000;}
 .badge.fini{background:#666;}
 .badge.sched{background:#0a3d8f;}
-@keyframes blink{50%{opacity:0.5}}
+@keyframes blink{0%{opacity:1}50%{opacity:0.7}100%{opacity:1}}
+.progress{height:4px; background:#ddd; border-radius:2px; margin-top:8px; width:100%; overflow:hidden;}
+.progress-fill{height:100%;}
 #modal{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:100; overflow-y:auto; padding:10px; box-sizing:border-box;}
 .modal-box{background:#fff; color:#000; max-width:520px; margin:20px auto; border-radius:12px; overflow:hidden;}
 .modal-head{background:#010; color:#fff; padding:12px; display:flex; justify-content:space-between; align-items:center;}
-.modal-body{padding:12px; max-height:82vh; overflow-y:auto;}
-.tab-detail{display:flex; gap:4px; margin-bottom:10px; overflow-x:auto;}
-.tab-detail button{flex:1; min-width:70px; padding:7px 4px; border:none; background:#eee; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px;}
+.modal-body{padding:12px; max-height:85vh; overflow-y:auto;}
+.tab-detail{display:flex; gap:4px; margin-bottom:10px; position:sticky; top:0; background:#fff; padding:5px 0; z-index:2;}
+.tab-detail button{flex:1; padding:8px 4px; border:none; background:#eee; border-radius:8px; font-weight:bold; cursor:pointer; font-size:11px;}
 .tab-detail button.active{background:red; color:#fff;}
-.buteur{background:#e8ffe8; border-left:5px solid #0a0; padding:10px; margin:6px 0; border-radius:6px;}
+.buteur{border-left:5px solid #0a0; padding:10px; margin:8px 0; border-radius:8px; background:#f0fff0;}
+.stat-row{display:flex; justify-content:space-between; align-items:center; padding:9px 6px; border-bottom:1px solid #eee; font-size:12px;}
+.stat-bar-bg{height:6px; background:#eee; border-radius:3px; flex:1; margin:0 8px; overflow:hidden; display:flex;}
+.stat-bar{height:100%;}
 </style>
 </head>
 <body>
 <div class="header">
-  <h2 style="margin:5px; font-size:18px;">ACTIFER - LIVE FOOT</h2>
-  <a href="index.html">← Accueil</a> <span style="font-size:11px; margin-left:6px;">live🟢</span> <span id="clock" style="font-size:10px;color:#ff0"></span>
+  <h2 style="margin:5px;">ACTIFER - LIVE FOOT</h2>
+  <a href="index.html">← Accueil</a> <span id="clock" style="font-size:11px;color:#ff0"></span>
   <div id="live-info" style="font-size:11px; margin-top:6px; color:#0f0;"></div>
 </div>
 <div class="tabs">
-  <button class="tab active" id="tab-all" onclick="loadAll(this)">🔴 Tous</button>
-  <button class="tab" id="tab-live" onclick="loadLiveOnly(this)" style="background:#300; border-color:red;">🔴 LIVE</button>
-  <button class="tab" onclick="load('fifa.friendly',this)">Amicaux</button>
-  <button class="tab" onclick="load('eng.1',this)">Premier League</button>
-  <button class="tab" onclick="load('esp.1',this)">LaLiga</button>
-  <button class="tab" onclick="load('fra.1',this)">Ligue 1</button>
-  <button class="tab" onclick="load('ita.1',this)">Serie A</button>
-  <button class="tab" onclick="load('ger.1',this)">Bundesliga</button>
-  <button class="tab" onclick="load('usa.1',this)">MLS 🇺🇸</button>
+  <button class="tab active" id="tab-all" onclick="loadAll(this)">Tous</button>
+  <button class="tab" id="tab-live" onclick="loadLiveOnly(this)" style="background:#900; border-color:#ff0;">🔴 LIVE SEULEMENT</button>
+  <button class="tab" onclick="loadLeague('fifa.friendly',this)">Amicaux</button>
+  <button class="tab" onclick="loadLeague('eng.1',this)">Premier League</button>
+  <button class="tab" onclick="loadLeague('esp.1',this)">LaLiga</button>
+  <button class="tab" onclick="loadLeague('fra.1',this)">Ligue 1</button>
+  <button class="tab" onclick="loadLeague('ita.1',this)">Serie A</button>
+  <button class="tab" onclick="loadLeague('ger.1',this)">Bundesliga</button>
+  <button class="tab" onclick="loadLeague('usa.1',this)">MLS 🇺🇸</button>
 </div>
 <div class="container"><div id="box">Chargement...</div></div>
 
 <div id="modal" onclick="if(event.target==this) closeModal()">
   <div class="modal-box">
-    <div class="modal-head"><b id="modal-title">Détails</b><button onclick="closeModal()" style="background:#fff;color:#000;border:none;padding:5px 10px;border-radius:15px;font-weight:bold">X</button></div>
+    <div class="modal-head"><b id="modal-title">Détails LIVE</b><button onclick="closeModal()" style="background:#fff;color:#000;border:none;padding:5px 12px;border-radius:15px;font-weight:bold">X</button></div>
     <div class="modal-body">
       <div class="tab-detail">
-        <button id="btn-detail" class="active" onclick="showTab('detail')">Buteurs</button>
-        <button id="btn-stats" onclick="showTab('stats')">📊 Stats</button>
-        <button id="btn-effectif" onclick="showTab('effectif')">Effectif</button>
-        <button id="btn-classement" onclick="showTab('classement')">Class.</button>
+        <button id="btn-detail" class="active" onclick="showTab('detail')">⚽ Buteurs</button>
+        <button id="btn-stats" onclick="showTab('stats')">📊 Stats LIVE</button>
+        <button id="btn-effectif" onclick="showTab('effectif')">👥 Effectif</button>
       </div>
-      <div id="tab-detail"></div>
+      <div id="tab-detail">Chargement...</div>
       <div id="tab-stats" style="display:none"></div>
       <div id="tab-effectif" style="display:none"></div>
-      <div id="tab-classement" style="display:none"></div>
     </div>
   </div>
 </div>
 
 <script>
 const LEAGUES={'fifa.friendly':'Amicaux','eng.1':'Premier League','esp.1':'LaLiga','fra.1':'Ligue 1','ita.1':'Serie A','ger.1':'Bundesliga','usa.1':'MLS'};
-let currentMode='all'; let allMatchesCache=[];
+let allMatchesCache=[]; let currentEventId=null; let currentLeague=null; let detailInterval=null;
 
-function traduire(txt){ if(!txt) return ''; let t=txt; const d={'Lineups are announced and players are warming up.':'Compos annoncées, échauffement.','First Half begins.':'Début du match!','Foul by':'Faute de','Corner,':'Corner,','Conceded by':'Concédé par','Attempt missed.':'Tir manqué.','Attempt saved.':'Arrêt du gardien!','Offside,':'Hors-jeu,','Goal!':'BUT!','Yellow Card':'Carton Jaune 🟨','Red Card':'Carton Rouge 🟥'}; for(let k in d) t=t.split(k).join(d[k]); return t; }
-function heureCotonou(dateStr){ try{ let d=new Date(dateStr); return d.toLocaleString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}) + ' (Cotonou)'; }catch(e){ return dateStr; } }
-function getNomButeur(s){ if(s.athletesInvolved && s.athletesInvolved[0]?.displayName) return s.athletesInvolved[0].displayName; if(s.athlete?.displayName) return s.athlete.displayName; let txt=s.text||''; let m=txt.match(/([A-Z][a-zà-ÿ]+(?:\s+[A-Z][a-zà-ÿ]+)+)\s*\(/); if(m && m[1].length>3 && m[1].length<30) return m[1].trim(); return null; }
-async function fetchLeague(lg){ const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg}/scoreboard`; try{ const r=await fetch(url+'?t='+Date.now()); const d=await r.json(); return (d.events||[]).map(e=>({...e,_lg:lg})); }catch(e){ try{ const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url)); const j=await r2.json(); const d=JSON.parse(j.contents); return (d.events||[]).map(ev=>({...ev,_lg:lg})); }catch(e2){ return []; } } }
-async function loadAll(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } currentMode='all'; const box=document.getElementById('box'); box.innerHTML='⏳ Chargement...'; const results=await Promise.all(Object.keys(LEAGUES).map(l=>fetchLeague(l))); allMatchesCache=results.flat(); afficher(allMatchesCache,false); }
-function loadLiveOnly(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } currentMode='live'; const liveOnly=allMatchesCache.filter(m=>m.competitions[0].status.type.state==='in'); afficher(liveOnly,true); }
-function afficher(all,isLiveOnly){
-  const box=document.getElementById('box');
-  document.getElementById('clock').innerText=' - '+new Date().toLocaleString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'}) + ' Cotonou';
-  const liveCount=allMatchesCache.filter(m=>m.competitions[0].status.type.state==='in').length;
-  const schedCount=allMatchesCache.filter(m=>m.competitions[0].status.type.state==='pre').length;
-  if(isLiveOnly && all.length===0){
-    document.getElementById('live-info').innerText=`Aucun LIVE maintenant. ${schedCount} prévus aujourd'hui.`;
-    box.innerHTML=`<div style="background:#ffc;padding:15px;border-radius:10px;text-align:center;color:#000"><b>⏰ Aucun LIVE en ce moment</b><br><br>Il est ${new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo'})} à Cotonou.<br>Les matchs LaLiga/MLS commencent à <b>13h00 / 19h00 Cotonou</b>.<br><br><button onclick="loadAll(document.getElementById('tab-all'))" style="padding:8px 15px;border-radius:20px;border:none;background:#010;color:#fff;font-weight:bold">Voir matchs prévus</button></div>`;
-    return;
-  }
-  document.getElementById('live-info').innerText=`🔴 ${liveCount} LIVE • ${schedCount} prévus • Total ${allMatchesCache.length} • MLS inclus 🇺🇸`;
-  if(all.length===0){ box.innerHTML='<p style="text-align:center;color:#fff">Pas de match</p>'; return; }
-  all.sort((a,b)=>{ const sa=a.competitions[0].status.type.state==='in'?0: a.competitions[0].status.type.state==='post'?1:2; const sb=b.competitions[0].status.type.state==='in'?0: b.competitions[0].status.type.state==='post'?1:2; return sa-sb; });
-  let html=''; let grouped={}; all.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); });
-  for(let lg of Object.keys(grouped)){ const gcount=grouped[lg]; const lc=gcount.filter(m=>m.competitions[0].status.type.state==='in').length; html+=`<div class="league-title">⚽ ${LEAGUES[lg]} ${lc>0?`🔴 ${lc} LIVE`:''}</div>`+gcount.map(x=>renderCard(x)).join(''); }
-  box.innerHTML=html;
+function heureCotonou(d){ try{return new Date(d).toLocaleString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})+' Cotonou';}catch(e){return d;} }
+function traduire(t){ if(!t) return ''; const d={'Goal!':'BUT!','Assist by':'Passe décisive de','Penalty - Scored':'Penalty marqué par','Own Goal':'But contre son camp de','Yellow Card':'Carton Jaune 🟨','Red Card':'Rouge 🟥','Foul by':'Faute de','Corner,':'Corner','Attempt saved.':'Arrêt du gardien!','Attempt missed.':'Tir manqué','First Half begins.':'Début du match!'}; for(let k in d) t=t.split(k).join(d[k]); return t; }
+
+function getMatchState(status){
+  let raw = ((status.displayClock||'') + ' ' + (status.type.shortDetail||'') + ' ' + (status.type.detail||'') + ' ' + (status.type.name||'')).toLowerCase();
+  let minute=null; let m=raw.match(/(\d+)'/); if(m) minute=parseInt(m[1]); else{ m=raw.match(/(\d+):\d+/); if(m) minute=parseInt(m[1]); }
+  if(raw.includes('ht')||raw.includes('half time')) return {state:'HT', minute:45, label:'⏸️ Mi-temps 45\'', isLive:true};
+  if(status.type.state==='post'||raw.includes('ft')||raw.includes('full time')) return {state:'FT', minute:90, label:'Terminé', isLive:false};
+  if(status.type.state==='in') return {state:'LIVE', minute:minute, label: minute!==null?`🔴 LIVE ${minute}'`:'🔴 LIVE', isLive:true};
+  return {state:'PRE', minute:null, label:'Prévu', isLive:false};
 }
-async function load(league,btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } currentMode=league; const box=document.getElementById('box'); box.innerHTML='Chargement...'; const events=await fetchLeague(league); document.getElementById('clock').innerText=' - '+new Date().toLocaleString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'}) + ' Cotonou'; const liveCount=events.filter(m=>m.competitions[0].status.type.state==='in').length; document.getElementById('live-info').innerText=`${LEAGUES[league]} - 🔴 ${liveCount} LIVE / ${events.length} matchs`; if(events.length===0){ box.innerHTML=`<p style="text-align:center;color:#fff">Pas de match dans ${LEAGUES[league]} aujourd'hui.</p>`; return; } box.innerHTML=`<div class="league-title">⚽ ${LEAGUES[league]}</div>`+events.map(g=>renderCard(g)).join(''); }
+
+async function fetchLeague(lg){
+  const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg}/scoreboard`;
+  try{ const r=await fetch(url+'?t='+Date.now()); const d=await r.json(); return (d.events||[]).map(e=>({...e,_lg:lg})); }
+  catch(e){ try{ const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url)); const j=await r2.json(); const d=JSON.parse(j.contents); return (d.events||[]).map(ev=>({...ev,_lg:lg})); }catch(e2){ return []; } }
+}
+
+async function loadAll(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } const box=document.getElementById('box'); box.innerHTML='⏳ Chargement...'; const results=await Promise.all(Object.keys(LEAGUES).map(l=>fetchLeague(l))); allMatchesCache=results.flat(); afficherTous(allMatchesCache); }
+async function loadLiveOnly(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } const box=document.getElementById('box'); box.innerHTML='⏳ Chargement LIVE...'; if(allMatchesCache.length===0){ const results=await Promise.all(Object.keys(LEAGUES).map(l=>fetchLeague(l))); allMatchesCache=results.flat(); } const liveOnly=allMatchesCache.filter(m=>getMatchState(m.competitions[0].status).isLive===true); afficherLiveSeulement(liveOnly); }
+
+function afficherTous(all){ const box=document.getElementById('box'); document.getElementById('clock').innerText=' - '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'})+' Cotonou'; const liveCount=all.filter(m=>getMatchState(m.competitions[0].status).isLive).length; document.getElementById('live-info').innerText=`TOUS : 🔴 ${liveCount} LIVE/MT + ${all.length-liveCount} à venir • MLS inclus`; all.sort((a,b)=>{ const sa=getMatchState(a.competitions[0].status).isLive?0:1; const sb=getMatchState(b.competitions[0].status).isLive?0:1; return sa-sb; }); let html=''; let grouped={}; all.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); }); for(let lg of Object.keys(grouped)){ const gcount=grouped[lg]; const lc=gcount.filter(m=>getMatchState(m.competitions[0].status).isLive).length; html+=`<div class="league-title">⚽ ${LEAGUES[lg]} ${lc>0?`🔴 ${lc} LIVE`:''}</div>`+gcount.map(x=>renderCard(x)).join(''); } box.innerHTML=html; }
+function afficherLiveSeulement(liveMatches){ const box=document.getElementById('box'); document.getElementById('clock').innerText=' - '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'})+' Cotonou'; document.getElementById('live-info').innerText=`LIVE SEULEMENT : ${liveMatches.length} match(s) en cours`; if(liveMatches.length===0){ box.innerHTML=`<div style="background:#ffc;padding:20px;border-radius:12px;text-align:center;color:#000"><h3>😴 Aucun LIVE</h3><p>${new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo'})} Cotonou</p><button onclick="loadAll(document.getElementById('tab-all'))" style="padding:10px 20px;border-radius:20px;border:none;background:#010;color:#fff;font-weight:bold">Voir tous</button></div>`; return; } let html=''; let grouped={}; liveMatches.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); }); for(let lg of Object.keys(grouped)){ html+=`<div class="league-title">⚽ ${LEAGUES[lg]} 🔴 ${grouped[lg].length} LIVE</div>`+grouped[lg].map(x=>renderCard(x)).join(''); } box.innerHTML=html; }
+
 function renderCard(g){
-  const c=g.competitions[0]; const st=c.status; const h=c.competitors.find(x=>x.homeAway==='home'); const a=c.competitors.find(x=>x.homeAway==='away');
-  const isLive=st.type.state==='in'; const isFini=st.type.state==='post'; const isPre=st.type.state==='pre';
-  const badge=isLive?`<span class="badge live">🔴 LIVE ${st.displayClock||''}</span>`: isFini?`<span class="badge fini">Terminé</span>`: `<span class="badge sched">${heureCotonou(g.date)}</span>`;
-  return `<div class="card" onclick="openDetail('${g.id}','${g._lg}')" style="border-left:5px solid ${isLive?'red':isFini?'#999':'#0a3d8f'}">
-    <div style="display:flex; align-items:center; gap:8px; flex:1;">
-      <div class="team"><img src="${a.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px;font-weight:bold">${a.team.abbreviation||''}</small></div>
-      <div style="flex:1; font-size:13px;">
-        <div style="display:flex; justify-content:space-between;"><span>${a.team.shortDisplayName}</span><b>${isPre?'':a.score||0}</b></div>
-        <div style="display:flex; justify-content:space-between;"><span>${h.team.shortDisplayName}</span><b>${isPre?'':h.score||0}</b></div>
-        <small style="color:${isLive?'red':'#555'}; font-weight:bold;">${isLive?'En cours • Voir buteurs': isPre? heureCotonou(g.date) : 'Terminé • Voir détails'}</small>
-      </div>
-      <div class="team"><img src="${h.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px;font-weight:bold">${h.team.abbreviation||''}</small></div>
-    </div>
-    <div style="text-align:right; min-width:85px; margin-left:8px;">${badge}</div>
+  const c=g.competitions[0]; const st=c.status; const h=c.competitors.find(x=>x.homeAway==='home'); const a=c.competitors.find(x=>x.homeAway==='away'); const ms=getMatchState(st);
+  const isLive=ms.state==='LIVE'; const isHT=ms.state==='HT'; const isFini=ms.state==='FT'; const isPre=ms.state==='PRE';
+  let badgeClass=isLive?'live':isHT?'ht':isFini?'fini':'sched';
+  let timerText=isLive?`⏱️ ${ms.minute!==null?ms.minute+"' en cours":'En cours'}`: isHT?`⏸️ Mi-temps`: isFini?`Terminé`: heureCotonou(g.date);
+  let progressW=isLive? (ms.minute? (ms.minute/90)*100 : 15) : isHT?50: isFini?100:0;
+  return `<div class="card" onclick="openDetail('${g.id}','${g._lg}')" style="border-left:6px solid ${isLive?'red':isHT?'orange':isFini?'#999':'#0a3d8f'}">
+    <div class="card-top"><div style="display:flex; align-items:center; gap:8px; flex:1;"><div class="team"><img src="${a.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px">${a.team.abbreviation||''}</small></div><div style="flex:1; font-size:13px;"><div style="display:flex; justify-content:space-between;"><span>${a.team.shortDisplayName}</span><b>${a.score||0}</b></div><div style="display:flex; justify-content:space-between;"><span>${h.team.shortDisplayName}</span><b>${h.score||0}</b></div><small style="color:${isLive?'red':isHT?'#d35400':'#555'}; font-weight:bold;">${timerText}</small></div><div class="team"><img src="${h.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px">${h.team.abbreviation||''}</small></div></div><div style="text-align:right; min-width:95px; margin-left:8px;"><span class="badge ${badgeClass}">${ms.label}</span></div></div>${(isLive||isHT)?`<div class="progress"><div class="progress-fill" style="width:${progressW}%; background:${isHT?'orange':'red'}"></div></div>`:''}
   </div>`;
 }
-function showTab(name){ ['detail','stats','effectif','classement'].forEach(n=>{ document.getElementById('tab-'+n).style.display=n===name?'block':'none'; document.getElementById('btn-'+n).classList.toggle('active', n===name); }); }
+
+async function loadLeague(league,btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } const box=document.getElementById('box'); box.innerHTML='Chargement...'; const events=await fetchLeague(league); box.innerHTML=`<div class="league-title">⚽ ${LEAGUES[league]}</div>`+events.map(g=>renderCard(g)).join(''); }
+function showTab(n){ ['detail','stats','effectif'].forEach(x=>{ document.getElementById('tab-'+x).style.display=x===n?'block':'none'; document.getElementById('btn-'+x).classList.toggle('active', x===n); }); }
+
+// FONCTION DETAIL COMPLETE AVEC BUTEURS + PASSEURS + STATS LIVE
 async function openDetail(eventId,league){
-  document.getElementById('modal').style.display='block'; document.getElementById('modal-title').innerText='Chargement...'; document.getElementById('tab-detail').innerHTML='⏳...'; document.getElementById('tab-stats').innerHTML='⏳...'; document.getElementById('tab-effectif').innerHTML='⏳...'; document.getElementById('tab-classement').innerHTML='⏳...'; showTab('detail');
+  currentEventId=eventId; currentLeague=league;
+  document.getElementById('modal').style.display='block';
+  document.getElementById('modal-title').innerText='Chargement LIVE...';
+  document.getElementById('tab-detail').innerHTML='⏳ Chargement buteurs...';
+  document.getElementById('tab-stats').innerHTML='⏳ Chargement stats...';
+  document.getElementById('tab-effectif').innerHTML='⏳ Chargement effectif...';
+  showTab('detail');
+
+  await fetchDetail(eventId,league);
+
+  // rafraichit les stats toutes les 15 sec si modal ouverte
+  clearInterval(detailInterval);
+  detailInterval=setInterval(()=>{ if(document.getElementById('modal').style.display==='block' && currentEventId) fetchDetail(currentEventId,currentLeague); },15000);
+}
+
+async function fetchDetail(eventId,league){
   try{
-    const summaryUrl=`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/summary?event=${eventId}`;
-    let data; try{ const r=await fetch(summaryUrl); data=await r.json(); }catch(e){ const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(summaryUrl)); const j=await r2.json(); data=JSON.parse(j.contents); }
-    const comp=data.header?.competitions?.[0]; if(!comp){ document.getElementById('tab-detail').innerHTML='Match pas encore commencé.'; return; }
-    const home=comp.competitors?.find(c=>c.homeAway==='home'); const away=comp.competitors?.find(c=>c.homeAway==='away'); if(!home||!away){ document.getElementById('tab-detail').innerHTML='En attente...'; return; }
-    document.getElementById('modal-title').innerText=`${away.team.displayName} ${away.score||0} - ${home.score||0} ${home.team.displayName}`;
-    let scorers=[]; if(comp.details) scorers=comp.details.filter(d=>d.scoringPlay); if(scorers.length===0 && data.commentary) scorers=data.commentary.filter(c=>c.scoringPlay);
-    let detailHtml=`<div style="text-align:center; padding:10px; background:#ffc; border-radius:8px; margin-bottom:10px;"><div style="display:flex; justify-content:space-around; align-items:center;"><div><img src="${away.team.logo}" width="50" onerror="this.style.display='none'"><br><b>${away.team.displayName}</b></div><div style="font-size:24px; font-weight:bold;">${away.score||0} - ${home.score||0}<br><small style="font-size:11px;color:${comp.status.type.state==='in'?'red':'#555'}">${comp.status.type.state==='in'?'🔴 LIVE '+ (comp.status.displayClock||''): traduire(comp.status.type.detail)||''}</small></div><div><img src="${home.team.logo}" width="50" onerror="this.style.display='none'"><br><b>${home.team.displayName}</b></div></div><div style="margin-top:8px; font-size:11px; color:#555;">${comp.venue?.fullName||''} • ${heureCotonou(comp.date)}</div></div>`;
-    if(comp.status.type.state==='pre'){ detailHtml+=`<div style="background:#e3f2fd;padding:10px;border-radius:8px;text-align:center"><b>⏰ Match prévu</b><br>Coup d'envoi à ${heureCotonou(comp.date)}<br><small>Les buteurs et stats apparaîtront au coup d'envoi</small></div>`; }
-    else{
-      detailHtml+=`<div style="font-weight:bold; margin:10px 0;">⚽ Buteurs</div>`;
-      if(scorers.length>0){ scorers.forEach(s=>{ let nom=getNomButeur(s)|| s.team?.displayName || 'Buteur'; let minute=s.clock?.displayValue||''; let teamLogo=s.team?.id==away.team.id?away.team.logo:home.team.logo; detailHtml+=`<div class="buteur"><div style="display:flex;justify-content:space-between"><span style="display:flex;align-items:center;gap:6px"><img src="${teamLogo||''}" width="18" onerror="this.style.display='none'"> <b>${nom}</b></span><span style="color:red;font-weight:bold">${minute}'</span></div><div style="font-size:11px;color:#555">${traduire(s.text||'')}</div></div>`; }); }
-      else{ detailHtml+=`<p style="text-align:center;color:#666;font-size:12px">${away.score==0 && home.score==0?'0-0 • Pas encore de but':'Buts non détaillés'}</p>`; }
-      if(data.commentary){ detailHtml+=`<br><b>📝 Fil du match (FR)</b><br>`+data.commentary.slice(0,15).map(c=>`<div style="font-size:11px; padding:6px; border-bottom:1px solid #eee; ${c.scoringPlay?'background:#e8ffe8;font-weight:bold':''}">${c.clock?.displayValue?c.clock.displayValue+"' - ":''}${traduire(c.text)}</div>`).join(''); }
+    const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/summary?event=${eventId}`;
+    let data; try{ const r=await fetch(url+'?t='+Date.now()); data=await r.json(); }catch(e){ const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url)); const j=await r2.json(); data=JSON.parse(j.contents); }
+    const comp=data.header?.competitions?.[0]; if(!comp) return;
+    const home=comp.competitors?.find(c=>c.homeAway==='home'); const away=comp.competitors?.find(c=>c.homeAway==='away');
+    const ms=getMatchState(comp.status);
+    document.getElementById('modal-title').innerText=`${away.team.displayName} ${away.score} - ${home.score} ${home.team.displayName} ${ms.label}`;
+
+    // 1. BUTEURS + PASSEURS
+    let scorers = [];
+    if(comp.details) scorers = comp.details.filter(d=>d.scoringPlay);
+    if(scorers.length===0 && data.commentary) scorers = data.commentary.filter(c=>c.scoringPlay);
+
+    let detailHtml=`<div style="text-align:center; padding:10px; background:#ffc; border-radius:8px; margin-bottom:12px;">
+      <div style="display:flex; justify-content:space-around; align-items:center;">
+        <div><img src="${away.team.logo}" width="48"><br><b style="font-size:12px">${away.team.displayName}</b></div>
+        <div style="font-size:26px; font-weight:bold; color:${ms.state==='LIVE'?'red':'#000'}">${away.score||0} - ${home.score||0}<br><small style="font-size:13px;">${ms.label}</small><br><small style="font-size:10px;color:#555">${heureCotonou(comp.date)}</small></div>
+        <div><img src="${home.team.logo}" width="48"><br><b style="font-size:12px">${home.team.displayName}</b></div>
+      </div>
+    </div>`;
+
+    detailHtml+=`<div style="font-weight:bold; font-size:14px; margin:10px 0;">⚽ Buteurs et passeurs LIVE</div>`;
+
+    if(comp.status.type.state==='pre'){
+      detailHtml+=`<div style="background:#e3f2fd;padding:12px;border-radius:8px;text-align:center">Match prévu à ${heureCotonou(comp.date)}<br><small>Buteurs et passeurs dispo au coup d'envoi</small></div>`;
+    }else{
+      if(scorers.length>0){
+        scorers.forEach(s=>{
+          // ESPN : athletesInvolved[0] = buteur, [1] = passeur
+          let buteur = s.athletesInvolved?.[0]?.displayName || s.athlete?.displayName || null;
+          let passeur = s.athletesInvolved?.[1]?.displayName || null;
+          // si pas dans athletesInvolved, on parse le texte
+          if(!buteur){
+            let m = (s.text||'').match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+            if(m) buteur=m[1];
+          }
+          let minute = s.clock?.displayValue || s.time||'';
+          let isHome = s.team?.id==home.team.id;
+          let logo = isHome? home.team.logo : away.team.logo;
+          let teamName = isHome? home.team.abbreviation : away.team.abbreviation;
+
+          detailHtml+=`<div class="buteur">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="display:flex; align-items:center; gap:6px;"><img src="${logo}" width="18" onerror="this.style.display='none'"><b>${buteur||'Buteur'}</b> <small style="color:#666">(${teamName})</small></span>
+              <span style="background:red;color:#fff;padding:2px 8px;border-radius:12px;font-weight:bold;font-size:12px">${minute}'</span>
+            </div>
+            ${passeur?`<div style="font-size:11px; margin-top:4px; color:#0a0;">🎯 Passe décisive : <b>${passeur}</b></div>`:''}
+            <div style="font-size:11px; color:#555; margin-top:3px;">${traduire(s.text||'')}</div>
+          </div>`;
+        });
+      }else{
+        detailHtml+=`<div style="text-align:center; padding:12px; background:#f9f9f9; border-radius:8px; color:#666;">${(away.score==0 && home.score==0)?'0-0 • Pas encore de but<br><small>Dès qu\'il y a un but, le nom du buteur + passeur s\'affiche ici en LIVE</small>':'Buts non détaillés par ESPN pour ce match'}</div>`;
+      }
+
+      // Fil du match en direct
+      if(data.commentary && data.commentary.length>0){
+        detailHtml+=`<div style="margin-top:15px;"><b>📝 Fil du match en direct</b><div style="max-height:200px; overflow-y:auto; margin-top:6px; border:1px solid #eee; border-radius:8px;">`+
+        data.commentary.slice(0,20).map(c=>`<div style="font-size:11px; padding:6px; border-bottom:1px solid #f0f0f0; ${c.scoringPlay?'background:#e8ffe8;font-weight:bold':''}"><span style="color:red;font-weight:bold">${c.clock?.displayValue?c.clock.displayValue+"'":''}</span> ${traduire(c.text)}</div>`).join('')+
+        `</div></div>`;
+      }
     }
     document.getElementById('tab-detail').innerHTML=detailHtml;
-    let statsHtml=`<div style="display:flex; justify-content:space-between; background:#010; color:#fff; padding:8px; border-radius:8px; margin-bottom:8px;"><span>${away.team.abbreviation}</span><b>STATS</b><span>${home.team.abbreviation}</span></div>`;
-    if(data.boxscore?.teams?.length>=2){ let teamStats={}; data.boxscore.teams.forEach(t=>{ teamStats[t.team.id]={}; (t.statistics||[]).forEach(s=>{ teamStats[t.team.id][s.name]=s.displayValue; }); }); const list=[{k:'possessionPct',l:'Possession %'},{k:'totalShots',l:'Tirs'},{k:'shotsOnTarget',l:'Tirs cadrés'},{k:'wonCorners',l:'Corners'},{k:'yellowCards',l:'🟨 Jaunes'}]; list.forEach(it=>{ const av=teamStats[away.team.id]?.[it.k]||'0'; const hv=teamStats[home.team.id]?.[it.k]||'0'; statsHtml+=`<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; font-size:12px;"><span style="font-weight:bold">${av}</span><span>${it.l}</span><span style="font-weight:bold">${hv}</span></div>`; }); }else{ statsHtml+=`<p style="text-align:center;font-size:12px;color:#666">Stats dispo au coup d'envoi</p>`; }
+
+    // 2. STATS EN TEMPS RÉEL
+    let statsHtml=`<div style="display:flex; justify-content:space-between; background:#010; color:#fff; padding:8px; border-radius:8px; margin-bottom:10px; font-size:12px;"><span>🔵 ${away.team.abbreviation}</span><b style="color:#ff0">📊 STATS LIVE ${ms.label}</b><span>${home.team.abbreviation} 🔴</span></div>`;
+
+    if(data.boxscore?.teams?.length>=2){
+      let teamStats={};
+      data.boxscore.teams.forEach(t=>{
+        teamStats[t.team.id]={};
+        (t.statistics||[]).forEach(s=>{ teamStats[t.team.id][s.name]=s; });
+      });
+
+      const statList=[
+        {key:'possessionPct', label:'Possession %', isPct:true},
+        {key:'totalShots', label:'Tirs totaux'},
+        {key:'shotsOnTarget', label:'Tirs cadrés'},
+        {key:'wonCorners', label:'Corners'},
+        {key:'foulsCommitted', label:'Fautes'},
+        {key:'yellowCards', label:'🟨 Jaunes'},
+        {key:'redCards', label:'🟥 Rouges'},
+      ];
+
+      statList.forEach(it=>{
+        let aStat = teamStats[away.team.id]?.[it.key];
+        let hStat = teamStats[home.team.id]?.[it.key];
+        let aVal = aStat?.displayValue || aStat?.value || '0';
+        let hVal = hStat?.displayValue || hStat?.value || '0';
+
+        // barre de comparaison
+        let aNum = parseFloat(aVal)||0; let hNum = parseFloat(hVal)||0; let total = aNum+hNum||1;
+        let aPct = (aNum/total)*100; let hPct = 100-aPct;
+
+        statsHtml+=`<div class="stat-row">
+          <span style="font-weight:bold; min-width:30px; text-align:center;">${aVal}</span>
+          <div class="stat-bar-bg"><div class="stat-bar" style="width:${aPct}%; background:#0a3d8f;"></div><div class="stat-bar" style="width:${hPct}%; background:#c00;"></div></div>
+          <span style="min-width:80px; text-align:center; font-size:11px;">${it.label}</span>
+          <div class="stat-bar-bg"><div class="stat-bar" style="width:${hPct}%; background:#c00;"></div><div class="stat-bar" style="width:${aPct}%; background:#0a3d8f;"></div></div>
+          <span style="font-weight:bold; min-width:30px; text-align:center;">${hVal}</span>
+        </div>`;
+      });
+
+      statsHtml+=`<div style="text-align:center; margin-top:10px; font-size:10px; color:#666;">Stats mises à jour toutes les 15 secondes en LIVE • Source ESPN</div>`;
+    }else{
+      statsHtml+=`<div style="text-align:center; padding:15px; color:#666; font-size:12px;">${comp.status.type.state==='pre'?'Stats disponibles dès le coup d\'envoi':'Stats en direct non disponibles pour ce match amical'}</div>`;
+    }
     document.getElementById('tab-stats').innerHTML=statsHtml;
-    let effHtml=''; if(data.rosters && data.rosters.length>0){ data.rosters.forEach(r=>{ effHtml+=`<div style="background:#010;color:#fff;padding:6px;border-radius:6px;margin:10px 0 5px 0;font-weight:bold">${r.team.displayName}</div>`; (r.roster||[]).forEach(p=>{ const pl=p.athlete||p; effHtml+=`<div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid #eee;font-size:12px"><span>${pl.jersey||''} ${pl.displayName||''}</span><span>${p.starter?'⭐':'🔄'}</span></div>`; }); }); }else{ effHtml='<p style="text-align:center;">Compos 1h avant match</p>'; }
+
+    // 3. EFFECTIF
+    let effHtml='';
+    if(data.rosters && data.rosters.length>0){
+      data.rosters.forEach(r=>{
+        effHtml+=`<div style="background:#010;color:#fff;padding:6px 10px;border-radius:6px;margin:12px 0 6px 0;font-weight:bold;font-size:12px">👕 ${r.team.displayName} - ${r.formation||'Compo'}</div>`;
+        (r.roster||[]).forEach(p=>{
+          const pl=p.athlete||p; const isButeur = scorers.some(s=> s.athletesInvolved?.[0]?.id==pl.id);
+          effHtml+=`<div style="display:flex;justify-content:space-between;padding:6px 8px;border-bottom:1px solid #eee;font-size:11px; ${isButeur?'background:#e8ffe8;font-weight:bold':''}"><span>${pl.jersey?pl.jersey+'.':''} ${pl.displayName||''} ${pl.position?.abbreviation?'('+pl.position.abbreviation+')':''} ${isButeur?'⚽':''}</span><span>${p.starter?'⭐ Titulaire':'🔄 Remplaçant'}</span></div>`;
+        });
+      });
+    }else{
+      effHtml='<div style="text-align:center; padding:15px; color:#666;">Compositions annoncées 1h avant le coup d\'envoi<br><small>Tu verras les 11 titulaires + remplaçants</small></div>';
+    }
     document.getElementById('tab-effectif').innerHTML=effHtml;
-    document.getElementById('tab-classement').innerHTML='<p style="text-align:center;font-size:12px">Classement dispo pour championnats, pas pour amicaux</p>';
-  }catch(e){ document.getElementById('tab-detail').innerHTML='Erreur: '+e; }
+
+  }catch(e){
+    document.getElementById('tab-detail').innerHTML='Erreur chargement détails: '+e;
+  }
 }
-function closeModal(){ document.getElementById('modal').style.display='none'; }
-setInterval(()=>{ if(currentMode==='all') loadAll(); else if(currentMode==='live') loadLiveOnly(document.getElementById('tab-live')); },30000);
+
+function closeModal(){ document.getElementById('modal').style.display='none'; clearInterval(detailInterval); currentEventId=null; }
+setInterval(()=>{
+  const activeTab=document.querySelector('.tab.active');
+  if(activeTab && activeTab.id==='tab-live') loadLiveOnly(null);
+  else if(activeTab && activeTab.id==='tab-all') loadAll(null);
+},20000);
 loadAll();
 </script>
 </body>
