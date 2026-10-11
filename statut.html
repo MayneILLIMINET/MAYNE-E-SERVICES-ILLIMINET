@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN - Statuts - COMPLET SANS DUP</title>
+<title>ADMIN - Statuts - COMPLET + ACTUALISER</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -9,8 +9,11 @@
 *{box-sizing:border-box}
 body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0}
 .app{max-width:950px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000;overflow:hidden}
-.top{padding:10px;background:#000;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;gap:8px;flex-wrap:wrap}
-.btn-retour{background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none}
+.top{padding:10px;background:#000;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;gap:6px;flex-wrap:wrap}
+.btn-retour{background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none;border:none;cursor:pointer}
+.btn-refresh{background:#0d6efd;color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fff;cursor:pointer;animation:none}
+.btn-refresh.loading{background:#333;animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}
 .input{width:calc(100% - 16px);background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:8px}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:#000}
 .tab{background:#222;color:#fff;border:1px solid #444;padding:6px 9px;border-radius:20px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}
@@ -32,7 +35,6 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 .kv{display:flex;gap:4px;font-size:9px;line-height:1.25;border-bottom:1px dotted #222;padding:1px 0}
 .kv b{color:#ffeb3b;min-width:32px;font-weight:800;font-size:8px;text-transform:uppercase}
 .kv span{color:#fff;flex:1;word-break:break-all}
-.kv.dupl{opacity:0.5}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
 #mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:600px;width:100%;padding:14px;max-height:92vh;overflow:auto}
 .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
@@ -41,29 +43,42 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 <body>
 <div class="app">
 <div class="top">
-  <div style="display:flex;gap:6px"><a href="admin.html" class="btn-retour">← ADMIN</a><a href="index.html" class="btn-retour" style="background:#333;color:#fff;border:1px solid #555">🏠</a></div>
-  <b style="color:#ffeb3b;font-size:11px">📊 TRANSFERTS - COMPLET</b><span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:9px"></span>
+  <div style="display:flex;gap:6px;align-items:center">
+    <a href="admin.html" class="btn-retour">← ADMIN</a>
+    <a href="index.html" class="btn-retour" style="background:#333;color:#fff;border:1px solid #555">🏠</a>
+    <button id="btnRefresh" onclick="refreshData()" class="btn-refresh">🔄 Actualiser</button>
+  </div>
+  <div style="text-align:right">
+    <b style="color:#ffeb3b;font-size:11px;display:block">📊 TRANSFERTS - COMPLET</b>
+    <span id="lastUpdate" style="font-size:8px;color:#0f0">MAJ: -</span>
+  </div>
+  <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:9px">0 cmds</span>
 </div>
+
 <div class="stats">
   <div><div class="sval" id="stEnCours" style="color:#ffeb3b">0</div><div class="slab">EN COURS</div></div>
   <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS RÉCENT</div></div>
   <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS</div></div>
   <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
 </div>
+
 <div class="tabs" id="tabs"></div>
-<input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire, Arouko..." oninput="filtrer()">
+<input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire..." oninput="filtrer()">
+
 <div class="wrap">
-<table><thead><tr><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date / MAJ</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"></tbody></table>
+<table><thead><tr><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date / MAJ</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Chargement...</td></tr></tbody></table>
 </div>
 </div>
+
 <div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3><div id="mContent"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER</button><button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button><button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button></div></div></div>
+
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
-function getPhone(){ try{let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p;}catch(e){} return null;}
-function isAdmin(ph){ if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8))); }
+function getPhone(){try{let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p;}catch(e){} return null;}
+function isAdmin(ph){if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8)));}
 if(!isAdmin(getPhone())){document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement</div>'; throw 'not admin';}
 const SERVICES=[{key:'all',label:'TOUS',path:null},{key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},{key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},{key:'market',label:'MARKET',path:'commandes_marketplace'},{key:'1xbet',label:'1XBET',path:'commandes_1xbet'},{key:'factures',label:'FACTURES',path:'commandes_factures'},{key:'forfaits',label:'FORFAITS',path:'commandes_forfaits'},{key:'epargne',label:'EPARGNE',path:'commandes_epargne'},{key:'depot',label:'DEPOTS',path:'commandes_depots'},{key:'retrait',label:'RETRAITS',path:'commandes_retraits'},{key:'kyc',label:'KYC',path:'kyc_demandes'}];
 let allData=[],currentTab='all',currentItem=null,counts={};
@@ -71,75 +86,52 @@ function getPriority(s){const t=(s||'').toLowerCase(); if(t.includes('en cours')
 function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms;}
 function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:3px;font-size:8px" id="count-'+s.key+'">0</span>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
 async function loadAll(){
+  const btn=document.getElementById('btnRefresh');
+  if(btn){ btn.classList.add('loading'); btn.innerText='⏳...'; }
   allData=[]; counts={}; SERVICES.forEach(s=>counts[s.key]=0);
   const pr=SERVICES.filter(s=>s.path).map(s=>db.ref(s.path).limitToLast(400).once('value').then(snap=>{
     snap.forEach(ch=>{
       const v=ch.val();
-      const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:v.montant||v.total||v.prix||0,statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v,_time:0};
+      const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:v.montant||v.total||v.prix||0,statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v,_time:0}
       it._time=getTime(it); allData.push(it); counts[s.key]++;
     });
   }));
   await Promise.all(pr);
   allData.sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;});
   SERVICES.forEach(s=>{const el=document.getElementById('count-'+s.key); if(el) el.innerText=s.key==='all'?allData.length:(counts[s.key]||0);});
-  document.getElementById('totalCount').innerText=allData.length+' cmds'; updateStats(allData); render(allData);
+  document.getElementById('totalCount').innerText=allData.length+' cmds';
+  document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR');
+  updateStats(allData); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab || currentTab==='all'));
+  if(btn){ btn.classList.remove('loading'); btn.innerText='🔄 Actualiser'; }
 }
+function refreshData(){ loadAll().then(()=>{ if(currentTab!=='all') switchTab(currentTab); }); }
 function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
 function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;}); updateStats(list); render(list);}
-
-// NOUVEAU FORMAT : TOUTES LES INFOS SANS DUPLICATION
 function buildClientDetails(item){
-  const d=item.data;
-  const ignoreKeys=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone'];
+  const d=item.data; const ignoreKeys=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone'];
   const priorityKeys=['montant','total','prix','amount','type','service','operateur','operator','reseau','numero','numero_beneficiaire','numero_benef','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet','id_1xbet'];
-
-  let seenValues=new Set();
-  seenValues.add(String(item.client_id||'').toLowerCase());
-  seenValues.add(String(item.phone||'').toLowerCase());
-  seenValues.add(String(item.montant||'').toLowerCase());
-
+  let seen=new Set(); seen.add(String(item.client_id||'').toLowerCase()); seen.add(String(item.phone||'').toLowerCase()); seen.add(String(item.montant||'').toLowerCase());
   let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''}</div>`;
-
-  // 1. clés prioritaires dans l'ordre
   priorityKeys.forEach(k=>{
-    if(d[k]===undefined || d[k]==='' || d[k]===null) return;
-    const v=String(d[k]).trim();
-    if(!v) return;
-    if(seenValues.has(v.toLowerCase())) return; // anti-duplication
-    // anti duplication partielle : si déjà dans client_id
-    if(v.length>4 && String(item.client_id).includes(v)) return;
-    seenValues.add(v.toLowerCase());
-    const label=k.replace('numero_beneficiaire','BÉNÉF').replace('numero_benef','BÉNÉF').replace('operateur','OP').replace('client_nom','NOM').replace('id_1xbet','1XBET');
+    if(d[k]===undefined||d[k]===''||d[k]===null) return;
+    const v=String(d[k]).trim(); if(!v) return; if(seen.has(v.toLowerCase())) return; if(v.length>4 && String(item.client_id).includes(v)) return;
+    seen.add(v.toLowerCase()); const label=k.replace('numero_beneficiaire','BÉNÉF').replace('numero_benef','BÉNÉF').replace('operateur','OP').replace('client_nom','NOM').replace('id_1xbet','1XBET');
     html+=`<div class="kv"><b>${label}:</b><span>${v.slice(0,60)}</span></div>`;
   });
-
-  // 2. toutes les autres clés restantes non ignorées
   Object.keys(d).forEach(k=>{
-    if(priorityKeys.includes(k) || ignoreKeys.includes(k)) return;
-    if(typeof d[k]==='object') return;
-    const v=String(d[k]).trim();
-    if(!v || v.length<2 || v.length>80) return;
-    if(seenValues.has(v.toLowerCase())) return;
-    seenValues.add(v.toLowerCase());
+    if(priorityKeys.includes(k)||ignoreKeys.includes(k)) return; if(typeof d[k]==='object') return;
+    const v=String(d[k]).trim(); if(!v||v.length<2||v.length>80) return; if(seen.has(v.toLowerCase())) return; seen.add(v.toLowerCase());
     html+=`<div class="kv"><b>${k.slice(0,8)}:</b><span>${v}</span></div>`;
   });
-
   return html;
 }
-
 function render(list){
   const tb=document.getElementById('tbody'); tb.innerHTML='';
   if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune</td></tr>'; return;}
   list.slice(0,600).forEach((item,idx)=>{
     let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
     const tr=document.createElement('tr'); tr.className=getPriority(item.statut)===0?'en-cours':'';
-    tr.innerHTML=`
-      <td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span></td>
-      <td class="col-client">${buildClientDetails(item)}</td>
-      <td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td>
-      <td class="col-date"><span class="small">${(item.date||'').slice(0,10)}<br>${(item.date||'').slice(11,16)}<br><span style="color:#0f0">${item.data.updated_at?('MAJ '+item.data.updated_at.slice(11,16)):''}</span><br>#${idx+1}</span></td>
-      <td class="col-action"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>
-    `;
+    tr.innerHTML=`<td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span></td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,10)}<br>${(item.date||'').slice(11,16)}<br><span style="color:#0f0">${item.data.updated_at?('MAJ '+item.data.updated_at.slice(11,16)):''}</span><br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
     tb.appendChild(tr);
   });
 }
@@ -154,6 +146,8 @@ initTabs(); loadAll();firebase.auth().onAuthStateChanged(function(user){
   if(user){ init(); } 
   else { firebase.auth().signInAnonymously(); }
 });
+// Actualisation auto toutes les 60s
+setInterval(()=>{ refreshData(); }, 60000);
 </script>
 </body>
 </html>
