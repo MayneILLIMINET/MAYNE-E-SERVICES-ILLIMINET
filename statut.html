@@ -14,7 +14,6 @@ body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-conte
 .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:#000}
 .tab{background:#222;color:#fff;border:1px solid #444;padding:6px 9px;border-radius:20px;font-size:10px;font-weight:800;cursor:pointer}
 .tab.active{background:#ff5000;color:#fff;border-color:#fff}
-.tab.count{background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:4px;font-size:9px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#000;margin:0 8px 8px 8px;border-radius:8px}
 .sval{font-weight:900;font-size:14px}
 .slab{font-size:8px;color:#aaa}
@@ -26,9 +25,7 @@ tr.en-cours{border-left:4px solid #ffeb3b; background:#2a2a00}
 .badge{padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900}
 .ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}.prog{background:#0d6efd;color:#fff}
 .btn{border:none;padding:5px 8px;border-radius:5px;font-weight:800;cursor:pointer;font-size:10px;margin:1px}
-.btn-val{background:#28a745;color:#fff}
-.btn-ann{background:#dc3545;color:#fff}
-.btn-view{background:#333;color:#fff;border:1px solid #555}
+.btn-val{background:#28a745;color:#fff}.btn-ann{background:#dc3545;color:#fff}.btn-view{background:#333;color:#fff;border:1px solid #555}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
 #mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:600px;width:100%;padding:14px;max-height:92vh;overflow:auto}
 .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
@@ -39,39 +36,39 @@ tr.en-cours{border-left:4px solid #ffeb3b; background:#2a2a00}
 <body>
 <div class="app">
 <div class="top">
-  <div style="display:flex;gap:8px;align-items:center">
+  <div style="display:flex;gap:8px">
     <a href="admin.html" class="btn-retour">← ADMIN</a>
     <a href="index.html" class="btn-retour" style="background:#333;color:#fff;border:1px solid #555">🏠 ACCUEIL</a>
   </div>
-  <b style="color:#ffeb3b">📊 SERVICES STATUS - TRI EN COURS EN HAUT</b>
+  <b style="color:#ffeb3b">📊 TRANSFERTS - TRI RÉCENT</b>
   <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:11px"></span>
 </div>
 
 <div class="stats">
   <div><div class="sval" id="stEnCours" style="color:#ffeb3b">0</div><div class="slab">EN COURS EN HAUT</div></div>
-  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS</div></div>
-  <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS</div></div>
+  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS - RÉCENT EN HAUT</div></div>
+  <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS - RÉCENT EN HAUT</div></div>
   <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
 </div>
 
 <div class="tabs" id="tabs"></div>
-<input id="search" class="input" placeholder="🔍 Rechercher client, phone, montant, id 1xbet, opérateur, statut..." oninput="filtrer()">
+<input id="search" class="input" placeholder="🔍 Rechercher..." oninput="filtrer()">
 
 <table>
-<thead><tr><th>Service</th><th>Client / Détails complets</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+<thead><tr><th>Service</th><th>Client / Détails complets</th><th>Statut</th><th>Date / MAJ</th><th>Actions</th></tr></thead>
 <tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
 </table>
 </div>
 
 <div id="modal" onclick="if(event.target==this) closeModal()">
   <div id="mBox">
-    <h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail Commande</h3>
+    <h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3>
     <div id="mContent"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
       <button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER</button>
-      <button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER / REJETER</button>
+      <button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button>
       <button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button>
-      <button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier Client</button>
+      <button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button>
     </div>
   </div>
 </div>
@@ -83,7 +80,7 @@ var db=firebase.database();
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
 function getPhone(){ try{ let p = JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
 function isAdmin(phone){ if(!phone) return false; const c=phone.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8)) ); }
-if(!isAdmin(getPhone())){ document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin 0158612131 seulement<br><a href="index.html" style="color:#ff5000">Retour</a></div>'; throw 'not admin'; }
+if(!isAdmin(getPhone())){ document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement</div>'; throw 'not admin'; }
 
 const SERVICES = [
   {key:'all', label:'TOUS', path:null},
@@ -99,16 +96,22 @@ const SERVICES = [
   {key:'kyc', label:'KYC', path:'kyc_demandes'}
 ];
 
-let allData=[], filtered=[], currentTab='all', currentItem=null;
-let counts={};
+let allData=[], currentTab='all', currentItem=null, counts={};
 
 function getPriority(statut){
   const s=(statut||'').toLowerCase();
-  if(s.includes('en cours')||s.includes('attente')||s.includes('pending')||s.includes('en-cours')) return 0;
-  if(s.includes('prog')||s.includes('traitement')) return 1;
-  if(s.includes('rejet')||s.includes('annul')||s.includes('echec')||s.includes('fail')) return 3;
-  if(s.includes('valid')||s.includes('succes')||s.includes('paye')||s.includes('livre')) return 2;
+  if(s.includes('en cours')||s.includes('attente')||s.includes('pending')) return 0;
   return 1;
+}
+// NOUVEAU : temps effectif = updated_at sinon date
+function getEffectiveTime(item){
+  const t = item.data.updated_at || item.data.updatedAt || item.date || item.data.date || item.data.created_at || '';
+  const ms = Date.parse(t);
+  return isNaN(ms)? 0 : ms;
+}
+function formatTime(ms){
+  if(!ms) return '-';
+  try{ return new Date(ms).toLocaleString('fr-FR'); }catch(e){ return ms; }
 }
 
 function initTabs(){
@@ -118,7 +121,7 @@ function initTabs(){
     const b=document.createElement('button');
     b.className='tab'+(s.key===currentTab?' active':'');
     b.id='tab-'+s.key;
-    b.innerHTML=s.label+' <span class="count" id="count-'+s.key+'">0</span>';
+    b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:4px;font-size:9px" id="count-'+s.key+'">0</span>';
     b.onclick=()=> switchTab(s.key);
     cont.appendChild(b);
   });
@@ -127,37 +130,40 @@ function initTabs(){
 async function loadAll(){
   allData=[]; counts={}; SERVICES.forEach(s=> counts[s.key]=0);
   const promises = SERVICES.filter(s=>s.path).map(s=>
-    db.ref(s.path).limitToLast(300).once('value').then(snap=>{
+    db.ref(s.path).limitToLast(400).once('value').then(snap=>{
       snap.forEach(ch=>{
         const v=ch.val();
-        allData.push({
+        const item={
           id: ch.key,
           path: s.path,
           service: s.key,
           serviceLabel: s.label,
-          client_id: v.client_id||v.phone||v.user||v.client||v.customer||'',
+          client_id: v.client_id||v.phone||v.user||'',
           phone: v.phone||v.client_id||'',
-          montant: v.montant||v.total||v.prix||v.amount||v.montant_total||0,
+          montant: v.montant||v.total||v.prix||v.amount||0,
           statut: (v.statut||v.status||'en cours').toLowerCase(),
-          date: v.date||v.created_at||v.timestamp||v.heure||'',
-          data: v
-        });
+          date: v.date||v.created_at||v.timestamp||'',
+          data: v,
+          _time: 0
+        };
+        item._time = getEffectiveTime(item);
+        allData.push(item);
         counts[s.key]++;
       });
     })
   );
   await Promise.all(promises);
-  // TRI : EN COURS TOUJOURS EN HAUT PUIS DATE DESC
+  // TRI CORRIGÉ : EN COURS TOUJOURS EN HAUT, PUIS PLUS RÉCENT AU PLUS ANCIEN
   allData.sort((a,b)=>{
-    const pa=getPriority(a.statut); const pb=getPriority(b.statut);
-    if(pa!==pb) return pa-pb;
-    return (b.date||'').toString().localeCompare((a.date||'').toString());
+    const pa=getPriority(a.statut), pb=getPriority(b.statut);
+    if(pa!==pb) return pa-pb; // en cours d'abord
+    return b._time - a._time; // plus récent d'abord
   });
   SERVICES.forEach(s=>{
     const el=document.getElementById('count-'+s.key);
     if(el) el.innerText = s.key==='all'? allData.length : (counts[s.key]||0);
   });
-  document.getElementById('totalCount').innerText = allData.length+' commandes - EN COURS EN HAUT';
+  document.getElementById('totalCount').innerText = allData.length+' - Tri récent';
   updateStats(allData);
   render(allData);
 }
@@ -165,10 +171,9 @@ async function loadAll(){
 function updateStats(list){
   let en=0,val=0,rej=0;
   list.forEach(i=>{
-    const st=i.statut;
-    if(getPriority(st)===0) en++;
-    else if(st.includes('valid')||st.includes('succes')) val++;
-    else if(st.includes('rejet')||st.includes('annul')) rej++;
+    if(getPriority(i.statut)===0) en++;
+    if(i.statut.includes('valid')) val++;
+    if(i.statut.includes('annul')||i.statut.includes('rejet')) rej++;
   });
   document.getElementById('stEnCours').innerText=en;
   document.getElementById('stValide').innerText=val;
@@ -181,67 +186,49 @@ function switchTab(key){
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+key)?.classList.add('active');
   let list = key==='all'? allData : allData.filter(d=>d.service===key);
-  // re-tri par priorité pour ce tab
   list = [...list].sort((a,b)=>{
-    const pa=getPriority(a.statut); const pb=getPriority(b.statut);
+    const pa=getPriority(a.statut), pb=getPriority(b.statut);
     if(pa!==pb) return pa-pb;
-    return (b.date||'').toString().localeCompare((a.date||'').toString());
+    return b._time - a._time;
   });
   updateStats(list);
   render(list);
 }
 
 function formatAllFields(data){
-  // Affiche TOUS les éléments importants de la commande
-  const ignore=['statut','status','date','created_at','timestamp'];
   let html='';
-  const fields = [
-    'type','service','operateur','operator','reseau',
-    'montant','total','prix','amount','montant_total',
-    'phone','client_id','user','customer','client',
-    'id_1xbet','id1xbet','compte_1xbet','code','numero',
-    'forfait','facture','reference','ref','id_facture',
-    'adresse','ville','quantite','produit','article'
-  ];
-  fields.forEach(k=>{
-    if(data[k]!==undefined && data[k]!=='' &&!ignore.includes(k)){
-      html+=`<div style="display:flex;justify-content:space-between;gap:6px"><span style="color:#ffeb3b">${k}:</span><b style="color:#fff;word-break:break-all">${String(data[k]).slice(0,80)}</b></div>`;
-    }
-  });
-  // s'il reste d'autres clés non listées, on les montre aussi
+  const fields=['type','service','operateur','montant','total','phone','client_id','id_1xbet','forfait','facture','reference','adresse','ville','quantite','produit'];
+  fields.forEach(k=>{ if(data[k]!==undefined && data[k]!=='') html+=`<div style="display:flex;justify-content:space-between"><span style="color:#ffeb3b">${k}:</span><b>${String(data[k]).slice(0,80)}</b></div>`; });
   Object.keys(data).forEach(k=>{
-    if(!fields.includes(k) &&!ignore.includes(k) && typeof data[k]!=='object' && String(data[k]).length<100){
-      if(String(data[k]).trim()!=='')
-        html+=`<div style="display:flex;justify-content:space-between;gap:6px"><span style="color:#aaa">${k}:</span><b>${String(data[k]).slice(0,80)}</b></div>`;
+    if(!fields.includes(k) && typeof data[k]!=='object' &&!['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_by'].includes(k)){
+      if(String(data[k]).trim() && String(data[k]).length<100)
+        html+=`<div style="display:flex;justify-content:space-between"><span style="color:#aaa">${k}:</span><b>${String(data[k]).slice(0,80)}</b></div>`;
     }
   });
-  return html||'<span class="small">Aucun détail</span>';
+  return html;
 }
 
 function render(list){
-  filtered=list;
   const tb=document.getElementById('tbody'); tb.innerHTML='';
   if(list.length===0){ tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px">Aucune commande</td></tr>'; return; }
-  list.slice(0,500).forEach(item=>{
+  list.slice(0,600).forEach(item=>{
     let badgeClass='wait';
-    if(item.statut.includes('valid')||item.statut.includes('succes')) badgeClass='ok';
-    else if(item.statut.includes('rejet')||item.statut.includes('annul')) badgeClass='no';
+    if(item.statut.includes('valid')) badgeClass='ok';
+    else if(item.statut.includes('annul')||item.statut.includes('rejet')) badgeClass='no';
     else if(getPriority(item.statut)===0) badgeClass='wait';
     else badgeClass='prog';
     const tr=document.createElement('tr');
     tr.className = getPriority(item.statut)===0? 'en-cours' : '';
+    const updated = item.data.updated_at? `<br><small style="color:#0f0">MAJ: ${String(item.data.updated_at).slice(0,19)}</small>` : '';
     tr.innerHTML=`
-      <td><b style="color:#ffeb3b">${item.serviceLabel}</b><br><small class="small">${item.path}<br>ID: ${item.id.slice(0,12)}...</small></td>
+      <td><b style="color:#ffeb3b">${item.serviceLabel}</b><br><small class="small">${item.id.slice(0,10)}...</small></td>
+      <td><div style="color:#0f0;font-weight:900">${item.montant} F - ${item.client_id}</div><div class="detail-box">${formatAllFields(item.data)}</div></td>
+      <td><span class="badge ${badgeClass}">${item.statut.toUpperCase()}</span>${getPriority(item.statut)===0?'<br><small style="color:#ffeb3b">🔝 EN HAUT</small>':''}</td>
+      <td><small>${(item.date||'').toString().slice(0,19)}${updated}<br><small style="color:#ff5000">#${list.indexOf(item)+1} - ${new Date(item._time).toLocaleTimeString('fr-FR')}</small></small></td>
       <td>
-        <div style="font-weight:900;color:#0f0">${item.montant} F - ${item.client_id||item.phone}</div>
-        <div class="detail-box">${formatAllFields(item.data)}</div>
-      </td>
-      <td><span class="badge ${badgeClass}">${item.statut.toUpperCase()}</span><br><small class="small" style="color:#ffeb3b">${getPriority(item.statut)===0?'🔝 EN HAUT':''}</small></td>
-      <td><small>${(item.date||'').toString().slice(0,19)}<br>${item.data.heure||''}</small></td>
-      <td>
-        <button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Détail complet</button><br>
-        <button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅ Valider</button>
-        <button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌ Annuler</button>
+        <button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><br>
+        <button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button>
+        <button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button>
       </td>
     `;
     tb.appendChild(tr);
@@ -261,52 +248,49 @@ function openDetail(path,id){
   if(!item) return;
   currentItem=item;
   document.getElementById('mTitle').innerText = item.serviceLabel+' - '+id;
-  let html='';
-  html+=`<div class="row"><span>Service</span><b>${item.serviceLabel} (${item.path})</b></div>`;
-  html+=`<div class="row"><span>Client</span><b>${item.client_id||item.phone}</b></div>`;
-  html+=`<div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div>`;
-  html+=`<div class="row"><span>Statut</span><b>${item.statut.toUpperCase()}</b></div>`;
-  html+=`<div class="row"><span>Date</span><b>${item.date}</b></div>`;
-  html+=`<div style="margin-top:10px"><b style="color:#ffeb3b">TOUS LES CHAMPS DE LA COMMANDE :</b></div>`;
-  Object.keys(item.data).forEach(k=>{
-    html+=`<div class="row"><span>${k}</span><b style="word-break:break-all; text-align:right; max-width:60%">${typeof item.data[k]==='object'? JSON.stringify(item.data[k]).slice(0,300) : item.data[k]}</b></div>`;
-  });
-  html+=`<div style="margin-top:8px;background:#000;padding:8px;border-radius:6px;max-height:300px;overflow:auto"><pre style="white-space:pre-wrap;font-size:10px;color:#0f0">${JSON.stringify(item.data,null,2)}</pre></div>`;
+  let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div><div class="row"><span>Créé</span><b>${item.date}</b></div><div class="row"><span>MAJ</span><b>${item.data.updated_at||'-'}</b></div><div class="row"><span>Temps effectif</span><b>${formatTime(item._time)}</b></div>`;
+  html+=`<div style="margin-top:8px"><b style="color:#ffeb3b">TOUS LES CHAMPS:</b></div>`;
+  Object.keys(item.data).forEach(k=>{ html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;text-align:right">${typeof item.data[k]==='object'? JSON.stringify(item.data[k]).slice(0,300) : item.data[k]}</b></div>`; });
   document.getElementById('mContent').innerHTML=html;
   document.getElementById('modal').style.display='flex';
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; currentItem=null; }
 
 function quickAction(path,id,newStatut){
-  if(!confirm(newStatut.toUpperCase()+' cette commande '+id+'?')) return;
-  db.ref(path+'/'+id+'/statut').set(newStatut).then(()=>{
-    db.ref(path+'/'+id+'/status').set(newStatut);
-    db.ref(path+'/'+id+'/updated_at').set(new Date().toISOString());
-    db.ref(path+'/'+id+'/updated_by').set('admin_'+getPhone());
+  if(!confirm(newStatut.toUpperCase()+' '+id+'?')) return;
+  const nowISO = new Date().toISOString();
+  const nowFR = new Date().toLocaleString('fr-FR');
+  // On met à jour statut + updated_at pour que le tri récent fonctionne
+  const updates={};
+  updates[path+'/'+id+'/statut']=newStatut;
+  updates[path+'/'+id+'/status']=newStatut;
+  updates[path+'/'+id+'/updated_at']=nowISO;
+  updates[path+'/'+id+'/updated_at_fr']=nowFR;
+  updates[path+'/'+id+'/updated_by']=getPhone();
+  db.ref().update(updates).then(()=>{
+    // Notif
     const item = allData.find(x=> x.path===path && x.id===id);
-    const clientPhone = item?.client_id || item?.phone || item?.data?.phone;
-    if(clientPhone){
-      db.ref('notifications/'+clientPhone).push({
-        titre: newStatut==='validé'? '✅ Commande Validée' : '❌ Commande Annulée',
-        message: `Ta commande ${item.serviceLabel} de ${item.montant} F est ${newStatut}`,
-        date: new Date().toLocaleString('fr-FR'),
+    const phone = item?.client_id || item?.phone;
+    if(phone){
+      db.ref('notifications/'+phone).push({
+        titre: newStatut==='validé'? '✅ Validée' : '❌ Annulée',
+        message: `Ta commande ${item.serviceLabel} de ${item.montant} F est ${newStatut} à ${nowFR}`,
+        date: nowFR,
         service: item.serviceLabel
       });
     }
-    alert('✅ Statut mis à '+newStatut);
-    loadAll();
+    alert('✅ '+newStatut+' - Remontée en haut des '+newStatut+'s');
+    loadAll().then(()=>{ if(currentTab!=='all') switchTab(currentTab); });
   });
 }
 function validerCurrent(){ if(!currentItem) return; quickAction(currentItem.path, currentItem.id, 'validé'); closeModal(); }
 function annulerCurrent(){ if(!currentItem) return; quickAction(currentItem.path, currentItem.id, 'annulé'); closeModal(); }
 function notifierCurrent(){
   if(!currentItem) return;
-  let titre=prompt('Titre notif:', currentItem.serviceLabel+' - Mise à jour');
-  if(!titre) return;
-  let msg=prompt('Message:', 'Ta commande est en cours de traitement');
-  if(!msg) return;
+  let titre=prompt('Titre:', currentItem.serviceLabel+' - Mise à jour'); if(!titre) return;
+  let msg=prompt('Message:','Ta commande est en cours'); if(!msg) return;
   const phone=currentItem.client_id||currentItem.phone;
-  db.ref('notifications/'+phone).push({titre, message:msg, date:new Date().toLocaleString('fr-FR')}).then(()=> alert('Notif envoyée à '+phone));
+  db.ref('notifications/'+phone).push({titre, message:msg, date:new Date().toLocaleString('fr-FR')}).then(()=> alert('Notif envoyée'));
 }
 
 initTabs();
