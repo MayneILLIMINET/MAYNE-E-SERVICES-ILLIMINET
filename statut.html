@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN - Statuts - FIX LARGEUR</title>
+<title>ADMIN - Statuts - COMPLET SANS DUP</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -17,30 +17,22 @@ body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-conte
 .tab.active{background:#ff5000;color:#fff;border-color:#fff}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#000;margin:0 8px 8px 8px;border-radius:8px}
 .sval{font-weight:900;font-size:14px}.slab{font-size:8px;color:#aaa}
-
-/* TABLE FIXE - NE DEBORDE PLUS */
 .wrap{width:100%;overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
-th,td{border:1px solid #333;padding:6px;text-align:left;vertical-align:top;word-wrap:break-word;overflow-wrap:anywhere}
-th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:10px}
-tr:hover{background:#2a2a2a}
+th,td{border:1px solid #333;padding:5px;text-align:left;vertical-align:top;word-wrap:break-word;overflow-wrap:anywhere}
+th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:9px}
 tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
-
-/* LARGEURS FIXES POUR MOBILE */
-.col-service{width:18%}
-.col-client{width:34%}
-.col-statut{width:14%}
-.col-date{width:18%}
-.col-action{width:16%}
-
-.badge{padding:2px 6px;border-radius:10px;font-size:8px;font-weight:900;display:inline-block}
-.ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}.prog{background:#0d6efd;color:#fff}
-.btn{border:none;padding:4px 6px;border-radius:5px;font-weight:800;cursor:pointer;font-size:9px;margin:1px;width:100%}
+.col-service{width:15%}.col-client{width:42%}.col-statut{width:13%}.col-date{width:16%}.col-action{width:14%}
+.badge{padding:2px 5px;border-radius:10px;font-size:8px;font-weight:900;display:inline-block}
+.ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
+.btn{border:none;padding:4px 5px;border-radius:5px;font-weight:800;cursor:pointer;font-size:8px;margin:1px;width:100%}
 .btn-val{background:#28a745;color:#fff}.btn-ann{background:#dc3545;color:#fff}.btn-view{background:#333;color:#fff;border:1px solid #555}
-.small{font-size:8px;color:#aaa;word-break:break-all}
-.client-main{color:#0f0;font-weight:900;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.client-sub{font-size:9px;color:#ddd;line-height:1.2;max-height:62px;overflow:hidden}
-.line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.small{font-size:8px;color:#aaa}
+.client-main{color:#0f0;font-weight:900;font-size:11px;line-height:1.1}
+.kv{display:flex;gap:4px;font-size:9px;line-height:1.25;border-bottom:1px dotted #222;padding:1px 0}
+.kv b{color:#ffeb3b;min-width:32px;font-weight:800;font-size:8px;text-transform:uppercase}
+.kv span{color:#fff;flex:1;word-break:break-all}
+.kv.dupl{opacity:0.5}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
 #mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:600px;width:100%;padding:14px;max-height:92vh;overflow:auto}
 .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
@@ -49,71 +41,38 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 <body>
 <div class="app">
 <div class="top">
-  <div style="display:flex;gap:6px">
-    <a href="admin.html" class="btn-retour">← ADMIN</a>
-    <a href="index.html" class="btn-retour" style="background:#333;color:#fff;border:1px solid #555">🏠</a>
-  </div>
-  <b style="color:#ffeb3b;font-size:12px">📊 TRANSFERTS - FIX</b>
-  <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:10px"></span>
+  <div style="display:flex;gap:6px"><a href="admin.html" class="btn-retour">← ADMIN</a><a href="index.html" class="btn-retour" style="background:#333;color:#fff;border:1px solid #555">🏠</a></div>
+  <b style="color:#ffeb3b;font-size:11px">📊 TRANSFERTS - COMPLET</b><span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:9px"></span>
 </div>
-
 <div class="stats">
   <div><div class="sval" id="stEnCours" style="color:#ffeb3b">0</div><div class="slab">EN COURS</div></div>
-  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS</div></div>
+  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS RÉCENT</div></div>
   <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS</div></div>
   <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
 </div>
-
 <div class="tabs" id="tabs"></div>
-<input id="search" class="input" placeholder="🔍 Rechercher phone, montant, bénéficiaire..." oninput="filtrer()">
-
+<input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire, Arouko..." oninput="filtrer()">
 <div class="wrap">
-<table>
-<thead><tr><th class="col-service">Service</th><th class="col-client">Client / Détails</th><th class="col-statut">Statut</th><th class="col-date">Date / MAJ</th><th class="col-action">Actions</th></tr></thead>
-<tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Chargement...</td></tr></tbody>
-</table>
+<table><thead><tr><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date / MAJ</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"></tbody></table>
 </div>
 </div>
-
-<div id="modal" onclick="if(event.target==this) closeModal()">
-  <div id="mBox">
-    <h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3>
-    <div id="mContent"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-      <button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER</button>
-      <button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button>
-      <button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button>
-      <button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button>
-    </div>
-  </div>
-</div>
-
+<div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3><div id="mContent"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER</button><button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button><button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button></div></div></div>
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
-function getPhone(){ try{ let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
-function isAdmin(ph){ if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8)) ); }
-if(!isAdmin(getPhone())){ document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement</div>'; throw 'not admin'; }
-
+function getPhone(){ try{let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p;}catch(e){} return null;}
+function isAdmin(ph){ if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8))); }
+if(!isAdmin(getPhone())){document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement</div>'; throw 'not admin';}
 const SERVICES=[{key:'all',label:'TOUS',path:null},{key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},{key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},{key:'market',label:'MARKET',path:'commandes_marketplace'},{key:'1xbet',label:'1XBET',path:'commandes_1xbet'},{key:'factures',label:'FACTURES',path:'commandes_factures'},{key:'forfaits',label:'FORFAITS',path:'commandes_forfaits'},{key:'epargne',label:'EPARGNE',path:'commandes_epargne'},{key:'depot',label:'DEPOTS',path:'commandes_depots'},{key:'retrait',label:'RETRAITS',path:'commandes_retraits'},{key:'kyc',label:'KYC',path:'kyc_demandes'}];
-
 let allData=[],currentTab='all',currentItem=null,counts={};
-function getPriority(s){ const t=(s||'').toLowerCase(); if(t.includes('en cours')||t.includes('attente')||t.includes('pending')) return 0; return 1; }
-function getTime(item){ const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms; }
-
-function initTabs(){
-  const c=document.getElementById('tabs'); c.innerHTML='';
-  SERVICES.forEach(s=>{
-    const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key;
-    b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:4px;font-size:8px" id="count-'+s.key+'">0</span>';
-    b.onclick=()=>switchTab(s.key); c.appendChild(b);
-  });
-}
+function getPriority(s){const t=(s||'').toLowerCase(); if(t.includes('en cours')||t.includes('attente')||t.includes('pending')) return 0; return 1;}
+function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms;}
+function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:3px;font-size:8px" id="count-'+s.key+'">0</span>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
 async function loadAll(){
   allData=[]; counts={}; SERVICES.forEach(s=>counts[s.key]=0);
-  const pr=SERVICES.filter(s=>s.path).map(s=> db.ref(s.path).limitToLast(400).once('value').then(snap=>{
+  const pr=SERVICES.filter(s=>s.path).map(s=>db.ref(s.path).limitToLast(400).once('value').then(snap=>{
     snap.forEach(ch=>{
       const v=ch.val();
       const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:v.montant||v.total||v.prix||0,statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v,_time:0};
@@ -121,77 +80,76 @@ async function loadAll(){
     });
   }));
   await Promise.all(pr);
-  allData.sort((a,b)=>{ const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time; });
-  SERVICES.forEach(s=>{ const el=document.getElementById('count-'+s.key); if(el) el.innerText=s.key==='all'?allData.length:(counts[s.key]||0); });
-  document.getElementById('totalCount').innerText=allData.length+' cmds';
-  updateStats(allData); render(allData);
+  allData.sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;});
+  SERVICES.forEach(s=>{const el=document.getElementById('count-'+s.key); if(el) el.innerText=s.key==='all'?allData.length:(counts[s.key]||0);});
+  document.getElementById('totalCount').innerText=allData.length+' cmds'; updateStats(allData); render(allData);
 }
-function updateStats(list){ let en=0,va=0,re=0; list.forEach(i=>{ if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++; }); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length; }
-function switchTab(key){ currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{ const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time; }); updateStats(list); render(list); }
+function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
+function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;}); updateStats(list); render(list);}
 
-// FORMAT COMPACT SANS DUPLICATION
-function compactClient(item){
+// NOUVEAU FORMAT : TOUTES LES INFOS SANS DUPLICATION
+function buildClientDetails(item){
   const d=item.data;
-  // Dédup: on garde seulement valeurs uniques et non vides
-  const seen=new Set();
-  const uniq=(v)=>{ if(!v) return false; const s=String(v).trim(); if(!s||s.length<2) return false; if(seen.has(s.toLowerCase())) return false; seen.add(s.toLowerCase()); return true; };
-  
-  const tel = d.client_id || d.phone || d.numero || '';
-  const montant = d.montant || d.total || d.prix || '';
-  const benef = d.numero_beneficiaire || d.numero_benef || d.beneficiaire || d.dest || '';
-  const operateur = d.operateur || d.operator || d.reseau || '';
-  const typeForfait = d.type || d.forfait || d.service || d.type_forfait || '';
-  const nom = d.client_nom || d.nom || d.name || '';
+  const ignoreKeys=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone'];
+  const priorityKeys=['montant','total','prix','amount','type','service','operateur','operator','reseau','numero','numero_beneficiaire','numero_benef','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet','id_1xbet'];
 
-  let lines=[];
-  if(uniq(tel)) lines.push(tel);
-  if(montant && uniq(montant+' F')) lines.push(montant+' F');
-  if(operateur && uniq(operateur)) lines.push(operateur);
-  if(benef && benef!==tel && uniq(benef)) lines.push('→ '+benef);
-  if(typeForfait && uniq(typeForfait)) lines.push(typeForfait);
-  if(nom && uniq(nom)) lines.push(nom);
+  let seenValues=new Set();
+  seenValues.add(String(item.client_id||'').toLowerCase());
+  seenValues.add(String(item.phone||'').toLowerCase());
+  seenValues.add(String(item.montant||'').toLowerCase());
 
-  // limite à 4 lignes max pour respecter dimensions
-  lines=lines.slice(0,4);
-  return lines.map(l=>`<div class="line">${l}</div>`).join('');
+  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''}</div>`;
+
+  // 1. clés prioritaires dans l'ordre
+  priorityKeys.forEach(k=>{
+    if(d[k]===undefined || d[k]==='' || d[k]===null) return;
+    const v=String(d[k]).trim();
+    if(!v) return;
+    if(seenValues.has(v.toLowerCase())) return; // anti-duplication
+    // anti duplication partielle : si déjà dans client_id
+    if(v.length>4 && String(item.client_id).includes(v)) return;
+    seenValues.add(v.toLowerCase());
+    const label=k.replace('numero_beneficiaire','BÉNÉF').replace('numero_benef','BÉNÉF').replace('operateur','OP').replace('client_nom','NOM').replace('id_1xbet','1XBET');
+    html+=`<div class="kv"><b>${label}:</b><span>${v.slice(0,60)}</span></div>`;
+  });
+
+  // 2. toutes les autres clés restantes non ignorées
+  Object.keys(d).forEach(k=>{
+    if(priorityKeys.includes(k) || ignoreKeys.includes(k)) return;
+    if(typeof d[k]==='object') return;
+    const v=String(d[k]).trim();
+    if(!v || v.length<2 || v.length>80) return;
+    if(seenValues.has(v.toLowerCase())) return;
+    seenValues.add(v.toLowerCase());
+    html+=`<div class="kv"><b>${k.slice(0,8)}:</b><span>${v}</span></div>`;
+  });
+
+  return html;
 }
 
 function render(list){
   const tb=document.getElementById('tbody'); tb.innerHTML='';
-  if(list.length===0){ tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune</td></tr>'; return; }
+  if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune</td></tr>'; return;}
   list.slice(0,600).forEach((item,idx)=>{
     let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
     const tr=document.createElement('tr'); tr.className=getPriority(item.statut)===0?'en-cours':'';
-    const maj = item.data.updated_at? `<span style="color:#0f0">MAJ ${String(item.data.updated_at).slice(11,16)}</span>` : '';
     tr.innerHTML=`
-      <td class="col-service"><b style="color:#ffeb3b;font-size:9px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span></td>
-      <td class="col-client"><div class="client-main">${item.montant?item.montant+' F':''} ${item.client_id?'- '+String(item.client_id).slice(0,12):''}</div><div class="client-sub">${compactClient(item)}</div></td>
-      <td class="col-statut"><span class="badge ${badge}">${item.statut.slice(0,7).toUpperCase()}</span></td>
-      <td class="col-date"><span class="small">${(item.date||'').toString().slice(0,10)}<br>${(item.date||'').toString().slice(11,16)}<br>${maj}<br>#${idx+1}</span></td>
+      <td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span></td>
+      <td class="col-client">${buildClientDetails(item)}</td>
+      <td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td>
+      <td class="col-date"><span class="small">${(item.date||'').slice(0,10)}<br>${(item.date||'').slice(11,16)}<br><span style="color:#0f0">${item.data.updated_at?('MAJ '+item.data.updated_at.slice(11,16)):''}</span><br>#${idx+1}</span></td>
       <td class="col-action"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>
     `;
     tb.appendChild(tr);
   });
 }
-function filtrer(){ const q=document.getElementById('search').value.toLowerCase(); if(!q){ switchTab(currentTab); return; } const base=currentTab==='all'?allData:allData.filter(d=>d.service===currentTab); const f=base.filter(i=> JSON.stringify(i).toLowerCase().includes(q)); render(f); }
-function openDetail(path,id){
-  const item=allData.find(x=> x.path===path && x.id===id); if(!item) return; currentItem=item;
-  document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id;
-  let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div><div class="row"><span>Créé</span><b>${item.date}</b></div><div class="row"><span>MAJ</span><b>${item.data.updated_at||'-'}</b></div>`;
-  Object.keys(item.data).forEach(k=>{ if(k!=='statut'&&k!=='status') html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;text-align:right;font-size:11px">${typeof item.data[k]==='object'?JSON.stringify(item.data[k]).slice(0,200):item.data[k]}</b></div>`; });
-  document.getElementById('mContent').innerHTML=html; document.getElementById('modal').style.display='flex';
-}
-function closeModal(){ document.getElementById('modal').style.display='none'; currentItem=null; }
-function quickAction(path,id,newStatut){
-  if(!confirm(newStatut.toUpperCase()+' '+id+'?')) return;
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
-  const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone();
-  db.ref().update(up).then(()=>{ alert('✅ '+newStatut); loadAll().then(()=>{ if(currentTab!=='all') switchTab(currentTab); }); });
-}
-function validerCurrent(){ if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'validé'); closeModal(); }
-function annulerCurrent(){ if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'annulé'); closeModal(); }
-function notifierCurrent(){ if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:','Traitement'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>alert('Envoyé')); }
-
+function filtrer(){const q=document.getElementById('search').value.toLowerCase(); if(!q){switchTab(currentTab); return;} const base=currentTab==='all'?allData:allData.filter(d=>d.service===currentTab); const f=base.filter(i=>JSON.stringify(i).toLowerCase().includes(q)); render(f);}
+function openDetail(path,id){const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item; document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id; let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div>`; Object.keys(item.data).forEach(k=>{html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${typeof item.data[k]==='object'?JSON.stringify(item.data[k]).slice(0,300):item.data[k]}</b></div>`;}); document.getElementById('mContent').innerHTML=html; document.getElementById('modal').style.display='flex';}
+function closeModal(){document.getElementById('modal').style.display='none'; currentItem=null;}
+function quickAction(path,id,newStatut){if(!confirm(newStatut.toUpperCase()+' '+id+'?')) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone(); db.ref().update(up).then(()=>{alert('✅ '+newStatut); loadAll().then(()=>{if(currentTab!=='all') switchTab(currentTab);});});}
+function validerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'validé'); closeModal();}
+function annulerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'annulé'); closeModal();}
+function notifierCurrent(){if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:','Traitement'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>alert('Envoyé'));}
 initTabs(); loadAll();firebase.auth().onAuthStateChanged(function(user){
   if(user){ init(); } 
   else { firebase.auth().signInAnonymously(); }
