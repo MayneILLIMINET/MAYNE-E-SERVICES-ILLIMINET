@@ -311,6 +311,10 @@ function notifierCurrent(){
 
 initTabs();
 loadAll();
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ init(); } 
+  else { firebase.auth().signInAnonymously(); }
+});
 </script>
 </body>
 </html>
