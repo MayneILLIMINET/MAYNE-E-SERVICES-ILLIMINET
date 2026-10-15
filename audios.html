@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppDans - Lecteur Gratuit</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+.header{width:100%;max-width:480px;text-align:center;margin:20px 0}
+.header h1{font-size:26px;font-weight:800}
+.header h1 span{color:#1DB954}
+.card{width:100%;max-width:480px;background:#151515;border-radius:20px;padding:20px;border:1px solid #222}
+.btn-pick{width:100%;padding:16px;background:#1DB954;color:#000;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer}
+.item{padding:12px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.item.active{background:#1DB95422;color:#1DB954}
+.player{margin-top:18px;background:#1e1e1e;border-radius:16px;padding:16px}
+.controls{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.controls button{width:48px;height:48px;border-radius:50%;border:0;background:#2a2a2a;color:#fff}
+.controls button.play{width:62px;height:62px;background:#1DB954;color:#000;font-size:26px}
+</style>
+</head>
+<body>
+<div class="header"><h1>AppDans <span>Player</span></h1><p>100% gratuit, hors-ligne, sans pub</p></div>
+<div class="card">
+<button class="btn-pick" id="pickBtn">🎵 Choisir mes musiques</button>
+<input type="file" id="fileInput" accept=".mp3,.m4a,.wav,.ogg,audio/*" multiple hidden>
+<div id="list"></div>
+<div id="playerBox" style="display:none">
+<div id="nowTitle"></div>
+<input type="range" id="seek" value="0" style="width:100%;margin:12px 0;accent-color:#1DB954">
+<div style="display:flex;justify-content:space-between;font-size:12px;opacity:.6"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+<div class="controls"><button id="prevBtn">⏮</button><button class="play" id="playBtn">▶</button><button id="nextBtn">⏭</button></div>
+</div>
+</div>
+<audio id="audio"></audio>
+<script>
+const fileInput=document.getElementById('fileInput'),pickBtn=document.getElementById('pickBtn'),listEl=document.getElementById('list'),audio=document.getElementById('audio'),playBtn=document.getElementById('playBtn'),prevBtn=document.getElementById('prevBtn'),nextBtn=document.getElementById('nextBtn'),seek=document.getElementById('seek'),nowTitle=document.getElementById('nowTitle'),playerBox=document.getElementById('playerBox'),curEl=document.getElementById('cur'),durEl=document.getElementById('dur');
+let tracks=[],index=0;
+pickBtn.onclick=()=>fileInput.click();
+fileInput.onchange=e=>{tracks=Array.from(e.target.files);if(tracks.length){renderList();load(0,true);}};
+function renderList(){listEl.innerHTML='';tracks.forEach((f,i)=>{const d=document.createElement('div');d.className='item'+(i===index?' active':'');d.innerHTML=`<span>${f.name}</span>`;d.onclick=()=>load(i,true);listEl.appendChild(d);});}
+function load(i,auto){index=i;const f=tracks[index];audio.src=URL.createObjectURL(f);nowTitle.textContent=f.name;playerBox.style.display='block';renderList();if(auto){audio.play();playBtn.textContent='⏸';}}
+function fmt(s){if(isNaN(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60).toString().padStart(2,'0');return m+':'+sec;}
+playBtn.onclick=()=>{if(audio.paused){audio.play();playBtn.textContent='⏸';}else{audio.pause();playBtn.textContent='▶';}};
+prevBtn.onclick=()=>{if(index>0)load(index-1,true);};
+nextBtn.onclick=()=>{if(index<tracks.length-1)load(index+1,true);};
+audio.ontimeupdate=()=>{seek.value=audio.duration?audio.currentTime/audio.duration*100:0;curEl.textContent=fmt(audio.currentTime);durEl.textContent=fmt(audio.duration);};
+seek.oninput=()=>{if(audio.duration)audio.currentTime=seek.value/100*audio.duration;};
+audio.onended=()=>{if(index<tracks.length-1)load(index+1,true);};
+</script>
+</body>
+</html>
