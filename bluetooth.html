@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bluetooth Force Fix</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#0a0a0a;color:#fff;padding:18px;display:flex;flex-direction:column;align-items:center}
+.card{width:100%;max-width:560px;background:#151515;border-radius:18px;padding:18px;border:1px solid #222;margin-bottom:14px}
+h1{font-size:20px;margin-bottom:8px} h1 span{color:#1DB954}
+h2{font-size:15px;margin:14px 0 8px;color:#1DB954}
+p,li{font-size:13px;opacity:.8;line-height:1.5}
+.btn{width:100%;padding:14px;border-radius:12px;border:0;font-weight:800;font-size:14px;cursor:pointer;margin:6px 0}
+.btn-green{background:#1DB954;color:#000}
+.btn-dark{background:#2a2a2a;color:#fff}
+.code{background:#000;border:1px solid #333;border-radius:10px;padding:10px;font-family:monospace;font-size:12px;margin:8px 0;white-space:pre-wrap;word-break:break-all}
+.status{padding:10px;border-radius:10px;background:#1e1e1e;margin:8px 0;font-size:12px}
+.ok{color:#1DB954} .fail{color:#ff4d4d}
+ol{padding-left:18px}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>🔧 Bluetooth <span>Force Fix</span></h1>
+<p>Pour bouton gris qui refuse de s'activer. Ce fichier tente tous les déblocages logiciels possibles.</p>
+
+<h2>ETAPE 1 - Test automatique (dans ce navigateur)</h2>
+<button class="btn btn-green" id="testBtn">1. Tester si Bluetooth est bloqué</button>
+<button class="btn btn-dark" id="reqBtn">2. Tenter activation via Web Bluetooth</button>
+<div class="status" id="log">En attente...</div>
+
+<h2>ETAPE 2 - Fix sans PC (à faire à la main - 2 min)</h2>
+<ol>
+<li>Paramètres > Apps > Voir toutes les apps > 3 points > Afficher système > <b>Bluetooth</b> > Stockage > <b>Vider cache + Effacer données</b></li>
+<li>Pareil pour <b>Bluetooth MIDI Service</b> et <b>com.android.bluetooth</b></li>
+<li>Paramètres > Système > Options de réinitialisation > <b>Réinitialiser Wi-Fi, données mobiles et Bluetooth</b> (ça ne supprime pas tes fichiers)</li>
+<li>Redémarre en <b>mode sans échec</b> : appuie long sur bouton éteindre > appui long sur "Éteindre" > Mode sans échec > teste Bluetooth. Si ça marche en mode sans échec = une app bloque.</li>
+</ol>
+
+<h2>ETAPE 3 - Fix FORCE avec PC (méthode qui débloque 90% des boutons gris)</h2>
+<p>Il te faut un PC + câble USB :</p>
+<div class="code">1. Active Développeur : Paramètres > À propos > tape 7x sur Numéro de build
+2. Paramètres > Système > Options développeur > Active Débogage USB
+3. Branche au PC
+4. Sur PC, installe ADB (tape sur Google "platform tools download")
+5. Ouvre CMD / Terminal dans le dossier platform-tools et tape :
+
+adb devices
+adb shell svc bluetooth enable
+adb shell svc bluetooth disable
+adb shell svc bluetooth enable
+
+6. Si ça reste gris, tape ça aussi :
+adb shell pm clear com.android.bluetooth
+adb shell settings put global bluetooth_on 1
+adb reboot
+</div>
+<button class="btn btn-dark" onclick="navigator.clipboard.writeText(document.querySelector('.code').innerText)">Copier les commandes ADB</button>
+
+<h2>ETAPE 4 - Si toujours gris = hardware</h2>
+<p>Si après tout ça le bouton reste gris, c'est la puce Bluetooth qui a grillé (choc, eau, mise à jour). Solution : clé USB Bluetooth OTG à 3.000F ou réparation.</p>
+
+<h2>Code Android pour forcer (si tu fais une app)</h2>
+<div class="code">BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+if (adapter != null) {
+    adapter.enable();
+    try {
+        Method m = adapter.getClass().getMethod("enable");
+        m.invoke(adapter);
+    } catch (Exception e) { e.printStackTrace(); }
+}</div>
+</div>
+<script>
+const logEl = document.getElementById('log');
+function log(t,c=''){ logEl.innerHTML += `<div class="${c}">${t}</div>`; }
+document.getElementById('testBtn').onclick = async()=>{
+  logEl.innerHTML='';
+  log('--- Test Bluetooth ---');
+  if(!navigator.bluetooth){ log('❌ Ton navigateur ne supporte pas Web Bluetooth. Utilise Chrome sur Android.', 'fail'); return; }
+  log('✅ Web Bluetooth supporté','ok');
+  const btEnabled = await navigator.bluetooth.getAvailability().catch(()=>false);
+  log(`Bluetooth disponible : ${btEnabled ? 'OUI' : 'NON (bloqué ou éteint)'}`, btEnabled?'ok':'fail');
+  if(!btEnabled) log('→ Fais ETAPE 2 et 3 ci-dessous, c\'est ça qui va le débloquer','fail');
+};
+document.getElementById('reqBtn').onclick = async()=>{
+  logEl.innerHTML='';
+  try{
+    log('Demande activation...');
+    const device = await navigator.bluetooth.requestDevice({acceptAllDevices:true});
+    log(`✅ Appareil trouvé : ${device.name||'inconnu'} - Bluetooth débloqué !`,'ok');
+  }catch(e){
+    log(`❌ Erreur : ${e.message}`,'fail');
+    log('Cause bouton gris = service Bluetooth Android crashé. Fais fix ADB ETAPE 3.');
+  }
+};
+</script>
+</body>
+</html>
