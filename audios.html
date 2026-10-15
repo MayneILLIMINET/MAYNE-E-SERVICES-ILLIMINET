@@ -3,51 +3,120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AppDans - Lecteur Gratuit</title>
+<title>AppDans Player - AB Repeat</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
-.header{width:100%;max-width:480px;text-align:center;margin:20px 0}
-.header h1{font-size:26px;font-weight:800}
-.header h1 span{color:#1DB954}
-.card{width:100%;max-width:480px;background:#151515;border-radius:20px;padding:20px;border:1px solid #222}
-.btn-pick{width:100%;padding:16px;background:#1DB954;color:#000;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer}
-.item{padding:12px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.item.active{background:#1DB95422;color:#1DB954}
-.player{margin-top:18px;background:#1e1e1e;border-radius:16px;padding:16px}
-.controls{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-.controls button{width:48px;height:48px;border-radius:50%;border:0;background:#2a2a2a;color:#fff}
-.controls button.play{width:62px;height:62px;background:#1DB954;color:#000;font-size:26px}
+body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+.header{width:100%;max-width:520px;text-align:center;margin:12px 0}
+.header h1{font-size:24px;font-weight:800}.header h1 span{color:#1DB954}
+.header p{opacity:.6;font-size:13px;margin-top:4px}
+.card{width:100%;max-width:520px;background:#151515;border-radius:20px;padding:16px;border:1px solid #222}
+.btn-pick{width:100%;padding:15px;background:#1DB954;color:#000;border:0;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer}
+.list{margin-top:14px;max-height:260px;overflow:auto}
+.item{padding:10px;border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;font-size:14px;margin-bottom:3px}
+.item.active{background:#1DB95422;color:#1DB954;border:1px solid #1DB954}
+.player{margin-top:14px;background:#1e1e1e;border-radius:16px;padding:14px}
+.title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.seek{width:100%;margin:10px 0;accent-color:#1DB954}
+.time{display:flex;justify-content:space-between;font-size:11px;opacity:.6}
+.controls{display:flex;justify-content:center;gap:10px;align-items:center;margin-top:10px}
+.controls button{width:46px;height:46px;border-radius:50%;border:0;background:#2a2a2a;color:#fff;font-size:18px}
+.controls button.play{width:60px;height:60px;background:#1DB954;color:#000;font-size:24px}
+.modes{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.mode-btn{padding:7px 12px;border-radius:20px;border:1px solid #333;background:#2a2a2a;color:#fff;font-size:12px;cursor:pointer}
+.mode-btn.on{background:#1DB954;color:#000;border-color:#1DB954;font-weight:700}
+.ab-box{margin-top:12px;background:#111;border:1px dashed #333;border-radius:12px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ab-box span{font-size:12px;opacity:.7}
+.ab-box button{padding:6px 10px;border-radius:8px;border:1px solid #333;background:#2a2a2a;color:#fff;font-size:12px}
+.ab-box button.on{background:#1DB954;color:#000}
+.hint{font-size:11px;opacity:.35;text-align:center;margin-top:10px}
 </style>
 </head>
 <body>
-<div class="header"><h1>AppDans <span>Player</span></h1><p>100% gratuit, hors-ligne, sans pub</p></div>
+<div class="header"><h1>AppDans <span>Player</span></h1><p>Tout lire • Boucle • Répéter AB comme VLC • 100% offline</p></div>
 <div class="card">
 <button class="btn-pick" id="pickBtn">🎵 Choisir mes musiques</button>
-<input type="file" id="fileInput" accept=".mp3,.m4a,.wav,.ogg,audio/*" multiple hidden>
-<div id="list"></div>
-<div id="playerBox" style="display:none">
-<div id="nowTitle"></div>
-<input type="range" id="seek" value="0" style="width:100%;margin:12px 0;accent-color:#1DB954">
-<div style="display:flex;justify-content:space-between;font-size:12px;opacity:.6"><span id="cur">0:00</span><span id="dur">0:00</span></div>
-<div class="controls"><button id="prevBtn">⏮</button><button class="play" id="playBtn">▶</button><button id="nextBtn">⏭</button></div>
+<input type="file" id="fileInput" accept=".mp3,.m4a,.wav,.ogg,.flac,audio/*" multiple hidden>
+<div class="list" id="list"></div>
+<div class="player" id="playerBox" style="display:none">
+<div class="title" id="nowTitle"></div>
+<input type="range" id="seek" class="seek" value="0">
+<div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+<div class="controls">
+<button id="prevBtn">⏮</button>
+<button class="play" id="playBtn">▶</button>
+<button id="nextBtn">⏭</button>
+</div>
+<div class="modes">
+<button class="mode-btn" id="loopBtn">🔁 Boucle: OFF</button>
+<button class="mode-btn" id="shuffleBtn">🔀 Aléatoire: OFF</button>
+<button class="mode-btn on" id="allBtn">▶ Tout lire: ON</button>
+</div>
+<div class="ab-box">
+<span>AB Repeat (comme VLC):</span>
+<button id="aBtn">Set A [ 0:00 ]</button>
+<button id="bBtn">Set B [ 0:00 ]</button>
+<button id="clearAB">Effacer AB</button>
+<span id="abStatus" style="opacity:.6"></span>
 </div>
 </div>
-<audio id="audio"></audio>
+<div class="hint">Tes musiques restent sur ton téléphone. Rien n'est uploadé.</div>
+</div>
+<audio id="audio" preload="metadata"></audio>
 <script>
-const fileInput=document.getElementById('fileInput'),pickBtn=document.getElementById('pickBtn'),listEl=document.getElementById('list'),audio=document.getElementById('audio'),playBtn=document.getElementById('playBtn'),prevBtn=document.getElementById('prevBtn'),nextBtn=document.getElementById('nextBtn'),seek=document.getElementById('seek'),nowTitle=document.getElementById('nowTitle'),playerBox=document.getElementById('playerBox'),curEl=document.getElementById('cur'),durEl=document.getElementById('dur');
+const $=id=>document.getElementById(id);
+const fileInput=$('fileInput'),pickBtn=$('pickBtn'),listEl=$('list'),audio=$('audio'),playBtn=$('playBtn'),prevBtn=$('prevBtn'),nextBtn=$('nextBtn'),seek=$('seek'),nowTitle=$('nowTitle'),playerBox=$('playerBox'),curEl=$('cur'),durEl=$('dur'),loopBtn=$('loopBtn'),shuffleBtn=$('shuffleBtn'),allBtn=$('allBtn'),aBtn=$('aBtn'),bBtn=$('bBtn'),clearAB=$('clearAB'),abStatus=$('abStatus');
 let tracks=[],index=0;
+let loopMode=0;
+let shuffle=false, playAll=true;
+let pointA=null, pointB=null;
 pickBtn.onclick=()=>fileInput.click();
-fileInput.onchange=e=>{tracks=Array.from(e.target.files);if(tracks.length){renderList();load(0,true);}};
-function renderList(){listEl.innerHTML='';tracks.forEach((f,i)=>{const d=document.createElement('div');d.className='item'+(i===index?' active':'');d.innerHTML=`<span>${f.name}</span>`;d.onclick=()=>load(i,true);listEl.appendChild(d);});}
-function load(i,auto){index=i;const f=tracks[index];audio.src=URL.createObjectURL(f);nowTitle.textContent=f.name;playerBox.style.display='block';renderList();if(auto){audio.play();playBtn.textContent='⏸';}}
-function fmt(s){if(isNaN(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60).toString().padStart(2,'0');return m+':'+sec;}
-playBtn.onclick=()=>{if(audio.paused){audio.play();playBtn.textContent='⏸';}else{audio.pause();playBtn.textContent='▶';}};
-prevBtn.onclick=()=>{if(index>0)load(index-1,true);};
-nextBtn.onclick=()=>{if(index<tracks.length-1)load(index+1,true);};
-audio.ontimeupdate=()=>{seek.value=audio.duration?audio.currentTime/audio.duration*100:0;curEl.textContent=fmt(audio.currentTime);durEl.textContent=fmt(audio.duration);};
-seek.oninput=()=>{if(audio.duration)audio.currentTime=seek.value/100*audio.duration;};
-audio.onended=()=>{if(index<tracks.length-1)load(index+1,true);};
+fileInput.onchange=e=>{tracks=Array.from(e.target.files);if(tracks.length){render();load(0,true);}};
+function render(){listEl.innerHTML='';tracks.forEach((f,i)=>{const d=document.createElement('div');d.className='item'+(i===index?' active':'');d.textContent=f.name; d.onclick=()=>load(i,true); listEl.appendChild(d);});}
+function load(i,auto){index=i; const f=tracks[index]; if(!f)return; audio.src=URL.createObjectURL(f); nowTitle.textContent=f.name; playerBox.style.display='block'; pointA=null; pointB=null; updateAB(); render(); if(auto){audio.play(); playBtn.textContent='⏸';}}
+function fmt(s){if(isNaN(s))return'0:00'; const m=Math.floor(s/60),sec=Math.floor(s%60).toString().padStart(2,'0'); return m+':'+sec;}
+playBtn.onclick=()=>{if(audio.paused){audio.play(); playBtn.textContent='⏸';}else{audio.pause(); playBtn.textContent='▶';}};
+prevBtn.onclick=()=>{ if(shuffle){ load(Math.floor(Math.random()*tracks.length),true); } else if(index>0) load(index-1,true); else if(loopMode===1) load(tracks.length-1,true); };
+nextBtn.onclick=()=>{ nextTrack(); };
+function nextTrack(){
+  if(shuffle){ load(Math.floor(Math.random()*tracks.length),true); return; }
+  if(index < tracks.length-1){ load(index+1,true); }
+  else { if(loopMode===1 && playAll) load(0,true); else { playBtn.textContent='▶'; } }
+}
+loopBtn.onclick=()=>{
+  loopMode=(loopMode+1)%3;
+  loopBtn.textContent=['🔁 Boucle: OFF','🔁 Boucle: TOUT','🔂 Boucle: UN'][loopMode];
+  loopBtn.classList.toggle('on', loopMode!==0);
+  audio.loop = (loopMode===2);
+};
+shuffleBtn.onclick=()=>{shuffle=!shuffle; shuffleBtn.textContent=`🔀 Aléatoire: ${shuffle?'ON':'OFF'}`; shuffleBtn.classList.toggle('on',shuffle);};
+allBtn.onclick=()=>{playAll=!playAll; allBtn.textContent=`▶ Tout lire: ${playAll?'ON':'OFF'}`; allBtn.classList.toggle('on',playAll);};
+aBtn.onclick=()=>{ pointA=audio.currentTime; updateAB(); };
+bBtn.onclick=()=>{ pointB=audio.currentTime; if(pointA!==null && pointB!==null && pointB<=pointA){ [pointA,pointB]=[pointB,pointA]; } updateAB(); };
+clearAB.onclick=()=>{ pointA=null; pointB=null; updateAB(); };
+function updateAB(){
+  aBtn.textContent=`Set A [ ${pointA!==null?fmt(pointA):'0:00'} ]`;
+  bBtn.textContent=`Set B [ ${pointB!==null?fmt(pointB):'0:00'} ]`;
+  aBtn.classList.toggle('on', pointA!==null);
+  bBtn.classList.toggle('on', pointB!==null);
+  if(pointA!==null && pointB!==null) abStatus.textContent=`🔁 Boucle AB ${fmt(pointA)} → ${fmt(pointB)} active`;
+  else if(pointA!==null) abStatus.textContent=`A défini à ${fmt(pointA)}, attends B`;
+  else abStatus.textContent='';
+}
+audio.ontimeupdate=()=>{
+  if(pointA!==null && pointB!==null){
+    if(audio.currentTime >= pointB){ audio.currentTime = pointA; audio.play(); }
+  }
+  seek.value = audio.duration? audio.currentTime/audio.duration*100 : 0;
+  curEl.textContent = fmt(audio.currentTime);
+  durEl.textContent = fmt(audio.duration);
+};
+seek.oninput=()=>{ if(audio.duration) audio.currentTime = seek.value/100*audio.duration; };
+audio.onended=()=>{
+  if(loopMode===2) { audio.currentTime=0; audio.play(); return; }
+  if(playAll) nextTrack();
+  else playBtn.textContent='▶';
+};
 </script>
 </body>
 </html>
