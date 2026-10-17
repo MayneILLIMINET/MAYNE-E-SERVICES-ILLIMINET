@@ -3,42 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AppDans - Lecteur Gratuit</title>
+<title>AppDans Player V4 - YouTube + Local</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
-.header{width:100%;max-width:480px;text-align:center;margin:20px 0}
-.header h1{font-size:26px;font-weight:800}
-.header h1 span{color:#1DB954}
-.header p{opacity:.6;margin-top:8px;font-size:14px}
-.card{width:100%;max-width:480px;background:#151515;border-radius:20px;padding:20px;border:1px solid #222}
-.btn-pick{width:100%;padding:16px;background:#1DB954;color:#000;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer}
-.list{margin-top:18px;max-height:320px;overflow:auto}
-.item{padding:12px 10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border:1px solid transparent;margin-bottom:4px}
-.item.active{background:#1DB95422;border-color:#1DB954;color:#1DB954}
-.player{margin-top:18px;background:#1e1e1e;border-radius:16px;padding:16px}
-.title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.progress{width:100%;margin:12px 0}
-.progress input{width:100%;accent-color:#1DB954}
-.controls{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-.controls button{width:48px;height:48px;border-radius:50%;border:0;font-size:20px;cursor:pointer;background:#2a2a2a;color:#fff}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px}
+.header{width:100%;max-width:560px;text-align:center;margin:10px 0}
+.header h1{font-size:24px;font-weight:900} .header h1 span{color:#1DB954}
+.tabs{width:100%;max-width:560px;display:flex;gap:8px;margin:12px 0}
+.tab{flex:1;padding:12px;border-radius:12px;border:1px solid #222;background:#151515;color:#fff;font-weight:800;cursor:pointer;text-align:center}
+.tab.on{background:#1DB954;color:#000;border-color:#1DB954}
+.card{width:100%;max-width:560px;background:#151515;border-radius:20px;padding:14px;border:1px solid #222}
+.btn{padding:14px;border-radius:14px;border:0;font-weight:800;font-size:13px;cursor:pointer;width:100%}
+.btn-green{background:#1DB954;color:#000} .btn-dark{background:#2a2a2a;color:#fff}
+.btn-small{padding:10px 12px;font-size:12px;border-radius:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.search{width:100%;margin:12px 0;padding:12px 14px;border-radius:12px;border:1px solid #333;background:#1e1e1e;color:#fff;font-size:14px}
+.list{max-height:38vh;overflow:auto;border-radius:12px;background:#0f0f0f;border:1px solid #1e1e1e}
+.item{padding:11px 12px;border-bottom:1px solid #1a1a1a;cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:center}
+.item.active{background:#1DB9541a;color:#1DB954;border-left:3px solid #1DB954}
+.player{margin-top:12px;background:#1e1e1e;border-radius:16px;padding:14px;border:1px solid #2a2a2a}
+.title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.seek{width:100%;margin:10px 0;accent-color:#1DB954;height:4px}
+.time{display:flex;justify-content:space-between;font-size:11px;opacity:.6}
+.controls{display:flex;justify-content:center;gap:10px;align-items:center;margin-top:10px}
+.controls button{width:46px;height:46px;border-radius:50%;border:0;background:#2a2a2a;color:#fff;font-size:18px}
 .controls button.play{width:62px;height:62px;background:#1DB954;color:#000;font-size:26px}
-.time{display:flex;justify-content:space-between;font-size:12px;opacity:.6;margin-top:6px}
-.hint{margin-top:14px;font-size:12px;opacity:.4;text-align:center}
+.yt-box{display:flex;flex-direction:column;gap:10px}
+.yt-input{padding:14px;border-radius:12px;border:1px solid #333;background:#1e1e1e;color:#fff;font-size:14px;width:100%}
+.yt-result{background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:12px;display:none}
+.yt-thumb{width:100%;border-radius:10px;margin-bottom:10px}
+.status{font-size:12px;opacity:.7;text-align:center;padding:8px}
+.hint{font-size:11px;opacity:.35;text-align:center;margin-top:10px}
 </style>
 </head>
 <body>
-<div class="header">
-<h1>AppDans <span>Player</span></h1>
-<p>100% gratuit, hors-ligne, sans pub, sans publication</p>
+<div class="header"><h1>AppDans <span>Player V4</span></h1><p>Local + YouTube Downloader</p></div>
+
+<div class="tabs">
+<div class="tab on" id="tabLocal">📁 Ma Musique</div>
+<div class="tab" id="tabYT">▶ YouTube</div>
 </div>
-<div class="card">
-<button class="btn-pick" id="pickBtn">🎵 Choisir mes musiques</button>
+
+<div class="card" id="localCard">
+<div class="grid2">
+<button class="btn btn-green" id="pickFolderBtn">📁 Scanner dossier</button>
+<button class="btn btn-dark" id="pickFilesBtn">🎵 Fichiers</button>
+</div>
 <input type="file" id="fileInput" accept=".mp3,.m4a,.wav,.ogg,.flac,audio/*" multiple hidden>
+<input type="file" id="folderInput" accept=".mp3,.m4a,.wav,.ogg,.flac,audio/*" multiple webkitdirectory hidden>
+<input type="text" id="search" class="search" placeholder="Rechercher...">
+<div class="status" id="count">Aucune chanson</div>
 <div class="list" id="list"></div>
 <div class="player" id="playerBox" style="display:none">
-<div class="title" id="nowTitle">Aucune musique</div>
-<div class="progress"><input type="range" id="seek" value="0" min="0" max="100"></div>
+<div class="title" id="nowTitle"></div>
+<input type="range" id="seek" class="seek" value="0">
 <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
 <div class="controls">
 <button id="prevBtn">⏮</button>
@@ -46,71 +64,148 @@ body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:
 <button id="nextBtn">⏭</button>
 </div>
 </div>
-<div class="hint">Tes fichiers restent sur ton téléphone. Rien n'est envoyé sur internet.</div>
 </div>
+
+<div class="card" id="ytCard" style="display:none">
+<div class="yt-box">
+<input type="text" id="ytUrl" class="yt-input" placeholder="Colle lien YouTube ici... ex: https://youtu.be/...">
+<div class="grid2">
+<button class="btn btn-green" id="ytVideoBtn">📹 Vidéo MP4</button>
+<button class="btn btn-dark" id="ytAudioBtn">🎵 Audio MP3</button>
+</div>
+<div class="status" id="ytStatus">Colle un lien et choisis Video ou Audio. Usage perso uniquement.</div>
+<div class="yt-result" id="ytResult">
+<img id="ytThumb" class="yt-thumb">
+<div id="ytTitle" style="font-weight:700;font-size:14px;margin-bottom:8px"></div>
+<div class="grid2">
+<button class="btn btn-green btn-small" id="ytDownloadBtn">⬇ Télécharger</button>
+<button class="btn btn-dark btn-small" id="ytAddToPlayerBtn">+ Ajouter au Player</button>
+</div>
+</div>
+</div>
+<div class="hint">Astuce: utilise YouTube Premium si tu veux rester 100% légal. Cet outil est pour ton usage perso hors ligne.</div>
+</div>
+
 <audio id="audio" preload="metadata"></audio>
+
 <script>
-const fileInput = document.getElementById('fileInput');
-const pickBtn = document.getElementById('pickBtn');
-const listEl = document.getElementById('list');
-const audio = document.getElementById('audio');
-const playBtn = document.getElementById('playBtn');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const seek = document.getElementById('seek');
-const nowTitle = document.getElementById('nowTitle');
-const playerBox = document.getElementById('playerBox');
-const curEl = document.getElementById('cur');
-const durEl = document.getElementById('dur');
-let tracks = [];
-let index = 0;
-pickBtn.onclick = () => fileInput.click();
-fileInput.onchange = e => {
-  tracks = Array.from(e.target.files);
-  if(!tracks.length) return;
-  renderList();
-  load(0, true);
-};
-function renderList(){
-  listEl.innerHTML = '';
-  tracks.forEach((f,i)=>{
-    const div = document.createElement('div');
-    div.className = 'item' + (i===index?' active':'');
-    div.innerHTML = `<span>${f.name}</span>`;
-    div.onclick = ()=>load(i,true);
-    listEl.appendChild(div);
+const $=id=>document.getElementById(id);
+const fileInput=$('fileInput'), folderInput=$('folderInput'), listEl=$('list'), audio=$('audio'), playBtn=$('playBtn'), prevBtn=$('prevBtn'), nextBtn=$('nextBtn'), seek=$('seek'), nowTitle=$('nowTitle'), playerBox=$('playerBox'), curEl=$('cur'), durEl=$('dur'), searchEl=$('search'), countEl=$('count');
+
+let tracks=[], filteredTracks=[], index=0, pointA=null, pointB=null;
+let ytData={url:null, title:null, thumb:null, directUrl:null, isAudio:false};
+
+// --- TABS ---
+$('tabLocal').onclick=()=>{ $('tabLocal').classList.add('on'); $('tabYT').classList.remove('on'); $('localCard').style.display='block'; $('ytCard').style.display='none'; };
+$('tabYT').onclick=()=>{ $('tabYT').classList.add('on'); $('tabLocal').classList.remove('on'); $('ytCard').style.display='block'; $('localCard').style.display='none'; };
+
+// --- DB ---
+const DB_NAME='appdans_v4', STORE='tracks';
+function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,2); r.onupgradeneeded=()=>r.result.createObjectStore(STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
+async function idbSaveAll(files){const db=await idbOpen(); const tx=db.transaction(STORE,'readwrite'); const s=tx.objectStore(STORE); s.clear(); for(let f of files){ await new Promise(r=>{const req=s.add({name:f.name, blob:f}); req.onsuccess=r; req.onerror=r;});}}
+async function idbAddOne(name, blob){const db=await idbOpen(); const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).add({name, blob});}
+async function idbLoad(){try{const db=await idbOpen(); const tx=db.transaction(STORE,'readonly'); const all=await new Promise(res=>{const req=tx.objectStore(STORE).getAll(); req.onsuccess=()=>res(req.result); req.onerror=()=>res([]);}); if(all.length){const files=all.map(o=>new File([o.blob], o.name, {type:o.blob.type||'audio/mp3'})); setTracks(files,false);}}catch(e){}}
+
+// --- PLAYER LOGIC ---
+function setTracks(fileList, save=true){
+  const audioFiles = Array.from(fileList).filter(f=>f.type.startsWith('audio/') || f.type.startsWith('video/') || /\.(mp3|m4a|wav|ogg|flac|aac|mp4)$/i.test(f.name));
+  if(!audioFiles.length){ alert('Aucun audio trouvé'); return; }
+  audioFiles.sort((a,b)=>a.name.localeCompare(b.name));
+  tracks = audioFiles.map((f,i)=>({id:i, name:f.name, file:f, url: URL.createObjectURL(f)}));
+  filteredTracks=[...tracks];
+  if(save) idbSaveAll(audioFiles);
+  render(); if(tracks.length) load(0,false);
+}
+function render(){
+  listEl.innerHTML=''; filteredTracks.forEach(t=>{
+    const realIndex=tracks.indexOf(t);
+    const d=document.createElement('div'); d.className='item'+(realIndex===index?' active':'');
+    d.innerHTML=`<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</span>`;
+    d.onclick=()=>{ index=realIndex; load(index,true); };
+    listEl.appendChild(d);
   });
+  countEl.textContent=`${filteredTracks.length} / ${tracks.length} chansons`;
 }
-function load(i, autoplay){
-  index = i;
-  const f = tracks[index];
-  if(!f) return;
-  audio.src = URL.createObjectURL(f);
-  nowTitle.textContent = f.name;
-  playerBox.style.display = 'block';
-  renderList();
-  if(autoplay){ audio.play(); playBtn.textContent='⏸'; }
+function load(i,auto){ index=i; const t=tracks[index]; if(!t) return; audio.src=t.url; nowTitle.textContent=t.name; playerBox.style.display='block'; render(); if(auto) audio.play().then(()=>playBtn.textContent='⏸'); }
+$('pickFilesBtn').onclick=()=>fileInput.click(); $('pickFolderBtn').onclick=()=>folderInput.click();
+fileInput.onchange=e=>{ if(e.target.files.length) setTracks(e.target.files,true); };
+folderInput.onchange=e=>{ if(e.target.files.length) setTracks(e.target.files,true); };
+searchEl.oninput=()=>{ const q=searchEl.value.toLowerCase(); filteredTracks=q?tracks.filter(t=>t.name.toLowerCase().includes(q)):[...tracks]; render(); };
+function fmt(s){ if(isNaN(s)) return '0:00'; const m=Math.floor(s/60), sec=Math.floor(s%60).toString().padStart(2,'0'); return m+':'+sec; }
+playBtn.onclick=()=>{ if(audio.paused){ audio.play(); playBtn.textContent='⏸'; } else { audio.pause(); playBtn.textContent='▶'; } };
+prevBtn.onclick=()=>{ if(index>0) load(index-1,true); }; nextBtn.onclick=()=>{ if(index<tracks.length-1) load(index+1,true); else load(0,true); };
+audio.ontimeupdate=()=>{ seek.value=audio.duration?audio.currentTime/audio.duration*100:0; curEl.textContent=fmt(audio.currentTime); durEl.textContent=fmt(audio.duration); };
+seek.oninput=()=>{ if(audio.duration) audio.currentTime=seek.value/100*audio.duration; };
+audio.onended=()=>{ if(index<tracks.length-1) load(index+1,true); };
+
+// --- YOUTUBE DOWNLOADER via Cobalt API ---
+function getYTId(url){ const m=url.match(/(?:youtu\.be\/|v=|shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
+
+async function fetchFromCobalt(ytUrl, isAudio){
+  const res=await fetch('https://api.cobalt.tools/api/json', {
+    method:'POST',
+    headers:{'Accept':'application/json','Content-Type':'application/json'},
+    body: JSON.stringify({url:ytUrl, vCodec:'h264', vQuality:'720', aFormat:isAudio?'mp3':'mp3', isAudioOnly:isAudio, filenamePattern:'basic'})
+  });
+  const data=await res.json();
+  if(data.url) return data;
+  throw new Error(data.text||'Erreur Cobalt');
 }
-function fmt(s){ if(isNaN(s))return '0:00'; const m=Math.floor(s/60); const sec=Math.floor(s%60).toString().padStart(2,'0'); return m+':'+sec; }
-playBtn.onclick = ()=>{
-  if(audio.paused){ audio.play(); playBtn.textContent='⏸'; }
-  else { audio.pause(); playBtn.textContent='▶'; }
+
+async function handleYT(isAudio){
+  const url=$('ytUrl').value.trim();
+  if(!url){ alert('Colle un lien YouTube'); return; }
+  const id=getYTId(url);
+  if(!id){ $('ytStatus').textContent='Lien invalide'; return; }
+  
+  $('ytStatus').textContent=isAudio?'Récupération audio...':'Récupération vidéo...';
+  try{
+    const data=await fetchFromCobalt(url, isAudio);
+    ytData.directUrl=data.url;
+    ytData.title=data.filename||`youtube-${id}`;
+    ytData.isAudio=isAudio;
+    ytData.thumb=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    
+    $('ytThumb').src=ytData.thumb;
+    $('ytTitle').textContent=ytData.title;
+    $('ytResult').style.display='block';
+    $('ytStatus').textContent=isAudio?'Audio prêt !':'Vidéo prête !';
+  }catch(e){
+    $('ytStatus').textContent='Erreur: '+e.message+' - Essaye avec un autre lien ou réessaye.';
+  }
+}
+
+$('ytVideoBtn').onclick=()=>handleYT(false);
+$('ytAudioBtn').onclick=()=>handleYT(true);
+
+$('ytDownloadBtn').onclick=async()=>{
+  if(!ytData.directUrl) return;
+  $('ytStatus').textContent='Téléchargement en cours...';
+  const a=document.createElement('a');
+  a.href=ytData.directUrl;
+  a.download=ytData.title+(ytData.isAudio?'.mp3':'.mp4');
+  a.target='_blank';
+  a.click();
+  $('ytStatus').textContent='Téléchargement lancé ! Regarde tes notifications.';
 };
-prevBtn.onclick = ()=>{ if(index>0) load(index-1,true); };
-nextBtn.onclick = ()=>{ if(index<tracks.length-1) load(index+1,true); };
-audio.ontimeupdate = ()=>{
-  const p = audio.duration? (audio.currentTime/audio.duration*100) : 0;
-  seek.value = p;
-  curEl.textContent = fmt(audio.currentTime);
-  durEl.textContent = fmt(audio.duration);
+
+$('ytAddToPlayerBtn').onclick=async()=>{
+  if(!ytData.directUrl) return;
+  $('ytStatus').textContent='Ajout au player... ça peut prendre 30s';
+  try{
+    const resp=await fetch(ytData.directUrl);
+    const blob=await resp.blob();
+    const ext=ytData.isAudio?'.mp3':'.mp4';
+    const name=ytData.title.replace(/[^a-z0-9]/gi,'_').substring(0,40)+ext;
+    await idbAddOne(name, blob);
+    const file=new File([blob], name, {type:blob.type});
+    const newTrack={id:tracks.length, name, file, url:URL.createObjectURL(file)};
+    tracks.push(newTrack); filteredTracks=[...tracks]; render();
+    $('ytStatus').textContent='✅ Ajouté dans Ma Musique ! Va dans l\'onglet Ma Musique.';
+  }catch(e){ $('ytStatus').textContent='Erreur ajout: '+e.message; }
 };
-seek.oninput = ()=>{
-  if(audio.duration) audio.currentTime = seek.value/100*audio.duration;
-};
-audio.onended = ()=>{
-  if(index<tracks.length-1) load(index+1,true);
-  else { playBtn.textContent='▶'; }
-};
+
+idbLoad();
 </script>
 </body>
 </html>
