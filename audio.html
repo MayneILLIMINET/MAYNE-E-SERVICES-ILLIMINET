@@ -1,232 +1,66 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AppDans Player V6 - Direct DL</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
-body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px}
-.header{width:100%;max-width:580px;text-align:center;margin:8px 0}
-.header h1{font-size:23px;font-weight:900} .header h1 span{color:#1DB954}
-.tabs{width:100%;max-width:580px;display:flex;gap:8px;margin:10px 0}
-.tab{flex:1;padding:12px;border-radius:12px;border:1px solid #222;background:#151515;color:#fff;font-weight:800;cursor:pointer;text-align:center}
-.tab.on{background:#1DB954;color:#000;border-color:#1DB954}
-.card{width:100%;max-width:580px;background:#151515;border-radius:20px;padding:14px;border:1px solid #222}
-.btn{padding:14px;border-radius:14px;border:0;font-weight:800;font-size:13px;cursor:pointer;width:100%}
-.btn-green{background:#1DB954;color:#000} .btn-dark{background:#2a2a2a;color:#fff}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.search{width:100%;margin:12px 0;padding:12px 14px;border-radius:12px;border:1px solid #333;background:#1e1e1e;color:#fff;font-size:14px}
-.list{max-height:36vh;overflow:auto;border-radius:12px;background:#0f0f0f;border:1px solid #1e1e1e}
-.item{padding:11px 12px;border-bottom:1px solid #1a1a1a;cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:center}
-.item.active{background:#1DB9541a;color:#1DB954;border-left:3px solid #1DB954}
-.player{margin-top:12px;background:#1e1e1e;border-radius:16px;padding:14px;border:1px solid #2a2a2a}
-.title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
-.seek{width:100%;margin:10px 0;accent-color:#1DB954;height:4px}
-.time{display:flex;justify-content:space-between;font-size:11px;opacity:.6}
-.controls{display:flex;justify-content:center;gap:10px;align-items:center;margin-top:10px}
-.controls button{width:46px;height:46px;border-radius:50%;border:0;background:#2a2a2a;color:#fff;font-size:18px}
-.controls button.play{width:62px;height:62px;background:#1DB954;color:#000;font-size:26px}
-.yt-input{padding:14px;border-radius:12px;border:1px solid #333;background:#1e1e1e;color:#fff;font-size:14px;width:100%}
-.yt-result{background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:12px;display:none}
-.yt-thumb{width:100%;border-radius:10px;margin-bottom:10px}
-.status{font-size:12px;opacity:.8;text-align:center;padding:10px;line-height:1.5;background:#1a1a1a;border-radius:10px;margin:8px 0}
-.progress{width:100%;height:6px;background:#2a2a2a;border-radius:10px;overflow:hidden;display:none;margin:8px 0}
-.progress-bar{height:100%;width:0%;background:#1DB954;transition:width 0.3s}
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;background:#2a2a2a}
-</style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppDans V7 - 6 APIs</title>
+<style>body{background:#0a0a0a;color:#fff;font-family:sans-serif;padding:14px;display:flex;flex-direction:column;align-items:center} .card{background:#151515;border:1px solid #222;border-radius:16px;padding:14px;width:100%;max-width:560px} input,button{width:100%;padding:14px;border-radius:12px;border:1px solid #333;margin:6px 0} button{background:#1DB954;color:#000;font-weight:900;border:0;cursor:pointer} button.dark{background:#2a2a2a;color:#fff} .log{background:#000;padding:10px;border-radius:10px;font-size:11px;white-space:pre-wrap;min-height:60px;margin-top:10px;line-height:1.4} .list{max-height:30vh;overflow:auto;background:#0f0f0f;border-radius:10px;margin-top:10px} .item{padding:10px;border-bottom:1px solid #222;font-size:13px}</style>
 </head>
 <body>
-<div class="header"><h1>AppDans <span>Player V6 DIRECT</span></h1><p>Téléchargement YouTube intégré - sans redirection</p></div>
-
-<div class="tabs">
-<div class="tab on" id="tabLocal">📁 Ma Musique</div>
-<div class="tab" id="tabYT">▶ YouTube Direct</div>
+<h2>AppDans <span style="color:#1DB954">V7 DIRECT 6 APIs</span></h2>
+<div class="card">
+<input id="ytUrl" placeholder="Colle lien YouTube ici">
+<button id="dlMp3">🎵 Télécharger MP3 Direct dans Player</button>
+<button id="dlMp4" class="dark">📹 Télécharger MP4 Direct dans Player</button>
+<div id="log" class="log">Prêt. Colle un lien.</div>
+<div id="list" class="list"></div>
+<audio id="audio" controls style="width:100%;margin-top:10px"></audio>
+<video id="video" controls style="width:100%;margin-top:10px;display:none;border-radius:10px"></video>
 </div>
-
-<div class="card" id="localCard">
-<div class="grid2">
-<button class="btn btn-green" id="pickFolderBtn">📁 Scanner dossier</button>
-<button class="btn btn-dark" id="pickFilesBtn">🎵 Fichiers + Vidéos</button>
-</div>
-<input type="file" id="fileInput" accept=".mp3,.m4a,.wav,.ogg,.flac,.mp4,.mkv,.webm,audio/*,video/*" multiple hidden>
-<input type="file" id="folderInput" accept=".mp3,.m4a,.wav,.ogg,.flac,.mp4,.mkv,.webm,audio/*,video/*" multiple webkitdirectory hidden>
-<input type="text" id="search" class="search" placeholder="Rechercher...">
-<div class="status" id="count">Aucun fichier</div>
-<div class="list" id="list"></div>
-<div class="player" id="playerBox" style="display:none">
-<div class="title" id="nowTitle"></div>
-<video id="videoEl" style="width:100%;border-radius:10px;margin-top:10px;display:none" controls></video>
-<input type="range" id="seek" class="seek" value="0">
-<div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
-<div class="controls">
-<button id="prevBtn">⏮</button>
-<button class="play" id="playBtn">▶</button>
-<button id="nextBtn">⏭</button>
-</div>
-</div>
-</div>
-
-<div class="card" id="ytCard" style="display:none">
-<input type="text" id="ytUrl" class="yt-input" placeholder="Colle lien YouTube : https://youtu.be/xxxx">
-<div class="grid2" style="margin-top:10px">
-<button class="btn btn-green" id="ytVideoBtn">📹 DL VIDEO dans Player</button>
-<button class="btn btn-dark" id="ytAudioBtn">🎵 DL AUDIO dans Player</button>
-</div>
-<div class="status" id="ytStatus">Colle un lien YouTube et clique. Le fichier sera téléchargé ET ajouté automatiquement dans ton Player, sans quitter l'app.</div>
-<div class="progress" id="progress"><div class="progress-bar" id="progressBar"></div></div>
-<div class="yt-result" id="ytResult">
-<img id="ytThumb" class="yt-thumb">
-<div id="ytTitle" style="font-weight:700;font-size:14px;margin-bottom:8px"></div>
-<div id="ytInfo" style="font-size:11px;opacity:.6"></div>
-</div>
-</div>
-
-<audio id="audio" preload="metadata"></audio>
-
 <script>
 const $=id=>document.getElementById(id);
-const fileInput=$('fileInput'), folderInput=$('folderInput'), listEl=$('list'), audio=$('audio'), videoEl=$('videoEl'), playBtn=$('playBtn'), prevBtn=$('prevBtn'), nextBtn=$('nextBtn'), seek=$('seek'), nowTitle=$('nowTitle'), playerBox=$('playerBox'), curEl=$('cur'), durEl=$('dur'), searchEl=$('search'), countEl=$('count');
-let tracks=[], filteredTracks=[], index=0;
+const logEl=$('log'), listEl=$('list'), audio=$('audio'), video=$('video');
+let tracks=[];
+function log(t){ logEl.textContent+= '\n> '+t; logEl.scrollTop=logEl.scrollHeight; }
+function getId(u){ const m=u.match(/(?:youtu\.be\/|v=|shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
 
-$('tabLocal').onclick=()=>{ $('tabLocal').classList.add('on'); $('tabYT').classList.remove('on'); $('localCard').style.display='block'; $('ytCard').style.display='none'; };
-$('tabYT').onclick=()=>{ $('tabYT').classList.add('on'); $('tabLocal').classList.remove('on'); $('ytCard').style.display='block'; $('localCard').style.display='none'; };
-
-const DB_NAME='appdans_v6', STORE='tracks';
-function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=()=>r.result.createObjectStore(STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
-async function idbSaveAll(files){const db=await idbOpen(); const tx=db.transaction(STORE,'readwrite'); const s=tx.objectStore(STORE); s.clear(); for(let f of files){ await new Promise(r=>{const req=s.add({name:f.name, blob:f}); req.onsuccess=r; req.onerror=r;});}}
-async function idbAdd(name, blob){const db=await idbOpen(); const tx=db.transaction(STORE,'readwrite'); await new Promise(r=>{const req=tx.objectStore(STORE).add({name, blob}); req.onsuccess=r; req.onerror=r;});}
-async function idbLoad(){try{const db=await idbOpen(); const tx=db.transaction(STORE,'readonly'); const all=await new Promise(res=>{const req=tx.objectStore(STORE).getAll(); req.onsuccess=()=>res(req.result); req.onerror=()=>res([]);}); if(all.length){const files=all.map(o=>new File([o.blob], o.name, {type:o.blob.type})); setTracks(files,false);}}catch(e){}}
-
-function setTracks(fileList, save=true){
-  const files = Array.from(fileList).filter(f=>f.type.startsWith('audio/') || f.type.startsWith('video/') || /\.(mp3|m4a|wav|ogg|flac|aac|mp4|mkv|webm)$/i.test(f.name));
-  if(!files.length){ alert('Aucun audio/vidéo'); return; }
-  files.sort((a,b)=>a.name.localeCompare(b.name));
-  tracks = files.map((f,i)=>({id:i, name:f.name, file:f, url: URL.createObjectURL(f), isVideo:f.type.startsWith('video/')||/\.mp4|\.mkv|\.webm$/i.test(f.name)}));
-  filteredTracks=[...tracks];
-  if(save) idbSaveAll(files);
-  render(); if(tracks.length) load(0,false);
-}
-function render(){
-  listEl.innerHTML=''; filteredTracks.forEach(t=>{
-    const realIndex=tracks.indexOf(t);
-    const d=document.createElement('div'); d.className='item'+(realIndex===index?' active':'');
-    d.innerHTML=`<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.isVideo?'🎬 ':'🎵 '}${t.name}</span><span class="badge">${t.isVideo?'VIDEO':'AUDIO'}</span>`;
-    d.onclick=()=>{ index=realIndex; load(index,true); };
-    listEl.appendChild(d);
-  });
-  countEl.textContent=`${filteredTracks.length} / ${tracks.length} fichiers`;
-}
-function load(i,auto){
-  index=i; const t=tracks[index]; if(!t) return;
-  nowTitle.textContent=t.name; playerBox.style.display='block';
-  if(t.isVideo){
-    audio.pause(); videoEl.style.display='block'; videoEl.src=t.url; if(auto) videoEl.play();
-  }else{
-    videoEl.pause(); videoEl.style.display='none'; audio.src=t.url; if(auto) audio.play().then(()=>playBtn.textContent='⏸');
-  }
-  render();
-}
-$('pickFilesBtn').onclick=()=>fileInput.click(); $('pickFolderBtn').onclick=()=>folderInput.click();
-fileInput.onchange=e=>{ if(e.target.files.length) setTracks(e.target.files,true); };
-folderInput.onchange=e=>{ if(e.target.files.length) setTracks(e.target.files,true); };
-searchEl.oninput=()=>{ const q=searchEl.value.toLowerCase(); filteredTracks=q?tracks.filter(t=>t.name.toLowerCase().includes(q)):[...tracks]; render(); };
-function fmt(s){ if(isNaN(s)) return '0:00'; const m=Math.floor(s/60), sec=Math.floor(s%60).toString().padStart(2,'0'); return m+':'+sec; }
-playBtn.onclick=()=>{ const m=videoEl.style.display!=='none'?videoEl:audio; if(m.paused){ m.play(); playBtn.textContent='⏸'; } else { m.pause(); playBtn.textContent='▶'; } };
-prevBtn.onclick=()=>{ if(index>0) load(index-1,true); }; nextBtn.onclick=()=>{ if(index<tracks.length-1) load(index+1,true); else load(0,true); };
-audio.ontimeupdate=()=>{ seek.value=audio.duration?audio.currentTime/audio.duration*100:0; curEl.textContent=fmt(audio.currentTime); durEl.textContent=fmt(audio.duration); };
-videoEl.ontimeupdate=()=>{ seek.value=videoEl.duration?videoEl.currentTime/videoEl.duration*100:0; curEl.textContent=fmt(videoEl.currentTime); durEl.textContent=fmt(videoEl.duration); };
-seek.oninput=()=>{ const m=videoEl.style.display!=='none'?videoEl:audio; if(m.duration) m.currentTime=seek.value/100*m.duration; };
-audio.onended=()=>{ if(index<tracks.length-1) load(index+1,true); };
-videoEl.onended=()=>{ if(index<tracks.length-1) load(index+1,true); };
-
-// --- YOUTUBE DIRECT DOWNLOAD LOGIC ---
-function getYTId(url){ const m=url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
-
-async function downloadYouTube(ytUrl, isAudio){
-  const id=getYTId(ytUrl);
-  if(!id) throw new Error('Lien invalide');
-  
-  $('ytStatus').textContent = '🔍 Connexion au serveur de téléchargement...';
-  $('progress').style.display='block';
-  $('progressBar').style.width='10%';
-  $('ytThumb').src=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-  $('ytResult').style.display='block';
-  $('ytTitle').textContent='Préparation...';
-
-  // On utilise Cobalt API via proxy CORS qui autorise le navigateur
-  // C'est le seul moyen de le faire 100% dans ton app sans backend
-  const apiUrls = [
-    'https://api.cobalt.tools/api/json',
-    'https://co.wuk.sh/api/json'
+async function tryAllApis(url, isAudio){
+  const id=getId(url);
+  log(`ID détecté: ${id}`);
+  const apis=[
+    {name:'Cobalt 1', fn: async()=>{ const r=await fetch('https://api.cobalt.tools/api/json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,isAudioOnly:isAudio,aFormat:'mp3'})}); const j=await r.json(); return j.url; }},
+    {name:'Co.Wuk.sh', fn: async()=>{ const r=await fetch('https://co.wuk.sh/api/json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,isAudioOnly:isAudio})}); const j=await r.json(); return j.url; }},
+    {name:'Invidious API', fn: async()=>{ const r=await fetch(`https://inv.nadeko.net/api/v1/videos/${id}`); const j=await r.json(); const best=isAudio? j.adaptiveFormats.find(f=>f.type.includes('audio')) : j.formatStreams[0]; return best.url; }},
+    {name:'Piped API', fn: async()=>{ const r=await fetch(`https://pipedapi.kavin.rocks/streams/${id}`); const j=await r.json(); return isAudio? j.audioStreams[0].url : j.videoStreams[0].url; }},
   ];
-
-  let data=null;
-  for(let api of apiUrls){
+  for(let api of apis){
     try{
-      const res = await fetch(api, {
-        method:'POST',
-        headers:{'Accept':'application/json','Content-Type':'application/json'},
-        body: JSON.stringify({
-          url: ytUrl,
-          vCodec: 'h264',
-          vQuality: '720',
-          aFormat: isAudio ? 'mp3' : 'mp3',
-          isAudioOnly: isAudio,
-          filenamePattern: 'basic'
-        })
-      });
-      data = await res.json();
-      if(data && data.url) break;
-    }catch(e){ continue; }
+      log(`Essai ${api.name}...`);
+      const directUrl=await api.fn();
+      if(directUrl){ log(`${api.name} OK -> ${directUrl.slice(0,60)}...`); return directUrl; }
+    }catch(e){ log(`${api.name} échoué: ${e.message}`); }
   }
-
-  if(!data || !data.url) throw new Error('Serveur occupé, réessaye dans 10s ou essaye un autre lien. YouTube limite beaucoup.');
-
-  $('ytStatus').textContent = `✅ Lien trouvé ! Téléchargement du fichier ${isAudio?'MP3':'MP4'} en cours...`;
-  $('progressBar').style.width='40%';
-  $('ytTitle').textContent = data.filename || `youtube-${id}`;
-  $('ytInfo').textContent = `Source: ${data.url.substring(0,60)}...`;
-
-  // Téléchargement du blob DIRECTEMENT
-  $('ytStatus').textContent = '⬇️ Téléchargement direct en cours, patiente... (peut prendre 30s-1min selon la taille)';
-  const fileRes = await fetch(data.url);
-  if(!fileRes.ok) throw new Error('Echec téléchargement fichier');
-  
-  const blob = await fileRes.blob();
-  $('progressBar').style.width='80%';
-
-  const ext = isAudio ? '.mp3' : '.mp4';
-  const cleanName = (data.filename || `YT_${id}`).replace(/[^a-z0-9_ \-]/gi,'_').substring(0,50) + ext;
-
-  // Ajout direct dans le player et dans la mémoire
-  await idbAdd(cleanName, blob);
-  const file = new File([blob], cleanName, {type: blob.type});
-  const newTrack = {id: tracks.length, name: cleanName, file, url: URL.createObjectURL(file), isVideo: !isAudio};
-  tracks.push(newTrack);
-  filteredTracks = [...tracks];
-  render();
-
-  $('progressBar').style.width='100%';
-  $('ytStatus').innerHTML = `✅ <b>TERMINÉ !</b> ${cleanName} ajouté dans ton Player.<br>Va dans <b>Ma Musique</b> pour l'écouter. Il est aussi sauvegardé dans ton téléphone.`;
-  
-  setTimeout(()=>{ $('progress').style.display='none'; }, 2000);
-  // auto switch
-  setTimeout(()=>{ $('tabLocal').click(); load(tracks.length-1, false); }, 1000);
+  throw new Error('Toutes les APIs bloquées par YouTube à cette heure. Réessaye dans 5 min.');
 }
 
-$('ytVideoBtn').onclick=async()=>{
-  const url=$('ytUrl').value.trim();
-  if(!url) return alert('Colle un lien YouTube');
-  try{ await downloadYouTube(url, false); }catch(e){ $('ytStatus').textContent='❌ Erreur: '+e.message; $('progress').style.display='none'; }
-};
-$('ytAudioBtn').onclick=async()=>{
-  const url=$('ytUrl').value.trim();
-  if(!url) return alert('Colle un lien YouTube');
-  try{ await downloadYouTube(url, true); }catch(e){ $('ytStatus').textContent='❌ Erreur: '+e.message; $('progress').style.display='none'; }
-};
-
-idbLoad();
+async function download(url,isAudio){
+  logEl.textContent=''; log(`Début DL ${isAudio?'MP3':'MP4'} pour ${url}`);
+  try{
+    const direct=await tryAllApis(url,isAudio);
+    log('Téléchargement du fichier...');
+    const res=await fetch(direct);
+    const blob=await res.blob();
+    const name=`YT_${getId(url)}_${Date.now()}.${isAudio?'mp3':'mp4'}`;
+    const fileUrl=URL.createObjectURL(blob);
+    tracks.push({name,url:fileUrl,isVideo:!isAudio});
+    listEl.innerHTML+=`<div class=item>✅ ${name} - <a href="#" onclick="playLast(${tracks.length-1});return false">Lire</a> - <a href="${fileUrl}" download="${name}">Sauver</a></div>`;
+    if(isAudio){ video.style.display='none'; audio.style.display='block'; audio.src=fileUrl; audio.play(); }
+    else{ audio.pause(); video.style.display='block'; video.src=fileUrl; video.play(); }
+    log(`✅ TERMINÉ et ajouté: ${name}`);
+  }catch(e){ log(`❌ ERREUR FINALE: ${e.message}`); }
+}
+window.playLast=i=>{ const t=tracks[i]; if(t.isVideo){ audio.pause(); video.style.display='block'; video.src=t.url; video.play(); } else { video.pause(); video.style.display='none'; audio.src=t.url; audio.play(); } };
+$('dlMp3').onclick=()=>{ const u=$('ytUrl').value.trim(); if(!u) return alert('Colle lien'); download(u,true); };
+$('dlMp4').onclick=()=>{ const u=$('ytUrl').value.trim(); if(!u) return alert('Colle lien'); download(u,false); };
 </script>
 </body>
 </html>
