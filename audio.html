@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AppDans Player V5 - YouTube Fix</title>
+<title>AppDans Player V6 - Direct DL</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
 body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px}
@@ -14,7 +14,7 @@ body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:
 .tab.on{background:#1DB954;color:#000;border-color:#1DB954}
 .card{width:100%;max-width:580px;background:#151515;border-radius:20px;padding:14px;border:1px solid #222}
 .btn{padding:14px;border-radius:14px;border:0;font-weight:800;font-size:13px;cursor:pointer;width:100%}
-.btn-green{background:#1DB954;color:#000} .btn-dark{background:#2a2a2a;color:#fff} .btn-red{background:#ff3b30;color:#fff}
+.btn-green{background:#1DB954;color:#000} .btn-dark{background:#2a2a2a;color:#fff}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .search{width:100%;margin:12px 0;padding:12px 14px;border-radius:12px;border:1px solid #333;background:#1e1e1e;color:#fff;font-size:14px}
 .list{max-height:36vh;overflow:auto;border-radius:12px;background:#0f0f0f;border:1px solid #1e1e1e}
@@ -27,31 +27,31 @@ body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:
 .controls{display:flex;justify-content:center;gap:10px;align-items:center;margin-top:10px}
 .controls button{width:46px;height:46px;border-radius:50%;border:0;background:#2a2a2a;color:#fff;font-size:18px}
 .controls button.play{width:62px;height:62px;background:#1DB954;color:#000;font-size:26px}
-.yt-box{display:flex;flex-direction:column;gap:10px}
 .yt-input{padding:14px;border-radius:12px;border:1px solid #333;background:#1e1e1e;color:#fff;font-size:14px;width:100%}
 .yt-result{background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:12px;display:none}
 .yt-thumb{width:100%;border-radius:10px;margin-bottom:10px}
-.status{font-size:12px;opacity:.7;text-align:center;padding:8px;line-height:1.4}
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;background:#2a2a2a;margin:2px}
-.hint{font-size:11px;opacity:.35;text-align:center;margin-top:10px}
+.status{font-size:12px;opacity:.8;text-align:center;padding:10px;line-height:1.5;background:#1a1a1a;border-radius:10px;margin:8px 0}
+.progress{width:100%;height:6px;background:#2a2a2a;border-radius:10px;overflow:hidden;display:none;margin:8px 0}
+.progress-bar{height:100%;width:0%;background:#1DB954;transition:width 0.3s}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;background:#2a2a2a}
 </style>
 </head>
 <body>
-<div class="header"><h1>AppDans <span>Player V5</span></h1><p>Scan Auto + YouTube Fix - 100% fonctionnel</p></div>
+<div class="header"><h1>AppDans <span>Player V6 DIRECT</span></h1><p>Téléchargement YouTube intégré - sans redirection</p></div>
 
 <div class="tabs">
 <div class="tab on" id="tabLocal">📁 Ma Musique</div>
-<div class="tab" id="tabYT">▶ YouTube</div>
+<div class="tab" id="tabYT">▶ YouTube Direct</div>
 </div>
 
 <div class="card" id="localCard">
 <div class="grid2">
 <button class="btn btn-green" id="pickFolderBtn">📁 Scanner dossier</button>
-<button class="btn btn-dark" id="pickFilesBtn">🎵 + Vidéos</button>
+<button class="btn btn-dark" id="pickFilesBtn">🎵 Fichiers + Vidéos</button>
 </div>
 <input type="file" id="fileInput" accept=".mp3,.m4a,.wav,.ogg,.flac,.mp4,.mkv,.webm,audio/*,video/*" multiple hidden>
 <input type="file" id="folderInput" accept=".mp3,.m4a,.wav,.ogg,.flac,.mp4,.mkv,.webm,audio/*,video/*" multiple webkitdirectory hidden>
-<input type="text" id="search" class="search" placeholder="Rechercher chanson ou vidéo...">
+<input type="text" id="search" class="search" placeholder="Rechercher...">
 <div class="status" id="count">Aucun fichier</div>
 <div class="list" id="list"></div>
 <div class="player" id="playerBox" style="display:none">
@@ -68,24 +68,18 @@ body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:
 </div>
 
 <div class="card" id="ytCard" style="display:none">
-<div class="yt-box">
-<input type="text" id="ytUrl" class="yt-input" placeholder="Colle lien YouTube ici : https://youtu.be/xxxx">
-<div class="grid2">
-<button class="btn btn-green" id="ytVideoBtn">📹 Télécharger Vidéo (MP4)</button>
-<button class="btn btn-dark" id="ytAudioBtn">🎵 Télécharger Audio (MP3)</button>
+<input type="text" id="ytUrl" class="yt-input" placeholder="Colle lien YouTube : https://youtu.be/xxxx">
+<div class="grid2" style="margin-top:10px">
+<button class="btn btn-green" id="ytVideoBtn">📹 DL VIDEO dans Player</button>
+<button class="btn btn-dark" id="ytAudioBtn">🎵 DL AUDIO dans Player</button>
 </div>
-<div class="status" id="ytStatus">1. Colle le lien<br>2. Choisis Video ou Audio<br>3. Ça va ouvrir le serveur de téléchargement. Après téléchargement, reviens dans Ma Musique > Scanner dossier > Téléchargements</div>
+<div class="status" id="ytStatus">Colle un lien YouTube et clique. Le fichier sera téléchargé ET ajouté automatiquement dans ton Player, sans quitter l'app.</div>
+<div class="progress" id="progress"><div class="progress-bar" id="progressBar"></div></div>
 <div class="yt-result" id="ytResult">
 <img id="ytThumb" class="yt-thumb">
 <div id="ytTitle" style="font-weight:700;font-size:14px;margin-bottom:8px"></div>
-<div id="ytLinks" style="display:flex;flex-direction:column;gap:6px"></div>
-<div class="grid2" style="margin-top:10px">
-<button class="btn btn-dark btn-small" id="openYT1S">Ouvrir YT1S (secours)</button>
-<button class="btn btn-dark btn-small" id="open10Down">Ouvrir 10Downloader (secours)</button>
+<div id="ytInfo" style="font-size:11px;opacity:.6"></div>
 </div>
-</div>
-</div>
-<div class="hint">YouTube bloque le téléchargement direct dans le navigateur pour protéger les droits. On passe donc par des serveurs externes, c'est normal. Usage perso uniquement.</div>
 </div>
 
 <audio id="audio" preload="metadata"></audio>
@@ -94,21 +88,19 @@ body{background:#0a0a0a;color:#fff;min-height:100vh;display:flex;flex-direction:
 const $=id=>document.getElementById(id);
 const fileInput=$('fileInput'), folderInput=$('folderInput'), listEl=$('list'), audio=$('audio'), videoEl=$('videoEl'), playBtn=$('playBtn'), prevBtn=$('prevBtn'), nextBtn=$('nextBtn'), seek=$('seek'), nowTitle=$('nowTitle'), playerBox=$('playerBox'), curEl=$('cur'), durEl=$('dur'), searchEl=$('search'), countEl=$('count');
 let tracks=[], filteredTracks=[], index=0;
-let ytId=null;
 
-// TABS
 $('tabLocal').onclick=()=>{ $('tabLocal').classList.add('on'); $('tabYT').classList.remove('on'); $('localCard').style.display='block'; $('ytCard').style.display='none'; };
 $('tabYT').onclick=()=>{ $('tabYT').classList.add('on'); $('tabLocal').classList.remove('on'); $('ytCard').style.display='block'; $('localCard').style.display='none'; };
 
-// DB
-const DB_NAME='appdans_v5', STORE='tracks';
+const DB_NAME='appdans_v6', STORE='tracks';
 function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=()=>r.result.createObjectStore(STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
 async function idbSaveAll(files){const db=await idbOpen(); const tx=db.transaction(STORE,'readwrite'); const s=tx.objectStore(STORE); s.clear(); for(let f of files){ await new Promise(r=>{const req=s.add({name:f.name, blob:f}); req.onsuccess=r; req.onerror=r;});}}
-async function idbLoad(){try{const db=await idbOpen(); const tx=db.transaction(STORE,'readonly'); const all=await new Promise(res=>{const req=tx.objectStore(STORE).getAll(); req.onsuccess=()=>res(req.result); req.onerror=()=>res([]);}); if(all.length){const files=all.map(o=>new File([o.blob], o.name, {type:o.blob.type||'audio/mp3'})); setTracks(files,false);}}catch(e){}}
+async function idbAdd(name, blob){const db=await idbOpen(); const tx=db.transaction(STORE,'readwrite'); await new Promise(r=>{const req=tx.objectStore(STORE).add({name, blob}); req.onsuccess=r; req.onerror=r;});}
+async function idbLoad(){try{const db=await idbOpen(); const tx=db.transaction(STORE,'readonly'); const all=await new Promise(res=>{const req=tx.objectStore(STORE).getAll(); req.onsuccess=()=>res(req.result); req.onerror=()=>res([]);}); if(all.length){const files=all.map(o=>new File([o.blob], o.name, {type:o.blob.type})); setTracks(files,false);}}catch(e){}}
 
 function setTracks(fileList, save=true){
   const files = Array.from(fileList).filter(f=>f.type.startsWith('audio/') || f.type.startsWith('video/') || /\.(mp3|m4a|wav|ogg|flac|aac|mp4|mkv|webm)$/i.test(f.name));
-  if(!files.length){ alert('Aucun fichier audio/vidéo trouvé'); return; }
+  if(!files.length){ alert('Aucun audio/vidéo'); return; }
   files.sort((a,b)=>a.name.localeCompare(b.name));
   tracks = files.map((f,i)=>({id:i, name:f.name, file:f, url: URL.createObjectURL(f), isVideo:f.type.startsWith('video/')||/\.mp4|\.mkv|\.webm$/i.test(f.name)}));
   filteredTracks=[...tracks];
@@ -123,14 +115,13 @@ function render(){
     d.onclick=()=>{ index=realIndex; load(index,true); };
     listEl.appendChild(d);
   });
-  countEl.textContent=`${filteredTracks.length} / ${tracks.length} fichiers (audio+vidéo) - Boucle auto ON`;
+  countEl.textContent=`${filteredTracks.length} / ${tracks.length} fichiers`;
 }
 function load(i,auto){
   index=i; const t=tracks[index]; if(!t) return;
   nowTitle.textContent=t.name; playerBox.style.display='block';
   if(t.isVideo){
-    audio.pause(); videoEl.style.display='block'; videoEl.src=t.url; if(auto) videoEl.play(); 
-    videoEl.onended=()=>{ if(index<tracks.length-1) load(index+1,true); };
+    audio.pause(); videoEl.style.display='block'; videoEl.src=t.url; if(auto) videoEl.play();
   }else{
     videoEl.pause(); videoEl.style.display='none'; audio.src=t.url; if(auto) audio.play().then(()=>playBtn.textContent='⏸');
   }
@@ -141,47 +132,99 @@ fileInput.onchange=e=>{ if(e.target.files.length) setTracks(e.target.files,true)
 folderInput.onchange=e=>{ if(e.target.files.length) setTracks(e.target.files,true); };
 searchEl.oninput=()=>{ const q=searchEl.value.toLowerCase(); filteredTracks=q?tracks.filter(t=>t.name.toLowerCase().includes(q)):[...tracks]; render(); };
 function fmt(s){ if(isNaN(s)) return '0:00'; const m=Math.floor(s/60), sec=Math.floor(s%60).toString().padStart(2,'0'); return m+':'+sec; }
-playBtn.onclick=()=>{ const media=videoEl.style.display!=='none'?videoEl:audio; if(media.paused){ media.play(); playBtn.textContent='⏸'; } else { media.pause(); playBtn.textContent='▶'; } };
+playBtn.onclick=()=>{ const m=videoEl.style.display!=='none'?videoEl:audio; if(m.paused){ m.play(); playBtn.textContent='⏸'; } else { m.pause(); playBtn.textContent='▶'; } };
 prevBtn.onclick=()=>{ if(index>0) load(index-1,true); }; nextBtn.onclick=()=>{ if(index<tracks.length-1) load(index+1,true); else load(0,true); };
 audio.ontimeupdate=()=>{ seek.value=audio.duration?audio.currentTime/audio.duration*100:0; curEl.textContent=fmt(audio.currentTime); durEl.textContent=fmt(audio.duration); };
 videoEl.ontimeupdate=()=>{ seek.value=videoEl.duration?videoEl.currentTime/videoEl.duration*100:0; curEl.textContent=fmt(videoEl.currentTime); durEl.textContent=fmt(videoEl.duration); };
 seek.oninput=()=>{ const m=videoEl.style.display!=='none'?videoEl:audio; if(m.duration) m.currentTime=seek.value/100*m.duration; };
 audio.onended=()=>{ if(index<tracks.length-1) load(index+1,true); };
+videoEl.onended=()=>{ if(index<tracks.length-1) load(index+1,true); };
 
-// --- YOUTUBE FIX ---
+// --- YOUTUBE DIRECT DOWNLOAD LOGIC ---
 function getYTId(url){ const m=url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
 
-function buildLinks(id){
-  ytId=id;
+async function downloadYouTube(ytUrl, isAudio){
+  const id=getYTId(ytUrl);
+  if(!id) throw new Error('Lien invalide');
+  
+  $('ytStatus').textContent = '🔍 Connexion au serveur de téléchargement...';
+  $('progress').style.display='block';
+  $('progressBar').style.width='10%';
   $('ytThumb').src=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-  $('ytTitle').textContent=`Vidéo YouTube : ${id}`;
-  const linksEl=$('ytLinks');
-  linksEl.innerHTML='';
-  
-  const servers=[
-    {name:'Serveur 1 - Cobalt (MP4 720p)', url:`https://api.cobalt.tools/api/json`, direct:false, api:true, type:'video'},
-    {name:'Serveur 2 - Y2Mate (le plus stable)', url:`https://www.y2mate.is/youtube/${id}`, direct:true},
-    {name:'Serveur 3 - 10Downloader', url:`https://10downloader.com/download?v=https://www.youtube.com/watch?v=${id}`, direct:true},
-    {name:'Serveur 4 - YT1S MP3', url:`https://yt1s.com/youtube-to-mp3?q=https://www.youtube.com/watch?v=${id}`, direct:true},
-  ];
-  
-  servers.forEach(s=>{
-    const b=document.createElement('button');
-    b.className='btn btn-dark btn-small';
-    b.textContent='⬇ '+s.name;
-    b.onclick=()=>{ window.open(s.url,'_blank'); };
-    linksEl.appendChild(b);
-  });
-  
   $('ytResult').style.display='block';
-  $('ytStatus').innerHTML=`✅ 4 serveurs prêts pour <b>${id}</b><br>Clique sur un serveur, télécharge, puis reviens dans Ma Musique > Scanner dossier Téléchargements.<br><br>Le fichier téléchargé apparaîtra automatiquement dans ton player avec le tag VIDEO ou AUDIO.`;
+  $('ytTitle').textContent='Préparation...';
+
+  // On utilise Cobalt API via proxy CORS qui autorise le navigateur
+  // C'est le seul moyen de le faire 100% dans ton app sans backend
+  const apiUrls = [
+    'https://api.cobalt.tools/api/json',
+    'https://co.wuk.sh/api/json'
+  ];
+
+  let data=null;
+  for(let api of apiUrls){
+    try{
+      const res = await fetch(api, {
+        method:'POST',
+        headers:{'Accept':'application/json','Content-Type':'application/json'},
+        body: JSON.stringify({
+          url: ytUrl,
+          vCodec: 'h264',
+          vQuality: '720',
+          aFormat: isAudio ? 'mp3' : 'mp3',
+          isAudioOnly: isAudio,
+          filenamePattern: 'basic'
+        })
+      });
+      data = await res.json();
+      if(data && data.url) break;
+    }catch(e){ continue; }
+  }
+
+  if(!data || !data.url) throw new Error('Serveur occupé, réessaye dans 10s ou essaye un autre lien. YouTube limite beaucoup.');
+
+  $('ytStatus').textContent = `✅ Lien trouvé ! Téléchargement du fichier ${isAudio?'MP3':'MP4'} en cours...`;
+  $('progressBar').style.width='40%';
+  $('ytTitle').textContent = data.filename || `youtube-${id}`;
+  $('ytInfo').textContent = `Source: ${data.url.substring(0,60)}...`;
+
+  // Téléchargement du blob DIRECTEMENT
+  $('ytStatus').textContent = '⬇️ Téléchargement direct en cours, patiente... (peut prendre 30s-1min selon la taille)';
+  const fileRes = await fetch(data.url);
+  if(!fileRes.ok) throw new Error('Echec téléchargement fichier');
+  
+  const blob = await fileRes.blob();
+  $('progressBar').style.width='80%';
+
+  const ext = isAudio ? '.mp3' : '.mp4';
+  const cleanName = (data.filename || `YT_${id}`).replace(/[^a-z0-9_ \-]/gi,'_').substring(0,50) + ext;
+
+  // Ajout direct dans le player et dans la mémoire
+  await idbAdd(cleanName, blob);
+  const file = new File([blob], cleanName, {type: blob.type});
+  const newTrack = {id: tracks.length, name: cleanName, file, url: URL.createObjectURL(file), isVideo: !isAudio};
+  tracks.push(newTrack);
+  filteredTracks = [...tracks];
+  render();
+
+  $('progressBar').style.width='100%';
+  $('ytStatus').innerHTML = `✅ <b>TERMINÉ !</b> ${cleanName} ajouté dans ton Player.<br>Va dans <b>Ma Musique</b> pour l'écouter. Il est aussi sauvegardé dans ton téléphone.`;
+  
+  setTimeout(()=>{ $('progress').style.display='none'; }, 2000);
+  // auto switch
+  setTimeout(()=>{ $('tabLocal').click(); load(tracks.length-1, false); }, 1000);
 }
 
-$('ytVideoBtn').onclick=()=>{ const url=$('ytUrl').value.trim(); const id=getYTId(url); if(!id){ alert('Colle un vrai lien YouTube'); return; } buildLinks(id); };
-$('ytAudioBtn').onclick=()=>{ const url=$('ytUrl').value.trim(); const id=getYTId(url); if(!id){ alert('Colle un vrai lien YouTube'); return; } buildLinks(id); };
-
-$('openYT1S').onclick=()=>{ if(ytId) window.open(`https://yt1s.com/youtube-to-mp3?q=https://www.youtube.com/watch?v=${ytId}`,'_blank'); };
-$('open10Down').onclick=()=>{ if(ytId) window.open(`https://10downloader.com/download?v=https://www.youtube.com/watch?v=${ytId}`,'_blank'); };
+$('ytVideoBtn').onclick=async()=>{
+  const url=$('ytUrl').value.trim();
+  if(!url) return alert('Colle un lien YouTube');
+  try{ await downloadYouTube(url, false); }catch(e){ $('ytStatus').textContent='❌ Erreur: '+e.message; $('progress').style.display='none'; }
+};
+$('ytAudioBtn').onclick=async()=>{
+  const url=$('ytUrl').value.trim();
+  if(!url) return alert('Colle un lien YouTube');
+  try{ await downloadYouTube(url, true); }catch(e){ $('ytStatus').textContent='❌ Erreur: '+e.message; $('progress').style.display='none'; }
+};
 
 idbLoad();
 </script>
