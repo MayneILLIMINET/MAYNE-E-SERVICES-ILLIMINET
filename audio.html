@@ -1,66 +1,43 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AppDans V7 - 6 APIs</title>
-<style>body{background:#0a0a0a;color:#fff;font-family:sans-serif;padding:14px;display:flex;flex-direction:column;align-items:center} .card{background:#151515;border:1px solid #222;border-radius:16px;padding:14px;width:100%;max-width:560px} input,button{width:100%;padding:14px;border-radius:12px;border:1px solid #333;margin:6px 0} button{background:#1DB954;color:#000;font-weight:900;border:0;cursor:pointer} button.dark{background:#2a2a2a;color:#fff} .log{background:#000;padding:10px;border-radius:10px;font-size:11px;white-space:pre-wrap;min-height:60px;margin-top:10px;line-height:1.4} .list{max-height:30vh;overflow:auto;background:#0f0f0f;border-radius:10px;margin-top:10px} .item{padding:10px;border-bottom:1px solid #222;font-size:13px}</style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AppDans V8 - FINAL</title>
+<style>body{background:#0a0a0a;color:#fff;font-family:sans-serif;padding:14px;display:flex;flex-direction:column;align-items:center} .card{background:#151515;border:1px solid #222;border-radius:16px;padding:14px;width:100%;max-width:560px} input,button{width:100%;padding:14px;border-radius:12px;border:1px solid #333;margin:6px 0} button{background:#1DB954;color:#000;font-weight:900;border:0;cursor:pointer} button.dark{background:#2a2a2a;color:#fff} .log{background:#000;padding:10px;border-radius:10px;font-size:11px;white-space:pre-wrap;min-height:80px;margin-top:10px} </style>
 </head>
 <body>
-<h2>AppDans <span style="color:#1DB954">V7 DIRECT 6 APIs</span></h2>
+<h2>AppDans <span style="color:#1DB954">V8 FINAL - ACTIF</span></h2>
 <div class="card">
-<input id="ytUrl" placeholder="Colle lien YouTube ici">
-<button id="dlMp3">🎵 Télécharger MP3 Direct dans Player</button>
-<button id="dlMp4" class="dark">📹 Télécharger MP4 Direct dans Player</button>
-<div id="log" class="log">Prêt. Colle un lien.</div>
-<div id="list" class="list"></div>
+<div style="font-size:11px;color:#888;margin-bottom:6px">Serveur: https://mayne-e-services-illiminet-1.onrender.com</div>
+<input id="ytUrl" placeholder="Colle lien YouTube ici ex: https://youtu.be/xxxx">
+<button id="dlMp3">🎵 Télécharger MP3 dans Player</button>
+<button id="dlMp4" class="dark">📹 Télécharger MP4 dans Player</button>
+<div id="log" class="log">Prêt. Colle un lien YouTube.</div>
 <audio id="audio" controls style="width:100%;margin-top:10px"></audio>
 <video id="video" controls style="width:100%;margin-top:10px;display:none;border-radius:10px"></video>
 </div>
 <script>
 const $=id=>document.getElementById(id);
-const logEl=$('log'), listEl=$('list'), audio=$('audio'), video=$('video');
-let tracks=[];
-function log(t){ logEl.textContent+= '\n> '+t; logEl.scrollTop=logEl.scrollHeight; }
-function getId(u){ const m=u.match(/(?:youtu\.be\/|v=|shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:null; }
-
-async function tryAllApis(url, isAudio){
-  const id=getId(url);
-  log(`ID détecté: ${id}`);
-  const apis=[
-    {name:'Cobalt 1', fn: async()=>{ const r=await fetch('https://api.cobalt.tools/api/json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,isAudioOnly:isAudio,aFormat:'mp3'})}); const j=await r.json(); return j.url; }},
-    {name:'Co.Wuk.sh', fn: async()=>{ const r=await fetch('https://co.wuk.sh/api/json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,isAudioOnly:isAudio})}); const j=await r.json(); return j.url; }},
-    {name:'Invidious API', fn: async()=>{ const r=await fetch(`https://inv.nadeko.net/api/v1/videos/${id}`); const j=await r.json(); const best=isAudio? j.adaptiveFormats.find(f=>f.type.includes('audio')) : j.formatStreams[0]; return best.url; }},
-    {name:'Piped API', fn: async()=>{ const r=await fetch(`https://pipedapi.kavin.rocks/streams/${id}`); const j=await r.json(); return isAudio? j.audioStreams[0].url : j.videoStreams[0].url; }},
-  ];
-  for(let api of apis){
-    try{
-      log(`Essai ${api.name}...`);
-      const directUrl=await api.fn();
-      if(directUrl){ log(`${api.name} OK -> ${directUrl.slice(0,60)}...`); return directUrl; }
-    }catch(e){ log(`${api.name} échoué: ${e.message}`); }
-  }
-  throw new Error('Toutes les APIs bloquées par YouTube à cette heure. Réessaye dans 5 min.');
-}
-
-async function download(url,isAudio){
-  logEl.textContent=''; log(`Début DL ${isAudio?'MP3':'MP4'} pour ${url}`);
+const logEl=$('log'), audio=$('audio'), video=$('video');
+const SERVER='https://mayne-e-services-illiminet-1.onrender.com';
+function log(t){ logEl.textContent+='\n> '+t; logEl.scrollTop=9999; }
+async function download(isAudio){
+  const url=$('ytUrl').value.trim();
+  if(!url) return alert('Colle un lien YouTube');
+  logEl.textContent=''; log((isAudio?'MP3':'MP4')+' demandé pour '+url);
   try{
-    const direct=await tryAllApis(url,isAudio);
-    log('Téléchargement du fichier...');
-    const res=await fetch(direct);
-    const blob=await res.blob();
-    const name=`YT_${getId(url)}_${Date.now()}.${isAudio?'mp3':'mp4'}`;
-    const fileUrl=URL.createObjectURL(blob);
-    tracks.push({name,url:fileUrl,isVideo:!isAudio});
-    listEl.innerHTML+=`<div class=item>✅ ${name} - <a href="#" onclick="playLast(${tracks.length-1});return false">Lire</a> - <a href="${fileUrl}" download="${name}">Sauver</a></div>`;
-    if(isAudio){ video.style.display='none'; audio.style.display='block'; audio.src=fileUrl; audio.play(); }
-    else{ audio.pause(); video.style.display='block'; video.src=fileUrl; video.play(); }
-    log(`✅ TERMINÉ et ajouté: ${name}`);
-  }catch(e){ log(`❌ ERREUR FINALE: ${e.message}`); }
+    log('Contact du serveur Render (peut prendre 30s au premier coup)...');
+    const r=await fetch(SERVER+'/api/json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url, isAudioOnly:isAudio, aFormat:'mp3', vQuality:'720'})});
+    const j=await r.json();
+    if(!j.url) throw new Error(JSON.stringify(j));
+    log('✅ Lien direct obtenu ! Lecture...');
+    if(isAudio){ video.style.display='none'; video.pause(); audio.style.display='block'; audio.src=j.url; audio.play(); }
+    else{ audio.pause(); audio.style.display='none'; video.style.display='block'; video.src=j.url; video.play(); }
+    log('Si ça ne joue pas, ton lien est: '+j.url);
+  }catch(e){ log('❌ ERREUR: '+e.message); }
 }
-window.playLast=i=>{ const t=tracks[i]; if(t.isVideo){ audio.pause(); video.style.display='block'; video.src=t.url; video.play(); } else { video.pause(); video.style.display='none'; audio.src=t.url; audio.play(); } };
-$('dlMp3').onclick=()=>{ const u=$('ytUrl').value.trim(); if(!u) return alert('Colle lien'); download(u,true); };
-$('dlMp4').onclick=()=>{ const u=$('ytUrl').value.trim(); if(!u) return alert('Colle lien'); download(u,false); };
+$('dlMp3').onclick=()=>download(true);
+$('dlMp4').onclick=()=>download(false);
 </script>
 </body>
 </html>
