@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Transfert - MAYNE</title>
+<title>Transfert - MAYNE - AVEC PREUVE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -18,7 +18,7 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 .select{width:100%;background:#1e1e1e;color:#fff;padding:13px;border:1px solid #fff;border-radius:12px;margin:6px 0}
 .btn{width:100%;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff;cursor:pointer;margin-top:10px}
 .btn-envoi{background:#ff5000}.btn-retrait{background:#e67e22}.btn-valid{background:#2b8a3e}
-.list{padding:16px}.item{background:#000;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between}
+.list{padding:16px}.item{background:#000;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;flex-direction:column;gap:8px;border-left:4px solid #ff5000}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #333}
 .bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer;padding:8px 12px}
 .bnav.active{background:#ff5000;color:#fff;border-radius:100px;font-weight:700}
@@ -31,6 +31,16 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 .input-with-prefix{border-radius:0 12px 12px 0!important;flex:1}
 .toggle{display:flex;gap:6px;margin-bottom:12px}.toggle button{flex:1}
 .warning-box{background:#1e1e1e;border:2px dashed #ffeb3b;border-radius:12px;padding:12px;margin:10px 0;display:none;text-align:left}
+
+/* PREUVE STYLES */
+.preuve-zone{margin-top:8px;background:#111;border:1px dashed #0f0;border-radius:10px;padding:10px;display:none}
+.preuve-zone.show{display:block}
+.preuve-img-mini{width:100%;max-height:220px;object-fit:contain;border-radius:8px;border:1px solid #333;cursor:pointer}
+.btn-voir-preuve{background:#0d6efd;color:#fff;border:none;padding:8px 12px;border-radius:20px;font-size:10px;font-weight:800;margin-top:6px;cursor:pointer;width:100%}
+.badge-preuve{background:#0d6efd;color:#fff;padding:2px 6px;border-radius:10px;font-size:8px;font-weight:900;margin-left:4px}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:10000;padding:10px;flex-direction:column}
+.viewer img{max-width:100%;max-height:85vh;border-radius:10px;border:2px solid #ff5000}
+.viewer .close{margin-top:12px;background:#fff;color:#000;padding:10px 20px;border-radius:20px;font-weight:900;border:none;cursor:pointer}
 </style>
 </head>
 <body>
@@ -77,12 +87,20 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <div id="transfert-status" style="margin-top:8px;font-size:12px;display:none;text-align:center"></div>
 </div>
 
-<div class="list"><h3>Mon historique Transfert</h3><div id="histo">Aucun transfert</div></div>
+<div class="list"><h3>Mon historique Transfert <span style="font-size:10px;color:#0d6efd">📸 = Preuve dispo</span></h3><div id="histo">Aucun transfert</div></div>
 </div>
 
 <div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav" onclick="location.href='forfait.html'">FORFAIT📱</button><button class="bnav active">TRANSFERT💸</button><button class="bnav" onclick="location.href='echange.html'">ECHANGE🔄</button></div>
+
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="modal-btn btn-yes" style="margin-top:10px" onclick="hideAlert()">OK</button></div></div>
 <div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="confirm-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui</button></div></div></div>
+
+<!-- VIEWER IMAGE PLEIN ECRAN -->
+<div id="viewer" class="viewer" onclick="closeViewer()">
+  <img id="viewerImg" src="">
+  <div id="viewerInfo" style="color:#fff;font-size:12px;margin-top:8px;text-align:center"></div>
+  <button class="close" onclick="closeViewer()">✕ Fermer</button>
+</div>
 
 <script>
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
@@ -102,6 +120,13 @@ async function pushJS(destId,titre,msg){try{await fetch(ONESIGNAL_WEBHOOK,{metho
 function updateIndicatif(){document.getElementById('prefix-affiche').innerText='+'+document.getElementById('transfert-pays').value;}
 function switchMode(m){document.getElementById('tab-envoi').style.background=m==='envoi'?'#ff5000':'#1e1e1e';document.getElementById('tab-retrait').style.background=m==='retrait'?'#ff5000':'#1e1e1e';document.getElementById('zone-envoi').style.display=m==='envoi'?'block':'none';document.getElementById('zone-retrait').style.display=m==='retrait'?'block':'none';}
 
+function openViewer(url, info){
+  document.getElementById('viewerImg').src=url;
+  document.getElementById('viewerInfo').innerText=info||'';
+  document.getElementById('viewer').style.display='flex';
+}
+function closeViewer(){document.getElementById('viewer').style.display='none';}
+
 async function init(){
   var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||!u.phone){location.href='index.html';return;}
@@ -109,9 +134,43 @@ async function init(){
   document.getElementById('uname').textContent=userNom;document.getElementById('uemail').textContent=u.phone;document.getElementById('av').textContent=(userNom[0]||'M').toUpperCase();
   updateIndicatif();
   db.ref('clients/'+uid).on('value',s=>{var d=s.val()||{};solde=+d.solde||0;document.getElementById('solde').textContent=solde.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';});
+  
   db.ref('commandes_transferts').orderByChild('client_id').equalTo(uid).on('value',s=>{
-    var c=document.getElementById('histo');if(!s.exists()){c.innerHTML='Aucun transfert';return;}
-    var h='';s.forEach(ch=>{var v=ch.val();var col='#ffbb00';if((v.statut||'').toLowerCase().includes('valid'))col='#28a745';if((v.statut||'').toLowerCase().includes('annul'))col='#dc3545';h=`<div class=item><div><b>${v.type||'Transfert'} - ${v.pays||v.numero_decaissement||''}</b><br><small>${v.numero_complet||v.numero_decaissement} - ${v.date}</small></div><div style="text-align:right"><b>${v.montant}F</b><br><span style="background:${col};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${v.statut}</span></div></div>`+h;});c.innerHTML=h;
+    var c=document.getElementById('histo');
+    if(!s.exists()){c.innerHTML='Aucun transfert';return;}
+    var h='';
+    s.forEach(ch=>{
+      var v=ch.val();
+      var col='#ffbb00';if((v.statut||'').toLowerCase().includes('valid'))col='#28a745';if((v.statut||'').toLowerCase().includes('annul'))col='#dc3545';
+      var preuveUrl = v.preuve_url || v.preuve_base64 || '';
+      var hasPreuve = !!preuveUrl;
+      var preuveHtml = '';
+      if(hasPreuve){
+        preuveHtml = `
+          <div class="preuve-zone show">
+            <div style="font-size:10px;color:#0f0;font-weight:800;margin-bottom:4px">✅ PREUVE D'ENVOI DISPONIBLE ${v.preuve_date_fr?' - '+v.preuve_date_fr:''}</div>
+            <img src="${preuveUrl}" class="preuve-img-mini" onclick="openViewer('${preuveUrl}','Transfert ${v.montant}F - ${v.date}')" onerror="this.style.display='none'">
+            <button class="btn-voir-preuve" onclick="openViewer('${preuveUrl}','Transfert ${v.montant}F - ${v.date}')">📸 VOIR PREUVE EN GRAND</button>
+            <a href="${preuveUrl}" download="preuve_${ch.key}.jpg" target="_blank" style="display:block;text-align:center;font-size:9px;color:#0d6efd;margin-top:4px">⬇ Télécharger la preuve</a>
+          </div>
+        `;
+      } else {
+        if((v.statut||'').toLowerCase().includes('valid')){
+          preuveHtml = `<div style="font-size:9px;color:#aaa;margin-top:6px">⏳ Preuve en cours d'envoi par l'admin...</div>`;
+        } else {
+          preuveHtml = `<div style="font-size:9px;color:#666;margin-top:6px">⌛ En attente de validation</div>`;
+        }
+      }
+
+      h=`<div class="item" style="border-left-color:${col}">
+        <div style="display:flex;justify-content:space-between;width:100%">
+          <div><b>${v.type||'Transfert'} - ${v.pays||v.numero_decaissement||''}</b> ${hasPreuve?'<span class="badge-preuve">📸 PREUVE</span>':''}<br><small>${v.numero_complet||v.numero_decaissement} - ${v.date}</small></div>
+          <div style="text-align:right"><b>${v.montant}F</b><br><span style="background:${col};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${v.statut}</span></div>
+        </div>
+        ${preuveHtml}
+      </div>`+h;
+    });
+    c.innerHTML=h;
   });
 }
 
