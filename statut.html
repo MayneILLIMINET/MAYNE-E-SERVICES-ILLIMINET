@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN - Statuts - COMPLET + ACTUALISER</title>
+<title>ADMIN - Statuts - COMPLET + PREUVE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <style>
 *{box-sizing:border-box}
 body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0}
 .app{max-width:950px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000;overflow:hidden}
 .top{padding:10px;background:#000;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;gap:6px;flex-wrap:wrap}
 .btn-retour{background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none;border:none;cursor:pointer}
-.btn-refresh{background:#0d6efd;color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fff;cursor:pointer;animation:none}
-.btn-refresh.loading{background:#333;animation:spin 1s linear infinite}
-@keyframes spin{from{transform:rotate(0deg)} to{transform:rotate(360deg)}}
+.btn-refresh{background:#0d6efd;color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fff;cursor:pointer}
 .input{width:calc(100% - 16px);background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:8px}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:#000}
 .tab{background:#222;color:#fff;border:1px solid #444;padding:6px 9px;border-radius:20px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}
@@ -30,6 +29,7 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 .ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
 .btn{border:none;padding:4px 5px;border-radius:5px;font-weight:800;cursor:pointer;font-size:8px;margin:1px;width:100%}
 .btn-val{background:#28a745;color:#fff}.btn-ann{background:#dc3545;color:#fff}.btn-view{background:#333;color:#fff;border:1px solid #555}
+.btn-preuve{background:#0d6efd;color:#fff;border:1px solid #fff}
 .small{font-size:8px;color:#aaa}
 .client-main{color:#0f0;font-weight:900;font-size:11px;line-height:1.1}
 .kv{display:flex;gap:4px;font-size:9px;line-height:1.25;border-bottom:1px dotted #222;padding:1px 0}
@@ -38,6 +38,10 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
 #mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:600px;width:100%;padding:14px;max-height:92vh;overflow:auto}
 .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
+.preuve-box{margin:10px 0;padding:10px;background:#000;border:1px dashed #ff5000;border-radius:10px}
+.preuve-img{width:100%;max-height:300px;object-fit:contain;border-radius:8px;border:1px solid #444;margin-top:8px}
+.progress{width:100%;height:6px;background:#333;border-radius:10px;overflow:hidden;margin:6px 0;display:none}
+.progress-bar{height:100%;background:#0d6efd;width:0%;transition:width .3s}
 </style>
 </head>
 <body>
@@ -49,7 +53,7 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
     <button id="btnRefresh" onclick="refreshData()" class="btn-refresh">🔄 Actualiser</button>
   </div>
   <div style="text-align:right">
-    <b style="color:#ffeb3b;font-size:11px;display:block">📊 TRANSFERTS - COMPLET</b>
+    <b style="color:#ffeb3b;font-size:11px;display:block">📊 TRANSFERTS - AVEC PREUVE</b>
     <span id="lastUpdate" style="font-size:8px;color:#0f0">MAJ: -</span>
   </div>
   <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:9px">0 cmds</span>
@@ -70,12 +74,26 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 </div>
 </div>
 
-<div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3><div id="mContent"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER</button><button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button><button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button></div></div></div>
+<div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3><div id="mContent"></div>
+<div class="preuve-box">
+  <b style="color:#0d6efd;font-size:12px">📸 PREUVE D'ENVOI (Capture écran transfert)</b>
+  <div id="preuveCurrent" style="margin:6px 0"></div>
+  <input type="file" id="preuveFile" accept="image/*" style="width:100%;background:#111;color:#fff;padding:8px;border-radius:8px;border:1px solid #444;margin:6px 0">
+  <img id="previewImg" class="preuve-img" style="display:none">
+  <div class="progress" id="upProgress"><div class="progress-bar" id="upBar"></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+    <button class="btn btn-preuve" style="padding:10px;font-size:10px" onclick="uploadPreuveSeule()">📤 ENVOYER PREUVE SEULE</button>
+    <button class="btn btn-val" style="padding:10px;font-size:10px" onclick="validerAvecPreuve()">✅ VALIDER + PREUVE</button>
+  </div>
+  <div style="font-size:8px;color:#aaa;margin-top:4px">L'image sera visible par l'utilisateur dans son historique. Poids max 5Mo.</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER SANS PREUVE</button><button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button><button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button></div></div></div>
 
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
+var storage=firebase.storage();
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
 function getPhone(){try{let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p;}catch(e){} return null;}
 function isAdmin(ph){if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8)));}
@@ -87,7 +105,7 @@ function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.d
 function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:3px;font-size:8px" id="count-'+s.key+'">0</span>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
 async function loadAll(){
   const btn=document.getElementById('btnRefresh');
-  if(btn){ btn.classList.add('loading'); btn.innerText='⏳...'; }
+  if(btn){ btn.innerText='⏳...'; }
   allData=[]; counts={}; SERVICES.forEach(s=>counts[s.key]=0);
   const pr=SERVICES.filter(s=>s.path).map(s=>db.ref(s.path).limitToLast(400).once('value').then(snap=>{
     snap.forEach(ch=>{
@@ -102,16 +120,17 @@ async function loadAll(){
   document.getElementById('totalCount').innerText=allData.length+' cmds';
   document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR');
   updateStats(allData); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab || currentTab==='all'));
-  if(btn){ btn.classList.remove('loading'); btn.innerText='🔄 Actualiser'; }
+  if(btn){ btn.innerText='🔄 Actualiser'; }
 }
 function refreshData(){ loadAll().then(()=>{ if(currentTab!=='all') switchTab(currentTab); }); }
 function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
 function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;}); updateStats(list); render(list);}
 function buildClientDetails(item){
-  const d=item.data; const ignoreKeys=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone'];
+  const d=item.data; const ignoreKeys=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone','preuve_url','preuve_base64'];
   const priorityKeys=['montant','total','prix','amount','type','service','operateur','operator','reseau','numero','numero_beneficiaire','numero_benef','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet','id_1xbet'];
   let seen=new Set(); seen.add(String(item.client_id||'').toLowerCase()); seen.add(String(item.phone||'').toLowerCase()); seen.add(String(item.montant||'').toLowerCase());
-  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''}</div>`;
+  let hasPreuve = d.preuve_url || d.preuve_base64;
+  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''} ${hasPreuve?'📸':''}</div>`;
   priorityKeys.forEach(k=>{
     if(d[k]===undefined||d[k]===''||d[k]===null) return;
     const v=String(d[k]).trim(); if(!v) return; if(seen.has(v.toLowerCase())) return; if(v.length>4 && String(item.client_id).includes(v)) return;
@@ -123,6 +142,7 @@ function buildClientDetails(item){
     const v=String(d[k]).trim(); if(!v||v.length<2||v.length>80) return; if(seen.has(v.toLowerCase())) return; seen.add(v.toLowerCase());
     html+=`<div class="kv"><b>${k.slice(0,8)}:</b><span>${v}</span></div>`;
   });
+  if(hasPreuve) html+=`<div class="kv"><b style="color:#0f0">PREUVE:</b><span style="color:#0f0">✅ Envoyée</span></div>`;
   return html;
 }
 function render(list){
@@ -130,23 +150,146 @@ function render(list){
   if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune</td></tr>'; return;}
   list.slice(0,600).forEach((item,idx)=>{
     let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
+    const hasPreuve = item.data.preuve_url || item.data.preuve_base64;
     const tr=document.createElement('tr'); tr.className=getPriority(item.statut)===0?'en-cours':'';
-    tr.innerHTML=`<td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span></td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,10)}<br>${(item.date||'').slice(11,16)}<br><span style="color:#0f0">${item.data.updated_at?('MAJ '+item.data.updated_at.slice(11,16)):''}</span><br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
+    tr.innerHTML=`<td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 4px;border-radius:8px;font-size:7px">📸 PREUVE</span>':''}</td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,10)}<br>${(item.date||'').slice(11,16)}<br><span style="color:#0f0">${item.data.updated_at?('MAJ '+item.data.updated_at.slice(11,16)):''}</span><br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-preuve" onclick="openDetail('${item.path}','${item.id}')">📸 Preuve</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
     tb.appendChild(tr);
   });
 }
 function filtrer(){const q=document.getElementById('search').value.toLowerCase(); if(!q){switchTab(currentTab); return;} const base=currentTab==='all'?allData:allData.filter(d=>d.service===currentTab); const f=base.filter(i=>JSON.stringify(i).toLowerCase().includes(q)); render(f);}
-function openDetail(path,id){const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item; document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id; let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div>`; Object.keys(item.data).forEach(k=>{html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${typeof item.data[k]==='object'?JSON.stringify(item.data[k]).slice(0,300):item.data[k]}</b></div>`;}); document.getElementById('mContent').innerHTML=html; document.getElementById('modal').style.display='flex';}
+function openDetail(path,id){
+  const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item;
+  document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id;
+  let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div>`;
+  Object.keys(item.data).forEach(k=>{
+    if(k==='preuve_base64') return;
+    if(k==='preuve_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir image</a></b></div>`;
+    else html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${typeof item.data[k]==='object'?JSON.stringify(item.data[k]).slice(0,300):item.data[k]}</b></div>`;
+  });
+  document.getElementById('mContent').innerHTML=html;
+  // Affichage preuve actuelle
+  const pc=document.getElementById('preuveCurrent');
+  if(item.data.preuve_url){
+    pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée:</div><img src="${item.data.preuve_url}" class="preuve-img" style="display:block"><div style="font-size:9px"><a href="${item.data.preuve_url}" target="_blank" style="color:#0d6efd">Ouvrir en grand</a></div>`;
+  } else if(item.data.preuve_base64){
+    pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée (base64):</div><img src="${item.data.preuve_base64}" class="preuve-img" style="display:block">`;
+  } else {
+    pc.innerHTML=`<div style="color:#aaa;font-size:10px">Aucune preuve pour le moment. Sélectionne une capture.</div>`;
+  }
+  document.getElementById('previewImg').style.display='none';
+  document.getElementById('preuveFile').value='';
+  document.getElementById('modal').style.display='flex';
+}
 function closeModal(){document.getElementById('modal').style.display='none'; currentItem=null;}
+
+// Preview image
+document.getElementById('preuveFile').addEventListener('change', function(e){
+  const file=e.target.files[0]; if(!file) return;
+  if(file.size>5*1024*1024){ alert('Image trop lourde >5Mo'); return; }
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const img=document.getElementById('previewImg');
+    img.src=ev.target.result;
+    img.style.display='block';
+  };
+  reader.readAsDataURL(file);
+});
+
+async function uploadImageAndGetUrl(file, path){
+  const ext=file.name.split('.').pop()||'jpg';
+  const ref=storage.ref(`preuves/${path}/${Date.now()}_${Math.random().toString(36).slice(2,6)}.${ext}`);
+  const task=ref.put(file);
+  return new Promise((resolve, reject)=>{
+    task.on('state_changed', snap=>{
+      const pct=(snap.bytesTransferred/snap.totalBytes*100).toFixed(0);
+      document.getElementById('upProgress').style.display='block';
+      document.getElementById('upBar').style.width=pct+'%';
+    }, err=>reject(err), async()=>{
+      const url=await task.snapshot.ref.getDownloadURL();
+      resolve(url);
+    });
+  });
+}
+
+async function doUploadPreuve(){
+  if(!currentItem) return null;
+  const fileInput=document.getElementById('preuveFile');
+  const file=fileInput.files[0];
+  if(!file) return null;
+  try{
+    document.getElementById('upProgress').style.display='block';
+    let url;
+    try{
+      url=await uploadImageAndGetUrl(file, currentItem.path);
+    }catch(storageErr){
+      console.log('Storage fail, fallback base64', storageErr);
+      // Fallback: stocker en base64 compressé dans RTDB si storage non activé
+      const b64=await new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); });
+      return {url:null, b64};
+    }
+    return {url, b64:null};
+  }catch(e){ alert('Erreur upload: '+e.message); return null; }
+}
+
+async function uploadPreuveSeule(){
+  if(!currentItem) return;
+  const res=await doUploadPreuve();
+  if(!res) return alert('Choisis d\'abord une image');
+  const nowISO=new Date().toISOString();
+  const nowFR=new Date().toLocaleString('fr-FR');
+  const updates={};
+  if(res.url){
+    updates[currentItem.path+'/'+currentItem.id+'/preuve_url']=res.url;
+  } else {
+    updates[currentItem.path+'/'+currentItem.id+'/preuve_base64']=res.b64;
+  }
+  updates[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO;
+  updates[currentItem.path+'/'+currentItem.id+'/preuve_by']=getPhone();
+  updates[currentItem.path+'/'+currentItem.id+'/preuve_date_fr']=nowFR;
+  await db.ref().update(updates);
+  alert('✅ Preuve envoyée au client !');
+  document.getElementById('upProgress').style.display='none';
+  loadAll();
+  // Notif auto
+  const ph=currentItem.client_id||currentItem.phone;
+  if(ph){
+    db.ref('notifications/'+ph).push({titre:'Preuve d\'envoi disponible 📸', message:`Votre transfert ${currentItem.montant}F a une preuve. Consultez l'historique.`, date:nowFR, preuve_url:res.url||'', type:'preuve', commande_id:currentItem.id});
+  }
+}
+
+async function validerAvecPreuve(){
+  if(!currentItem) return;
+  const fileInput=document.getElementById('preuveFile');
+  if(!fileInput.files[0]) return alert('Sélectionne d\'abord la capture d\'écran');
+  const res=await doUploadPreuve();
+  if(!res) return;
+  const nowISO=new Date().toISOString();
+  const nowFR=new Date().toLocaleString('fr-FR');
+  const up={};
+  up[currentItem.path+'/'+currentItem.id+'/statut']='validé';
+  up[currentItem.path+'/'+currentItem.id+'/status']='validé';
+  up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO;
+  up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR;
+  up[currentItem.path+'/'+currentItem.id+'/updated_by']=getPhone();
+  if(res.url) up[currentItem.path+'/'+currentItem.id+'/preuve_url']=res.url;
+  else up[currentItem.path+'/'+currentItem.id+'/preuve_base64']=res.b64;
+  up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO;
+  await db.ref().update(up);
+  alert('✅ Validé + Preuve envoyée');
+  closeModal();
+  loadAll();
+}
+
 function quickAction(path,id,newStatut){if(!confirm(newStatut.toUpperCase()+' '+id+'?')) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone(); db.ref().update(up).then(()=>{alert('✅ '+newStatut); loadAll().then(()=>{if(currentTab!=='all') switchTab(currentTab);});});}
 function validerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'validé'); closeModal();}
 function annulerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'annulé'); closeModal();}
 function notifierCurrent(){if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:','Traitement'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>alert('Envoyé'));}
-initTabs(); loadAll();firebase.auth().onAuthStateChanged(function(user){
-  if(user){ init(); } 
+
+initTabs(); loadAll();
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ } 
   else { firebase.auth().signInAnonymously(); }
 });
-// Actualisation auto toutes les 60s
 setInterval(()=>{ refreshData(); }, 60000);
 </script>
 </body>
