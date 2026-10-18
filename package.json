@@ -2,7 +2,6 @@
   "name": "appdans-server",
   "dependencies": {
     "express": "^4.18.0",
-    "cors": "^2.8.5",
-    "@distube/ytdl-core": "^4.15.4"
+    "cors": "^2.8.5"
   }
 }
