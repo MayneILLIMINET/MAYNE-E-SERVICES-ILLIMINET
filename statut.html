@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN - Statuts - COMPLET + PREUVE</title>
+<title>ADMIN - Statuts - DATABASE + CLOUDINARY</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <style>
 *{box-sizing:border-box}
 body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0}
@@ -53,39 +52,35 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
     <button id="btnRefresh" onclick="refreshData()" class="btn-refresh">🔄 Actualiser</button>
   </div>
   <div style="text-align:right">
-    <b style="color:#ffeb3b;font-size:11px;display:block">📊 TRANSFERTS - AVEC PREUVE</b>
+    <b style="color:#ffeb3b;font-size:11px;display:block">📊 TRANSFERTS - DB + CLOUDINARY</b>
     <span id="lastUpdate" style="font-size:8px;color:#0f0">MAJ: -</span>
   </div>
   <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:9px">0 cmds</span>
 </div>
-
 <div class="stats">
   <div><div class="sval" id="stEnCours" style="color:#ffeb3b">0</div><div class="slab">EN COURS</div></div>
-  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS RÉCENT</div></div>
+  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS</div></div>
   <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS</div></div>
   <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
 </div>
-
 <div class="tabs" id="tabs"></div>
 <input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire..." oninput="filtrer()">
-
 <div class="wrap">
-<table><thead><tr><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date / MAJ</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Chargement...</td></tr></tbody></table>
+<table><thead><tr><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Connexion...</td></tr></tbody></table>
 </div>
 </div>
 
 <div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3><div id="mContent"></div>
 <div class="preuve-box">
-  <b style="color:#0d6efd;font-size:12px">📸 PREUVE D'ENVOI (Capture écran transfert)</b>
+  <b style="color:#0d6efd;font-size:12px">📸 PREUVE D'ENVOI - Cloudinary</b>
   <div id="preuveCurrent" style="margin:6px 0"></div>
   <input type="file" id="preuveFile" accept="image/*" style="width:100%;background:#111;color:#fff;padding:8px;border-radius:8px;border:1px solid #444;margin:6px 0">
   <img id="previewImg" class="preuve-img" style="display:none">
   <div class="progress" id="upProgress"><div class="progress-bar" id="upBar"></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
-    <button class="btn btn-preuve" style="padding:10px;font-size:10px" onclick="uploadPreuveSeule()">📤 ENVOYER PREUVE SEULE</button>
+    <button class="btn btn-preuve" style="padding:10px;font-size:10px" onclick="uploadPreuveSeule()">📤 PREUVE SEULE</button>
     <button class="btn btn-val" style="padding:10px;font-size:10px" onclick="validerAvecPreuve()">✅ VALIDER + PREUVE</button>
   </div>
-  <div style="font-size:8px;color:#aaa;margin-top:4px">L'image sera visible par l'utilisateur dans son historique. Poids max 5Mo.</div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER SANS PREUVE</button><button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button><button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button></div></div></div>
 
@@ -93,19 +88,42 @@ tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
-var storage=firebase.storage();
+
+// ===== CLOUDINARY IDENTIQUE A DEPOT.HTML =====
+async function uploadToCloudinary(b64){
+  var fd=new FormData();
+  fd.append('file',b64);
+  fd.append('upload_preset','mayneaudio');
+  fd.append('folder','preuves_admin');
+  var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd});
+  var data=await res.json();
+  if(data.secure_url) return data.secure_url;
+  throw new Error('Cloudinary: '+(data.error?.message||JSON.stringify(data)));
+}
+
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
-function getPhone(){try{let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p;}catch(e){} return null;}
-function isAdmin(ph){if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8)));}
-if(!isAdmin(getPhone())){document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement</div>'; throw 'not admin';}
+function getPhone(){
+  try{
+    let v=localStorage.getItem('mayne_current_user');
+    if(v){ let o=JSON.parse(v); if(o.phone) return o.phone; }
+    let p=localStorage.getItem('phone'); if(p) return p;
+  }catch(e){} return null;
+}
+function isAdmin(ph){ if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8))); }
+let userPhone=getPhone();
+if(!isAdmin(userPhone)){
+  document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement<br><small>Phone:'+(userPhone||'non trouvé')+'<br>Connecte-toi d\'abord sur index.html</small></div>';
+  throw 'not admin';
+}
+
 const SERVICES=[{key:'all',label:'TOUS',path:null},{key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},{key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},{key:'market',label:'MARKET',path:'commandes_marketplace'},{key:'1xbet',label:'1XBET',path:'commandes_1xbet'},{key:'factures',label:'FACTURES',path:'commandes_factures'},{key:'forfaits',label:'FORFAITS',path:'commandes_forfaits'},{key:'epargne',label:'EPARGNE',path:'commandes_epargne'},{key:'depot',label:'DEPOTS',path:'commandes_depots'},{key:'retrait',label:'RETRAITS',path:'commandes_retraits'},{key:'kyc',label:'KYC',path:'kyc_demandes'}];
 let allData=[],currentTab='all',currentItem=null,counts={};
 function getPriority(s){const t=(s||'').toLowerCase(); if(t.includes('en cours')||t.includes('attente')||t.includes('pending')) return 0; return 1;}
 function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms;}
 function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:3px;font-size:8px" id="count-'+s.key+'">0</span>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
+
 async function loadAll(){
-  const btn=document.getElementById('btnRefresh');
-  if(btn){ btn.innerText='⏳...'; }
+  const btn=document.getElementById('btnRefresh'); if(btn) btn.innerText='⏳...';
   allData=[]; counts={}; SERVICES.forEach(s=>counts[s.key]=0);
   const pr=SERVICES.filter(s=>s.path).map(s=>db.ref(s.path).limitToLast(400).once('value').then(snap=>{
     snap.forEach(ch=>{
@@ -119,40 +137,27 @@ async function loadAll(){
   SERVICES.forEach(s=>{const el=document.getElementById('count-'+s.key); if(el) el.innerText=s.key==='all'?allData.length:(counts[s.key]||0);});
   document.getElementById('totalCount').innerText=allData.length+' cmds';
   document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR');
-  updateStats(allData); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab || currentTab==='all'));
-  if(btn){ btn.innerText='🔄 Actualiser'; }
+  updateStats(allData); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
+  if(btn) btn.innerText='🔄 Actualiser';
 }
-function refreshData(){ loadAll().then(()=>{ if(currentTab!=='all') switchTab(currentTab); }); }
+function refreshData(){ loadAll(); }
 function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
 function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;}); updateStats(list); render(list);}
 function buildClientDetails(item){
-  const d=item.data; const ignoreKeys=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone','preuve_url','preuve_base64'];
-  const priorityKeys=['montant','total','prix','amount','type','service','operateur','operator','reseau','numero','numero_beneficiaire','numero_benef','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet','id_1xbet'];
-  let seen=new Set(); seen.add(String(item.client_id||'').toLowerCase()); seen.add(String(item.phone||'').toLowerCase()); seen.add(String(item.montant||'').toLowerCase());
-  let hasPreuve = d.preuve_url || d.preuve_base64;
-  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''} ${hasPreuve?'📸':''}</div>`;
-  priorityKeys.forEach(k=>{
-    if(d[k]===undefined||d[k]===''||d[k]===null) return;
-    const v=String(d[k]).trim(); if(!v) return; if(seen.has(v.toLowerCase())) return; if(v.length>4 && String(item.client_id).includes(v)) return;
-    seen.add(v.toLowerCase()); const label=k.replace('numero_beneficiaire','BÉNÉF').replace('numero_benef','BÉNÉF').replace('operateur','OP').replace('client_nom','NOM').replace('id_1xbet','1XBET');
-    html+=`<div class="kv"><b>${label}:</b><span>${v.slice(0,60)}</span></div>`;
-  });
-  Object.keys(d).forEach(k=>{
-    if(priorityKeys.includes(k)||ignoreKeys.includes(k)) return; if(typeof d[k]==='object') return;
-    const v=String(d[k]).trim(); if(!v||v.length<2||v.length>80) return; if(seen.has(v.toLowerCase())) return; seen.add(v.toLowerCase());
-    html+=`<div class="kv"><b>${k.slice(0,8)}:</b><span>${v}</span></div>`;
-  });
-  if(hasPreuve) html+=`<div class="kv"><b style="color:#0f0">PREUVE:</b><span style="color:#0f0">✅ Envoyée</span></div>`;
+  const d=item.data; const ignoreKeys=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone','preuve_url','preuve_base64','capture_url'];
+  const priorityKeys=['montant','total','prix','reseau','numero','numero_beneficiaire','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet'];
+  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''} ${d.preuve_url||d.capture_url?'📸':''}</div>`;
+  priorityKeys.forEach(k=>{ if(d[k]===undefined||d[k]===''||d[k]===null) return; html+=`<div class="kv"><b>${k}:</b><span>${String(d[k]).slice(0,60)}</span></div>`; });
   return html;
 }
 function render(list){
   const tb=document.getElementById('tbody'); tb.innerHTML='';
-  if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune</td></tr>'; return;}
+  if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune commande</td></tr>'; return;}
   list.slice(0,600).forEach((item,idx)=>{
     let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
-    const hasPreuve = item.data.preuve_url || item.data.preuve_base64;
+    const hasPreuve = item.data.preuve_url || item.data.capture_url;
     const tr=document.createElement('tr'); tr.className=getPriority(item.statut)===0?'en-cours':'';
-    tr.innerHTML=`<td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 4px;border-radius:8px;font-size:7px">📸 PREUVE</span>':''}</td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,10)}<br>${(item.date||'').slice(11,16)}<br><span style="color:#0f0">${item.data.updated_at?('MAJ '+item.data.updated_at.slice(11,16)):''}</span><br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-preuve" onclick="openDetail('${item.path}','${item.id}')">📸 Preuve</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
+    tr.innerHTML=`<td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 4px;border-radius:8px;font-size:7px">📸</span>':''}</td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,16)}<br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-preuve" onclick="openDetail('${item.path}','${item.id}')">📸</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
     tb.appendChild(tr);
   });
 }
@@ -163,134 +168,60 @@ function openDetail(path,id){
   let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div>`;
   Object.keys(item.data).forEach(k=>{
     if(k==='preuve_base64') return;
-    if(k==='preuve_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir image</a></b></div>`;
+    if(k==='preuve_url' || k==='capture_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir</a></b></div>`;
     else html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${typeof item.data[k]==='object'?JSON.stringify(item.data[k]).slice(0,300):item.data[k]}</b></div>`;
   });
   document.getElementById('mContent').innerHTML=html;
-  // Affichage preuve actuelle
   const pc=document.getElementById('preuveCurrent');
-  if(item.data.preuve_url){
-    pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée:</div><img src="${item.data.preuve_url}" class="preuve-img" style="display:block"><div style="font-size:9px"><a href="${item.data.preuve_url}" target="_blank" style="color:#0d6efd">Ouvrir en grand</a></div>`;
-  } else if(item.data.preuve_base64){
-    pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée (base64):</div><img src="${item.data.preuve_base64}" class="preuve-img" style="display:block">`;
-  } else {
-    pc.innerHTML=`<div style="color:#aaa;font-size:10px">Aucune preuve pour le moment. Sélectionne une capture.</div>`;
-  }
-  document.getElementById('previewImg').style.display='none';
-  document.getElementById('preuveFile').value='';
-  document.getElementById('modal').style.display='flex';
+  if(item.data.preuve_url || item.data.capture_url){
+    const u = item.data.preuve_url || item.data.capture_url;
+    pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée:</div><img src="${u}" class="preuve-img" style="display:block"><div style="font-size:9px"><a href="${u}" target="_blank" style="color:#0d6efd">Ouvrir</a></div>`;
+  } else { pc.innerHTML=`<div style="color:#aaa;font-size:10px">Aucune preuve.</div>`; }
+  document.getElementById('previewImg').style.display='none'; document.getElementById('preuveFile').value=''; document.getElementById('modal').style.display='flex';
 }
 function closeModal(){document.getElementById('modal').style.display='none'; currentItem=null;}
-
-// Preview image
 document.getElementById('preuveFile').addEventListener('change', function(e){
   const file=e.target.files[0]; if(!file) return;
-  if(file.size>5*1024*1024){ alert('Image trop lourde >5Mo'); return; }
-  const reader=new FileReader();
-  reader.onload=function(ev){
-    const img=document.getElementById('previewImg');
-    img.src=ev.target.result;
-    img.style.display='block';
-  };
-  reader.readAsDataURL(file);
+  if(file.size>5*1024*1024){ alert('>5Mo'); return; }
+  const reader=new FileReader(); reader.onload=function(ev){ const img=document.getElementById('previewImg'); img.src=ev.target.result; img.style.display='block'; }; reader.readAsDataURL(file);
 });
-
-async function uploadImageAndGetUrl(file, path){
-  const ext=file.name.split('.').pop()||'jpg';
-  const ref=storage.ref(`preuves/${path}/${Date.now()}_${Math.random().toString(36).slice(2,6)}.${ext}`);
-  const task=ref.put(file);
-  return new Promise((resolve, reject)=>{
-    task.on('state_changed', snap=>{
-      const pct=(snap.bytesTransferred/snap.totalBytes*100).toFixed(0);
-      document.getElementById('upProgress').style.display='block';
-      document.getElementById('upBar').style.width=pct+'%';
-    }, err=>reject(err), async()=>{
-      const url=await task.snapshot.ref.getDownloadURL();
-      resolve(url);
-    });
-  });
-}
-
 async function doUploadPreuve(){
-  if(!currentItem) return null;
-  const fileInput=document.getElementById('preuveFile');
-  const file=fileInput.files[0];
-  if(!file) return null;
+  const file=document.getElementById('preuveFile').files[0]; if(!file){ alert('Choisis une image'); return null; }
+  document.getElementById('upProgress').style.display='block'; document.getElementById('upBar').style.width='40%';
   try{
-    document.getElementById('upProgress').style.display='block';
-    let url;
-    try{
-      url=await uploadImageAndGetUrl(file, currentItem.path);
-    }catch(storageErr){
-      console.log('Storage fail, fallback base64', storageErr);
-      // Fallback: stocker en base64 compressé dans RTDB si storage non activé
-      const b64=await new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(file); });
-      return {url:null, b64};
-    }
-    return {url, b64:null};
+    const b64=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=rej; fr.readAsDataURL(file); });
+    document.getElementById('upBar').style.width='70%';
+    const url=await uploadToCloudinary(b64);
+    document.getElementById('upBar').style.width='100%';
+    return url;
   }catch(e){ alert('Erreur upload: '+e.message); return null; }
+  finally{ setTimeout(()=>{document.getElementById('upProgress').style.display='none'; document.getElementById('upBar').style.width='0%';},1000); }
 }
-
 async function uploadPreuveSeule(){
-  if(!currentItem) return;
-  const res=await doUploadPreuve();
-  if(!res) return alert('Choisis d\'abord une image');
-  const nowISO=new Date().toISOString();
-  const nowFR=new Date().toLocaleString('fr-FR');
-  const updates={};
-  if(res.url){
-    updates[currentItem.path+'/'+currentItem.id+'/preuve_url']=res.url;
-  } else {
-    updates[currentItem.path+'/'+currentItem.id+'/preuve_base64']=res.b64;
-  }
-  updates[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO;
-  updates[currentItem.path+'/'+currentItem.id+'/preuve_by']=getPhone();
-  updates[currentItem.path+'/'+currentItem.id+'/preuve_date_fr']=nowFR;
-  await db.ref().update(updates);
-  alert('✅ Preuve envoyée au client !');
-  document.getElementById('upProgress').style.display='none';
-  loadAll();
-  // Notif auto
-  const ph=currentItem.client_id||currentItem.phone;
-  if(ph){
-    db.ref('notifications/'+ph).push({titre:'Preuve d\'envoi disponible 📸', message:`Votre transfert ${currentItem.montant}F a une preuve. Consultez l'historique.`, date:nowFR, preuve_url:res.url||'', type:'preuve', commande_id:currentItem.id});
-  }
+  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return;
+  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
+  const up={}; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO; up[currentItem.path+'/'+currentItem.id+'/preuve_by']=getPhone(); up[currentItem.path+'/'+currentItem.id+'/preuve_date_fr']=nowFR;
+  await db.ref().update(up); alert('✅ Preuve envoyée !'); loadAll();
+  const ph=currentItem.client_id||currentItem.phone; if(ph){ db.ref('notifications/'+ph).push({titre:'Preuve disponible 📸', message:`Votre transfert ${currentItem.montant}F a une preuve`, date:nowFR, preuve_url:url, type:'preuve', commande_id:currentItem.id}); }
 }
-
 async function validerAvecPreuve(){
-  if(!currentItem) return;
-  const fileInput=document.getElementById('preuveFile');
-  if(!fileInput.files[0]) return alert('Sélectionne d\'abord la capture d\'écran');
-  const res=await doUploadPreuve();
-  if(!res) return;
-  const nowISO=new Date().toISOString();
-  const nowFR=new Date().toLocaleString('fr-FR');
-  const up={};
-  up[currentItem.path+'/'+currentItem.id+'/statut']='validé';
-  up[currentItem.path+'/'+currentItem.id+'/status']='validé';
-  up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO;
-  up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR;
-  up[currentItem.path+'/'+currentItem.id+'/updated_by']=getPhone();
-  if(res.url) up[currentItem.path+'/'+currentItem.id+'/preuve_url']=res.url;
-  else up[currentItem.path+'/'+currentItem.id+'/preuve_base64']=res.b64;
-  up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO;
-  await db.ref().update(up);
-  alert('✅ Validé + Preuve envoyée');
-  closeModal();
-  loadAll();
+  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return;
+  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
+  const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']='validé'; up[currentItem.path+'/'+currentItem.id+'/status']='validé'; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO;
+  await db.ref().update(up); alert('✅ Validé + Preuve'); closeModal(); loadAll();
 }
-
-function quickAction(path,id,newStatut){if(!confirm(newStatut.toUpperCase()+' '+id+'?')) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone(); db.ref().update(up).then(()=>{alert('✅ '+newStatut); loadAll().then(()=>{if(currentTab!=='all') switchTab(currentTab);});});}
+function quickAction(path,id,newStatut){if(!confirm(newStatut.toUpperCase()+' '+id+'?')) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone(); db.ref().update(up).then(()=>{alert('✅ '+newStatut); loadAll();});}
 function validerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'validé'); closeModal();}
 function annulerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'annulé'); closeModal();}
-function notifierCurrent(){if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:','Traitement'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>alert('Envoyé'));}
+function notifierCurrent(){if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>alert('Envoyé'));}
 
-initTabs(); loadAll();
+// FIX AFFICHAGE: attend auth
+initTabs();
 firebase.auth().onAuthStateChanged(function(user){
-  if(user){ } 
+  if(user){ loadAll(); } 
   else { firebase.auth().signInAnonymously(); }
 });
-setInterval(()=>{ refreshData(); }, 60000);
+setInterval(()=>{ refreshData(); }, 30000);
 </script>
 </body>
 </html>
