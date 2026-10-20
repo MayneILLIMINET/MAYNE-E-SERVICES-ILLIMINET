@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN - AUTO SON + DETAILS COMPLETS</title>
+<title>ADMIN - ULTRA ECO</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -12,8 +12,7 @@
 .btn-retour{background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;border:none;cursor:pointer}
 .btn-refresh{background:#0d6efd;color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fff;cursor:pointer}
 .btn-sound{background:#28a745;color:#fff;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fff;cursor:pointer}
-.btn-sound.off{background:#555}
-.btn-sound.looping{animation:shake 0.5s infinite;background:#ff0000 !important}
+.btn-sound.off{background:#555}.btn-sound.looping{background:#ff0000 !important;animation:shake 0.5s infinite}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
 .input{width:calc(100% - 16px);background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:8px}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:#000}
@@ -22,11 +21,10 @@
 .tab-count{background:#000;color:#ffeb3b;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900;min-width:18px;text-align:center}
 .tab.active .tab-count{background:#fff;color:#ff5000}
 .tab-count.has-en-cours{background:#ffeb3b;color:#000;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#000;margin:0 8px 8px 8px;border-radius:8px}
 .sval{font-weight:900;font-size:18px}.slab{font-size:8px;color:#aaa}
 table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
-th,td{border:1px solid #333;padding:6px;text-align:left;vertical-align:top;word-wrap:break-word;overflow-wrap:anywhere}
+th,td{border:1px solid #333;padding:6px;text-align:left;vertical-align:top;word-wrap:break-word}
 th{background:#ff5000;position:sticky;top:0;font-size:9px}
 tr.en-cours{border-left:5px solid #ffeb3b;background:#2a2a00;animation:blinkRow 1s infinite}
 @keyframes blinkRow{0%,100%{background:#2a2a00}50%{background:#4a3500}}
@@ -34,8 +32,8 @@ tr.en-cours{border-left:5px solid #ffeb3b;background:#2a2a00;animation:blinkRow 
 .ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
 .btn{border:none;padding:5px 6px;border-radius:6px;font-weight:800;cursor:pointer;font-size:8px;margin:1px;width:100%}
 .btn-val{background:#28a745;color:#fff}.btn-ann{background:#dc3545;color:#fff}.btn-view{background:#333;color:#fff;border:1px solid #555}.btn-preuve{background:#0d6efd;color:#fff;border:1px solid #fff}
-.client-main{color:#0f0;font-weight:900;font-size:11px;line-height:1.2}
-.kv{display:flex;gap:4px;font-size:9px;line-height:1.3;border-bottom:1px dotted #222;padding:2px 0}
+.client-main{color:#0f0;font-weight:900;font-size:11px}
+.kv{display:flex;gap:4px;font-size:9px;border-bottom:1px dotted #222;padding:2px 0}
 .kv b{color:#ffeb3b;font-size:8px;min-width:38px;text-transform:uppercase;font-weight:800}
 .kv span{color:#fff;flex:1;word-break:break-all}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
@@ -45,7 +43,6 @@ tr.en-cours{border-left:5px solid #ffeb3b;background:#2a2a00;animation:blinkRow 
 .preuve-img{width:100%;max-height:320px;object-fit:contain;border-radius:8px;border:1px solid #444;margin-top:8px}
 .progress{width:100%;height:8px;background:#333;border-radius:10px;overflow:hidden;margin:8px 0;display:none}
 .progress-bar{height:100%;background:#0d6efd;width:0%;transition:width .3s}
-.config-box{background:#000;border:1px solid #333;padding:10px;margin:8px;border-radius:10px}
 </style>
 </head>
 <body>
@@ -54,9 +51,9 @@ tr.en-cours{border-left:5px solid #ffeb3b;background:#2a2a00;animation:blinkRow 
   <div style="display:flex;gap:6px;flex-wrap:wrap">
     <a href="admin.html" class="btn-retour">← ADMIN</a>
     <button id="btnSound" class="btn-sound off" onclick="toggleSound()">🔇 SON OFF</button>
-    <button id="btnRefresh" onclick="refreshData()" class="btn-refresh">🔄 Actualiser</button>
+    <button id="btnRefresh" onclick="loadTout()" class="btn-refresh">📦 TOUT charger</button>
   </div>
-  <div style="text-align:right"><b style="color:#ffeb3b;font-size:11px">📊 ADMIN COMPLET</b><br><span id="lastUpdate" style="font-size:8px;color:#0f0">-</span></div>
+  <div style="text-align:right"><b style="color:#ffeb3b;font-size:11px">⚡ ULTRA ECO</b><br><span id="lastUpdate" style="font-size:8px;color:#0f0">Chargement 5/service</span></div>
   <span id="totalCount" style="background:#000;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:900">0 cmds</span>
 </div>
 
@@ -67,42 +64,16 @@ tr.en-cours{border-left:5px solid #ffeb3b;background:#2a2a00;animation:blinkRow 
   <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
 </div>
 
-<div class="config-box" id="soundConfig" style="display:none">
-  <b>🔊 MON SON PERSO</b>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
-    <input type="file" id="customSoundFile" accept="audio/*" style="width:100%;background:#111;color:#fff;padding:6px;border-radius:6px;border:1px solid #444;font-size:10px">
-    <button class="btn btn-preuve" style="font-size:10px;padding:8px" onclick="uploadCustomSound()">📤 UPLOADER</button>
-  </div>
-  <input type="text" id="customSoundUrl" placeholder="Ou URL MP3 https://..." style="width:100%;background:#111;color:#fff;padding:8px;border-radius:6px;border:1px solid #444;margin-top:6px;font-size:10px">
-  <div style="display:flex;gap:6px;margin-top:6px">
-    <button class="btn btn-val" style="font-size:9px;padding:6px" onclick="saveCustomUrl()">💾 SAUVER</button>
-    <button class="btn btn-view" style="font-size:9px;padding:6px" onclick="testSound()">▶️ TEST</button>
-    <button class="btn btn-ann" style="font-size:9px;padding:6px" onclick="resetSound()">🔄 DÉFAUT</button>
-  </div>
-  <div id="currentSoundInfo" style="font-size:9px;color:#0f0;margin-top:6px">Son : défaut</div>
-  <div class="progress" id="soundProgress"><div class="progress-bar" id="soundBar"></div></div>
-</div>
-<div style="text-align:center"><button onclick="document.getElementById('soundConfig').style.display=document.getElementById('soundConfig').style.display==='none'?'block':'none'" style="background:#000;color:#aaa;border:1px solid #333;padding:4px 10px;border-radius:12px;font-size:9px;cursor:pointer;margin:6px">⚙️ Configurer mon son</button></div>
-
 <div class="tabs" id="tabs"></div>
-<input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire, 1xbet..." oninput="filtrer()">
-<div style="overflow-x:auto"><table><thead><tr><th style="width:14%">Service</th><th style="width:46%">Client / Tous détails</th><th style="width:12%">Statut</th><th style="width:13%">Date</th><th style="width:15%">Action</th></tr></thead><tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Connexion...</td></tr></tbody></table></div>
+<input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire..." oninput="filtrer()">
+<div style="overflow-x:auto"><table><thead><tr><th style="width:14%">Service</th><th style="width:46%">Client / Détails complets</th><th style="width:12%">Statut</th><th style="width:13%">Date</th><th style="width:15%">Action</th></tr></thead><tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Chargement ultra rapide...</td></tr></tbody></table></div>
+<div style="text-align:center;padding:8px"><span style="font-size:8px;color:#888">Mode ultra éco : 5 par service au démarrage. Clique "TOUT charger" pour voir tout. Auto-refresh ajoute seulement les nouveaux EN COURS.</span></div>
 </div>
 
 <audio id="notifAudio" preload="auto"></audio>
 
-<div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000">Détail complet</h3><div id="mContent"></div>
-<div class="preuve-box">
-  <b style="color:#0d6efd;font-size:12px">📸 PREUVE - Cloudinary</b>
-  <div id="preuveCurrent"></div>
-  <input type="file" id="preuveFile" accept="image/*" style="width:100%;background:#111;color:#fff;padding:10px;border-radius:8px;border:1px solid #444;margin:6px 0">
-  <img id="previewImg" class="preuve-img" style="display:none">
-  <div class="progress" id="upProgress"><div class="progress-bar" id="upBar"></div></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-    <button class="btn btn-preuve" style="padding:12px;font-size:11px" onclick="uploadPreuveSeule()">📤 PREUVE SEULE</button>
-    <button class="btn btn-val" style="padding:12px;font-size:11px" onclick="validerAvecPreuve()">✅ VALIDER + PREUVE</button>
-  </div>
-</div>
+<div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000">Détail</h3><div id="mContent"></div>
+<div class="preuve-box"><b style="color:#0d6efd;font-size:12px">📸 PREUVE</b><div id="preuveCurrent"></div><input type="file" id="preuveFile" accept="image/*" style="width:100%;background:#111;color:#fff;padding:10px;border-radius:8px;border:1px solid #444;margin:6px 0"><img id="previewImg" class="preuve-img" style="display:none"><div class="progress" id="upProgress"><div class="progress-bar" id="upBar"></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><button class="btn btn-preuve" style="padding:12px" onclick="uploadPreuveSeule()">📤 PREUVE SEULE</button><button class="btn btn-val" style="padding:12px" onclick="validerAvecPreuve()">✅ VALIDER + PREUVE</button></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-val" style="padding:12px" onclick="validerCurrent()">✅ SANS PREUVE</button><button class="btn btn-ann" style="padding:12px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:12px;background:#333" onclick="closeModal()">Fermer</button></div></div></div>
 
 <script>
@@ -110,39 +81,22 @@ const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomai
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
 
-// ===== SON AUTO =====
+// SON AUTO - FIX : ne boucle que si EN COURS >0
 let soundEnabled = localStorage.getItem('mayne_sound')==='on';
 let customSoundUrl = localStorage.getItem('mayne_custom_sound')||'';
 let soundLoopInterval=null; let audioUnlocked=false;
 const DEFAULT_SOUND = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=notification-sound-7062.mp3";
 function getCurrentSound(){ return customSoundUrl || DEFAULT_SOUND; }
-function updateSoundInfo(){ document.getElementById('notifAudio').src=getCurrentSound(); document.getElementById('currentSoundInfo').innerText=customSoundUrl?'Son perso actif':'Son défaut'; }
-function updateSoundBtn(){ const b=document.getElementById('btnSound'); if(soundEnabled){ b.innerText='🔊 SON ON (AUTO)'; b.classList.remove('off'); } else { b.innerText='🔇 SON OFF'; b.classList.add('off'); b.classList.remove('looping'); } }
+function updateSoundBtn(){ const b=document.getElementById('btnSound'); const en=parseInt(document.getElementById('stEnCours').innerText)||0; if(soundEnabled){ b.innerText=en>0?`🔔 ${en} EN COURS !`:'🔊 SON ON'; b.classList.remove('off'); if(en>0) b.classList.add('looping'); else b.classList.remove('looping'); } else { b.innerText='🔇 SON OFF'; b.classList.add('off'); b.classList.remove('looping'); } }
 function unlockAudio(){ if(audioUnlocked) return; const a=document.getElementById('notifAudio'); a.src=getCurrentSound(); const v=a.volume; a.volume=0; a.play().then(()=>{a.pause(); a.volume=v; audioUnlocked=true;}).catch(()=>{}); }
 function toggleSound(){ soundEnabled=!soundEnabled; localStorage.setItem('mayne_sound', soundEnabled?'on':'off'); updateSoundBtn(); if(soundEnabled){ unlockAudio(); setTimeout(()=>playSoundOnce(),100); checkAndStartLoop(); } else { stopLoop(); } }
-function playSoundOnce(){ if(!soundEnabled) return; try{ const a=document.getElementById('notifAudio'); a.src=getCurrentSound(); a.currentTime=0; a.volume=1; a.play().catch(()=>{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.frequency.value=900; g.gain.value=0.5; o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>o.stop(),600); }); if(navigator.vibrate) navigator.vibrate([400,100,400]); }catch(e){} }
-function startLoop(){ if(soundLoopInterval) return; document.getElementById('btnSound').classList.add('looping'); document.getElementById('btnSound').innerText='🔔 '+document.getElementById('stEnCours').innerText+' EN COURS !'; soundLoopInterval=setInterval(()=>{ if(soundEnabled) playSoundOnce(); }, 3000); let c=0; let ti=setInterval(()=>{ if(!soundLoopInterval){ clearInterval(ti); document.title='ADMIN'; return; } document.title=c%2?'🔔 '+document.getElementById('stEnCours').innerText+' EN COURS !':'📊 ADMIN URGENT'; c++; }, 800); }
-function stopLoop(){ if(soundLoopInterval){ clearInterval(soundLoopInterval); soundLoopInterval=null; } document.getElementById('btnSound').classList.remove('looping'); updateSoundBtn(); document.title='ADMIN - DETAILS COMPLETS'; }
-function checkAndStartLoop(){ const en=parseInt(document.getElementById('stEnCours').innerText)||0; if(en>0 && soundEnabled) startLoop(); else stopLoop(); }
-function testSound(){ unlockAudio(); setTimeout(()=>playSoundOnce(),150); }
-function saveCustomUrl(){ const url=document.getElementById('customSoundUrl').value.trim(); if(!url) return alert('URL vide'); localStorage.setItem('mayne_custom_sound', url); customSoundUrl=url; updateSoundInfo(); testSound(); }
-function resetSound(){ localStorage.removeItem('mayne_custom_sound'); customSoundUrl=''; updateSoundInfo(); }
-async function uploadCustomSound(){
-  const file=document.getElementById('customSoundFile').files[0]; if(!file) return alert('Choisis audio');
-  document.getElementById('soundProgress').style.display='block'; document.getElementById('soundBar').style.width='40%';
-  try{
-    const fd=new FormData(); fd.append('file',file); fd.append('upload_preset','mayneaudio'); fd.append('folder','sons_admin'); fd.append('resource_type','video');
-    const res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/video/upload",{method:'POST',body:fd}); const data=await res.json();
-    if(data.secure_url){ localStorage.setItem('mayne_custom_sound', data.secure_url); customSoundUrl=data.secure_url; document.getElementById('soundBar').style.width='100%'; updateSoundInfo(); alert('✅ Son uploadé'); testSound(); }
-    else throw new Error(data.error?.message);
-  }catch(e){ alert('Err:'+e.message); } finally{ setTimeout(()=>{document.getElementById('soundProgress').style.display='none';},1000); }
-}
-document.addEventListener('click', ()=>{ if(!audioUnlocked) unlockAudio(); if(soundEnabled) checkAndStartLoop(); }, {capture:true});
+function playSoundOnce(){ if(!soundEnabled) return; const en=parseInt(document.getElementById('stEnCours').innerText)||0; if(en===0){ stopLoop(); return; } try{ const a=document.getElementById('notifAudio'); a.src=getCurrentSound(); a.currentTime=0; a.volume=1; a.play().catch(()=>{}); if(navigator.vibrate) navigator.vibrate([400,100,400]); }catch(e){} }
+function startLoop(){ const en=parseInt(document.getElementById('stEnCours').innerText)||0; if(en===0||!soundEnabled){ stopLoop(); return; } if(soundLoopInterval) return; document.getElementById('btnSound').classList.add('looping'); soundLoopInterval=setInterval(()=>{ const e=parseInt(document.getElementById('stEnCours').innerText)||0; if(e===0||!soundEnabled){ stopLoop(); return; } playSoundOnce(); }, 4000); }
+function stopLoop(){ if(soundLoopInterval){ clearInterval(soundLoopInterval); soundLoopInterval=null; } updateSoundBtn(); }
+function checkAndStartLoop(){ const en=parseInt(document.getElementById('stEnCours').innerText)||0; if(en>0 && soundEnabled) startLoop(); else stopLoop(); updateSoundBtn(); }
+document.addEventListener('click', ()=>{ if(!audioUnlocked) unlockAudio(); }, {capture:true});
 
-async function uploadToCloudinary(b64){
-  var fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio'); fd.append('folder','preuves_admin');
-  var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd}); var data=await res.json(); if(data.secure_url) return data.secure_url; throw new Error(data.error?.message);
-}
+async function uploadToCloudinary(b64){ var fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio'); fd.append('folder','preuves_admin'); var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd}); var data=await res.json(); if(data.secure_url) return data.secure_url; throw new Error(data.error?.message); }
 
 function getPhone(){ try{let v=localStorage.getItem('mayne_current_user'); if(v){let o=JSON.parse(v); if(o.phone) return o.phone;}}catch(e){} return null; }
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
@@ -151,7 +105,7 @@ if(!isAdmin(getPhone())){ document.body.innerHTML='⛔ Admin seulement'; throw '
 
 const SERVICES=[
   {key:'all',label:'TOUS',path:null},
-  {key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},
+  {key:'p2p',label:'P2P',path:'commandes_p2p_p2m'},
   {key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},
   {key:'market',label:'MARKET',path:'commandes_marketplace'},
   {key:'1xbet',label:'1XBET',path:'commandes_1xbet'},
@@ -163,106 +117,118 @@ const SERVICES=[
   {key:'kyc',label:'KYC',path:'kyc_demandes'}
 ];
 let allData=[],currentTab='all',currentItem=null;
+let toutLoaded=false;
 function getPriority(s){const t=(s||'').toLowerCase(); if(t.includes('en cours')||t.includes('attente')||t.includes('pending')) return 0; return 1;}
-function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms;}
-function initTabs(){
-  const c=document.getElementById('tabs'); c.innerHTML='';
-  SERVICES.forEach(s=>{
-    const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key;
-    b.innerHTML=`${s.label} <span class="tab-count" id="count-${s.key}">0</span> <span class="tab-count has-en-cours" id="encours-${s.key}" style="display:none">0</span>`;
-    b.onclick=()=>switchTab(s.key); c.appendChild(b);
-  });
+function getTime(item){
+  const d=item.data;
+  const t=d.updated_at||d.updatedAt||d.date||d.created_at||'';
+  let ms=Date.parse(t);
+  if(isNaN(ms)) ms=Date.now(); // si pas de date, considère comme récent pour ne pas le perdre
+  return ms;
 }
-async function loadAll(){
-  document.getElementById('btnRefresh').innerText='⏳...'; allData=[];
-  const promises = SERVICES.filter(s=>s.path).map(s=> db.ref(s.path).limitToLast(400).once('value').then(snap=>{
-    snap.forEach(ch=>{
-      const v=ch.val(); if(!v) return;
-      const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:v.montant||v.total||v.prix||0,statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v};
-      it._time=getTime(it); allData.push(it);
-    });
+function initTabs(){ const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{ const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=`${s.label} <span class="tab-count" id="count-${s.key}">0</span> <span class="tab-count has-en-cours" id="encours-${s.key}" style="display:none">0</span>`; b.onclick=()=>switchTab(s.key); c.appendChild(b); }); }
+
+async function loadUltraRapide(){
+  allData=[]; toutLoaded=false;
+  document.getElementById('tbody').innerHTML='<tr><td colspan="5" style="text-align:center">Chargement 5/service...</td></tr>';
+  const promises = SERVICES.filter(s=>s.path).map(s=> db.ref(s.path).limitToLast(5).once('value').then(snap=>{
+    snap.forEach(ch=>{ addOrUpdate(s.path,s.key,s.label,ch); });
   }));
   await Promise.all(promises);
-  allData.sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;});
+  const enCoursPromises = SERVICES.filter(s=>s.path).map(s=> 
+    db.ref(s.path).orderByChild('statut').equalTo('en cours').limitToLast(50).once('value').then(snap=>{
+      snap.forEach(ch=>{ addOrUpdate(s.path,s.key,s.label,ch,true); });
+    }).catch(()=>{})
+  );
+  await Promise.all(enCoursPromises);
+  finalizeLoad();
+}
+
+function addOrUpdate(path,key,label,ch,isEnCoursForce=false){
+  const v=ch.val(); if(!v) return;
+  const existing=allData.findIndex(x=>x.id===ch.key && x.path===path);
+  const it={id:ch.key,path:path,service:key,serviceLabel:label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:v.montant||v.total||v.prix||0,statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v,_time:getTime({data:v})}
+  if(existing>=0) allData[existing]=it; else allData.push(it);
+}
+
+function finalizeLoad(){
+  // FIX : EN COURS en haut, puis plus récent au plus ancien
+  allData.sort((a,b)=>{
+    const pa=getPriority(a.statut), pb=getPriority(b.statut);
+    if(pa!==pb) return pa-pb;
+    return (b._time||0)-(a._time||0);
+  });
+  const seen=new Set(); allData=allData.filter(x=>{ const k=x.path+':'+x.id; if(seen.has(k)) return false; seen.add(k); return true; });
   SERVICES.forEach(s=>{
     const total = s.key==='all'? allData.length : allData.filter(x=>x.path===s.path).length;
     const enCours = s.key==='all'? allData.filter(x=>getPriority(x.statut)===0).length : allData.filter(x=>x.path===s.path && getPriority(x.statut)===0).length;
     const el=document.getElementById('count-'+s.key); if(el) el.innerText=total;
-    const e2=document.getElementById('encours-'+s.key); if(e2){ if(enCours>0){ e2.innerText=enCours+' en cours'; e2.style.display='inline-block'; } else { e2.style.display='none'; } }
+    const e2=document.getElementById('encours-'+s.key); if(e2){ e2.style.display=enCours>0?'inline-block':'none'; if(enCours>0) e2.innerText=enCours+' en cours'; }
   });
   document.getElementById('totalCount').innerText=allData.length+' cmds';
-  document.getElementById('lastUpdate').innerText=new Date().toLocaleTimeString('fr-FR');
+  document.getElementById('lastUpdate').innerText= toutLoaded ? 'Mode TOUT - '+new Date().toLocaleTimeString('fr-FR') : 'Ultra rapide (5/service) - '+new Date().toLocaleTimeString('fr-FR');
   updateStats(allData);
   render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
-  document.getElementById('btnRefresh').innerText='🔄 Actualiser';
   checkAndStartLoop();
 }
-function refreshData(){ loadAll(); }
-function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
 
-// ===== DETAILS COMPLETS RESTAURÉS =====
+async function loadTout(){
+  if(toutLoaded){ alert('Déjà en mode TOUT'); return; }
+  document.getElementById('btnRefresh').innerText='⏳ TOUT...';
+  allData=[];
+  const promises = SERVICES.filter(s=>s.path).map(s=> db.ref(s.path).limitToLast(400).once('value').then(snap=>{
+    snap.forEach(ch=>{ addOrUpdate(s.path,s.key,s.label,ch); });
+  }));
+  await Promise.all(promises);
+  toutLoaded=true;
+  finalizeLoad();
+  document.getElementById('btnRefresh').innerText='✅ TOUT chargé';
+  setTimeout(()=>document.getElementById('btnRefresh').innerText='📦 TOUT charger',2000);
+}
+
+async function refreshOnlyEnCours(){
+  let newFound=false;
+  for(const s of SERVICES.filter(x=>x.path)){
+    try{
+      const snap=await db.ref(s.path).orderByChild('statut').equalTo('en cours').limitToLast(20).once('value');
+      snap.forEach(ch=>{
+        if(!allData.some(x=>x.id===ch.key && x.path===s.path)){
+          addOrUpdate(s.path,s.key,s.label,ch,true);
+          newFound=true;
+          playSoundOnce();
+        }
+      });
+    }catch(e){}
+  }
+  if(newFound){ finalizeLoad(); }
+  else { document.getElementById('lastUpdate').innerText=(toutLoaded?'TOUT':'5/service')+' - check '+new Date().toLocaleTimeString('fr-FR'); }
+}
+
+function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
 function buildClientDetails(item){
-  const d=item.data;
-  const ignore=['statut','status','date','created_at','timestamp','updated_at','updatedAt','updated_at_fr','updated_by','client_id','phone','preuve_url','preuve_base64','capture_url','preuve_date','preuve_by'];
-  const priority=['montant','total','prix','amount','type','service','operateur','operator','reseau','numero','numero_beneficiaire','numero_benef','beneficiaire','client_nom','nom','prenom','motif','forfait','reference','compte_1xbet','id_1xbet','id_transaction','transaction_id','mode_paiement','moyen','adresse','ville'];
-  let seen=new Set(); seen.add(String(item.client_id||'').toLowerCase()); seen.add(String(item.phone||'').toLowerCase());
-  let hasPreuve = d.preuve_url || d.capture_url;
-  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''} ${hasPreuve?'📸':''}</div>`;
-  priority.forEach(k=>{
-    if(d[k]===undefined||d[k]===''||d[k]===null) return;
-    const v=String(d[k]).trim(); if(!v) return; if(seen.has(v.toLowerCase())) return;
-    seen.add(v.toLowerCase());
-    html+=`<div class="kv"><b>${k.replace('numero_beneficiaire','BÉNÉF').replace('compte_1xbet','1XBET').slice(0,10)}:</b><span>${v.slice(0,70)}</span></div>`;
-  });
-  Object.keys(d).forEach(k=>{
-    if(priority.includes(k)||ignore.includes(k)) return;
-    if(typeof d[k]==='object') return;
-    const v=String(d[k]).trim(); if(!v||v.length<2||v.length>90) return;
-    if(seen.has(v.toLowerCase())) return; seen.add(v.toLowerCase());
-    html+=`<div class="kv"><b>${k.slice(0,10)}:</b><span>${v.slice(0,70)}</span></div>`;
-  });
+  const d=item.data; const ignore=['statut','status','date','created_at','updated_at','client_id','phone','preuve_url','capture_url','preuve_base64'];
+  const priority=['montant','total','operateur','reseau','numero','numero_beneficiaire','beneficiaire','client_nom','type','forfait','compte_1xbet','id_1xbet','mode_paiement'];
+  let seen=new Set(); let html=`<div class="client-main">${item.client_id||''} - ${item.montant}F ${d.preuve_url?'📸':''}</div>`;
+  priority.forEach(k=>{ if(d[k]===undefined) return; const v=String(d[k]).trim(); if(!v) return; if(seen.has(v.toLowerCase())) return; seen.add(v.toLowerCase()); html+=`<div class="kv"><b>${k.slice(0,10)}:</b><span>${v.slice(0,70)}</span></div>`; });
+  Object.keys(d).forEach(k=>{ if(priority.includes(k)||ignore.includes(k)) return; if(typeof d[k]==='object') return; const v=String(d[k]).trim(); if(!v||v.length>80) return; if(seen.has(v.toLowerCase())) return; seen.add(v.toLowerCase()); html+=`<div class="kv"><b>${k.slice(0,10)}:</b><span>${v.slice(0,70)}</span></div>`; });
   return html;
 }
-
-function render(list){
-  const tb=document.getElementById('tbody'); tb.innerHTML='';
-  if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune commande</td></tr>'; return;}
-  list.slice(0,500).forEach(item=>{
-    let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
-    const hasPreuve=item.data.preuve_url||item.data.capture_url;
-    const tr=document.createElement('tr'); tr.className=getPriority(item.statut)===0?'en-cours':'';
-    tr.innerHTML=`<td><b style="color:#ffeb3b;font-size:9px">${item.serviceLabel}</b><br><span style="font-size:7px;color:#aaa">${item.id.slice(0,7)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 5px;border-radius:8px;font-size:7px">📸 PREUVE</span>':''}</td><td>${buildClientDetails(item)}</td><td><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,6)}</span></td><td style="font-size:9px">${(item.date||'').slice(0,16)}</td><td><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-preuve" onclick="openDetail('${item.path}','${item.id}')">📸 Preuve</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
-    tb.appendChild(tr);
-  });
-}
+function render(list){ const tb=document.getElementById('tbody'); tb.innerHTML=''; if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune commande</td></tr>'; return;} list.slice(0,500).forEach(item=>{ let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no'; const tr=document.createElement('tr'); tr.className=getPriority(item.statut)===0?'en-cours':''; tr.innerHTML=`<td><b style="color:#ffeb3b;font-size:9px">${item.serviceLabel}</b><br><span style="font-size:7px">${item.id.slice(0,7)}</span></td><td>${buildClientDetails(item)}</td><td><span class="badge ${badge}">${item.statut.slice(0,6)}</span></td><td style="font-size:9px">${(item.date||'').slice(0,16)}</td><td><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️</button><button class="btn btn-preuve" onclick="openDetail('${item.path}','${item.id}')">📸</button><button class="btn btn-val" onclick="quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`; tb.appendChild(tr); }); }
+function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));}
 function filtrer(){const q=document.getElementById('search').value.toLowerCase(); if(!q){switchTab(currentTab); return;} const base=currentTab==='all'?allData:allData.filter(d=>d.service===currentTab); const f=base.filter(i=>JSON.stringify(i).toLowerCase().includes(q)); render(f);}
-function openDetail(path,id){
-  const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item;
-  document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id;
-  let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut</span><b>${item.statut}</b></div>`;
-  Object.keys(item.data).forEach(k=>{
-    if(k==='preuve_base64') return;
-    if(k==='preuve_url'||k==='capture_url') html+=`<div class="row"><span>${k}</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir image</a></b></div>`;
-    else if(typeof item.data[k]!=='object') html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${String(item.data[k]).slice(0,300)}</b></div>`;
-    else html+=`<div class="row"><span>${k}</span><b style="font-size:10px">${JSON.stringify(item.data[k]).slice(0,300)}</b></div>`;
-  });
-  document.getElementById('mContent').innerHTML=html;
-  const pc=document.getElementById('preuveCurrent');
-  if(item.data.preuve_url||item.data.capture_url){ const u=item.data.preuve_url||item.data.capture_url; pc.innerHTML=`<div style="color:#0f0">✅ Preuve:</div><img src="${u}" class="preuve-img">`; } else { pc.innerHTML=`<div style="color:#aaa">Aucune preuve</div>`; }
-  document.getElementById('previewImg').style.display='none'; document.getElementById('preuveFile').value=''; document.getElementById('modal').style.display='flex';
-}
+function openDetail(path,id){ const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item; document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id; let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div>`; Object.keys(item.data).forEach(k=>{ if(k==='preuve_base64') return; if(k==='preuve_url'||k==='capture_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir</a></b></div>`; else if(typeof item.data[k]!=='object') html+=`<div class="row"><span>${k}</span><b style="font-size:11px">${String(item.data[k]).slice(0,300)}</b></div>`; }); document.getElementById('mContent').innerHTML=html; const pc=document.getElementById('preuveCurrent'); if(item.data.preuve_url||item.data.capture_url){ pc.innerHTML=`<div style="color:#0f0">✅ Preuve:</div><img src="${item.data.preuve_url||item.data.capture_url}" class="preuve-img">`; } else { pc.innerHTML=`<div style="color:#aaa">Aucune preuve</div>`; } document.getElementById('previewImg').style.display='none'; document.getElementById('preuveFile').value=''; document.getElementById('modal').style.display='flex'; }
 function closeModal(){document.getElementById('modal').style.display='none'; currentItem=null;}
-document.getElementById('preuveFile').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; if(f.size>5*1024*1024){alert('>5Mo');return;} const r=new FileReader(); r.onload=ev=>{document.getElementById('previewImg').src=ev.target.result; document.getElementById('previewImg').style.display='block';}; r.readAsDataURL(f); });
+document.getElementById('preuveFile').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{document.getElementById('previewImg').src=ev.target.result; document.getElementById('previewImg').style.display='block';}; r.readAsDataURL(f); });
 async function doUploadPreuve(){ const file=document.getElementById('preuveFile').files[0]; if(!file){ alert('Choisis image'); return null; } document.getElementById('upProgress').style.display='block'; document.getElementById('upBar').style.width='50%'; try{ const b64=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=rej; fr.readAsDataURL(file);}); const url=await uploadToCloudinary(b64); document.getElementById('upBar').style.width='100%'; return url; }catch(e){ alert('Err:'+e.message); return null; } finally{ setTimeout(()=>{document.getElementById('upProgress').style.display='none';},1000); } }
-async function uploadPreuveSeule(){ if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const up={}; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; up[currentItem.path+'/'+currentItem.id+'/preuve_date']=new Date().toISOString(); await db.ref().update(up); alert('✅ Preuve envoyée'); loadAll(); }
-async function validerAvecPreuve(){ if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']='validé'; up[currentItem.path+'/'+currentItem.id+'/status']='validé'; up[currentItem.path+'/'+currentItem.id+'/updated_at']=new Date().toISOString(); up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; await db.ref().update(up); alert('✅ Validé + Preuve'); closeModal(); loadAll(); }
-function quickAction(path,id,st){ if(!confirm(st.toUpperCase()+' '+id+' ?')) return; const up={}; up[path+'/'+id+'/statut']=st; up[path+'/'+id+'/status']=st; up[path+'/'+id+'/updated_at']=new Date().toISOString(); db.ref().update(up).then(()=>{alert('✅ '+st); loadAll();}); }
+async function uploadPreuveSeule(){ if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const up={}; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; await db.ref().update(up); alert('✅ Preuve envoyée'); }
+async function validerAvecPreuve(){ if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']='validé'; up[currentItem.path+'/'+currentItem.id+'/updated_at']=new Date().toISOString(); up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; await db.ref().update(up); alert('✅ Validé + Preuve'); closeModal(); }
+function quickAction(path,id,st){ if(!confirm(st+' '+id+' ?')) return; const up={}; up[path+'/'+id+'/statut']=st; up[path+'/'+id+'/updated_at']=new Date().toISOString(); db.ref().update(up).then(()=>{ const idx=allData.findIndex(x=>x.id===id&&x.path===path); if(idx>=0){ allData[idx].statut=st; allData[idx]._time=Date.now(); } finalizeLoad(); }); }
 function validerCurrent(){ if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'validé'); closeModal(); }
 function annulerCurrent(){ if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'annulé'); closeModal(); }
 
-initTabs(); updateSoundBtn(); updateSoundInfo();
-firebase.auth().onAuthStateChanged(u=>{ if(u){ loadAll(); } else { firebase.auth().signInAnonymously(); } });
-setInterval(()=>{ loadAll(); }, 10000);
+initTabs(); updateSoundBtn();
+firebase.auth().onAuthStateChanged(u=>{ if(u){ loadUltraRapide(); } else { firebase.auth().signInAnonymously(); } });
+setInterval(()=>{ refreshOnlyEnCours(); }, 10000);
 </script>
 </body>
 </html>
