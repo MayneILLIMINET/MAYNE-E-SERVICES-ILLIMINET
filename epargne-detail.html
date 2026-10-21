@@ -26,6 +26,12 @@ body{background:#fff;display:flex;justify-content:center}
 .tour{min-width:170px;background:#fff;border-radius:16px;padding:12px;border:1px solid #eee}
 .tour.paye{border-color:#0f3d2e;background:#eaffea}
 .tour.avenir{background:#fff}
+.hist-wrap{margin:16px;background:#fff;border-radius:16px;padding:12px}
+.hist-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;font-size:13px}
+.hist-item:last-child{border:none}
+.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800}
+.badge-depot{background:#0f3d2e;color:#d6f78c}
+.badge-retrait{background:#ff5000;color:#fff}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.show{display:flex}
 .sheet{background:#000;color:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px}
@@ -43,6 +49,10 @@ body{background:#fff;display:flex;justify-content:center}
 <div class="subcard"><div class="white"><small>Frequence</small><br><b id="freq">Par mois</b></div><div class="white"><small>Contribution</small><br><b id="contrib">2000 XOF</b></div></div>
 <div class="timer ok" id="timerBox"><div>⏳</div><div><b id="timerTitle">Prochain depot dans :</b><br><span id="countdown"></span></div></div>
 <h3 style="padding:16px;color:#fff">Tours a venir</h3><div class="tours" id="tours"></div>
+
+<h3 style="padding:16px;color:#fff;display:flex;justify-content:space-between">Historique <span id="histTotal" style="font-size:12px;background:#000;padding:4px 8px;border-radius:20px">0 ops</span></h3>
+<div class="hist-wrap" id="histWrap"><div style="text-align:center;padding:20px;color:#888">Aucun historique</div></div>
+
 </div>
 <div class="bottom"><button class="bnav" onclick="location.href='epargne.html'">← EPARGNE</button><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav active">INFOS👤</button></div>
 <div class="modal" id="mAlert"><div class="sheet" style="text-align:center"><p id="alertTxt"></p><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="closeM()">OK</button></div></div>
@@ -84,6 +94,29 @@ function init(){
     targetTime=data.prochainDepot?new Date(data.prochainDepot):new Date(Date.now()+interval*1000);
     startCountdown();
   });
+  // HISTORIQUE LISTENER
+  db.ref('epargne/'+uid+'/'+eid+'/historique').orderByChild('timestamp').on('value',snap=>{
+    const arr=[]; snap.forEach(c=>{ arr.push({id:c.key,...c.val()}); });
+    arr.sort((a,b)=>b.timestamp-a.timestamp);
+    renderHist(arr);
+  });
+}
+function renderHist(list){
+  document.getElementById('histTotal').textContent=list.length+' ops';
+  const wrap=document.getElementById('histWrap');
+  if(list.length===0){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:#888">Aucun historique</div>'; return; }
+  let h=''; let totalDepot=0,totalRetrait=0;
+  list.forEach(it=>{
+    if(it.type==='depot') totalDepot+=Number(it.montant||0);
+    else totalRetrait+=Number(it.montant||0);
+    const isDepot=it.type==='depot';
+    h+=`<div class="hist-item">
+      <div><span class="badge ${isDepot?'badge-depot':'badge-retrait'}">${isDepot?'DEPOT':'RETRAIT'}</span><br><small style="color:#888">${it.date_fr||''}</small>${it.penalite?'<br><small style="color:red">Pénalité: '+it.penalite+'F</small>':''}</div>
+      <div style="text-align:right"><b style="color:${isDepot?'green':'#c0392b'}">${isDepot?'+':'-'}${it.montant} XOF</b><br><small>Reçu: ${it.montantFinal??it.montant}F</small><br><small style="color:#888">Collecte après: ${it.collecteApres}F</small></div>
+    </div>`;
+  });
+  h=`<div style="display:flex;gap:8px;margin-bottom:10px"><div style="flex:1;background:#eaffea;padding:8px;border-radius:10px;text-align:center"><small>Total dépôts</small><br><b style="color:green">+${totalDepot} F</b></div><div style="flex:1;background:#ffe9e9;padding:8px;border-radius:10px;text-align:center"><small>Total retraits</small><br><b style="color:#c0392b">-${totalRetrait} F</b></div></div>`+h;
+  wrap.innerHTML=h;
 }
 function renderTours(){
   const contrib=+data.montant||2000;
@@ -134,26 +167,58 @@ function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
 function showAlert(t){closeM();document.getElementById('alertTxt').textContent=t;document.getElementById('mAlert').classList.add('show');}
 function showConfirm(t,cb){closeM();document.getElementById('confirmTxt').textContent=t;document.getElementById('mConfirm').classList.add('show');document.getElementById('confirmOk').onclick=()=>{closeM();cb();};}
+
 function deposer(){
   const mt=Number(document.getElementById('dMont').value);if(!mt)return showAlert('Montant');
   const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);
   const newCollecte=getCollecte()+mt;const newJours=Math.max(0,(data.joursRestants??0)-(mt/contrib)*(interval/86400));
   const newProchain=new Date(Date.now()+interval*1000).toISOString();
+  const now=new Date(); const date_fr=now.toLocaleString('fr-FR');
+  
   db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours),prochainDepot:newProchain})
  .then(()=>db.ref('clients/'+uid).once('value')).then(s=>db.ref('clients/'+uid).update({solde_epargne:(+s.val().solde_epargne||0)+mt}))
  .then(()=>{
+    return db.ref('epargne/'+uid+'/'+eid+'/historique').push({
+      type:'depot',
+      montant:mt,
+      montantFinal:mt,
+      penalite:0,
+      collecteAvant:getCollecte(),
+      collecteApres:newCollecte,
+      timestamp:now.getTime(),
+      date_iso:now.toISOString(),
+      date_fr:date_fr,
+      frequence:data.frequence
+    });
+  })
+ .then(()=>{
     pushNotif("Dépôt épargne","Dépôt "+mt+" XOF sur "+data.nom+" - "+data.frequence);
-    closeM();
+    document.getElementById('dMont').value=''; closeM();
   });
 }
 function retirer(){const mt=Number(document.getElementById('rMont').value);if(!mt)return showAlert('Montant');if(mt>getCollecte())return showAlert('Insuffisant');let penalty=0,finalMt=mt;if(data.bloque){const p=(data.echeance||'').split('/');const fin=p.length===3?new Date(p[2]+'-'+p[1]+'-'+p[0]):null;if(fin&&fin>new Date()){penalty=Math.round(mt*0.05);finalMt=mt-penalty;return showConfirm(`Bloquée: pénalité 5% = ${penalty}F. Tu recevras ${finalMt}F`,()=>doRetrait(mt,finalMt,penalty));}}doRetrait(mt,finalMt,penalty);}
 function doRetrait(mt,finalMt,penalty){
   const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);
-  const newCollecte=Math.max(0,getCollecte()-mt);const newJours=(data.joursRestants??0)+(mt/contrib)*(interval/86400);
+  const collecteAvant=getCollecte();
+  const newCollecte=Math.max(0,collecteAvant-mt);const newJours=(data.joursRestants??0)+(mt/contrib)*(interval/86400);
+  const now=new Date(); const date_fr=now.toLocaleString('fr-FR');
+  
   db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours)})
  .then(()=>db.ref('clients/'+uid).once('value')).then(s=>{
     const c=s.val()||{};
     return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
+  }).then(()=>{
+    return db.ref('epargne/'+uid+'/'+eid+'/historique').push({
+      type:'retrait',
+      montant:mt,
+      montantFinal:finalMt,
+      penalite:penalty,
+      collecteAvant:collecteAvant,
+      collecteApres:newCollecte,
+      timestamp:now.getTime(),
+      date_iso:now.toISOString(),
+      date_fr:date_fr
+    });
   }).then(()=>{
     if(penalty>0){
       return db.ref('clients/'+ADMIN_UID).once('value').then(a=>{
@@ -165,7 +230,7 @@ function doRetrait(mt,finalMt,penalty){
     }else{
       pushNotif("Retrait épargne","Retrait "+mt+" XOF sur "+data.nom+" - Reçu "+finalMt+"F");
     }
-  }).then(()=>closeM());
+  }).then(()=>{ document.getElementById('rMont').value=''; closeM(); });
 }
 firebase.auth().onAuthStateChanged(function(user){
   if(user){ init(); } 
