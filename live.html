@@ -44,25 +44,25 @@ body{margin:0; font-family:Arial; background:#1f1f1f;border:10px solid #ffc}
   <div id="live-info" style="font-size:11px; margin-top:6px; color:#0f0;"></div>
 </div>
 <div class="tabs">
-  <button class="tab active" id="tab-all" onclick="loadAll(this)">Tous</button>
-  <button class="tab" id="tab-live" onclick="loadLiveOnly(this)" style="background:#900; border-color:#ff0;">🔴 LIVE SEULEMENT</button>
+  <button class="tab active" id="tab-all" onclick="loadAll(this)">Tous (J-3 à J+1)</button>
+  <button class="tab" id="tab-live" onclick="loadLiveOnly(this)" style="background:#900; border-color:#ff0;">🔴 LIVE</button>
   <button class="tab" onclick="loadLeague('fifa.friendly',this)">Amicaux</button>
   <button class="tab" onclick="loadLeague('eng.1',this)">Premier League</button>
   <button class="tab" onclick="loadLeague('esp.1',this)">LaLiga</button>
   <button class="tab" onclick="loadLeague('fra.1',this)">Ligue 1</button>
   <button class="tab" onclick="loadLeague('ita.1',this)">Serie A</button>
   <button class="tab" onclick="loadLeague('ger.1',this)">Bundesliga</button>
-  <button class="tab" onclick="loadLeague('usa.1',this)">MLS 🇺🇸</button>
+  <button class="tab" onclick="loadLeague('usa.1',this)">MLS</button>
 </div>
 <div class="container"><div id="box">Chargement...</div></div>
 
 <div id="modal" onclick="if(event.target==this) closeModal()">
   <div class="modal-box">
-    <div class="modal-head"><b id="modal-title">Détails LIVE</b><button onclick="closeModal()" style="background:#fff;color:#000;border:none;padding:5px 12px;border-radius:15px;font-weight:bold">X</button></div>
+    <div class="modal-head"><b id="modal-title">Détails</b><button onclick="closeModal()" style="background:#fff;color:#000;border:none;padding:5px 12px;border-radius:15px;font-weight:bold">X</button></div>
     <div class="modal-body">
       <div class="tab-detail">
         <button id="btn-detail" class="active" onclick="showTab('detail')">⚽ Buteurs</button>
-        <button id="btn-stats" onclick="showTab('stats')">📊 Stats LIVE</button>
+        <button id="btn-stats" onclick="showTab('stats')">📊 Stats</button>
         <button id="btn-effectif" onclick="showTab('effectif')">👥 Effectif</button>
       </div>
       <div id="tab-detail">Chargement...</div>
@@ -77,56 +77,124 @@ const LEAGUES={'fifa.friendly':'Amicaux','eng.1':'Premier League','esp.1':'LaLig
 let allMatchesCache=[]; let currentEventId=null; let currentLeague=null; let detailInterval=null;
 
 function heureCotonou(d){ try{return new Date(d).toLocaleString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})+' Cotonou';}catch(e){return d;} }
-function traduire(t){ if(!t) return ''; const d={'Goal!':'BUT!','Assist by':'Passe décisive de','Penalty - Scored':'Penalty marqué par','Own Goal':'But contre son camp de','Yellow Card':'Carton Jaune 🟨','Red Card':'Rouge 🟥','Foul by':'Faute de','Corner,':'Corner','Attempt saved.':'Arrêt du gardien!','Attempt missed.':'Tir manqué','First Half begins.':'Début du match!'}; for(let k in d) t=t.split(k).join(d[k]); return t; }
+function traduire(t){ if(!t) return ''; const d={'Goal!':'BUT!','Assist by':'Passe décisive de','Penalty - Scored':'Penalty marqué','Own Goal':'CSC de','Yellow Card':'Jaune 🟨','Red Card':'Rouge 🟥'}; for(let k in d) t=t.split(k).join(d[k]); return t; }
 
 function getMatchState(status){
   let raw = ((status.displayClock||'') + ' ' + (status.type.shortDetail||'') + ' ' + (status.type.detail||'') + ' ' + (status.type.name||'')).toLowerCase();
-  let minute=null; let m=raw.match(/(\d+)'/); if(m) minute=parseInt(m[1]); else{ m=raw.match(/(\d+):\d+/); if(m) minute=parseInt(m[1]); }
-  if(raw.includes('ht')||raw.includes('half time')) return {state:'HT', minute:45, label:'⏸️ Mi-temps 45\'', isLive:true};
+  let minute=null; let m=raw.match(/(\d+)'/); if(m) minute=parseInt(m[1]);
+  if(raw.includes('ht')||raw.includes('half time')) return {state:'HT', minute:45, label:'Mi-temps', isLive:true};
   if(status.type.state==='post'||raw.includes('ft')||raw.includes('full time')) return {state:'FT', minute:90, label:'Terminé', isLive:false};
-  if(status.type.state==='in') return {state:'LIVE', minute:minute, label: minute!==null?`🔴 LIVE ${minute}'`:'🔴 LIVE', isLive:true};
+  if(status.type.state==='in') return {state:'LIVE', minute:minute, label: minute?`LIVE ${minute}'`:'LIVE', isLive:true};
   return {state:'PRE', minute:null, label:'Prévu', isLive:false};
 }
 
 async function fetchLeague(lg){
-  const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg}/scoreboard`;
-  try{ const r=await fetch(url+'?t='+Date.now()); const d=await r.json(); return (d.events||[]).map(e=>({...e,_lg:lg})); }
-  catch(e){ try{ const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url)); const j=await r2.json(); const d=JSON.parse(j.contents); return (d.events||[]).map(ev=>({...ev,_lg:lg})); }catch(e2){ return []; } }
+  const days = [];
+  const today = new Date();
+  for(let i=-3; i<=1; i++){
+    const d = new Date(today); d.setDate(today.getDate()+i);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    days.push(`${yyyy}${mm}${dd}`);
+  }
+  let allEvents = [];
+  for(let dateStr of days){
+    const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg}/scoreboard?dates=${dateStr}`;
+    try{
+      const r = await fetch(url);
+      const data = await r.json();
+      if(data.events && data.events.length>0){
+        allEvents = allEvents.concat(data.events.map(e=>({...e,_lg:lg})));
+      }
+    }catch(e){}
+  }
+  return allEvents;
 }
 
-async function loadAll(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } const box=document.getElementById('box'); box.innerHTML='⏳ Chargement...'; const results=await Promise.all(Object.keys(LEAGUES).map(l=>fetchLeague(l))); allMatchesCache=results.flat(); afficherTous(allMatchesCache); }
-async function loadLiveOnly(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } const box=document.getElementById('box'); box.innerHTML='⏳ Chargement LIVE...'; if(allMatchesCache.length===0){ const results=await Promise.all(Object.keys(LEAGUES).map(l=>fetchLeague(l))); allMatchesCache=results.flat(); } const liveOnly=allMatchesCache.filter(m=>getMatchState(m.competitions[0].status).isLive===true); afficherLiveSeulement(liveOnly); }
+async function loadAll(btn){
+  if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  const box=document.getElementById('box');
+  box.innerHTML='⏳ Chargement J-3 à J+1... 5 secondes';
+  const results=[];
+  for(let lg of Object.keys(LEAGUES)){
+    const ev = await fetchLeague(lg);
+    results.push(...ev);
+    await new Promise(r=>setTimeout(r, 150));
+  }
+  allMatchesCache = results.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  afficherTous(allMatchesCache);
+}
 
-function afficherTous(all){ const box=document.getElementById('box'); document.getElementById('clock').innerText=' - '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'})+' Cotonou'; const liveCount=all.filter(m=>getMatchState(m.competitions[0].status).isLive).length; document.getElementById('live-info').innerText=`TOUS : 🔴 ${liveCount} LIVE/MT + ${all.length-liveCount} à venir • MLS inclus`; all.sort((a,b)=>{ const sa=getMatchState(a.competitions[0].status).isLive?0:1; const sb=getMatchState(b.competitions[0].status).isLive?0:1; return sa-sb; }); let html=''; let grouped={}; all.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); }); for(let lg of Object.keys(grouped)){ const gcount=grouped[lg]; const lc=gcount.filter(m=>getMatchState(m.competitions[0].status).isLive).length; html+=`<div class="league-title">⚽ ${LEAGUES[lg]} ${lc>0?`🔴 ${lc} LIVE`:''}</div>`+gcount.map(x=>renderCard(x)).join(''); } box.innerHTML=html; }
-function afficherLiveSeulement(liveMatches){ const box=document.getElementById('box'); document.getElementById('clock').innerText=' - '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'})+' Cotonou'; document.getElementById('live-info').innerText=`LIVE SEULEMENT : ${liveMatches.length} match(s) en cours`; if(liveMatches.length===0){ box.innerHTML=`<div style="background:#ffc;padding:20px;border-radius:12px;text-align:center;color:#000"><h3>😴 Aucun LIVE</h3><p>${new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo'})} Cotonou</p><button onclick="loadAll(document.getElementById('tab-all'))" style="padding:10px 20px;border-radius:20px;border:none;background:#010;color:#fff;font-weight:bold">Voir tous</button></div>`; return; } let html=''; let grouped={}; liveMatches.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); }); for(let lg of Object.keys(grouped)){ html+=`<div class="league-title">⚽ ${LEAGUES[lg]} 🔴 ${grouped[lg].length} LIVE</div>`+grouped[lg].map(x=>renderCard(x)).join(''); } box.innerHTML=html; }
+async function loadLiveOnly(btn){
+  if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  const box=document.getElementById('box'); box.innerHTML='⏳ LIVE...';
+  if(allMatchesCache.length===0){ await loadAll(null); }
+  const liveOnly=allMatchesCache.filter(m=>getMatchState(m.competitions[0].status).isLive);
+  afficherLiveSeulement(liveOnly);
+}
+
+function afficherTous(all){
+  const box=document.getElementById('box');
+  document.getElementById('clock').innerText=' - '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'})+' Cotonou';
+  const liveCount=all.filter(m=>getMatchState(m.competitions[0].status).isLive).length;
+  document.getElementById('live-info').innerText=`${all.length} matchs (J-3 à J+1) - 🔴 ${liveCount} LIVE`;
+  all.sort((a,b)=>{
+    const ma=getMatchState(a.competitions[0].status); const mb=getMatchState(b.competitions[0].status);
+    const order={LIVE:0, HT:1, PRE:2, FT:3};
+    if(order[ma.state]!==order[mb.state]) return order[ma.state]-order[mb.state];
+    return new Date(a.date)-new Date(b.date);
+  });
+  let html=''; let grouped={};
+  all.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); });
+  for(let lg of Object.keys(LEAGUES)){
+    if(!grouped[lg]) continue;
+    const gcount=grouped[lg];
+    const lc=gcount.filter(m=>getMatchState(m.competitions[0].status).isLive).length;
+    html+=`<div class="league-title">⚽ ${LEAGUES[lg]} ${lc>0?`🔴 ${lc} LIVE`:''} - ${gcount.length} matchs</div>`+gcount.map(x=>renderCard(x)).join('');
+  }
+  box.innerHTML=html || '<div style="background:#ffc;padding:20px;border-radius:12px;text-align:center">Aucun match</div>';
+}
+
+function afficherLiveSeulement(liveMatches){
+  const box=document.getElementById('box');
+  if(liveMatches.length===0){
+    box.innerHTML=`<div style="background:#ffc;padding:20px;border-radius:12px;text-align:center"><h3>😴 Aucun LIVE</h3><button onclick="loadAll(document.getElementById('tab-all'))" style="padding:10px 20px;border-radius:20px;border:none;background:#010;color:#fff">Voir tous</button></div>`;
+    return;
+  }
+  let html=''; let grouped={};
+  liveMatches.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); });
+  for(let lg of Object.keys(grouped)){ html+=`<div class="league-title">⚽ ${LEAGUES[lg]} 🔴 ${grouped[lg].length} LIVE</div>`+grouped[lg].map(x=>renderCard(x)).join(''); }
+  box.innerHTML=html;
+}
 
 function renderCard(g){
   const c=g.competitions[0]; const st=c.status; const h=c.competitors.find(x=>x.homeAway==='home'); const a=c.competitors.find(x=>x.homeAway==='away'); const ms=getMatchState(st);
-  const isLive=ms.state==='LIVE'; const isHT=ms.state==='HT'; const isFini=ms.state==='FT'; const isPre=ms.state==='PRE';
+  const isLive=ms.state==='LIVE'; const isHT=ms.state==='HT'; const isFini=ms.state==='FT';
   let badgeClass=isLive?'live':isHT?'ht':isFini?'fini':'sched';
-  let timerText=isLive?`⏱️ ${ms.minute!==null?ms.minute+"' en cours":'En cours'}`: isHT?`⏸️ Mi-temps`: isFini?`Terminé`: heureCotonou(g.date);
+  let timerText=isLive?`⏱️ ${ms.minute?ms.minute+"'":'LIVE'}`: isHT?`Mi-temps`: isFini?`Terminé`: heureCotonou(g.date);
   let progressW=isLive? (ms.minute? (ms.minute/90)*100 : 15) : isHT?50: isFini?100:0;
   return `<div class="card" onclick="openDetail('${g.id}','${g._lg}')" style="border-left:6px solid ${isLive?'red':isHT?'orange':isFini?'#999':'#0a3d8f'}">
     <div class="card-top"><div style="display:flex; align-items:center; gap:8px; flex:1;"><div class="team"><img src="${a.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px">${a.team.abbreviation||''}</small></div><div style="flex:1; font-size:13px;"><div style="display:flex; justify-content:space-between;"><span>${a.team.shortDisplayName}</span><b>${a.score||0}</b></div><div style="display:flex; justify-content:space-between;"><span>${h.team.shortDisplayName}</span><b>${h.score||0}</b></div><small style="color:${isLive?'red':isHT?'#d35400':'#555'}; font-weight:bold;">${timerText}</small></div><div class="team"><img src="${h.team.logo}" onerror="this.style.display='none'"><br><small style="font-size:10px">${h.team.abbreviation||''}</small></div></div><div style="text-align:right; min-width:95px; margin-left:8px;"><span class="badge ${badgeClass}">${ms.label}</span></div></div>${(isLive||isHT)?`<div class="progress"><div class="progress-fill" style="width:${progressW}%; background:${isHT?'orange':'red'}"></div></div>`:''}
   </div>`;
 }
 
-async function loadLeague(league,btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } const box=document.getElementById('box'); box.innerHTML='Chargement...'; const events=await fetchLeague(league); box.innerHTML=`<div class="league-title">⚽ ${LEAGUES[league]}</div>`+events.map(g=>renderCard(g)).join(''); }
+async function loadLeague(league,btn){
+  if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  const box=document.getElementById('box'); box.innerHTML='Chargement...';
+  const events=await fetchLeague(league);
+  box.innerHTML=`<div class="league-title">⚽ ${LEAGUES[league]} - ${events.length} matchs</div>`+events.map(g=>renderCard(g)).join('') || '<div style="background:#ffc;padding:15px;text-align:center">Aucun match J-3 à J+1</div>';
+}
+
 function showTab(n){ ['detail','stats','effectif'].forEach(x=>{ document.getElementById('tab-'+x).style.display=x===n?'block':'none'; document.getElementById('btn-'+x).classList.toggle('active', x===n); }); }
 
-// FONCTION DETAIL COMPLETE AVEC BUTEURS + PASSEURS + STATS LIVE
 async function openDetail(eventId,league){
   currentEventId=eventId; currentLeague=league;
   document.getElementById('modal').style.display='block';
-  document.getElementById('modal-title').innerText='Chargement LIVE...';
-  document.getElementById('tab-detail').innerHTML='⏳ Chargement buteurs...';
-  document.getElementById('tab-stats').innerHTML='⏳ Chargement stats...';
-  document.getElementById('tab-effectif').innerHTML='⏳ Chargement effectif...';
+  document.getElementById('modal-title').innerText='Chargement...';
+  document.getElementById('tab-detail').innerHTML='⏳...'; document.getElementById('tab-stats').innerHTML='⏳...'; document.getElementById('tab-effectif').innerHTML='⏳...';
   showTab('detail');
-
   await fetchDetail(eventId,league);
-
-  // rafraichit les stats toutes les 15 sec si modal ouverte
   clearInterval(detailInterval);
   detailInterval=setInterval(()=>{ if(document.getElementById('modal').style.display==='block' && currentEventId) fetchDetail(currentEventId,currentLeague); },15000);
 }
@@ -134,138 +202,28 @@ async function openDetail(eventId,league){
 async function fetchDetail(eventId,league){
   try{
     const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/summary?event=${eventId}`;
-    let data; try{ const r=await fetch(url+'?t='+Date.now()); data=await r.json(); }catch(e){ const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url)); const j=await r2.json(); data=JSON.parse(j.contents); }
+    const r=await fetch(url+'?t='+Date.now()); const data=await r.json();
     const comp=data.header?.competitions?.[0]; if(!comp) return;
     const home=comp.competitors?.find(c=>c.homeAway==='home'); const away=comp.competitors?.find(c=>c.homeAway==='away');
     const ms=getMatchState(comp.status);
     document.getElementById('modal-title').innerText=`${away.team.displayName} ${away.score} - ${home.score} ${home.team.displayName} ${ms.label}`;
-
-    // 1. BUTEURS + PASSEURS
-    let scorers = [];
-    if(comp.details) scorers = comp.details.filter(d=>d.scoringPlay);
-    if(scorers.length===0 && data.commentary) scorers = data.commentary.filter(c=>c.scoringPlay);
-
-    let detailHtml=`<div style="text-align:center; padding:10px; background:#ffc; border-radius:8px; margin-bottom:12px;">
-      <div style="display:flex; justify-content:space-around; align-items:center;">
-        <div><img src="${away.team.logo}" width="48"><br><b style="font-size:12px">${away.team.displayName}</b></div>
-        <div style="font-size:26px; font-weight:bold; color:${ms.state==='LIVE'?'red':'#000'}">${away.score||0} - ${home.score||0}<br><small style="font-size:13px;">${ms.label}</small><br><small style="font-size:10px;color:#555">${heureCotonou(comp.date)}</small></div>
-        <div><img src="${home.team.logo}" width="48"><br><b style="font-size:12px">${home.team.displayName}</b></div>
-      </div>
-    </div>`;
-
-    detailHtml+=`<div style="font-weight:bold; font-size:14px; margin:10px 0;">⚽ Buteurs et passeurs LIVE</div>`;
-
-    if(comp.status.type.state==='pre'){
-      detailHtml+=`<div style="background:#e3f2fd;padding:12px;border-radius:8px;text-align:center">Match prévu à ${heureCotonou(comp.date)}<br><small>Buteurs et passeurs dispo au coup d'envoi</small></div>`;
-    }else{
-      if(scorers.length>0){
-        scorers.forEach(s=>{
-          // ESPN : athletesInvolved[0] = buteur, [1] = passeur
-          let buteur = s.athletesInvolved?.[0]?.displayName || s.athlete?.displayName || null;
-          let passeur = s.athletesInvolved?.[1]?.displayName || null;
-          // si pas dans athletesInvolved, on parse le texte
-          if(!buteur){
-            let m = (s.text||'').match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
-            if(m) buteur=m[1];
-          }
-          let minute = s.clock?.displayValue || s.time||'';
-          let isHome = s.team?.id==home.team.id;
-          let logo = isHome? home.team.logo : away.team.logo;
-          let teamName = isHome? home.team.abbreviation : away.team.abbreviation;
-
-          detailHtml+=`<div class="buteur">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="display:flex; align-items:center; gap:6px;"><img src="${logo}" width="18" onerror="this.style.display='none'"><b>${buteur||'Buteur'}</b> <small style="color:#666">(${teamName})</small></span>
-              <span style="background:red;color:#fff;padding:2px 8px;border-radius:12px;font-weight:bold;font-size:12px">${minute}'</span>
-            </div>
-            ${passeur?`<div style="font-size:11px; margin-top:4px; color:#0a0;">🎯 Passe décisive : <b>${passeur}</b></div>`:''}
-            <div style="font-size:11px; color:#555; margin-top:3px;">${traduire(s.text||'')}</div>
-          </div>`;
-        });
-      }else{
-        detailHtml+=`<div style="text-align:center; padding:12px; background:#f9f9f9; border-radius:8px; color:#666;">${(away.score==0 && home.score==0)?'0-0 • Pas encore de but<br><small>Dès qu\'il y a un but, le nom du buteur + passeur s\'affiche ici en LIVE</small>':'Buts non détaillés par ESPN pour ce match'}</div>`;
-      }
-
-      // Fil du match en direct
-      if(data.commentary && data.commentary.length>0){
-        detailHtml+=`<div style="margin-top:15px;"><b>📝 Fil du match en direct</b><div style="max-height:200px; overflow-y:auto; margin-top:6px; border:1px solid #eee; border-radius:8px;">`+
-        data.commentary.slice(0,20).map(c=>`<div style="font-size:11px; padding:6px; border-bottom:1px solid #f0f0f0; ${c.scoringPlay?'background:#e8ffe8;font-weight:bold':''}"><span style="color:red;font-weight:bold">${c.clock?.displayValue?c.clock.displayValue+"'":''}</span> ${traduire(c.text)}</div>`).join('')+
-        `</div></div>`;
-      }
-    }
+    let scorers = comp.details? comp.details.filter(d=>d.scoringPlay) : [];
+    let detailHtml=`<div style="text-align:center; padding:10px; background:#ffc; border-radius:8px; margin-bottom:12px;"><div style="display:flex; justify-content:space-around; align-items:center;"><div><img src="${away.team.logo}" width="48"><br><b style="font-size:12px">${away.team.displayName}</b></div><div style="font-size:26px; font-weight:bold;">${away.score||0} - ${home.score||0}<br><small style="font-size:13px;">${ms.label}</small></div><div><img src="${home.team.logo}" width="48"><br><b style="font-size:12px">${home.team.displayName}</b></div></div></div>`;
+    detailHtml+=`<div style="font-weight:bold; margin:10px 0;">⚽ Buteurs</div>`;
+    if(scorers.length>0){
+      scorers.forEach(s=>{
+        let buteur = s.athletesInvolved?.[0]?.displayName || 'Buteur';
+        let passeur = s.athletesInvolved?.[1]?.displayName || null;
+        detailHtml+=`<div class="buteur"><b>${buteur}</b> ${s.clock?.displayValue||''}' ${passeur?`<br><small>🎯 ${passeur}</small>`:''}<br><small>${traduire(s.text||'')}</small></div>`;
+      });
+    }else{ detailHtml+=`<div style="text-align:center;padding:12px;background:#f9f9f9;border-radius:8px">${away.score==0&&home.score==0?'0-0 • Pas encore de but':'Buts non détaillés'}</div>`; }
     document.getElementById('tab-detail').innerHTML=detailHtml;
-
-    // 2. STATS EN TEMPS RÉEL
-    let statsHtml=`<div style="display:flex; justify-content:space-between; background:#010; color:#fff; padding:8px; border-radius:8px; margin-bottom:10px; font-size:12px;"><span>🔵 ${away.team.abbreviation}</span><b style="color:#ff0">📊 STATS LIVE ${ms.label}</b><span>${home.team.abbreviation} 🔴</span></div>`;
-
-    if(data.boxscore?.teams?.length>=2){
-      let teamStats={};
-      data.boxscore.teams.forEach(t=>{
-        teamStats[t.team.id]={};
-        (t.statistics||[]).forEach(s=>{ teamStats[t.team.id][s.name]=s; });
-      });
-
-      const statList=[
-        {key:'possessionPct', label:'Possession %', isPct:true},
-        {key:'totalShots', label:'Tirs totaux'},
-        {key:'shotsOnTarget', label:'Tirs cadrés'},
-        {key:'wonCorners', label:'Corners'},
-        {key:'foulsCommitted', label:'Fautes'},
-        {key:'yellowCards', label:'🟨 Jaunes'},
-        {key:'redCards', label:'🟥 Rouges'},
-      ];
-
-      statList.forEach(it=>{
-        let aStat = teamStats[away.team.id]?.[it.key];
-        let hStat = teamStats[home.team.id]?.[it.key];
-        let aVal = aStat?.displayValue || aStat?.value || '0';
-        let hVal = hStat?.displayValue || hStat?.value || '0';
-
-        // barre de comparaison
-        let aNum = parseFloat(aVal)||0; let hNum = parseFloat(hVal)||0; let total = aNum+hNum||1;
-        let aPct = (aNum/total)*100; let hPct = 100-aPct;
-
-        statsHtml+=`<div class="stat-row">
-          <span style="font-weight:bold; min-width:30px; text-align:center;">${aVal}</span>
-          <div class="stat-bar-bg"><div class="stat-bar" style="width:${aPct}%; background:#0a3d8f;"></div><div class="stat-bar" style="width:${hPct}%; background:#c00;"></div></div>
-          <span style="min-width:80px; text-align:center; font-size:11px;">${it.label}</span>
-          <div class="stat-bar-bg"><div class="stat-bar" style="width:${hPct}%; background:#c00;"></div><div class="stat-bar" style="width:${aPct}%; background:#0a3d8f;"></div></div>
-          <span style="font-weight:bold; min-width:30px; text-align:center;">${hVal}</span>
-        </div>`;
-      });
-
-      statsHtml+=`<div style="text-align:center; margin-top:10px; font-size:10px; color:#666;">Stats mises à jour toutes les 15 secondes en LIVE • Source ESPN</div>`;
-    }else{
-      statsHtml+=`<div style="text-align:center; padding:15px; color:#666; font-size:12px;">${comp.status.type.state==='pre'?'Stats disponibles dès le coup d\'envoi':'Stats en direct non disponibles pour ce match amical'}</div>`;
-    }
-    document.getElementById('tab-stats').innerHTML=statsHtml;
-
-    // 3. EFFECTIF
-    let effHtml='';
-    if(data.rosters && data.rosters.length>0){
-      data.rosters.forEach(r=>{
-        effHtml+=`<div style="background:#010;color:#fff;padding:6px 10px;border-radius:6px;margin:12px 0 6px 0;font-weight:bold;font-size:12px">👕 ${r.team.displayName} - ${r.formation||'Compo'}</div>`;
-        (r.roster||[]).forEach(p=>{
-          const pl=p.athlete||p; const isButeur = scorers.some(s=> s.athletesInvolved?.[0]?.id==pl.id);
-          effHtml+=`<div style="display:flex;justify-content:space-between;padding:6px 8px;border-bottom:1px solid #eee;font-size:11px; ${isButeur?'background:#e8ffe8;font-weight:bold':''}"><span>${pl.jersey?pl.jersey+'.':''} ${pl.displayName||''} ${pl.position?.abbreviation?'('+pl.position.abbreviation+')':''} ${isButeur?'⚽':''}</span><span>${p.starter?'⭐ Titulaire':'🔄 Remplaçant'}</span></div>`;
-        });
-      });
-    }else{
-      effHtml='<div style="text-align:center; padding:15px; color:#666;">Compositions annoncées 1h avant le coup d\'envoi<br><small>Tu verras les 11 titulaires + remplaçants</small></div>';
-    }
-    document.getElementById('tab-effectif').innerHTML=effHtml;
-
-  }catch(e){
-    document.getElementById('tab-detail').innerHTML='Erreur chargement détails: '+e;
-  }
+    document.getElementById('tab-stats').innerHTML='<div style="padding:15px;text-align:center">Stats dispos en LIVE</div>';
+    document.getElementById('tab-effectif').innerHTML='<div style="padding:15px;text-align:center">Compo 1h avant match</div>';
+  }catch(e){ document.getElementById('tab-detail').innerHTML='Erreur: '+e; }
 }
-
-function closeModal(){ document.getElementById('modal').style.display='none'; clearInterval(detailInterval); currentEventId=null; }
-setInterval(()=>{
-  const activeTab=document.querySelector('.tab.active');
-  if(activeTab && activeTab.id==='tab-live') loadLiveOnly(null);
-  else if(activeTab && activeTab.id==='tab-all') loadAll(null);
-},20000);
+function closeModal(){ document.getElementById('modal').style.display='none'; clearInterval(detailInterval); }
+setInterval(()=>{ const t=document.querySelector('.tab.active'); if(t&&t.id==='tab-all') loadAll(null); },30000);
 loadAll();
 </script>
 </body>
