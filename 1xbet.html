@@ -76,7 +76,7 @@ function handleDepot(){
   if(etapeDepot===1){
     let id=document.getElementById('xbet-id').value.trim();
     let m=Number(document.getElementById('xbet-montant').value);
-    if(!id||m<300)return showAlert('ID et montant min 300F requis');
+    if(!id||m<100)return showAlert('ID et montant min 100F requis');
     let frais=Math.ceil(m*0.01);let totalNormal=m+frais;
     if(solde >= totalNormal){depotMode='normal';depotMontant1xbet=m;document.getElementById('detail-depot').innerHTML=`<b>NB:</b> Frais 1% PSP.<br><br>Montant: <b>${m}F</b><br>Frais 1%: <b>${frais}F</b><br>Total débité: <b style="color:#ff5000">${totalNormal}F</b><br>Reçu sur 1XBET: <b>${m}F</b>`;}
     else if(solde >= m){depotMode='fallback';depotMontant1xbet=m-frais;document.getElementById('detail-depot').innerHTML=`<b>NB:</b> Frais 1%.<br><br>⚠️ Solde juste: <b>${solde}F</b><br>Mode adapté: Vous avez ${m}F exact<br>→ Reçu sur 1XBET: <b>${depotMontant1xbet}F</b> (${m}-${frais})<br>Total débité: <b style="color:#ff5000">${m}F</b>`;}
