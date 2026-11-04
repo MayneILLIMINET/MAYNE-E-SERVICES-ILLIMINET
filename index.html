@@ -34,16 +34,11 @@ const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomai
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 database=firebase.database();db=database;
 firebase.auth().onAuthStateChanged(function(user){
-  if(user){
-    tryAutoLogin();
-  } else {
-    firebase.auth().signInAnonymously().catch(e=>console.log(e));
-  }
+  if(user){ tryAutoLogin(); } else { firebase.auth().signInAnonymously().catch(e=>console.log(e)); }
 });
 if(typeof firebase.appCheck==='function')firebase.appCheck().setTokenAutoRefreshEnabled(false);
 </script>
 <script>
-// --- FIX KODULAR -> JS + ONESIGNAL.COM ---
 window.lastPidSauve=null;
 setInterval(function(){
   try{
@@ -58,7 +53,6 @@ setInterval(function(){
       database.ref('clients/'+phone+'/onesignal_id').set(pid);
       database.ref('clients/'+phone+'/phone').set(phone);
       try{fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(pid)});}catch(e){}
-      console.log('APK OneSignal sauvé:',phone,pid);
     }
   }catch(e){}
 },1500);
@@ -75,22 +69,36 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#010;min-heigh
 .notif-count{position:absolute;top:-8px;right:-8px;background:#ff5000;color:#fff;font-size:11px;font-weight:bold;border-radius:50%;padding:2px 6px;min-width:18px;text-align:center;display:none}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
 @keyframes borderPulse{0%{box-shadow:0 0 4px rgba(255,80,0,.4)}50%{box-shadow:0 0 14px rgba(255,80,0,.9)}100%{box-shadow:0 0 4px rgba(255,80,0,.4)}}
-.service-btn-new{border-left:6px solid #fff!important;position:relative;transition:all.3s}
-.service-btn-new.has-new{border-left-color:#ff5000!important;animation:borderPulse 1.2s infinite}
+/* STYLE RETIRER APPLIQUE AUX SERVICES - COPIE EXACTE */
+.service-btn-new{
+  background:#ff5000!important;
+  color:#fff!important;
+  border:4px solid #aaa!important;
+  border-left:9px solid #fff!important;
+  border-right:15px solid #fff!important;
+  padding:12px 4px!important;
+  font-size:12px!important;
+  font-weight:bold!important;
+  border-radius:4px!important;
+  cursor:pointer;
+  text-transform:uppercase;
+  position:relative;transition:all .3s
+}
+.service-btn-new.has-new{animation:borderPulse 1.2s infinite; border-left-color:#ffeb3b!important}
 .input-group{text-align:left;margin-bottom:8px}
 .input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
 .input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#ff5000;color:#fff}
 .dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
 .btn-submit{width:100%;background:#ff5000;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
 .btn-link{background:#500;border:none;color:#fff;text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;display:inline-block}
-.user-header{background:#010;padding:8px;border-radius:6px;border:20px solid #1e1e1e;border-left:12px solid #c00;border-right:14px solid #aaa;margin-bottom:10px;position:relative;text-align:left}
+.user-header{background:#010;padding:8px;border-radius:6px;border:20px solid #1e1e1e;border-left:12px solid #c00;border-right:14px solid #aaa;margin-bottom:10px;position:relative;text-align:left;cursor:pointer}
 .profile-line{font-size:14px;font-weight:bold;margin-bottom:2px;width:65%}
 .solde-val{font-size:18px;font-weight:bold;color:#0f0}
 .btn-logout{position:absolute;top:1px;right:8px;background:#010;color:#c00;border:4px solid #aaa;border-left:12px solid#fff;border-right:6px solid#fff;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
 .services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px}
 .tab-btn{padding:10px 4px;font-size:10px;font-weight:bold;background:#fb3b;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;text-transform:uppercase}
 .tab-btn.btn-home{grid-column:span 2;background:#010;border:10px solid#aaa;color:#fff;font-size:12px;border-right:18px solid#fff;border-left:18px solid #fff!important}
-.tab-btn.btn-full{grid-column:span 2;background:#fb3b}
+.tab-btn.btn-full{grid-column:span 2}
 .service-panel{background:#010;color:#fff;padding:10px;border-radius:6px;text-align:left}
 .sub-panel h4{margin:0 0 8px 0;color:#fff;border-bottom:2px solid #fff;padding-bottom:3px;font-size:14px;text-transform:uppercase}
 .about-section{margin-top:15px;padding-top:10px;border-top:1px dashed #666;font-size:11px;background:#010}
@@ -105,6 +113,8 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#010;min-heigh
 .modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
 .btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#ddd;color:#000}
 .app-container.dark-mode{background:#000000!important;color:#fff!important;border-color:#444!important}
+/* MODAL CODE SECRET SOLDE */
+.pin-input{width:100%;padding:14px;border-radius:8px;border:3px solid #ff5000;background:#000;color:#fff;text-align:center;font-size:22px;font-weight:bold;letter-spacing:8px;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -142,25 +152,28 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#010;min-heigh
     <button class="btn-action-top" onclick="location.href='depot.html'" style="background:#fb3b;border:3px solid#aaa;border-left:8px solid #fff;border-right:15px solid#fff">📥Recharger</button>
     <button class="btn-action-top retrait" onclick="location.href='retrait.html'" style="background:#ff5000;border:4px solid#aaa;border-left:9px solid #fff;border-right: 15px solid#fff">📤RETIRER</button>
   </div>
-  <div class="user-header">
-    <button type="button" class="btn-logout" onclick="executerDeconnexion()">DÉCONNEXION</button>
+
+  <!-- ZONE SOLDES CLIQUABLE + CODE SECRET -->
+  <div class="user-header" onclick="handleClickSolde(event)">
+    <button type="button" class="btn-logout" onclick="event.stopPropagation();executerDeconnexion()">DÉCONNEXION</button>
     <div class="profile-line" id="user-name"><b>CHARGEMENT...</div>
-    <div style="font-size:10px;color:#e0e0e0;display:flex;justify-content:space-between;align-items:center"><b>SOLDE :</b><span onclick="toggleSolde()" style="cursor:pointer;font-size:20px;background:#aaaa;top:1px;padding:20 50px">👁️</span></div>
+    <div style="font-size:10px;color:#e0e0e0;display:flex;justify-content:space-between;align-items:center"><b>SOLDE :</b><span onclick="event.stopPropagation();handleClickSolde(event)" style="cursor:pointer;font-size:20px;background:#aaaa;top:1px;padding:20 50px">👁️</span></div>
     <div class="solde-val"><span id="user-balance"><b>0</span> F</div>
     <div style="font-size:10px;color:#e0e0e0;margin-top:4px;"><b>BONUS :</div><div class="solde-val" style="color:#ffeb3b"><span id="user-commission"><b>0</span> F</div><div style="font-size:10px;color:#fff;"><b>SOLDE EPARGNE :</div><div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div>
+    <div id="solde-hint" style="font-size:9px;color:#ffeb3b;margin-top:6px;text-align:center">🔒 Touchez pour afficher avec votre code secret</div>
   </div>
+
   <div class="services-grid">
     <button class="tab-btn btn-home" onclick="location.href='live.html'">SCORE⚽LIVE</button>
-    <button id="btn-market" class="tab-btn service-btn-new" style="border-left-color:#FF9800" onclick="location.href='market.html'">Market</button>
-    <button id="btn-1xbet" class="tab-btn service-btn-new" style="border-left-color:#2196F3" onclick="location.href='1xbet.html'">1XBET</button>
-    <button id="btn-facture" class="tab-btn service-btn-new" style="border-left-color:#4CAF50" onclick="location.href='factures.html'">Facture</button>
-    <button class="tab-btn" style="opacity:0.45;background:#2b2b2b!important;color:#888!important;cursor:not-allowed">Immobilier 🔒</button>
-    <button id="btn-epargne" class="tab-btn service-btn-new" style="border-left-color:#9C27B0" onclick="location.href='epargne.html'">Épargne</button>
-    <button class="tab-btn" style="opacity:0.45;background:#2b2b2b!important;color:#888!important;cursor:not-allowed">Livraison 🔒</button>
-    <button id="btn-transfert" class="tab-btn service-btn-new" style="border-left-color:#00BCD4" onclick="location.href='transfert.html'">TRANSFERT</button>
-    <button id="btn-p2p" class="tab-btn service-btn-new" style="border-left-color:#f5000" onclick="location.href='p2p.html'">🚀 P2P/P2M</button>
-    <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" style="border-left-color:#E91E63" onclick="location.href='messagerie.html'">💬 Messagerie</button>
-    <button id="btn-forfait" class="tab-btn btn-full service-btn-new" style="border-left-color:#8BC34A" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
+    <!-- SERVICES STYLE RETIRER - SUPPRESSION IMMOBILIER / LIVRAISON -->
+    <button id="btn-market" class="tab-btn service-btn-new" onclick="location.href='market.html'">Market</button>
+    <button id="btn-1xbet" class="tab-btn service-btn-new" onclick="location.href='1xbet.html'">1XBET</button>
+    <button id="btn-facture" class="tab-btn service-btn-new" onclick="location.href='factures.html'">Facture</button>
+    <button id="btn-epargne" class="tab-btn service-btn-new" onclick="location.href='epargne.html'">Épargne</button>
+    <button id="btn-transfert" class="tab-btn service-btn-new" onclick="location.href='transfert.html'">TRANSFERT</button>
+    <button id="btn-p2p" class="tab-btn service-btn-new" onclick="location.href='p2p.html'">🚀 P2P/P2M</button>
+    <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" onclick="location.href='messagerie.html'">💬 Messagerie</button>
+    <button id="btn-forfait" class="tab-btn btn-full service-btn-new" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
   </div>
   <footer style="display:none;background:#010;color:#aaa; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
     <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023</div>
@@ -198,13 +211,30 @@ body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#010;min-heigh
 </div>
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
 <div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
+
+<!-- MODAL CODE SECRET SOLDES -->
+<div id="pin-solde-modal" class="modal-overlay"><div class="modal-box" style="max-width:320px;border:3px solid #ff5000">
+  <div style="font-size:28px">🔒</div>
+  <div style="font-weight:bold;color:#ffeb3b;font-size:15px;margin:6px 0">CODE SECRET</div>
+  <div style="font-size:12px;color:#ccc;margin-bottom:10px">Entrez votre code à 6 chiffres<br>pour voir vos soldes</div>
+  <input type="password" id="pin-solde-input" class="pin-input" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off">
+  <div id="pin-solde-error" style="color:#ff5555;font-size:12px;font-weight:bold;min-height:16px;margin-top:6px"></div>
+  <div class="modal-btns" style="margin-top:10px"><button class="modal-btn btn-no" onclick="fermerPinSolde()">Annuler</button><button class="modal-btn btn-yes" onclick="verifierPinSolde()">Afficher 👁️</button></div>
+  <div style="font-size:10px;color:#888;margin-top:8px">C'est le même code que pour vous connecter</div>
+</div></div>
+
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
 let tempPhone='',tempEmail='';
 const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,d=null)=>{try{const v=localStorage.getItem('mayne_'+k);return v?JSON.parse(v):d;}catch{return d;}}};
-let sessionTimer=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null,soldeMasque=localStorage.getItem('mayne_hide_solde')==='true';
+let sessionTimer=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null;
+// SOLDES TOUJOURS MASQUES AU DEPART - JAMAIS EN CLAIR SANS CODE
+let soldeMasque=true;
+let soldeDeverrouille=false;
+let soldeTimer=null;
+
 function demarrerTimerSession(){clearInterval(sessionTimer);sessionTimer=setInterval(()=>{TinyDB.put('current_user_last',Date.now());},60000);}
 function tryAutoLogin(){
   const splash=document.getElementById('splash-zone'),out=document.getElementById('logged-out-zone'),inZ=document.getElementById('logged-in-zone'),login=document.getElementById('login-interface'),reg=document.getElementById('register-interface'),verif=document.getElementById('verify-interface'),foot=document.querySelector('footer');
@@ -212,6 +242,8 @@ function tryAutoLogin(){
   if(!saved||!saved.phone){splash.style.display='none';inZ.style.display='none';out.style.display='block';login.style.display='block';reg.style.display='none';verif.style.display='none';if(foot)foot.style.display='none';return;}
   if(Date.now()-(TinyDB.get('current_user_last')||Date.now())>7*24*60*60*1000){executerDeconnexion();return;}
   currentUserId=saved.phone; splash.style.display='none';out.style.display='none';login.style.display='none';reg.style.display='none';verif.style.display='none';if(foot)foot.style.display='block';
+  // reset verrouillage à chaque ouverture
+  soldeMasque=true; soldeDeverrouille=false; sessionStorage.removeItem('mayne_solde_unlocked');
   chargerSessionDepuisFirebase(saved.phone);
 }
 function chargerSessionDepuisFirebase(phone){
@@ -221,6 +253,7 @@ function chargerSessionDepuisFirebase(phone){
     document.getElementById('user-name').innerText=data.nom||phone;
     const maj=(id,val)=>{const el=document.getElementById(id);if(!el)return;el.dataset.vrai=val.toLocaleString('fr-FR');el.innerText=soldeMasque?'••••••':el.dataset.vrai;};
     maj('user-balance',currentUserSolde);maj('user-commission',data.commission||0);maj('user-recompense',currentUserRecompense);
+    appliquerEtatSolde();
   });
 window.OneSignalDeferred.push(async function(OneSignal){
   try{
@@ -237,6 +270,69 @@ window.OneSignalDeferred.push(async function(OneSignal){
 });
   ecouterClocheEtBordures(); demarrerTimerSession();
 }
+
+// ===== CODE SECRET SOLDES =====
+function handleClickSolde(e){
+  if(soldeMasque){
+    // demande le code
+    document.getElementById('pin-solde-error').innerText='';
+    document.getElementById('pin-solde-input').value='';
+    document.getElementById('pin-solde-modal').style.display='flex';
+    setTimeout(()=>document.getElementById('pin-solde-input').focus(),100);
+  } else {
+    // déjà visible -> re-masquer
+    masquerSoldes();
+  }
+}
+function fermerPinSolde(){ document.getElementById('pin-solde-modal').style.display='none'; }
+function appliquerEtatSolde(){
+  const hint=document.getElementById('solde-hint');
+  ['user-balance','user-commission','user-recompense'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.innerText = soldeMasque ? '••••••' : (el.dataset.vrai||'0');
+  });
+  if(hint) hint.innerText = soldeMasque ? '🔒 Touchez pour afficher avec votre code secret' : '👁️ Soldes visibles - Touchez pour masquer';
+}
+function afficherSoldes(){
+  soldeMasque=false; soldeDeverrouille=true;
+  sessionStorage.setItem('mayne_solde_unlocked','1');
+  appliquerEtatSolde();
+  // re-masque auto après 60 sec
+  clearTimeout(soldeTimer);
+  soldeTimer=setTimeout(()=>{ masquerSoldes(); }, 60000);
+}
+function masquerSoldes(){
+  soldeMasque=true; soldeDeverrouille=false;
+  sessionStorage.removeItem('mayne_solde_unlocked');
+  clearTimeout(soldeTimer);
+  appliquerEtatSolde();
+}
+function verifierPinSolde(){
+  const code=document.getElementById('pin-solde-input').value.trim();
+  const err=document.getElementById('pin-solde-error');
+  if(code.length!==6){ err.innerText='Entrez les 6 chiffres'; return; }
+  if(!currentUserId){ err.innerText='Reconnectez-vous'; return; }
+  const hash=CryptoJS.MD5(code).toString();
+  database.ref('clients/'+currentUserId+'/pin').once('value').then(s=>{
+    const dbPin=String(s.val()||'');
+    if(dbPin===hash || dbPin===code){
+      fermerPinSolde();
+      afficherSoldes();
+    } else {
+      err.innerText='❌ Code incorrect';
+      document.getElementById('pin-solde-input').value='';
+      document.getElementById('pin-solde-input').focus();
+    }
+  });
+}
+// Entrée clavier = valider
+document.addEventListener('DOMContentLoaded',()=>{
+  const inp=document.getElementById('pin-solde-input');
+  if(inp) inp.addEventListener('keydown',e=>{ if(e.key==='Enter') verifierPinSolde(); });
+});
+// Ancienne fonction toggleSolde -> maintenant = handleClickSolde (gardée pour compatibilité)
+function toggleSolde(){ handleClickSolde(); }
+
 function ecouterClocheEtBordures(){
   if(!currentUserId)return;
   db.ref('notifications/'+currentUserId).on('value',snap=>{
@@ -258,7 +354,6 @@ function hideAlert(){document.getElementById('custom-alert').style.display='none
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
 function toggleTheme(){const app=document.querySelector('.app-container');const btn=document.getElementById('theme-toggle');const isDark=!app.classList.contains('dark-mode');app.classList.toggle('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');btn.innerText=isDark?'☀️':'🌙';}
-function toggleSolde(){soldeMasque=!soldeMasque;localStorage.setItem('mayne_hide_solde',soldeMasque);['user-balance','user-commission','user-recompense'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(soldeMasque){if(!el.dataset.vrai)el.dataset.vrai=el.innerText;el.innerText='••••••';}else if(el.dataset.vrai)el.innerText=el.dataset.vrai;});}
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
 function executerConnexion(){
@@ -287,6 +382,8 @@ function executerConnexion(){
     }
     if(window.AppInventor)window.AppInventor.setWebViewString('USER_'+currentUserId);
     if(dbPin===p)database.ref('clients/'+i).update({pin:pinHache});
+    // soldes restent masqués même après connexion
+    soldeMasque=true; soldeDeverrouille=false;
     chargerSessionDepuisFirebase(i);
   });
 }
@@ -309,7 +406,7 @@ function executerInscription(){
 }
 function envoyerCodeEmail(email,isResend=false){const mail=email||tempEmail;fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('sent')){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='block';showAlert(isResend?'Code renvoyé!':'Code envoyé à '+mail);}});}
 function verifierCodeEmail(){const code=document.getElementById('verify-code').value.trim();if(!code)return;fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('ok')){database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{showAlert('Email vérifié!');document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';document.getElementById('login-id').value=tempPhone;});}else showAlert('Code incorrect');});}
-function executerDeconnexion(){TinyDB.put('current_user',null);localStorage.removeItem('mayne_current_user');clearInterval(sessionTimer);if(currentUserId){database.ref('clients/'+currentUserId).off();['notifications'].forEach(p=>{database.ref(p).off();});}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
+function executerDeconnexion(){TinyDB.put('current_user',null);localStorage.removeItem('mayne_current_user');clearInterval(sessionTimer);masquerSoldes();if(currentUserId){database.ref('clients/'+currentUserId).off();['notifications'].forEach(p=>{database.ref(p).off();});}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
 </script>
 </body>
 </html>
