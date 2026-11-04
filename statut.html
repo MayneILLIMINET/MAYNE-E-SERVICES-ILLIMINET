@@ -24,7 +24,8 @@ th,td{border:1px solid #333;padding:5px;text-align:left;vertical-align:top;word-
 th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:9px}
 tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
 tr.clickable{cursor:pointer} tr.clickable:hover{background:#333}
-.col-service{width:15%}.col-client{width:42%}.col-statut{width:13%}.col-date{width:16%}.col-action{width:14%}
+tr.selected{background:#3a2a00!important;border-left:4px solid #28a745}
+.col-check{width:7%}.col-service{width:14%}.col-client{width:38%}.col-statut{width:12%}.col-date{width:15%}.col-action{width:14%}
 .badge{padding:2px 5px;border-radius:10px;font-size:8px;font-weight:900;display:inline-block}
 .ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
 .btn{border:none;padding:4px 5px;border-radius:5px;font-weight:800;cursor:pointer;font-size:8px;margin:1px;width:100%}
@@ -44,6 +45,12 @@ tr.clickable{cursor:pointer} tr.clickable:hover{background:#333}
 .progress-bar{height:100%;background:#0d6efd;width:0%;transition:width .3s}
 .status-edit{margin:12px 0;padding:10px;background:#111;border:1px solid #ffeb3b;border-radius:10px}
 .status-edit input{width:100%;background:#000;color:#fff;border:1px solid #555;padding:10px;border-radius:8px;margin-top:6px}
+/* BULK */
+.bulk-bar{display:none;gap:6px;padding:8px;background:#ffeb3b;color:#000;margin:0 8px 8px 8px;border-radius:8px;align-items:center;flex-wrap:wrap;position:sticky;top:52px;z-index:9}
+.bulk-bar.show{display:flex}
+.bulk-bar b{font-size:12px}
+.bulk-btn{border:none;padding:9px 12px;border-radius:20px;font-weight:900;font-size:11px;cursor:pointer;flex:1}
+.chk{width:18px;height:18px;accent-color:#28a745;cursor:pointer}
 </style>
 </head>
 <body>
@@ -66,10 +73,19 @@ tr.clickable{cursor:pointer} tr.clickable:hover{background:#333}
   <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS</div></div>
   <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
 </div>
+
+<!-- BARRE BULK -->
+<div id="bulkBar" class="bulk-bar">
+  <b id="bulkCount">0 sélectionné(s)</b>
+  <button class="bulk-btn" style="background:#28a745;color:#fff" onclick="bulkValidate()">✅ TOUT VALIDER</button>
+  <button class="bulk-btn" style="background:#dc3545;color:#fff" onclick="bulkCancel()">❌ TOUT ANNULER</button>
+  <button class="bulk-btn" style="background:#000;color:#fff" onclick="clearSelection()">✖ Annuler sélection</button>
+</div>
+
 <div class="tabs" id="tabs"></div>
 <input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire..." oninput="filtrer()">
 <div class="wrap">
-<table><thead><tr><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"><tr><td colspan="5" style="text-align:center;padding:20px">Connexion...</td></tr></tbody></table>
+<table><thead><tr><th class="col-check"><input type="checkbox" id="checkAll" class="chk" onclick="toggleSelectAll(this.checked)" title="Tout cocher"> <span style="font-size:8px">TOUT</span></th><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"><tr><td colspan="6" style="text-align:center;padding:20px">Connexion...</td></tr></tbody></table>
 </div>
 </div>
 
@@ -126,7 +142,7 @@ if(!isAdmin(userPhone)){
 }
 
 const SERVICES=[{key:'all',label:'TOUS',path:null},{key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},{key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},{key:'market',label:'MARKET',path:'commandes_marketplace'},{key:'1xbet',label:'1XBET',path:'commandes_1xbet'},{key:'factures',label:'FACTURES',path:'commandes_factures'},{key:'forfaits',label:'FORFAITS',path:'commandes_forfaits'},{key:'epargne',label:'EPARGNE',path:'commandes_epargne'},{key:'depot',label:'DEPOTS',path:'commandes_depots'},{key:'retrait',label:'RETRAITS',path:'commandes_retraits'},{key:'kyc',label:'KYC',path:'kyc_demandes'}];
-let allData=[],currentTab='all',currentItem=null,counts={};
+let allData=[],currentTab='all',currentItem=null,counts={},selected=new Set(),currentList=[];
 function getPriority(s){const t=(s||'').toLowerCase(); if(t.includes('en cours')||t.includes('attente')||t.includes('pending')) return 0; return 1;}
 function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms;}
 function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:3px;font-size:8px" id="count-'+s.key+'">0</span>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
@@ -158,17 +174,74 @@ function buildClientDetails(item){
   priorityKeys.forEach(k=>{ if(d[k]===undefined||d[k]===''||d[k]===null) return; html+=`<div class="kv"><b>${k}:</b><span>${String(d[k]).slice(0,60)}</span></div>`; });
   return html;
 }
+
+// ===== BULK =====
+function keyOf(item){return item.path+'|'+item.id;}
+function updateBulkBar(){
+  const bar=document.getElementById('bulkBar');
+  document.getElementById('bulkCount').innerText=selected.size+' sélectionné(s)';
+  bar.classList.toggle('show', selected.size>0);
+  // sync checkbox tout
+  const allVisible = currentList.filter(i=>getPriority(i.statut)===0);
+  const checkAll=document.getElementById('checkAll');
+  if(checkAll) checkAll.checked = allVisible.length>0 && allVisible.every(i=>selected.has(keyOf(i)));
+}
+function toggleSelect(path,id,checked,el){
+  const k=path+'|'+id;
+  if(checked) selected.add(k); else selected.delete(k);
+  if(el){ const tr=el.closest('tr'); if(tr) tr.classList.toggle('selected',checked); }
+  updateBulkBar();
+}
+function toggleSelectAll(checked){
+  // coche seulement les EN COURS visibles
+  currentList.forEach(item=>{
+    if(getPriority(item.statut)!==0) return;
+    const k=keyOf(item);
+    if(checked) selected.add(k); else selected.delete(k);
+  });
+  // re-render pour cocher visuellement
+  render(currentList);
+}
+function clearSelection(){ selected.clear(); render(currentList); }
+async function bulkAction(newStatut){
+  if(selected.size===0){ alert('Coche au moins 1 commande'); return; }
+  if(!confirm(newStatut.toUpperCase()+' les '+selected.size+' commandes sélectionnées ?')) return;
+  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
+  const up={};
+  const items=[];
+  selected.forEach(k=>{
+    const [path,id]=k.split('|');
+    const item=allData.find(x=>x.path===path&&x.id===id);
+    if(item) items.push(item);
+    up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone();
+  });
+  await db.ref().update(up);
+  // commission forfait si validé
+  if(newStatut.toLowerCase().includes('valid')){
+    for(const it of items){ if(it.path==='commandes_forfaits') await envoyerCommissionForfait(it); }
+  }
+  alert('✅ '+items.length+' commandes -> '+newStatut);
+  selected.clear();
+  loadAll();
+}
+function bulkValidate(){ bulkAction('validé'); }
+function bulkCancel(){ bulkAction('annulé'); }
+
 function render(list){
+  currentList=list;
   const tb=document.getElementById('tbody'); tb.innerHTML='';
-  if(list.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center">Aucune commande</td></tr>'; return;}
+  if(list.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune commande</td></tr>'; updateBulkBar(); return;}
   list.slice(0,600).forEach((item,idx)=>{
     let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
     const hasPreuve = item.data.preuve_url || item.data.capture_url;
-    const tr=document.createElement('tr'); tr.className=(getPriority(item.statut)===0?'en-cours':'')+' clickable';
+    const isEnCours = getPriority(item.statut)===0;
+    const k=keyOf(item); const isChecked=selected.has(k);
+    const tr=document.createElement('tr'); tr.className=(isEnCours?'en-cours':'')+' clickable'+(isChecked?' selected':'');
     tr.onclick=function(){ openDetail(item.path,item.id); };
-    tr.innerHTML=`<td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 4px;border-radius:8px;font-size:7px">📸</span>':''}</td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,12)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,16)}<br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="event.stopPropagation();openDetail('${item.path}','${item.id}')">👁️</button><button class="btn btn-val" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
+    tr.innerHTML=`<td class="col-check" onclick="event.stopPropagation()">${isEnCours?`<input type="checkbox" class="chk" ${isChecked?'checked':''} onchange="toggleSelect('${item.path}','${item.id}',this.checked,this)">`:`<span style="font-size:8px;color:#555">-</span>`}</td><td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 4px;border-radius:8px;font-size:7px">📸</span>':''}</td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,12)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,16)}<br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="event.stopPropagation();openDetail('${item.path}','${item.id}')">👁️</button><button class="btn btn-val" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
     tb.appendChild(tr);
   });
+  updateBulkBar();
 }
 function filtrer(){const q=document.getElementById('search').value.toLowerCase(); if(!q){switchTab(currentTab); return;} const base=currentTab==='all'?allData:allData.filter(d=>d.service===currentTab); const f=base.filter(i=>JSON.stringify(i).toLowerCase().includes(q)); render(f);}
 function openDetail(path,id){
