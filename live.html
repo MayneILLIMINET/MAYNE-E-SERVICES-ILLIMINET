@@ -36,6 +36,22 @@ body{margin:0; font-family:Arial, sans-serif; background:#ff5000; border:8px sol
 .avatar img{width:100%; height:100%; object-fit:cover; display:block}
 .avatar.bench{background:#555}
 .voir-tout{background:#000; color:#ffc; text-align:center; padding:8px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin:-2px 0 10px 0}
+#news-box{background:#fff; border-radius:14px; overflow:hidden; margin-bottom:14px; border:2px solid #000}
+.news-header{background:#000; color:#ffc; padding:10px 12px; font-weight:bold; font-size:13px; display:flex; justify-content:space-between; align-items:center}
+.news-header span:last-child{font-size:10px; background:red; color:#fff; padding:3px 8px; border-radius:10px}
+.news-main{position:relative; cursor:pointer}
+.news-main img{width:100%; height:220px; object-fit:cover; display:block; background:#ddd}
+.news-main .news-text{position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.92)); color:#fff; padding:32px 12px 12px 12px}
+.news-main .news-text b{font-size:15px; line-height:1.35; display:block}
+.news-main .news-text small{color:#ffc; font-size:11px; font-weight:bold}
+.news-dots{display:flex; justify-content:center; gap:6px; padding:8px; background:#fff}
+.news-dots span{width:8px; height:8px; border-radius:50%; background:#ddd; cursor:pointer}
+.news-dots span.active{background:red; width:22px; border-radius:10px}
+.news-list{display:flex; gap:8px; padding:10px; overflow-x:auto; background:#fff}
+.news-mini{min-width:135px; max-width:135px; cursor:pointer; border-radius:10px; overflow:hidden; border:2px solid #eee; background:#fff}
+.news-mini.active{border-color:red}
+.news-mini img{width:100%; height:72px; object-fit:cover; display:block; background:#eee}
+.news-mini p{margin:5px; font-size:10px; font-weight:bold; line-height:1.25; color:#000; height:38px; overflow:hidden}
 </style>
 </head>
 <body>
@@ -46,6 +62,7 @@ body{margin:0; font-family:Arial, sans-serif; background:#ff5000; border:8px sol
 <div class="tabs">
   <button class="tab active" onclick="loadAll(this)">Tous J-7 à J+7</button>
   <button class="tab" onclick="loadLiveOnly(this)" style="background:#900">🔴 LIVE</button>
+  <button class="tab" data-lg="ben.1" onclick="loadLeague('ben.1',this)" style="background:#008751; border-color:#ff0; border-width:2px">🇧🇯 Bénin • Ligue Pro</button>
   <button class="tab" data-lg="uefa.champions" onclick="loadLeague('uefa.champions',this)" style="background:#1a1a6e; border-color:#ffd700">🏆 Champions League</button>
   <button class="tab" data-lg="uefa.europa" onclick="loadLeague('uefa.europa',this)" style="background:#ff6a00; border-color:#fff">🧡 Europa League</button>
   <button class="tab" data-lg="uefa.europa.conf" onclick="loadLeague('uefa.europa.conf',this)" style="background:#0a6e2f; border-color:#ffc">💚 Conférence League</button>
@@ -60,7 +77,10 @@ body{margin:0; font-family:Arial, sans-serif; background:#ff5000; border:8px sol
   <button class="tab" data-lg="usa.1" onclick="loadLeague('usa.1',this)">MLS</button>
   <button class="tab" data-lg="fifa.friendly" onclick="loadLeague('fifa.friendly',this)">Amicaux</button>
 </div>
-<div class="container"><div id="box">Chargement...</div></div>
+<div class="container">
+  <div id="news-box"><div style="padding:14px; background:#fff; text-align:center; font-size:12px">📰 Chargement des actus en français...</div></div>
+  <div id="box">Chargement des matchs...</div>
+</div>
 <div id="modal" onclick="if(event.target==this) closeModal()">
   <div class="modal-box">
     <div class="modal-head"><b id="modal-title">Détails</b><button onclick="closeModal()" style="background:#ffc;color:#000;border:none;padding:6px 12px;border-radius:20px;font-weight:bold">X</button></div>
@@ -77,24 +97,96 @@ body{margin:0; font-family:Arial, sans-serif; background:#ff5000; border:8px sol
   </div>
 </div>
 <script>
-const LEAGUES={'uefa.champions':'Champions League','uefa.europa':'Europa League','uefa.europa.conf':'Conférence League','caf.nations':'CAN','fifa.world':'Coupe du Monde','caf.champions':'CAF Champions League','fifa.friendly':'Amicaux','eng.1':'Premier League','esp.1':'LaLiga','fra.1':'Ligue 1','ita.1':'Serie A','ger.1':'Bundesliga','usa.1':'MLS'};
+const LEAGUES={'ben.1':'🇧🇯 Bénin • Ligue Pro','uefa.champions':'Champions League','uefa.europa':'Europa League','uefa.europa.conf':'Conférence League','caf.nations':'CAN','fifa.world':'Coupe du Monde','caf.champions':'CAF Champions League','fifa.friendly':'Amicaux','eng.1':'Premier League','esp.1':'LaLiga','fra.1':'Ligue 1','ita.1':'Serie A','ger.1':'Bundesliga','usa.1':'MLS'};
 const LIMIT_PAR_LIGUE=10;
-let allMatchesCache=[], currentEventId=null, currentLeague=null, detailInterval=null, mainInterval=null, minuteTicker=null;
+let allMatchesCache=[], currentEventId=null, currentLeague=null, detailInterval=null, mainInterval=null, minuteTicker=null, newsInterval=null, newsIndex=0, REAL_NEWS=[], CURRENT_NEWS_LEAGUE=null;
+const LEAGUE_KEYWORDS={
+ 'ben.1':['bénin','benin','guépards','guepards','coton','dadjè','dadje','loto','loto-popo','cotonou','abomey','porto-novo','ligue pro','championnat du bénin','dynamo','dragons','asvo','buffles','ayema','aspac','espoir','sitatunga','rekin','hodio','cavaliers','titan','bani','sobemap','adjobi','coton fc','fédération béninoise','fbf'],
+ 'uefa.champions':['champions','ligue des champions','ldc','real madrid','barcelone','city','bayern','psg','arsenal'],
+ 'uefa.europa':['europa','ligue europa','c3'],
+ 'uefa.europa.conf':['conférence','conference','ligue conférence'],
+ 'caf.nations':['can','coupe d\'afrique','afrique','bénin','guépards','sénégal','maroc','côte d\'ivoire','nigéria'],
+ 'fifa.world':['coupe du monde','mondial','world cup'],
+ 'caf.champions':['caf','champions league africaine','ligue des champions africaine','coton fc','loto'],
+ 'eng.1':['premier league','angleterre','arsenal','chelsea','liverpool','city','united','tottenham'],
+ 'esp.1':['liga','espagne','real madrid','barcelone','atletico','seville'],
+ 'fra.1':['ligue 1','l1','psg','marseille','lyon','monaco','lille','rennes','paris'],
+ 'ita.1':['serie a','italie','inter','milan','juventus','naples','roma'],
+ 'ger.1':['bundesliga','allemagne','bayern','dortmund','leverkusen'],
+ 'usa.1':['mls','miami','messi','amérique'],
+ 'fifa.friendly':['amical','match amical']
+};
+async function fetchRealNews(lg){
+  CURRENT_NEWS_LEAGUE=lg||null;
+  document.getElementById('news-box').innerHTML='<div style="padding:14px; background:#fff; text-align:center; font-size:12px">📰 Chargement des actus en français...</div>';
+  let allArts=[];
+  const feeds=[
+    {url:'https://www.lequipe.fr/rss/football.xml', source:"L'ÉQUIPE"},
+    {url:'https://www.footmercato.net/rss', source:'FOOT MERCATO'},
+    {url:'https://rmcsport.bfmtv.com/rss/football/', source:'RMC SPORT'},
+    {url:'https://www.24haubenin.info/rss.xml', source:'24H AU BÉNIN'},
+    {url:'https://beninwebtv.com/feed/', source:'BÉNIN WEB TV'}
+  ];
+  for(let f of feeds){
+    try{
+      const r=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}`);
+      const j=await r.json();
+      (j.items||[]).forEach(it=>{
+        let img=it.enclosure?.link || it.thumbnail || '';
+        if(!img){ let m=(it.description||'').match(/src="([^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i); if(m) img=m[1]; }
+        if(!img) img='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80';
+        let txt=(it.title+' '+(it.description||'')).replace(/<[^>]*>/g,' ');
+        allArts.push({titre:it.title, cat:f.source, img:img, link:it.link||'#', text:txt.toLowerCase()});
+      });
+    }catch(e){}
+  }
+  if(allArts.length<3){
+    try{
+      const r=await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/news?limit=15');
+      const j=await r.json();
+      (j.articles||[]).forEach(a=>{
+        if(a.headline && a.images?.[0]?.url) allArts.push({titre:traduireTitre(a.headline), cat:"ESPN • FR", img:a.images[0].url, link:a.links?.web?.href||'#', text:a.headline.toLowerCase()});
+      });
+    }catch(e){}
+  }
+  let filtered=allArts;
+  if(lg && LEAGUE_KEYWORDS[lg]){
+    let kws=LEAGUE_KEYWORDS[lg];
+    let f=allArts.filter(a=>kws.some(k=>a.text.includes(k)));
+    if(f.length>=2) filtered=f;
+  }
+  let seen=new Set(); filtered=filtered.filter(a=>{ if(seen.has(a.titre)) return false; seen.add(a.titre); return true; });
+  if(filtered.length===0) filtered=allArts;
+  REAL_NEWS=filtered.slice(0,10); newsIndex=0; renderNews();
+}
+function traduireTitre(t){
+  let d={'Champions League':'Ligue des Champions','Premier League':'Premier League','Transfer':'Mercato','Injury':'Blessure','Report':'Info','Preview':'Avant-match','Review':'Débrief','Goal':'But','Win':'Victoire','Draw':'Match nul','Loss':'Défaite','Manager':'Entraîneur','Player':'Joueur','Team':'Équipe','Match':'Match','League':'Championnat','World Cup':'Coupe du Monde','Africa Cup':'CAN'};
+  Object.keys(d).forEach(k=>{ t=t.split(k).join(d[k]); });
+  return t;
+}
+function renderNews(){
+  if(REAL_NEWS.length===0){ document.getElementById('news-box').innerHTML='<div style="padding:12px; background:#fff; text-align:center">📰 Actus indisponibles pour le moment</div>'; return; }
+  let n=REAL_NEWS[newsIndex];
+  let label=CURRENT_NEWS_LEAGUE?`📰 ACTUS • ${LEAGUES[CURRENT_NEWS_LEAGUE]} • En Français`:'📰 ACTUS FOOT • En Français 🇫🇷';
+  document.getElementById('news-box').innerHTML=`<div class="news-header"><span>${label}</span><span>● ${REAL_NEWS.length} actus</span></div><div class="news-main" onclick="window.open('${n.link}','_blank')"><img src="${n.img}" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80'"><div class="news-text"><small>${n.cat}</small><b>${n.titre}</b><small style="color:#fff; opacity:0.8">Clique pour lire l'article →</small></div></div><div class="news-dots">${REAL_NEWS.map((_,i)=>`<span onclick="setNews(${i})" class="${i===newsIndex?'active':''}"></span>`).join('')}</div><div class="news-list">${REAL_NEWS.map((a,i)=>`<div class="news-mini ${i===newsIndex?'active':''}" onclick="setNews(${i})"><img src="${a.img}" onerror="this.style.display='none'"><p>${a.titre}</p></div>`).join('')}</div>`;
+  clearInterval(newsInterval);
+  newsInterval=setInterval(()=>{ newsIndex=(newsIndex+1)%REAL_NEWS.length; renderNews(); },4000);
+}
+function setNews(i){ newsIndex=i; renderNews(); }
 function heureCotonou(d){ return new Date(d).toLocaleString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'})+' Cotonou'; }
 function getMatchState(s){ let raw=((s.displayClock||'')+' '+(s.type.shortDetail||'')+' '+(s.type.detail||'')).toLowerCase(); let m=raw.match(/(\d+)'/); let minute=m?parseInt(m[1]):null; if(raw.includes('ht')) return {state:'HT', minute:45, label:'Mi-temps', isLive:true, order:1}; if(s.type.state==='post' || raw.includes('ft')) return {state:'FT', minute:90, label:'Terminé', isLive:false, order:3}; if(s.type.state==='in') return {state:'LIVE', minute, label:minute?`LIVE ${minute}'`:'LIVE', isLive:true, order:0}; return {state:'PRE', minute:null, label:'Prévu', isLive:false, order:2}; }
 function extractName(t){ if(!t) return 'Buteur'; let m=t.match(/^(.+?)\s*\(/); return m?m[1].trim():t.split(' - ')[0].trim().substring(0,35); }
 function getLogo(team){ if(!team) return ''; return team.logo || `https://a3.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fsoccer%2F500%2F${team.id}.png&w=80&h=80`; }
 function getPlayerAvatar(name, jersey, athlete){ if(athlete?.headshot?.href && athlete.headshot.href.startsWith('http')) return athlete.headshot.href; if(athlete?.headshot && typeof athlete.headshot === 'string' && athlete.headshot.startsWith('http')) return athlete.headshot; if(athlete?.id) return `https://a.espncdn.com/combiner/i?img=%2Fi%2Fheadshots%2Fsoccer%2Fplayers%2Ffull%2F${athlete.id}.png&w=80&h=80&scale=crop&background=transparent`; return null; }
-// CORRECTION : J-7 à J+7 au lieu de J-3 à J+1 + dédoublonnage
-async function fetchLeague(lg){ const days=[]; const today=new Date(); for(let i=-7;i<=7;i++){ const d=new Date(today); d.setDate(today.getDate()+i); days.push(`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`); } let all=[]; let seen=new Set(); for(let ds of days){ try{ const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg}/scoreboard?dates=${ds}`); const j=await r.json(); if(j.events) j.events.forEach(e=>{ if(!seen.has(e.id)){ seen.add(e.id); all.push({...e,_lg:lg}); } }); }catch(e){} } return all; }
+async function fetchLeague(lg){ const days=[]; const today=new Date(); for(let i=-7;i<=7;i++){ const d=new Date(today); d.setDate(today.getDate()+i); days.push(`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`); } let all=[]; let seen=new Set(); for(let ds of days){ try{ const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg}/scoreboard?dates=${ds}`); const j=await r.json(); if(j.events) j.events.forEach(e=>{ if(!seen.has(e.id)){ seen.add(e.id); all.push({...e,_lg:lg}); } }); }catch(e){} } if(lg==='ben.1' && all.length===0){ try{ const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/ben.1/scoreboard`); const j=await r.json(); if(j.events) j.events.forEach(e=>{ if(!seen.has(e.id)){ seen.add(e.id); all.push({...e,_lg:lg}); } }); }catch(e){} } return all; }
 function renderCard(g){ const c=g.competitions[0]; const st=c.status; const h=c.competitors.find(x=>x.homeAway==='home'); const a=c.competitors.find(x=>x.homeAway==='away'); const ms=getMatchState(st); let badgeClass=ms.state==='LIVE'?'live':ms.state==='HT'?'ht':ms.state==='FT'?'fini':'sched'; let timerText=ms.state==='LIVE'?`⏱️ <span class="live-minute" data-start="${ms.minute||0}">${ms.minute||0}'</span>`: ms.state==='HT'?`Mi-temps`: ms.state==='FT'?`Terminé`: heureCotonou(g.date); let progressW=ms.minute? (ms.minute/90)*100 : ms.state==='HT'?50: ms.state==='FT'?100:0; return `<div class="card" id="match-${g.id}" onclick="openDetail('${g.id}','${g._lg}')" style="border-left:6px solid ${ms.state==='LIVE'?'red':ms.state==='HT'?'orange':ms.state==='FT'?'#777':'#0a3d8f'}"><div class="card-top"><div style="display:flex; align-items:center; gap:8px; flex:1;"><div class="team"><img referrerpolicy="no-referrer" src="${getLogo(a.team)}" onerror="this.style.display='none'"><br>${a.team.abbreviation||''}</div><div style="flex:1; font-size:13px;"><div style="display:flex; justify-content:space-between"><span>${a.team.shortDisplayName}</span><b id="score-a-${g.id}">${a.score||0}</b></div><div style="display:flex; justify-content:space-between"><span>${h.team.shortDisplayName}</span><b id="score-h-${g.id}">${h.score||0}</b></div><small id="time-${g.id}" style="color:${ms.state==='LIVE'?'red':'#444'}; font-weight:bold">${timerText}</small></div><div class="team"><img referrerpolicy="no-referrer" src="${getLogo(h.team)}" onerror="this.style.display='none'"><br>${h.team.abbreviation||''}</div></div><div style="text-align:right; min-width:88px"><span id="badge-${g.id}" class="badge ${badgeClass}">${ms.label}</span></div></div><div class="progress"><div id="prog-${g.id}" class="progress-fill" style="width:${progressW}%; background:${ms.state==='HT'?'orange':ms.state==='LIVE'?'red':'#999'}"></div></div></div>`; }
-async function loadAll(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } document.getElementById('box').innerHTML='⏳ Chargement...'; let all=[]; for(let lg of Object.keys(LEAGUES)){ all=all.concat(await fetchLeague(lg)); await new Promise(r=>setTimeout(r,80)); } allMatchesCache=all; afficherTous(allMatchesCache); startAutoRefresh(); }
-function afficherTous(all){ const box=document.getElementById('box'); const liveCount=all.filter(m=>getMatchState(m.competitions[0].status).isLive).length; document.getElementById('live-info').innerText=`${all.length} matchs - 🔴 ${liveCount} LIVE`; document.getElementById('clock').innerText=new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'})+' Cotonou'; all=all.sort((a,b)=>{ const ma=getMatchState(a.competitions[0].status), mb=getMatchState(b.competitions[0].status); if(ma.order!==mb.order) return ma.order-mb.order; return new Date(a.date)-new Date(b.date); }); let html='', grouped={}; all.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); }); for(let lg of Object.keys(LEAGUES)){ if(!grouped[lg]) continue; const lc=grouped[lg].filter(m=>getMatchState(m.competitions[0].status).isLive).length; let list=grouped[lg]; let shown=list.slice(0,LIMIT_PAR_LIGUE); let extra=''; if(list.length>LIMIT_PAR_LIGUE){ extra=`<div class="voir-tout" onclick="document.querySelector('[data-lg=&quot;${lg}&quot;]').click(); window.scrollTo({top:0,behavior:'smooth'})">Voir les ${list.length} matchs de ${LEAGUES[lg]} →</div>`; } html+=`<div class="league-title"><span>⚽ ${LEAGUES[lg]}</span><span>${lc>0?`🔴 ${lc} LIVE - `:''}${shown.length} / ${list.length}</span></div>`+shown.map(x=>renderCard(x)).join('')+extra; } box.innerHTML=html || '<div style="background:#ffc;padding:20px;text-align:center">Aucun match</div>'; startMinuteTicker(); }
+async function loadAll(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } fetchRealNews(null); document.getElementById('box').innerHTML='⏳ Chargement des matchs...'; let all=[]; for(let lg of Object.keys(LEAGUES)){ all=all.concat(await fetchLeague(lg)); await new Promise(r=>setTimeout(r,80)); } allMatchesCache=all; afficherTous(allMatchesCache); startAutoRefresh(); }
+function afficherTous(all){ const box=document.getElementById('box'); const liveCount=all.filter(m=>getMatchState(m.competitions[0].status).isLive).length; document.getElementById('live-info').innerText=`${all.length} matchs - 🔴 ${liveCount} LIVE`; document.getElementById('clock').innerText=new Date().toLocaleTimeString('fr-FR',{timeZone:'Africa/Porto-Novo', hour:'2-digit', minute:'2-digit'})+' Cotonou'; all=all.sort((a,b)=>{ const ma=getMatchState(a.competitions[0].status), mb=getMatchState(b.competitions[0].status); if(ma.order!==mb.order) return ma.order-mb.order; return new Date(a.date)-new Date(b.date); }); let html='', grouped={}; all.forEach(m=>{ if(!grouped[m._lg]) grouped[m._lg]=[]; grouped[m._lg].push(m); }); for(let lg of Object.keys(LEAGUES)){ if(!grouped[lg]) continue; const lc=grouped[lg].filter(m=>getMatchState(m.competitions[0].status).isLive).length; let list=grouped[lg]; let shown=list.slice(0,LIMIT_PAR_LIGUE); let extra=''; if(list.length>LIMIT_PAR_LIGUE){ extra=`<div class="voir-tout" onclick="document.querySelector('[data-lg=&quot;${lg}&quot;]').click(); window.scrollTo({top:0,behavior:'smooth'})">Voir les ${list.length} matchs de ${LEAGUES[lg]} →</div>`; } html+=`<div class="league-title"><span>⚽ ${LEAGUES[lg]}</span><span>${lc>0?`🔴 ${lc} LIVE - `:''}${shown.length} / ${list.length}</span></div>`+shown.map(x=>renderCard(x)).join('')+extra; } if(!grouped['ben.1']){ html+=`<div class="league-title"><span>⚽ 🇧🇯 Bénin • Ligue Pro</span><span>Pas de match J-7 à J+7 - Prochaine journée bientôt</span></div><div style="background:#ffc; padding:14px; border-radius:10px; text-align:center; font-size:12px">🇧🇯 Les matchs de Ligue Pro du Bénin s'affichent ici dès qu'ESPN les publie.<br>En attendant, regarde les actus Bénin en haut ⬆️</div>`; } box.innerHTML=html || '<div style="background:#ffc;padding:20px;text-align:center">Aucun match</div>'; startMinuteTicker(); }
 async function refreshScoresOnly(){ let fresh=[]; for(let lg of Object.keys(LEAGUES)){ fresh=fresh.concat(await fetchLeague(lg)); } fresh.forEach(g=>{ const c=g.competitions[0]; const h=c.competitors.find(x=>x.homeAway==='home'); const a=c.competitors.find(x=>x.homeAway==='away'); const ms=getMatchState(c.status); const elA=document.getElementById(`score-a-${g.id}`), elH=document.getElementById(`score-h-${g.id}`), elBadge=document.getElementById(`badge-${g.id}`), elProg=document.getElementById(`prog-${g.id}`); if(!elA) return; elA.innerText=a.score||0; elH.innerText=h.score||0; if(elBadge) elBadge.innerText=ms.label; if(elProg && ms.minute) elProg.style.width=(ms.minute/90*100)+'%'; }); }
 function startAutoRefresh(){ clearInterval(mainInterval); mainInterval=setInterval(refreshScoresOnly,15000); }
 function startMinuteTicker(){ clearInterval(minuteTicker); minuteTicker=setInterval(()=>{ document.querySelectorAll('.live-minute').forEach(el=>{ let v=parseInt(el.dataset.start)||0; if(v>0 && v<90){ el.innerText=(v+1)+"'"; el.dataset.start=v+1; } }); },60000); }
-async function loadLiveOnly(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } if(allMatchesCache.length===0) await loadAll(null); const live=allMatchesCache.filter(m=>getMatchState(m.competitions[0].status).isLive); if(live.length===0){ document.getElementById('box').innerHTML=`<div style="background:#ffc;padding:25px;border-radius:12px;text-align:center"><h3>😴 Aucun LIVE</h3></div>`; return; } afficherTous(live); }
-async function loadLeague(lg,btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } document.getElementById('box').innerHTML='Chargement...'; const ev=await fetchLeague(lg); document.getElementById('box').innerHTML=`<div class="league-title"><span>⚽ ${LEAGUES[lg]}</span><span>${ev.length}</span></div>`+ev.map(renderCard).join('') || '<div style="background:#ffc;padding:15px;text-align:center">Aucun match</div>'; }
+async function loadLiveOnly(btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } fetchRealNews(null); if(allMatchesCache.length===0) await loadAll(null); const live=allMatchesCache.filter(m=>getMatchState(m.competitions[0].status).isLive); if(live.length===0){ document.getElementById('box').innerHTML=`<div style="background:#ffc;padding:25px;border-radius:12px;text-align:center"><h3>😴 Aucun LIVE</h3></div>`; return; } afficherTous(live); }
+async function loadLeague(lg,btn){ if(btn){ document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } fetchRealNews(lg); document.getElementById('box').innerHTML='Chargement...'; const ev=await fetchLeague(lg); if(ev.length===0 && lg==='ben.1'){ document.getElementById('box').innerHTML=`<div class="league-title"><span>⚽ 🇧🇯 Bénin • Ligue Pro</span><span>0</span></div><div style="background:#ffc; padding:20px; border-radius:12px; text-align:center">🇧🇯 Aucun match publié par ESPN pour J-7 à J+7.<br><br>Les clubs à suivre : <b>Coton FC, Dadjè, Loto-Popo, Dragons, Dynamo, Buffles, Ayema, ASVO</b><br><br>Les actus Bénin sont en haut ⬆️</div>`; return; } document.getElementById('box').innerHTML=`<div class="league-title"><span>⚽ ${LEAGUES[lg]}</span><span>${ev.length}</span></div>`+ev.map(renderCard).join('') || '<div style="background:#ffc;padding:15px;text-align:center">Aucun match</div>'; }
 function showTab(n){ ['detail','stats','effectif'].forEach(x=>{ document.getElementById('tab-'+x).style.display=x===n?'block':'none'; document.getElementById('btn-'+x).classList.toggle('active', x===n); }); }
 async function openDetail(eventId,league){ currentEventId=eventId; currentLeague=league; document.getElementById('modal').style.display='block'; document.getElementById('tab-detail').innerHTML='⏳'; document.getElementById('tab-stats').innerHTML='⏳'; document.getElementById('tab-effectif').innerHTML='⏳'; showTab('detail'); await fetchDetail(eventId,league); clearInterval(detailInterval); detailInterval=setInterval(()=>fetchDetail(currentEventId,currentLeague),15000); }
 async function fetchDetail(eventId,league){
