@@ -45,12 +45,21 @@ tr.selected{background:#3a2a00!important;border-left:4px solid #28a745}
 .progress-bar{height:100%;background:#0d6efd;width:0%;transition:width .3s}
 .status-edit{margin:12px 0;padding:10px;background:#111;border:1px solid #ffeb3b;border-radius:10px}
 .status-edit input{width:100%;background:#000;color:#fff;border:1px solid #555;padding:10px;border-radius:8px;margin-top:6px}
-/* BULK */
 .bulk-bar{display:none;gap:6px;padding:8px;background:#ffeb3b;color:#000;margin:0 8px 8px 8px;border-radius:8px;align-items:center;flex-wrap:wrap;position:sticky;top:52px;z-index:9}
 .bulk-bar.show{display:flex}
 .bulk-bar b{font-size:12px}
 .bulk-btn{border:none;padding:9px 12px;border-radius:20px;font-weight:900;font-size:11px;cursor:pointer;flex:1}
 .chk{width:18px;height:18px;accent-color:#28a745;cursor:pointer}
+.dash{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px;background:#000;margin:0 8px 8px 8px;border-radius:10px;border:1px solid #333}
+.dash-card{background:#1e1e1e;border:2px solid #333;border-radius:10px;padding:8px;text-align:center;cursor:pointer}
+.dash-card.active{border-color:#ffeb3b;background:#2a2a00}
+.dash-card.forfait{border-top:4px solid #8BC34A}
+.dash-card.transfert{border-top:4px solid #00BCD4}
+.dash-card.total{border-top:4px solid #ff5000}
+.dash-val{font-size:16px;font-weight:900;color:#0f0;line-height:1.1}
+.dash-lab{font-size:8px;color:#aaa;font-weight:800;margin-top:2px}
+.dash-sub{font-size:8px;color:#ffeb3b}
+.bareme{margin:0 8px 8px 8px;padding:8px;background:#111;border:1px dashed #00BCD4;border-radius:8px;font-size:9px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -67,6 +76,35 @@ tr.selected{background:#3a2a00!important;border-left:4px solid #28a745}
   </div>
   <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:9px">0 cmds</span>
 </div>
+
+<div class="dash">
+  <div class="dash-card forfait" id="dashForfait" onclick="switchTab('forfaits')">
+    <div style="font-size:14px">📱 FORFAITS</div>
+    <div class="dash-val" id="dashComForfait">0 F</div>
+    <div class="dash-lab">COMMISSION 4% - VALIDÉS</div>
+    <div class="dash-sub" id="dashDetailForfait">0 F validés • 0 cmds</div>
+  </div>
+  <div class="dash-card transfert" id="dashTransfert" onclick="switchTab('transfert')">
+    <div style="font-size:14px">💸 TRANSFERT - RETRAIT</div>
+    <div class="dash-val" id="dashComTransfert" style="color:#00BCD4">0 F</div>
+    <div class="dash-lab">COMMISSION BARÈME RETRAIT - VALIDÉS</div>
+    <div class="dash-sub" id="dashDetailTransfert">0 F validés • 0 cmds</div>
+  </div>
+  <div class="dash-card total" id="dashTotal" onclick="switchTab('all')">
+    <div style="font-size:14px">💰 TOTAL</div>
+    <div class="dash-val" id="dashComTotal" style="color:#ffeb3b">0 F</div>
+    <div class="dash-lab">FORFAITS 4% + RETRAIT BARÈME</div>
+    <div class="dash-sub" id="dashDetailTotal">Cliquer = TOUS</div>
+  </div>
+</div>
+
+<div class="bareme">
+<b style="color:#00BCD4">💸 BARÈME RETRAIT (Transfert type = retrait) :</b><br>
+1 - 5 000 F → <b>45 F</b> &nbsp;|&nbsp; 5 001 - 10 000 F → <b>76 F</b> &nbsp;|&nbsp; 10 001 - 20 000 F → <b>125 F</b><br>
+20 001 - 50 000 F → <b>275 F</b> &nbsp;|&nbsp; 50 001 - 100 000 F → <b>387 F</b> &nbsp;|&nbsp; 100 001 - 200 000 F → <b>1 170 F</b><br>
+<span style="color:#aaa">Forfaits validés = <b style="color:#0f0">4%</b> • Seuls les transferts de type <b>RETRAIT</b> prennent la commission barème.</span>
+</div>
+
 <div class="stats">
   <div><div class="sval" id="stEnCours" style="color:#ffeb3b">0</div><div class="slab">EN COURS</div></div>
   <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS</div></div>
@@ -74,7 +112,6 @@ tr.selected{background:#3a2a00!important;border-left:4px solid #28a745}
   <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
 </div>
 
-<!-- BARRE BULK -->
 <div id="bulkBar" class="bulk-bar">
   <b id="bulkCount">0 sélectionné(s)</b>
   <button class="bulk-btn" style="background:#28a745;color:#fff" onclick="bulkValidate()">✅ TOUT VALIDER</button>
@@ -90,13 +127,11 @@ tr.selected{background:#3a2a00!important;border-left:4px solid #28a745}
 </div>
 
 <div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3><div id="mContent"></div>
-
 <div class="status-edit">
   <b style="color:#ffeb3b;font-size:11px">✏️ MODIFIER STATUT MANUELLEMENT</b>
   <input type="text" id="customStatus" placeholder="Ex: validé, annulé, en cours de traitement...">
   <button class="btn" style="background:#ffeb3b;color:#000;padding:10px;margin-top:6px;font-size:11px" onclick="saveCustomStatus()">💾 Enregistrer ce statut</button>
 </div>
-
 <div class="preuve-box">
   <b style="color:#0d6efd;font-size:12px">📸 PREUVE D'ENVOI - Cloudinary</b>
   <div id="preuveCurrent" style="margin:6px 0"></div>
@@ -114,220 +149,234 @@ tr.selected{background:#3a2a00!important;border-left:4px solid #28a745}
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
-
 async function uploadToCloudinary(b64){
-  var fd=new FormData();
-  fd.append('file',b64);
-  fd.append('upload_preset','mayneaudio');
-  fd.append('folder','preuves_admin');
-  var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd});
-  var data=await res.json();
-  if(data.secure_url) return data.secure_url;
-  throw new Error('Cloudinary: '+(data.error?.message||JSON.stringify(data)));
+  var fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio'); fd.append('folder','preuves_admin');
+  var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd}); var data=await res.json();
+  if(data.secure_url) return data.secure_url; throw new Error('Cloudinary: '+(data.error?.message||JSON.stringify(data)));
 }
-
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
-function getPhone(){
-  try{
-    let v=localStorage.getItem('mayne_current_user');
-    if(v){ let o=JSON.parse(v); if(o.phone) return o.phone; }
-    let p=localStorage.getItem('phone'); if(p) return p;
-  }catch(e){} return null;
-}
+function getPhone(){ try{ let v=localStorage.getItem('mayne_current_user'); if(v){ let o=JSON.parse(v); if(o.phone) return o.phone; } let p=localStorage.getItem('phone'); if(p) return p; }catch(e){} return null; }
 function isAdmin(ph){ if(!ph) return false; const c=ph.replace(/\D/g,''); return ADMIN_LIST.some(a=>c.endsWith(a.replace(/\D/g,'').slice(-8))); }
 let userPhone=getPhone();
-if(!isAdmin(userPhone)){
-  document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement<br><small>Phone:'+(userPhone||'non trouvé')+'<br>Connecte-toi d\'abord sur index.html</small></div>';
-  throw 'not admin';
-}
-
+if(!isAdmin(userPhone)){ document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement<br><small>Phone:'+(userPhone||'non trouvé')+'<br>Connecte-toi d\'abord sur index.html</small></div>'; throw 'not admin'; }
 const SERVICES=[{key:'all',label:'TOUS',path:null},{key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},{key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},{key:'market',label:'MARKET',path:'commandes_marketplace'},{key:'1xbet',label:'1XBET',path:'commandes_1xbet'},{key:'factures',label:'FACTURES',path:'commandes_factures'},{key:'forfaits',label:'FORFAITS',path:'commandes_forfaits'},{key:'epargne',label:'EPARGNE',path:'commandes_epargne'},{key:'depot',label:'DEPOTS',path:'commandes_depots'},{key:'retrait',label:'RETRAITS',path:'commandes_retraits'},{key:'kyc',label:'KYC',path:'kyc_demandes'}];
 let allData=[],currentTab='all',currentItem=null,counts={},selected=new Set(),currentList=[];
+let commissionsData={forfait:0,transfert:0,forfaitCount:0,transfertCount:0};
 function getPriority(s){const t=(s||'').toLowerCase(); if(t.includes('en cours')||t.includes('attente')||t.includes('pending')) return 0; return 1;}
 function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms;}
 function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:3px;font-size:8px" id="count-'+s.key+'">0</span>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
+
+// ===== COMMISSIONS =====
+// FORFAIT : 4%
+function getCommissionForfait(montant){ return Math.round((parseFloat(montant)||0)*0.04); }
+// TRANSFERT RETRAIT : BAREME FIXE
+function getCommissionRetrait(montant){
+  const m=parseFloat(montant)||0;
+  if(m<=0) return 0;
+  if(m<=5000) return 45;
+  if(m<=10000) return 76;
+  if(m<=20000) return 125;
+  if(m<=50000) return 275;
+  if(m<=100000) return 387;
+  if(m<=200000) return 1170;
+  return 1170; // >200000 : à confirmer
+}
+// Est-ce un transfert de type RETRAIT ?
+function isRetrait(item){
+  if(!item) return false;
+  // Si c'est dans commandes_retraits, c'est forcément un retrait
+  if(item.path==='commandes_retraits') return true;
+  // Si c'est dans commandes_transferts, on regarde le champ type / motif / service
+  const d=item.data||{};
+  const txt=((d.type||'')+' '+(d.motif||'')+' '+(d.service||'')+' '+(d.categorie||'')+' '+(d.operation||'')).toLowerCase();
+  if(txt.includes('retrait')) return true;
+  // Si pas de type précisé dans transfert, on considère que c'est un transfert classique -> PAS de commission barème
+  // Si tu veux que TOUS les transferts prennent le barème, dis-le moi et j'enlève ce test
+  return false;
+}
+function getCommissionForItem(item){
+  if(item.service==='forfaits') return getCommissionForfait(item.montant);
+  if(item.service==='transfert' && isRetrait(item)) return getCommissionRetrait(item.montant);
+  if(item.service==='retrait') return getCommissionRetrait(item.montant);
+  return 0;
+}
+
+function fmt(n){ return Math.round(n).toLocaleString('fr-FR')+' F'; }
+function calcCommissions(){
+  let fValideTotal=0, fValideCount=0, fCom=0;
+  let tValideTotal=0, tValideCount=0, tCom=0, tRetraitCount=0;
+  allData.forEach(it=>{
+    const isValide = it.statut.includes('valid');
+    if(!isValide) return;
+    if(it.service==='forfaits'){ fValideTotal+=it.montant||0; fValideCount++; fCom+=getCommissionForfait(it.montant); }
+    if(it.service==='transfert' || it.service==='retrait'){
+      // Pour le dashboard transfert, on compte seulement les retraits (barème)
+      if(isRetrait(it)){ tValideTotal+=it.montant||0; tValideCount++; tCom+=getCommissionRetrait(it.montant); tRetraitCount++; }
+      else if(it.service==='transfert'){ /* transfert non-retrait : 0 commission, pas compté dans total retrait */ }
+    }
+  });
+  return {fValideTotal,fValideCount,comForfait:fCom,tValideTotal,tValideCount,tRetraitCount,comTransfert:tCom,total:fCom+tCom};
+}
+function updateDashboard(){
+  const c=calcCommissions();
+  document.getElementById('dashComForfait').innerText=fmt(c.comForfait);
+  document.getElementById('dashDetailForfait').innerText=fmt(c.fValideTotal)+' validés • '+c.fValideCount+' cmds • 4%';
+  document.getElementById('dashComTransfert').innerText=fmt(c.comTransfert);
+  document.getElementById('dashDetailTransfert').innerText=fmt(c.tValideTotal)+' retraits validés • '+c.tValideCount+' cmds • Barème';
+  document.getElementById('dashComTotal').innerText=fmt(c.total);
+  document.getElementById('dashDetailTotal').innerText='Forfaits '+fmt(c.comForfait)+' + Retrait '+fmt(c.comTransfert);
+  document.getElementById('dashForfait').classList.toggle('active', currentTab==='forfaits');
+  document.getElementById('dashTransfert').classList.toggle('active', currentTab==='transfert');
+  document.getElementById('dashTotal').classList.toggle('active', currentTab==='all');
+  if(currentTab==='forfaits'){
+    document.getElementById('dashDetailForfait').innerText='👉 SEUL FORFAITS - '+fmt(c.fValideTotal)+' validés • '+c.fValideCount+' cmds • Commission 4% = '+fmt(c.comForfait);
+  }
+  if(currentTab==='transfert'){
+    document.getElementById('dashDetailTransfert').innerText='👉 SEUL RETRAIT - '+fmt(c.tValideTotal)+' validés • '+c.tValideCount+' retraits • Commission barème = '+fmt(c.comTransfert);
+  }
+}
+async function loadCommissionsDB(){
+  try{
+    const snap=await db.ref('commissions').once('value');
+    let f=0,t=0,fc=0,tc=0;
+    snap.forEach(userSnap=>{ userSnap.forEach(cSnap=>{ const v=cSnap.val()||{}; const com=parseFloat(v.commission||0); const svc=(v.service||v.type||'').toString().toLowerCase(); if(svc.includes('forfait')){ f+=com; fc++; } else if(svc.includes('transfert')||svc.includes('retrait')){ t+=com; tc++; } }); });
+    commissionsData={forfait:f,transfert:t,forfaitCount:fc,transfertCount:tc};
+  }catch(e){ console.log('commissions load',e); }
+}
 
 async function loadAll(){
   const btn=document.getElementById('btnRefresh'); if(btn) btn.innerText='⏳...';
   allData=[]; counts={}; SERVICES.forEach(s=>counts[s.key]=0);
   const pr=SERVICES.filter(s=>s.path).map(s=>db.ref(s.path).limitToLast(400).once('value').then(snap=>{
-    snap.forEach(ch=>{
-      const v=ch.val();
-      const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:parseFloat(v.montant||v.total||v.prix||0),statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v};
-      it._time=getTime(it); allData.push(it); counts[s.key]++;
-    });
+    snap.forEach(ch=>{ const v=ch.val(); const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:parseFloat(v.montant||v.total||v.prix||0),statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v}; it._time=getTime(it); allData.push(it); counts[s.key]++; });
   }));
-  await Promise.all(pr);
+  await Promise.all([Promise.all(pr), loadCommissionsDB()]);
   allData.sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;});
   SERVICES.forEach(s=>{const el=document.getElementById('count-'+s.key); if(el) el.innerText=s.key==='all'?allData.length:(counts[s.key]||0);});
   document.getElementById('totalCount').innerText=allData.length+' cmds';
   document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR');
-  updateStats(allData); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
+  updateStats(allData); updateDashboard(); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
   if(btn) btn.innerText='🔄 Actualiser';
 }
 function refreshData(){ loadAll(); }
 function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
-function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;}); updateStats(list); render(list);}
+function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;}); updateStats(list); updateDashboard(); render(list);}
 function buildClientDetails(item){
-  const d=item.data; const priorityKeys=['montant','total','prix','reseau','numero','numero_beneficiaire','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet'];
-  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''} ${d.preuve_url||d.capture_url?'📸':''}</div>`;
+  const d=item.data; const priorityKeys=['montant','total','prix','reseau','numero','numero_beneficiaire','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet','type'];
+  const com=getCommissionForItem(item);
+  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''} ${d.preuve_url||d.capture_url?'📸':''}`;
+  if(item.statut.includes('valid') && com>0){
+    if(item.service==='forfaits') html+=` <span style="background:#8BC34A;color:#000;padding:1px 4px;border-radius:8px;font-size:7px">COM 4% = ${com} F</span>`;
+    else html+=` <span style="background:#00BCD4;color:#000;padding:1px 4px;border-radius:8px;font-size:7px">COM RETRAIT = ${com} F</span>`;
+  }
+  html+=`</div>`;
   priorityKeys.forEach(k=>{ if(d[k]===undefined||d[k]===''||d[k]===null) return; html+=`<div class="kv"><b>${k}:</b><span>${String(d[k]).slice(0,60)}</span></div>`; });
+  if(item.statut.includes('valid') && com>0){ html+=`<div class="kv"><b>COM:</b><span style="color:#0f0">${com} F ${item.service==='forfaits'?'(4%)':'(Barème Retrait)'}</span></div>`; }
   return html;
 }
-
-// ===== BULK =====
 function keyOf(item){return item.path+'|'+item.id;}
-function updateBulkBar(){
-  const bar=document.getElementById('bulkBar');
-  document.getElementById('bulkCount').innerText=selected.size+' sélectionné(s)';
-  bar.classList.toggle('show', selected.size>0);
-  // sync checkbox tout
-  const allVisible = currentList.filter(i=>getPriority(i.statut)===0);
-  const checkAll=document.getElementById('checkAll');
-  if(checkAll) checkAll.checked = allVisible.length>0 && allVisible.every(i=>selected.has(keyOf(i)));
-}
-function toggleSelect(path,id,checked,el){
-  const k=path+'|'+id;
-  if(checked) selected.add(k); else selected.delete(k);
-  if(el){ const tr=el.closest('tr'); if(tr) tr.classList.toggle('selected',checked); }
-  updateBulkBar();
-}
-function toggleSelectAll(checked){
-  // coche seulement les EN COURS visibles
-  currentList.forEach(item=>{
-    if(getPriority(item.statut)!==0) return;
-    const k=keyOf(item);
-    if(checked) selected.add(k); else selected.delete(k);
-  });
-  // re-render pour cocher visuellement
-  render(currentList);
-}
+function updateBulkBar(){ const bar=document.getElementById('bulkBar'); document.getElementById('bulkCount').innerText=selected.size+' sélectionné(s)'; bar.classList.toggle('show', selected.size>0); const allVisible = currentList.filter(i=>getPriority(i.statut)===0); const checkAll=document.getElementById('checkAll'); if(checkAll) checkAll.checked = allVisible.length>0 && allVisible.every(i=>selected.has(keyOf(i))); }
+function toggleSelect(path,id,checked,el){ const k=path+'|'+id; if(checked) selected.add(k); else selected.delete(k); if(el){ const tr=el.closest('tr'); if(tr) tr.classList.toggle('selected',checked); } updateBulkBar(); }
+function toggleSelectAll(checked){ currentList.forEach(item=>{ if(getPriority(item.statut)!==0) return; const k=keyOf(item); if(checked) selected.add(k); else selected.delete(k); }); render(currentList); }
 function clearSelection(){ selected.clear(); render(currentList); }
 async function bulkAction(newStatut){
   if(selected.size===0){ alert('Coche au moins 1 commande'); return; }
   if(!confirm(newStatut.toUpperCase()+' les '+selected.size+' commandes sélectionnées ?')) return;
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
-  const up={};
-  const items=[];
-  selected.forEach(k=>{
-    const [path,id]=k.split('|');
-    const item=allData.find(x=>x.path===path&&x.id===id);
-    if(item) items.push(item);
-    up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone();
-  });
+  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; const items=[];
+  selected.forEach(k=>{ const [path,id]=k.split('|'); const item=allData.find(x=>x.path===path&&x.id===id); if(item) items.push(item); up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone(); });
   await db.ref().update(up);
-  // commission forfait si validé
   if(newStatut.toLowerCase().includes('valid')){
-    for(const it of items){ if(it.path==='commandes_forfaits') await envoyerCommissionForfait(it); }
+    for(const it of items){
+      if(it.path==='commandes_forfaits') await envoyerCommissionForfait(it);
+      if(it.path==='commandes_transferts' && isRetrait(it)) await envoyerCommissionTransfert(it);
+      if(it.path==='commandes_retraits') await envoyerCommissionTransfert(it);
+    }
   }
-  alert('✅ '+items.length+' commandes -> '+newStatut);
-  selected.clear();
-  loadAll();
+  alert('✅ '+items.length+' commandes -> '+newStatut); selected.clear(); loadAll();
 }
 function bulkValidate(){ bulkAction('validé'); }
 function bulkCancel(){ bulkAction('annulé'); }
-
 function render(list){
-  currentList=list;
-  const tb=document.getElementById('tbody'); tb.innerHTML='';
+  currentList=list; const tb=document.getElementById('tbody'); tb.innerHTML='';
   if(list.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune commande</td></tr>'; updateBulkBar(); return;}
   list.slice(0,600).forEach((item,idx)=>{
     let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
-    const hasPreuve = item.data.preuve_url || item.data.capture_url;
-    const isEnCours = getPriority(item.statut)===0;
-    const k=keyOf(item); const isChecked=selected.has(k);
-    const tr=document.createElement('tr'); tr.className=(isEnCours?'en-cours':'')+' clickable'+(isChecked?' selected':'');
-    tr.onclick=function(){ openDetail(item.path,item.id); };
+    const hasPreuve = item.data.preuve_url || item.data.capture_url; const isEnCours = getPriority(item.statut)===0; const k=keyOf(item); const isChecked=selected.has(k);
+    const tr=document.createElement('tr'); tr.className=(isEnCours?'en-cours':'')+' clickable'+(isChecked?' selected':''); tr.onclick=function(){ openDetail(item.path,item.id); };
     tr.innerHTML=`<td class="col-check" onclick="event.stopPropagation()">${isEnCours?`<input type="checkbox" class="chk" ${isChecked?'checked':''} onchange="toggleSelect('${item.path}','${item.id}',this.checked,this)">`:`<span style="font-size:8px;color:#555">-</span>`}</td><td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 4px;border-radius:8px;font-size:7px">📸</span>':''}</td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,12)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,16)}<br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="event.stopPropagation();openDetail('${item.path}','${item.id}')">👁️</button><button class="btn btn-val" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
     tb.appendChild(tr);
-  });
-  updateBulkBar();
+  }); updateBulkBar();
 }
 function filtrer(){const q=document.getElementById('search').value.toLowerCase(); if(!q){switchTab(currentTab); return;} const base=currentTab==='all'?allData:allData.filter(d=>d.service===currentTab); const f=base.filter(i=>JSON.stringify(i).toLowerCase().includes(q)); render(f);}
 function openDetail(path,id){
   const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item;
-  document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id;
-  document.getElementById('customStatus').value=item.statut;
+  document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id; document.getElementById('customStatus').value=item.statut;
   let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut actuel</span><b>${item.statut}</b></div>`;
-  Object.keys(item.data).forEach(k=>{
-    if(k==='preuve_base64') return;
-    if(k==='preuve_url' || k==='capture_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir</a></b></div>`;
-    else if(typeof item.data[k]!=='object') html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${String(item.data[k]).slice(0,400)}</b></div>`;
-  });
+  if(item.statut.includes('valid')){
+    const com=getCommissionForItem(item);
+    if(item.service==='forfaits') html+=`<div class="row" style="background:#1a3a1a"><span>Commission 4%</span><b style="color:#0f0">${com} F</b></div>`;
+    if(isRetrait(item)) html+=`<div class="row" style="background:#0a2a33"><span>Commission Retrait (Barème)</span><b style="color:#00BCD4">${com} F</b></div>`;
+  }
+  Object.keys(item.data).forEach(k=>{ if(k==='preuve_base64') return; if(k==='preuve_url' || k==='capture_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir</a></b></div>`; else if(typeof item.data[k]!=='object') html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${String(item.data[k]).slice(0,400)}</b></div>`; });
   document.getElementById('mContent').innerHTML=html;
   const pc=document.getElementById('preuveCurrent');
-  if(item.data.preuve_url || item.data.capture_url){
-    const u = item.data.preuve_url || item.data.capture_url;
-    pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée:</div><img src="${u}" class="preuve-img" style="display:block"><div style="font-size:9px"><a href="${u}" target="_blank" style="color:#0d6efd">Ouvrir</a></div>`;
-  } else { pc.innerHTML=`<div style="color:#aaa;font-size:10px">Aucune preuve.</div>`; }
+  if(item.data.preuve_url || item.data.capture_url){ const u = item.data.preuve_url || item.data.capture_url; pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée:</div><img src="${u}" class="preuve-img" style="display:block"><div style="font-size:9px"><a href="${u}" target="_blank" style="color:#0d6efd">Ouvrir</a></div>`; } else { pc.innerHTML=`<div style="color:#aaa;font-size:10px">Aucune preuve.</div>`; }
   document.getElementById('previewImg').style.display='none'; document.getElementById('preuveFile').value=''; document.getElementById('modal').style.display='flex';
 }
 function closeModal(){document.getElementById('modal').style.display='none'; currentItem=null;}
 document.getElementById('preuveFile').addEventListener('change', function(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=function(ev){ const img=document.getElementById('previewImg'); img.src=ev.target.result; img.style.display='block'; }; reader.readAsDataURL(file); });
 async function doUploadPreuve(){ const file=document.getElementById('preuveFile').files[0]; if(!file){ alert('Choisis une image'); return null; } document.getElementById('upProgress').style.display='block'; document.getElementById('upBar').style.width='40%'; try{ const b64=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=rej; fr.readAsDataURL(file); }); document.getElementById('upBar').style.width='70%'; const url=await uploadToCloudinary(b64); document.getElementById('upBar').style.width='100%'; return url; }catch(e){ alert('Erreur upload: '+e.message); return null; } finally{ setTimeout(()=>{document.getElementById('upProgress').style.display='none'; document.getElementById('upBar').style.width='0%';},1000); } }
-
-// MODIF STATUT MANUEL
 async function saveCustomStatus(){
-  if(!currentItem) return;
-  const newStatus=document.getElementById('customStatus').value.trim();
-  if(!newStatus){ alert('Écris un statut'); return; }
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
-  const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']=newStatus; up[currentItem.path+'/'+currentItem.id+'/status']=newStatus; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/updated_by']=getPhone();
+  if(!currentItem) return; const newStatus=document.getElementById('customStatus').value.trim(); if(!newStatus){ alert('Écris un statut'); return; }
+  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']=newStatus; up[currentItem.path+'/'+currentItem.id+'/status']=newStatus; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/updated_by']=getPhone();
   await db.ref().update(up);
-  if(newStatus.toLowerCase().includes('valid') && currentItem.path==='commandes_forfaits'){
-    await envoyerCommissionForfait(currentItem);
-    alert('✅ '+newStatus+' + Commission 4% envoyée');
-  } else {
-    alert('✅ Statut: '+newStatus);
-  }
+  if(newStatus.toLowerCase().includes('valid') && currentItem.path==='commandes_forfaits'){ await envoyerCommissionForfait(currentItem); alert('✅ '+newStatus+' + Commission 4% envoyée'); }
+  else if(newStatus.toLowerCase().includes('valid') && (currentItem.path==='commandes_transferts' || currentItem.path==='commandes_retraits') && isRetrait(currentItem)){ await envoyerCommissionTransfert(currentItem); alert('✅ '+newStatus+' + Commission Retrait '+getCommissionRetrait(currentItem.montant)+' F'); }
+  else { alert('✅ Statut: '+newStatus); }
   closeModal(); loadAll();
 }
-
 async function uploadPreuveSeule(){
-  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return;
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
-  const up={}; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO; up[currentItem.path+'/'+currentItem.id+'/preuve_by']=getPhone(); up[currentItem.path+'/'+currentItem.id+'/preuve_date_fr']=nowFR;
-  await db.ref().update(up); alert('✅ Preuve envoyée !'); loadAll();
-  const ph=currentItem.client_id||currentItem.phone; if(ph){ db.ref('notifications/'+ph).push({titre:'Preuve disponible 📸', message:`Votre transfert ${currentItem.montant}F a une preuve`, date:nowFR, preuve_url:url, type:'preuve', commande_id:currentItem.id}); }
+  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO; up[currentItem.path+'/'+currentItem.id+'/preuve_by']=getPhone(); up[currentItem.path+'/'+currentItem.id+'/preuve_date_fr']=nowFR;
+  await db.ref().update(up); alert('✅ Preuve envoyée !'); loadAll(); const ph=currentItem.client_id||currentItem.phone; if(ph){ db.ref('notifications/'+ph).push({titre:'Preuve disponible 📸', message:`Votre transfert ${currentItem.montant}F a une preuve`, date:nowFR, preuve_url:url, type:'preuve', commande_id:currentItem.id}); }
 }
 async function validerAvecPreuve(){
-  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return;
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
-  const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']='validé'; up[currentItem.path+'/'+currentItem.id+'/status']='validé'; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url;
+  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']='validé'; up[currentItem.path+'/'+currentItem.id+'/status']='validé'; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url;
   await db.ref().update(up);
   if(currentItem.path==='commandes_forfaits') await envoyerCommissionForfait(currentItem);
+  if((currentItem.path==='commandes_transferts' || currentItem.path==='commandes_retraits') && isRetrait(currentItem)) await envoyerCommissionTransfert(currentItem);
   alert('✅ Validé + Preuve'); closeModal(); loadAll();
 }
-
-// COMMISSION FORFAIT 4%
 async function envoyerCommissionForfait(item){
-  try{
-    const montant=parseFloat(item.montant||0); if(montant<=0) return;
-    const commission=Math.round(montant*0.04);
-    const ph=item.client_id||item.phone; if(!ph) return;
-    const nowFR=new Date().toLocaleString('fr-FR');
+  try{ const montant=parseFloat(item.montant||0); if(montant<=0) return; const commission=getCommissionForfait(montant); const ph=item.client_id||item.phone; if(!ph) return; const nowFR=new Date().toLocaleString('fr-FR');
     await db.ref('commissions/'+ph).push({type:'forfait',commande_id:item.id,montant_achat:montant,commission:commission,pourcentage:4,date:nowFR,date_iso:new Date().toISOString(),service:'FORFAITS'});
     const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
     await db.ref('notifications/'+ph).push({titre:`Commission 4% : +${commission}F`,message:`Forfait ${montant}F validé. Commission ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
   }catch(e){ console.error(e); }
 }
-
+async function envoyerCommissionTransfert(item){
+  try{
+    const montant=parseFloat(item.montant||0); if(montant<=0) return;
+    const commission=getCommissionRetrait(montant);
+    const ph=item.client_id||item.phone; if(!ph) return;
+    const nowFR=new Date().toLocaleString('fr-FR');
+    await db.ref('commissions/'+ph).push({type:'retrait',commande_id:item.id,montant_achat:montant,commission:commission,bareme:'retrait',date:nowFR,date_iso:new Date().toISOString(),service:'TRANSFERT'});
+    const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
+    await db.ref('notifications/'+ph).push({titre:`Commission Retrait : +${commission}F`,message:`Retrait ${montant}F validé. Commission barème ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
+  }catch(e){ console.error(e); }
+}
 function quickAction(path,id,newStatut){
-  if(!confirm(newStatut.toUpperCase()+' ?')) return;
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR');
-  const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone();
+  if(!confirm(newStatut.toUpperCase()+' ?')) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone();
   db.ref().update(up).then(async ()=>{
-    if(path==='commandes_forfaits' && newStatut.toLowerCase().includes('valid')){
-      const item=allData.find(x=>x.id===id&&x.path===path); if(item) await envoyerCommissionForfait(item);
-      alert('✅ '+newStatut+' + Commission 4%');
-    } else { alert('✅ '+newStatut); }
+    const item=allData.find(x=>x.id===id&&x.path===path);
+    if(path==='commandes_forfaits' && newStatut.toLowerCase().includes('valid')){ if(item) await envoyerCommissionForfait(item); alert('✅ '+newStatut+' + Commission 4%'); }
+    else if((path==='commandes_transferts'||path==='commandes_retraits') && newStatut.toLowerCase().includes('valid') && item && isRetrait(item)){ await envoyerCommissionTransfert(item); alert('✅ '+newStatut+' + Commission Retrait '+getCommissionRetrait(item.montant)+' F'); }
+    else { alert('✅ '+newStatut); }
     loadAll();
   });
 }
 function validerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'validé'); closeModal();}
 function annulerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'annulé'); closeModal();}
 function notifierCurrent(){if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>alert('Envoyé'));}
-
 initTabs();
 firebase.auth().onAuthStateChanged(function(user){ if(user){ loadAll(); } else { firebase.auth().signInAnonymously(); } });
 setInterval(()=>{ refreshData(); }, 30000);
