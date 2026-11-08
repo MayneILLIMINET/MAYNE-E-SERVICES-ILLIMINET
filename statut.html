@@ -1,158 +1,207 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ADMIN - Statuts - DATABASE + CLOUDINARY</title>
+<title>ADMIN PRO</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box}
-body{background:#111;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0}
-.app{max-width:950px;width:100%;min-height:100vh;background:#1e1e1e;border:5px solid #ff5000;overflow:hidden}
-.top{padding:10px;background:#000;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;gap:6px;flex-wrap:wrap}
-.btn-retour{background:#fff;color:#000;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900;text-decoration:none;border:none;cursor:pointer}
-.btn-refresh{background:#0d6efd;color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fff;cursor:pointer}
-.input{width:calc(100% - 16px);background:#000;color:#fff;padding:10px;border:1px solid #555;border-radius:8px;margin:8px}
-.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:#000}
-.tab{background:#222;color:#fff;border:1px solid #444;padding:6px 9px;border-radius:20px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap}
-.tab.active{background:#ff5000;color:#fff;border-color:#fff}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#000;margin:0 8px 8px 8px;border-radius:8px}
-.sval{font-weight:900;font-size:14px}.slab{font-size:8px;color:#aaa}
-.wrap{width:100%;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
-th,td{border:1px solid #333;padding:5px;text-align:left;vertical-align:top;word-wrap:break-word;overflow-wrap:anywhere}
-th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:9px}
-tr.en-cours{border-left:4px solid #ffeb3b;background:#2a2a00}
-tr.clickable{cursor:pointer} tr.clickable:hover{background:#333}
-tr.selected{background:#3a2a00!important;border-left:4px solid #28a745}
-.col-check{width:7%}.col-service{width:14%}.col-client{width:38%}.col-statut{width:12%}.col-date{width:15%}.col-action{width:14%}
-.badge{padding:2px 5px;border-radius:10px;font-size:8px;font-weight:900;display:inline-block}
-.ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
-.btn{border:none;padding:4px 5px;border-radius:5px;font-weight:800;cursor:pointer;font-size:8px;margin:1px;width:100%}
-.btn-val{background:#28a745;color:#fff}.btn-ann{background:#dc3545;color:#fff}.btn-view{background:#333;color:#fff;border:1px solid #555}
-.btn-preuve{background:#0d6efd;color:#fff;border:1px solid #fff}
-.small{font-size:8px;color:#aaa}
-.client-main{color:#0f0;font-weight:900;font-size:11px;line-height:1.1}
-.kv{display:flex;gap:4px;font-size:9px;line-height:1.25;border-bottom:1px dotted #222;padding:1px 0}
-.kv b{color:#ffeb3b;min-width:32px;font-weight:800;font-size:8px;text-transform:uppercase}
-.kv span{color:#fff;flex:1;word-break:break-all}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99;padding:10px}
-#mBox{background:#1e1e1e;border:2px solid #ff5000;border-radius:14px;max-width:600px;width:100%;padding:14px;max-height:92vh;overflow:auto}
-.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
-.preuve-box{margin:10px 0;padding:10px;background:#000;border:1px dashed #ff5000;border-radius:10px}
-.preuve-img{width:100%;max-height:300px;object-fit:contain;border-radius:8px;border:1px solid #444;margin-top:8px}
-.progress{width:100%;height:6px;background:#333;border-radius:10px;overflow:hidden;margin:6px 0;display:none}
-.progress-bar{height:100%;background:#0d6efd;width:0%;transition:width .3s}
-.status-edit{margin:12px 0;padding:10px;background:#111;border:1px solid #ffeb3b;border-radius:10px}
-.status-edit input{width:100%;background:#000;color:#fff;border:1px solid #555;padding:10px;border-radius:8px;margin-top:6px}
-.bulk-bar{display:none;gap:6px;padding:8px;background:#ffeb3b;color:#000;margin:0 8px 8px 8px;border-radius:8px;align-items:center;flex-wrap:wrap;position:sticky;top:52px;z-index:9}
+body{background:#0e0e0e;color:#fff;font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0}
+.app{max-width:1000px;width:100%;margin:0 auto;background:#151515;min-height:100vh}
+.top{padding:12px 12px 10px;background:#000;display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;z-index:20}
+.top-left{display:flex;gap:6px;align-items:center}
+.btn-retour{background:#fff;color:#000;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:900;text-decoration:none}
+.btn-home{background:#222;color:#fff;border:1px solid #444;padding:8px 12px;border-radius:999px;font-size:12px;text-decoration:none}
+.btn-refresh{background:#0d6efd;color:#fff;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:800;border:none;cursor:pointer}
+.top-right{text-align:right}
+.top-title{font-size:13px;font-weight:900;color:#ffeb3b}
+.top-sub{font-size:10px;color:#0f0}
+.count{font-size:11px;background:#222;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.dash{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+.dash-card{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:14px;padding:12px;cursor:pointer}
+.dash-card.active{border-color:#ffeb3b;background:#2a2500}
+.dash-card.forfait{border-top:3px solid #8BC34A}
+.dash-card.transfert{border-top:3px solid #00BCD4}
+.dash-card.xbet{border-top:3px solid #2196F3}
+.dash-card.total{border-top:3px solid #ff5000}
+.dash-emoji{font-size:13px}
+.dash-name{font-size:12px;font-weight:900;letter-spacing:.3px}
+.dash-val{font-size:22px;font-weight:900;color:#0f0;line-height:1.1;margin:4px 0 2px}
+.dash-val.blue{color:#00BCD4}
+.dash-val.blue2{color:#2196F3}
+.dash-val.yellow{color:#ffeb3b}
+.dash-lab{font-size:9px;color:#999;font-weight:700}
+.dash-sub{font-size:10px;color:#ffeb3b;margin-top:4px;line-height:1.3}
+.bareme{margin:0 10px 10px;background:#111;border:1px solid #222;border-radius:12px;padding:0;overflow:hidden}
+.bareme summary{padding:10px 12px;font-size:11px;font-weight:900;cursor:pointer;color:#ffeb3b;list-style:none}
+.bareme summary::-webkit-details-marker{display:none}
+.bareme-body{padding:0 12px 12px;font-size:11px;line-height:1.6;color:#ccc}
+.bareme-body b{color:#fff}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 10px 10px}
+.stat{background:#000;border-radius:10px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:16px}
+.stat span{font-size:8px;color:#999;font-weight:800;letter-spacing:.5px}
+.bulk-bar{display:none;gap:8px;padding:10px;background:#ffeb3b;color:#000;margin:0 10px 10px;border-radius:12px;align-items:center;flex-wrap:wrap}
 .bulk-bar.show{display:flex}
-.bulk-bar b{font-size:12px}
-.bulk-btn{border:none;padding:9px 12px;border-radius:20px;font-weight:900;font-size:11px;cursor:pointer;flex:1}
-.chk{width:18px;height:18px;accent-color:#28a745;cursor:pointer}
-.dash{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px;background:#000;margin:0 8px 8px 8px;border-radius:10px;border:1px solid #333}
-.dash-card{background:#1e1e1e;border:2px solid #333;border-radius:10px;padding:8px;text-align:center;cursor:pointer}
-.dash-card.active{border-color:#ffeb3b;background:#2a2a00}
-.dash-card.forfait{border-top:4px solid #8BC34A}
-.dash-card.transfert{border-top:4px solid #00BCD4}
-.dash-card.total{border-top:4px solid #ff5000}
-.dash-val{font-size:16px;font-weight:900;color:#0f0;line-height:1.1}
-.dash-lab{font-size:8px;color:#aaa;font-weight:800;margin-top:2px}
-.dash-sub{font-size:8px;color:#ffeb3b}
-.bareme{margin:0 8px 8px 8px;padding:8px;background:#111;border:1px dashed #00BCD4;border-radius:8px;font-size:9px;line-height:1.5}
+.bulk-bar b{font-size:12px;flex:1}
+.bulk-btn{border:none;padding:10px 12px;border-radius:999px;font-weight:900;font-size:12px;cursor:pointer}
+.bulk-btn:disabled{opacity:.5}
+.tabs{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:0 10px 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:#222;color:#fff;border:1px solid #333;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.tab.active{background:#ff5000;border-color:#fff}
+.tab i{font-style:normal;background:#000;color:#ffeb3b;padding:1px 6px;border-radius:999px;margin-left:4px;font-size:10px}
+.search-wrap{padding:0 10px 10px}
+.search{width:100%;background:#000;color:#fff;padding:12px 14px;border:1px solid #333;border-radius:12px;font-size:13px;outline:none}
+.search:focus{border-color:#ff5000}
+.list{padding:0 10px 20px;display:flex;flex-direction:column;gap:10px}
+.card{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:14px;padding:12px;position:relative}
+.card.en-cours{border-left:4px solid #ffeb3b}
+.card.selected{border-color:#28a745;background:#222a1e}
+.card.validating{opacity:.6}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card-check{display:flex;align-items:center;gap:8px}
+.chk{width:20px;height:20px;accent-color:#28a745}
+.service{font-size:10px;font-weight:900;color:#ffeb3b;background:#2a2a2a;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.client-phone{font-size:15px;font-weight:900;color:#0f0;line-height:1.1}
+.client-meta{font-size:11px;color:#aaa;margin-top:2px}
+.badge{font-size:10px;font-weight:900;padding:5px 9px;border-radius:999px;white-space:nowrap}
+.badge.ok{background:#28a745;color:#fff}
+.badge.no{background:#dc3545;color:#fff}
+.badge.wait{background:#ffeb3b;color:#000}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;padding:10px;background:#111;border-radius:10px}
+.kv{font-size:11px;line-height:1.3;min-width:0}
+.kv b{display:block;font-size:8px;color:#ffeb3b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
+.kv span{color:#fff;word-break:break-word}
+.com-box{margin:0 0 10px;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900;text-align:center}
+.com-box.green{background:#1a3a1a;color:#0f0}
+.com-box.blue{background:#0a2a33;color:#00BCD4}
+.com-box.blue2{background:#0a1a33;color:#4da3ff}
+.com-box.yellow{background:#2a2a00;color:#ffeb3b}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.btn{border:none;padding:11px 6px;border-radius:10px;font-weight:900;font-size:12px;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5}
+.btn-view{background:#333;color:#fff;border:1px solid #555}
+.btn-val{background:#28a745;color:#fff}
+.btn-ann{background:#dc3545;color:#fff}
+.btn-preuve{background:#0d6efd;color:#fff}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:flex-end;justify-content:center;z-index:99}
+#mBox{background:#1e1e1e;border-radius:18px 18px 0 0;width:100%;max-width:600px;padding:16px;max-height:92vh;overflow:auto}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
+.preuve-box{margin:12px 0;padding:12px;background:#000;border:1px dashed #ff5000;border-radius:12px}
+.preuve-img{width:100%;max-height:280px;object-fit:contain;border-radius:10px;border:1px solid #444;margin-top:8px}
+.progress{width:100%;height:6px;background:#333;border-radius:10px;overflow:hidden;margin:8px 0;display:none}
+.progress-bar{height:100%;background:#0d6efd;width:0%;transition:width .3s}
+.status-edit{margin:12px 0;padding:12px;background:#111;border:1px solid #ffeb3b;border-radius:12px}
+.status-edit input{width:100%;background:#000;color:#fff;border:1px solid #555;padding:11px;border-radius:10px;margin-top:8px}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(80px);background:#111;border:2px solid #28a745;color:#fff;padding:12px 16px;border-radius:12px;font-size:12px;font-weight:800;z-index:999;opacity:0;transition:.3s;max-width:92%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:#dc3545}
+.empty{text-align:center;padding:30px;color:#888;font-size:13px}
+@media(min-width:700px){.dash{grid-template-columns:1fr 1fr 1fr 1fr}.card-grid{grid-template-columns:1fr 1fr 1fr 1fr}}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="top">
-  <div style="display:flex;gap:6px;align-items:center">
-    <a href="admin.html" class="btn-retour">← ADMIN</a>
-    <a href="index.html" class="btn-retour" style="background:#333;color:#fff;border:1px solid #555">🏠</a>
-    <button id="btnRefresh" onclick="refreshData()" class="btn-refresh">🔄 Actualiser</button>
-  </div>
-  <div style="text-align:right">
-    <b style="color:#ffeb3b;font-size:11px;display:block">📊 TRANSFERTS - DB + CLOUDINARY</b>
-    <span id="lastUpdate" style="font-size:8px;color:#0f0">MAJ: -</span>
-  </div>
-  <span id="totalCount" style="background:#000;padding:4px 8px;border-radius:10px;font-size:9px">0 cmds</span>
+<div class="top-left">
+<a href="admin.html" class="btn-retour">← ADMIN</a>
+<a href="index.html" class="btn-home">🏠</a>
+<button id="btnRefresh" onclick="refreshData()" class="btn-refresh">🔄</button>
 </div>
-
+<div class="top-right">
+<div class="top-title">ADMIN PRO • 1 CLIC = VALIDÉ</div>
+<div class="top-sub" id="lastUpdate">MAJ: -</div>
+</div>
+<span class="count" id="totalCount">0 cmds</span>
+</div>
 <div class="dash">
-  <div class="dash-card forfait" id="dashForfait" onclick="switchTab('forfaits')">
-    <div style="font-size:14px">📱 FORFAITS</div>
-    <div class="dash-val" id="dashComForfait">0 F</div>
-    <div class="dash-lab">COMMISSION 4% - VALIDÉS</div>
-    <div class="dash-sub" id="dashDetailForfait">0 F validés • 0 cmds</div>
-  </div>
-  <div class="dash-card transfert" id="dashTransfert" onclick="switchTab('transfert')">
-    <div style="font-size:14px">💸 TRANSFERT - RETRAIT</div>
-    <div class="dash-val" id="dashComTransfert" style="color:#00BCD4">0 F</div>
-    <div class="dash-lab">COMMISSION BARÈME RETRAIT - VALIDÉS</div>
-    <div class="dash-sub" id="dashDetailTransfert">0 F validés • 0 cmds</div>
-  </div>
-  <div class="dash-card total" id="dashTotal" onclick="switchTab('all')">
-    <div style="font-size:14px">💰 TOTAL</div>
-    <div class="dash-val" id="dashComTotal" style="color:#ffeb3b">0 F</div>
-    <div class="dash-lab">FORFAITS 4% + RETRAIT BARÈME</div>
-    <div class="dash-sub" id="dashDetailTotal">Cliquer = TOUS</div>
-  </div>
+<div class="dash-card forfait" id="dashForfait" onclick="switchTab('forfaits')">
+<div class="dash-name">📱 FORFAITS</div>
+<div class="dash-val" id="dashComForfait">0 F</div>
+<div class="dash-lab">COMMISSION 4% • VALIDÉS</div>
+<div class="dash-sub" id="dashDetailForfait">0 F • 0 cmds</div>
 </div>
-
-<div class="bareme">
-<b style="color:#00BCD4">💸 BARÈME RETRAIT (Transfert type = retrait) :</b><br>
-1 - 5 000 F → <b>45 F</b> &nbsp;|&nbsp; 5 001 - 10 000 F → <b>76 F</b> &nbsp;|&nbsp; 10 001 - 20 000 F → <b>125 F</b><br>
-20 001 - 50 000 F → <b>275 F</b> &nbsp;|&nbsp; 50 001 - 100 000 F → <b>387 F</b> &nbsp;|&nbsp; 100 001 - 200 000 F → <b>1 170 F</b><br>
-<span style="color:#aaa">Forfaits validés = <b style="color:#0f0">4%</b> • Seuls les transferts de type <b>RETRAIT</b> prennent la commission barème.</span>
+<div class="dash-card transfert" id="dashTransfert" onclick="switchTab('transfert')">
+<div class="dash-name">💸 TRANSFERT</div>
+<div class="dash-val blue" id="dashComTransfert">0 F</div>
+<div class="dash-lab">ENVOI + RETRAIT • VALIDÉS</div>
+<div class="dash-sub" id="dashDetailTransfert">0 F • 0 cmds</div>
 </div>
-
+<div class="dash-card xbet" id="dashXbet" onclick="switchTab('1xbet')">
+<div class="dash-name">🎰 1XBET</div>
+<div class="dash-val blue2" id="dashComXbet">0 F</div>
+<div class="dash-lab">DEPOT 1% + RETRAIT</div>
+<div class="dash-sub" id="dashDetailXbet">0 F • 0 cmds</div>
+</div>
+<div class="dash-card total" id="dashTotal" onclick="switchTab('all')">
+<div class="dash-name">💰 TOTAL</div>
+<div class="dash-val yellow" id="dashComTotal">0 F</div>
+<div class="dash-lab">FORFAITS + TRANSFERT + 1XBET</div>
+<div class="dash-sub" id="dashDetailTotal">Cliquer = TOUS</div>
+</div>
+</div>
+<details class="bareme">
+<summary>📋 Voir les barèmes de commissions ▼</summary>
+<div class="bareme-body">
+<b>💸 RETRAIT :</b> 1 - 5 000 F → 45 F • 5 001 - 10 000 F → 76 F • 10 001 - 20 000 F → 125 F • 20 001 - 50 000 F → 275 F • 50 001 - 100 000 F → 387 F • 100 001 - 200 000 F → 1 170 F<br>
+<b>📤 ENVOI 1 - 500 000 F :</b> MTN 0,33% • MOOV 0,33% • CELTIS 0,302%<br>
+<b>📤 ENVOI 500 001 - 2 000 000 F :</b> MTN 1 628 F • MOOV 0,40% • CELTIS 0,302%<br>
+<b>FORFAITS = 4%</b> • <b>1XBET DEPOT = 1%</b> • <b>1XBET RETRAIT = barème retrait</b>
+</div>
+</details>
 <div class="stats">
-  <div><div class="sval" id="stEnCours" style="color:#ffeb3b">0</div><div class="slab">EN COURS</div></div>
-  <div><div class="sval" id="stValide" style="color:#28a745">0</div><div class="slab">VALIDÉS</div></div>
-  <div><div class="sval" id="stRejete" style="color:#dc3545">0</div><div class="slab">ANNULÉS</div></div>
-  <div><div class="sval" id="stTotal">0</div><div class="slab">TOTAL</div></div>
+<div class="stat"><b id="stEnCours" style="color:#ffeb3b">0</b><span>EN COURS</span></div>
+<div class="stat"><b id="stValide" style="color:#28a745">0</b><span>VALIDÉS</span></div>
+<div class="stat"><b id="stRejete" style="color:#dc3545">0</b><span>ANNULÉS</span></div>
+<div class="stat"><b id="stTotal">0</b><span>TOTAL</span></div>
 </div>
-
 <div id="bulkBar" class="bulk-bar">
-  <b id="bulkCount">0 sélectionné(s)</b>
-  <button class="bulk-btn" style="background:#28a745;color:#fff" onclick="bulkValidate()">✅ TOUT VALIDER</button>
-  <button class="bulk-btn" style="background:#dc3545;color:#fff" onclick="bulkCancel()">❌ TOUT ANNULER</button>
-  <button class="bulk-btn" style="background:#000;color:#fff" onclick="clearSelection()">✖ Annuler sélection</button>
+<b id="bulkCount">0 sélectionné(s)</b>
+<button class="bulk-btn" id="btnBulkVal" style="background:#28a745;color:#fff" onclick="bulkValidate()">✅ TOUT VALIDER</button>
+<button class="bulk-btn" id="btnBulkAnn" style="background:#dc3545;color:#fff" onclick="bulkCancel()">❌ TOUT ANNULER</button>
+<button class="bulk-btn" style="background:#000;color:#fff" onclick="clearSelection()">✖ Effacer</button>
 </div>
-
 <div class="tabs" id="tabs"></div>
-<input id="search" class="input" placeholder="🔍 Tel, montant, bénéficiaire..." oninput="filtrer()">
-<div class="wrap">
-<table><thead><tr><th class="col-check"><input type="checkbox" id="checkAll" class="chk" onclick="toggleSelectAll(this.checked)" title="Tout cocher"> <span style="font-size:8px">TOUT</span></th><th class="col-service">Service</th><th class="col-client">Client / Tous détails</th><th class="col-statut">Statut</th><th class="col-date">Date</th><th class="col-action">Actions</th></tr></thead><tbody id="tbody"><tr><td colspan="6" style="text-align:center;padding:20px">Connexion...</td></tr></tbody></table>
+<div class="search-wrap"><input id="search" class="search" placeholder="🔍 Tel, montant, bénéficiaire..." oninput="filtrer()"></div>
+<div class="list" id="list"><div class="empty">Connexion...</div></div>
 </div>
-</div>
-
 <div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 10px 0">Détail</h3><div id="mContent"></div>
 <div class="status-edit">
-  <b style="color:#ffeb3b;font-size:11px">✏️ MODIFIER STATUT MANUELLEMENT</b>
-  <input type="text" id="customStatus" placeholder="Ex: validé, annulé, en cours de traitement...">
-  <button class="btn" style="background:#ffeb3b;color:#000;padding:10px;margin-top:6px;font-size:11px" onclick="saveCustomStatus()">💾 Enregistrer ce statut</button>
+<b style="color:#ffeb3b;font-size:12px">✏️ MODIFIER STATUT MANUELLEMENT</b>
+<input type="text" id="customStatus" placeholder="Ex: validé, annulé, en cours...">
+<button class="btn" id="btnCustomStatus" style="background:#ffeb3b;color:#000;padding:12px;margin-top:8px" onclick="saveCustomStatus()">💾 Enregistrer ce statut</button>
 </div>
 <div class="preuve-box">
-  <b style="color:#0d6efd;font-size:12px">📸 PREUVE D'ENVOI - Cloudinary</b>
-  <div id="preuveCurrent" style="margin:6px 0"></div>
-  <input type="file" id="preuveFile" accept="image/*" style="width:100%;background:#111;color:#fff;padding:8px;border-radius:8px;border:1px solid #444;margin:6px 0">
-  <img id="previewImg" class="preuve-img" style="display:none">
-  <div class="progress" id="upProgress"><div class="progress-bar" id="upBar"></div></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
-    <button class="btn btn-preuve" style="padding:10px;font-size:10px" onclick="uploadPreuveSeule()">📤 PREUVE SEULE</button>
-    <button class="btn btn-val" style="padding:10px;font-size:10px" onclick="validerAvecPreuve()">✅ VALIDER + PREUVE</button>
-  </div>
+<b style="color:#0d6efd;font-size:12px">📸 PREUVE D'ENVOI - Cloudinary</b>
+<div id="preuveCurrent" style="margin:6px 0"></div>
+<input type="file" id="preuveFile" accept="image/*" style="width:100%;background:#111;color:#fff;padding:8px;border-radius:8px;border:1px solid #444;margin:6px 0">
+<img id="previewImg" class="preuve-img" style="display:none">
+<div class="progress" id="upProgress"><div class="progress-bar" id="upBar"></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+<button class="btn btn-preuve" id="btnPreuveSeule" style="padding:11px" onclick="uploadPreuveSeule()">📤 PREUVE SEULE</button>
+<button class="btn btn-val" id="btnValiderPreuve" style="padding:11px" onclick="validerAvecPreuve()">✅ VALIDER + PREUVE</button>
 </div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn btn-val" style="padding:10px" onclick="validerCurrent()">✅ VALIDER SANS PREUVE</button><button class="btn btn-ann" style="padding:10px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:10px;background:#333" onclick="closeModal()">Fermer</button><button class="btn" style="padding:10px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button></div></div></div>
-
+</div>
+<div class="modal-actions"><button class="btn btn-val" id="btnValiderCurrent" style="padding:12px" onclick="validerCurrent()">✅ VALIDER - 1 CLIC</button><button class="btn btn-ann" id="btnAnnulerCurrent" style="padding:12px" onclick="annulerCurrent()">❌ ANNULER</button><button class="btn btn-view" style="padding:11px" onclick="closeModal()">Fermer</button><button class="btn" style="padding:11px;background:#ff5000" onclick="notifierCurrent()">🔔 Notifier</button></div></div></div>
+<div id="toast"></div>
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
+let toastTimer=null;
+function showToast(msg,isErr){
+const t=document.getElementById('toast');
+t.innerText=msg; t.className=isErr?'show err':'show';
+clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ t.className=''; },2800);
+}
 async function uploadToCloudinary(b64){
-  var fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio'); fd.append('folder','preuves_admin');
-  var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd}); var data=await res.json();
-  if(data.secure_url) return data.secure_url; throw new Error('Cloudinary: '+(data.error?.message||JSON.stringify(data)));
+var fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio'); fd.append('folder','preuves_admin');
+var res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd}); var data=await res.json();
+if(data.secure_url) return data.secure_url; throw new Error('Cloudinary: '+(data.error?.message||JSON.stringify(data)));
 }
 const ADMIN_LIST=["0158612131","2290158612131","158612131","229158612131"];
 function getPhone(){ try{ let v=localStorage.getItem('mayne_current_user'); if(v){ let o=JSON.parse(v); if(o.phone) return o.phone; } let p=localStorage.getItem('phone'); if(p) return p; }catch(e){} return null; }
@@ -161,222 +210,346 @@ let userPhone=getPhone();
 if(!isAdmin(userPhone)){ document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement<br><small>Phone:'+(userPhone||'non trouvé')+'<br>Connecte-toi d\'abord sur index.html</small></div>'; throw 'not admin'; }
 const SERVICES=[{key:'all',label:'TOUS',path:null},{key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},{key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},{key:'market',label:'MARKET',path:'commandes_marketplace'},{key:'1xbet',label:'1XBET',path:'commandes_1xbet'},{key:'factures',label:'FACTURES',path:'commandes_factures'},{key:'forfaits',label:'FORFAITS',path:'commandes_forfaits'},{key:'epargne',label:'EPARGNE',path:'commandes_epargne'},{key:'depot',label:'DEPOTS',path:'commandes_depots'},{key:'retrait',label:'RETRAITS',path:'commandes_retraits'},{key:'kyc',label:'KYC',path:'kyc_demandes'}];
 let allData=[],currentTab='all',currentItem=null,counts={},selected=new Set(),currentList=[];
-let commissionsData={forfait:0,transfert:0,forfaitCount:0,transfertCount:0};
+let commissionsData={forfait:0,transfert:0,xbet:0,forfaitCount:0,transfertCount:0,xbetCount:0};
+let processing=new Set();
 function getPriority(s){const t=(s||'').toLowerCase(); if(t.includes('en cours')||t.includes('attente')||t.includes('pending')) return 0; return 1;}
 function getTime(item){const t=item.data.updated_at||item.data.updatedAt||item.date||''; const ms=Date.parse(t); return isNaN(ms)?0:ms;}
-function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <span style="background:#000;color:#ffeb3b;padding:1px 5px;border-radius:10px;margin-left:3px;font-size:8px" id="count-'+s.key+'">0</span>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
-
-// ===== COMMISSIONS =====
-// FORFAIT : 4%
+function initTabs(){const c=document.getElementById('tabs'); c.innerHTML=''; SERVICES.forEach(s=>{const b=document.createElement('button'); b.className='tab'+(s.key===currentTab?' active':''); b.id='tab-'+s.key; b.innerHTML=s.label+' <i id="count-'+s.key+'">0</i>'; b.onclick=()=>switchTab(s.key); c.appendChild(b);});}
 function getCommissionForfait(montant){ return Math.round((parseFloat(montant)||0)*0.04); }
-// TRANSFERT RETRAIT : BAREME FIXE
 function getCommissionRetrait(montant){
-  const m=parseFloat(montant)||0;
-  if(m<=0) return 0;
-  if(m<=5000) return 45;
-  if(m<=10000) return 76;
-  if(m<=20000) return 125;
-  if(m<=50000) return 275;
-  if(m<=100000) return 387;
-  if(m<=200000) return 1170;
-  return 1170; // >200000 : à confirmer
+const m=parseFloat(montant)||0;
+if(m<=0) return 0;
+if(m<=5000) return 45;
+if(m<=10000) return 76;
+if(m<=20000) return 125;
+if(m<=50000) return 275;
+if(m<=100000) return 387;
+if(m<=200000) return 1170;
+return 1170;
 }
-// Est-ce un transfert de type RETRAIT ?
+function getCommissionDepotXbet(montant){ return Math.round((parseFloat(montant)||0)*0.01); }
+function getReseau(item){
+const d=item.data||{};
+let r=(d.reseau||d.operateur||d.operator||d.network||d.reseau_destinataire||d.reseau_beneficiaire||'').toString().toLowerCase();
+if(r.includes('mtn')) return 'MTN';
+if(r.includes('moov')||r.includes('africa')) return 'MOOV';
+if(r.includes('celtis')||r.includes('celtiis')||r.includes('sb')) return 'CELTIS';
+if(r.includes('orange')) return 'ORANGE';
+return r ? r.toUpperCase() : '';
+}
+function getCommissionEnvoi(montant,reseau){
+const m=parseFloat(montant)||0;
+if(m<=0) return 0;
+let r=(reseau||'').toString().toUpperCase();
+if(m<=500000){
+if(r.includes('MTN')) return Math.round(m*0.0033);
+if(r.includes('MOOV')) return Math.round(m*0.0033);
+if(r.includes('CELTIS')) return Math.round(m*0.00302);
+return Math.round(m*0.0033);
+}
+if(m<=2000000){
+if(r.includes('MTN')) return 1628;
+if(r.includes('MOOV')) return Math.round(m*0.004);
+if(r.includes('CELTIS')) return Math.round(m*0.00302);
+return Math.round(m*0.0033);
+}
+if(r.includes('MTN')) return 1628;
+if(r.includes('MOOV')) return Math.round(m*0.004);
+if(r.includes('CELTIS')) return Math.round(m*0.00302);
+return Math.round(m*0.0033);
+}
+function getTypeText(item){
+const d=item.data||{};
+return ((d.type||'')+' '+(d.motif||'')+' '+(d.service||'')+' '+(d.categorie||'')+' '+(d.operation||'')+' '+(d.sens||'')).toLowerCase();
+}
 function isRetrait(item){
-  if(!item) return false;
-  // Si c'est dans commandes_retraits, c'est forcément un retrait
-  if(item.path==='commandes_retraits') return true;
-  // Si c'est dans commandes_transferts, on regarde le champ type / motif / service
-  const d=item.data||{};
-  const txt=((d.type||'')+' '+(d.motif||'')+' '+(d.service||'')+' '+(d.categorie||'')+' '+(d.operation||'')).toLowerCase();
-  if(txt.includes('retrait')) return true;
-  // Si pas de type précisé dans transfert, on considère que c'est un transfert classique -> PAS de commission barème
-  // Si tu veux que TOUS les transferts prennent le barème, dis-le moi et j'enlève ce test
-  return false;
+if(!item) return false;
+if(item.path==='commandes_retraits') return true;
+if(getTypeText(item).includes('retrait')) return true;
+return false;
+}
+function isEnvoi(item){
+if(!item) return false;
+if(item.path==='commandes_transferts'){
+let t=getTypeText(item);
+if(t.includes('envoi')||t.includes('depot')||t.includes('dépot')||t.includes('dépôt')||t.includes('envois')) return true;
+if(!t.includes('retrait')) return true;
+}
+if(item.path==='commandes_depots') return true;
+return false;
+}
+function isDepot(item){
+if(!item) return false;
+if(item.path==='commandes_depots') return true;
+if(getTypeText(item).includes('depot')||getTypeText(item).includes('dépot')||getTypeText(item).includes('recharge')||getTypeText(item).includes('recharger')) return true;
+return false;
 }
 function getCommissionForItem(item){
-  if(item.service==='forfaits') return getCommissionForfait(item.montant);
-  if(item.service==='transfert' && isRetrait(item)) return getCommissionRetrait(item.montant);
-  if(item.service==='retrait') return getCommissionRetrait(item.montant);
-  return 0;
+if(item.service==='forfaits') return getCommissionForfait(item.montant);
+if(item.service==='transfert' && isRetrait(item)) return getCommissionRetrait(item.montant);
+if(item.service==='transfert' && isEnvoi(item)) return getCommissionEnvoi(item.montant,getReseau(item));
+if(item.service==='retrait') return getCommissionRetrait(item.montant);
+if(item.service==='depot') return getCommissionEnvoi(item.montant,getReseau(item));
+if(item.service==='1xbet'){
+if(isRetrait(item)) return getCommissionRetrait(item.montant);
+if(isDepot(item)) return getCommissionDepotXbet(item.montant);
+if(getTypeText(item).includes('depot')||getTypeText(item).includes('dépot')) return getCommissionDepotXbet(item.montant);
+return getCommissionDepotXbet(item.montant);
 }
-
+return 0;
+}
+function getLabelCommission(item){
+if(item.service==='forfaits') return '4%';
+if(item.service==='1xbet' && isRetrait(item)) return 'Barème Retrait';
+if(item.service==='1xbet') return '1% Depot';
+if(item.service==='transfert' && isEnvoi(item)) return 'Envoi '+getReseau(item);
+if(isRetrait(item)) return 'Barème Retrait';
+return '';
+}
 function fmt(n){ return Math.round(n).toLocaleString('fr-FR')+' F'; }
 function calcCommissions(){
-  let fValideTotal=0, fValideCount=0, fCom=0;
-  let tValideTotal=0, tValideCount=0, tCom=0, tRetraitCount=0;
-  allData.forEach(it=>{
-    const isValide = it.statut.includes('valid');
-    if(!isValide) return;
-    if(it.service==='forfaits'){ fValideTotal+=it.montant||0; fValideCount++; fCom+=getCommissionForfait(it.montant); }
-    if(it.service==='transfert' || it.service==='retrait'){
-      // Pour le dashboard transfert, on compte seulement les retraits (barème)
-      if(isRetrait(it)){ tValideTotal+=it.montant||0; tValideCount++; tCom+=getCommissionRetrait(it.montant); tRetraitCount++; }
-      else if(it.service==='transfert'){ /* transfert non-retrait : 0 commission, pas compté dans total retrait */ }
-    }
-  });
-  return {fValideTotal,fValideCount,comForfait:fCom,tValideTotal,tValideCount,tRetraitCount,comTransfert:tCom,total:fCom+tCom};
+let fValideTotal=0, fValideCount=0, fCom=0;
+let tValideTotal=0, tValideCount=0, tCom=0, tRetraitCom=0, tEnvoiCom=0, tRetraitCount=0, tEnvoiCount=0;
+let xValideTotal=0, xValideCount=0, xCom=0, xDepotCom=0, xRetraitCom=0;
+allData.forEach(it=>{
+const isValide = it.statut.includes('valid');
+if(!isValide) return;
+if(it.service==='forfaits'){ fValideTotal+=it.montant||0; fValideCount++; fCom+=getCommissionForfait(it.montant); }
+if(it.service==='transfert' || it.service==='retrait' || it.service==='depot'){
+if(isRetrait(it)){ tValideTotal+=it.montant||0; tValideCount++; let c=getCommissionRetrait(it.montant); tCom+=c; tRetraitCom+=c; tRetraitCount++; }
+else if(isEnvoi(it) || it.service==='depot'){ tValideTotal+=it.montant||0; tValideCount++; let c=getCommissionEnvoi(it.montant,getReseau(it)); tCom+=c; tEnvoiCom+=c; tEnvoiCount++; }
+}
+if(it.service==='1xbet'){
+const com=getCommissionForItem(it);
+xValideTotal+=it.montant||0; xValideCount++; xCom+=com;
+if(isRetrait(it)) xRetraitCom+=com; else { xDepotCom+=com; }
+}
+});
+return {fValideTotal,fValideCount,comForfait:fCom,tValideTotal,tValideCount,comTransfert:tCom,tRetraitCom,tEnvoiCom,tRetraitCount,tEnvoiCount,xValideTotal,xValideCount,comXbet:xCom,xDepotCom,xRetraitCom,total:fCom+tCom+xCom};
 }
 function updateDashboard(){
-  const c=calcCommissions();
-  document.getElementById('dashComForfait').innerText=fmt(c.comForfait);
-  document.getElementById('dashDetailForfait').innerText=fmt(c.fValideTotal)+' validés • '+c.fValideCount+' cmds • 4%';
-  document.getElementById('dashComTransfert').innerText=fmt(c.comTransfert);
-  document.getElementById('dashDetailTransfert').innerText=fmt(c.tValideTotal)+' retraits validés • '+c.tValideCount+' cmds • Barème';
-  document.getElementById('dashComTotal').innerText=fmt(c.total);
-  document.getElementById('dashDetailTotal').innerText='Forfaits '+fmt(c.comForfait)+' + Retrait '+fmt(c.comTransfert);
-  document.getElementById('dashForfait').classList.toggle('active', currentTab==='forfaits');
-  document.getElementById('dashTransfert').classList.toggle('active', currentTab==='transfert');
-  document.getElementById('dashTotal').classList.toggle('active', currentTab==='all');
-  if(currentTab==='forfaits'){
-    document.getElementById('dashDetailForfait').innerText='👉 SEUL FORFAITS - '+fmt(c.fValideTotal)+' validés • '+c.fValideCount+' cmds • Commission 4% = '+fmt(c.comForfait);
-  }
-  if(currentTab==='transfert'){
-    document.getElementById('dashDetailTransfert').innerText='👉 SEUL RETRAIT - '+fmt(c.tValideTotal)+' validés • '+c.tValideCount+' retraits • Commission barème = '+fmt(c.comTransfert);
-  }
+const c=calcCommissions();
+document.getElementById('dashComForfait').innerText=fmt(c.comForfait);
+document.getElementById('dashDetailForfait').innerText=fmt(c.fValideTotal)+' • '+c.fValideCount+' cmds';
+document.getElementById('dashComTransfert').innerText=fmt(c.comTransfert);
+document.getElementById('dashDetailTransfert').innerText='Retrait '+fmt(c.tRetraitCom)+' + Envoi '+fmt(c.tEnvoiCom);
+document.getElementById('dashComXbet').innerText=fmt(c.comXbet);
+document.getElementById('dashDetailXbet').innerText='Depot '+fmt(c.xDepotCom)+' + Retrait '+fmt(c.xRetraitCom);
+document.getElementById('dashComTotal').innerText=fmt(c.total);
+document.getElementById('dashDetailTotal').innerText='Forfaits '+fmt(c.comForfait)+' + Transfert '+fmt(c.comTransfert)+' + 1XBET '+fmt(c.comXbet);
+document.getElementById('dashForfait').classList.toggle('active', currentTab==='forfaits');
+document.getElementById('dashTransfert').classList.toggle('active', currentTab==='transfert');
+document.getElementById('dashXbet').classList.toggle('active', currentTab==='1xbet');
+document.getElementById('dashTotal').classList.toggle('active', currentTab==='all');
 }
 async function loadCommissionsDB(){
-  try{
-    const snap=await db.ref('commissions').once('value');
-    let f=0,t=0,fc=0,tc=0;
-    snap.forEach(userSnap=>{ userSnap.forEach(cSnap=>{ const v=cSnap.val()||{}; const com=parseFloat(v.commission||0); const svc=(v.service||v.type||'').toString().toLowerCase(); if(svc.includes('forfait')){ f+=com; fc++; } else if(svc.includes('transfert')||svc.includes('retrait')){ t+=com; tc++; } }); });
-    commissionsData={forfait:f,transfert:t,forfaitCount:fc,transfertCount:tc};
-  }catch(e){ console.log('commissions load',e); }
+try{
+const snap=await db.ref('commissions').once('value');
+let f=0,t=0,x=0,fc=0,tc=0,xc=0;
+snap.forEach(userSnap=>{ userSnap.forEach(cSnap=>{ const v=cSnap.val()||{}; const com=parseFloat(v.commission||0); const svc=(v.service||v.type||'').toString().toLowerCase(); if(svc.includes('forfait')){ f+=com; fc++; } else if(svc.includes('1xbet')){ x+=com; xc++; } else if(svc.includes('transfert')||svc.includes('retrait')||svc.includes('envoi')){ t+=com; tc++; } }); });
+commissionsData={forfait:f,transfert:t,xbet:x,forfaitCount:fc,transfertCount:tc,xbetCount:xc};
+}catch(e){ console.log('commissions load',e); }
 }
-
 async function loadAll(){
-  const btn=document.getElementById('btnRefresh'); if(btn) btn.innerText='⏳...';
-  allData=[]; counts={}; SERVICES.forEach(s=>counts[s.key]=0);
-  const pr=SERVICES.filter(s=>s.path).map(s=>db.ref(s.path).limitToLast(400).once('value').then(snap=>{
-    snap.forEach(ch=>{ const v=ch.val(); const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:parseFloat(v.montant||v.total||v.prix||0),statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v}; it._time=getTime(it); allData.push(it); counts[s.key]++; });
-  }));
-  await Promise.all([Promise.all(pr), loadCommissionsDB()]);
-  allData.sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;});
-  SERVICES.forEach(s=>{const el=document.getElementById('count-'+s.key); if(el) el.innerText=s.key==='all'?allData.length:(counts[s.key]||0);});
-  document.getElementById('totalCount').innerText=allData.length+' cmds';
-  document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR');
-  updateStats(allData); updateDashboard(); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
-  if(btn) btn.innerText='🔄 Actualiser';
+const btn=document.getElementById('btnRefresh'); if(btn) btn.innerText='⏳';
+allData=[]; counts={}; SERVICES.forEach(s=>counts[s.key]=0);
+const pr=SERVICES.filter(s=>s.path).map(s=>db.ref(s.path).limitToLast(400).once('value').then(snap=>{
+snap.forEach(ch=>{ const v=ch.val(); const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:parseFloat(v.montant||v.total||v.prix||0),statut:(v.statut||v.status||'en cours').toLowerCase(),date:v.date||v.created_at||'',data:v}; it._time=getTime(it); allData.push(it); counts[s.key]++; });
+}));
+await Promise.all([Promise.all(pr), loadCommissionsDB()]);
+allData.sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;});
+SERVICES.forEach(s=>{const el=document.getElementById('count-'+s.key); if(el) el.innerText=s.key==='all'?allData.length:(counts[s.key]||0);});
+document.getElementById('totalCount').innerText=allData.length+' cmds';
+document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR');
+updateStats(allData); updateDashboard(); render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
+if(btn) btn.innerText='🔄';
 }
 function refreshData(){ loadAll(); }
 function updateStats(list){let en=0,va=0,re=0; list.forEach(i=>{if(getPriority(i.statut)===0) en++; if(i.statut.includes('valid')) va++; if(i.statut.includes('annul')||i.statut.includes('rejet')) re++;}); document.getElementById('stEnCours').innerText=en; document.getElementById('stValide').innerText=va; document.getElementById('stRejete').innerText=re; document.getElementById('stTotal').innerText=list.length;}
 function switchTab(key){currentTab=key; document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+key)?.classList.add('active'); let list=key==='all'?allData:allData.filter(d=>d.service===key); list=[...list].sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut); if(pa!==pb) return pa-pb; return b._time-a._time;}); updateStats(list); updateDashboard(); render(list);}
-function buildClientDetails(item){
-  const d=item.data; const priorityKeys=['montant','total','prix','reseau','numero','numero_beneficiaire','beneficiaire','client_nom','nom','motif','forfait','reference','compte_1xbet','type'];
-  const com=getCommissionForItem(item);
-  let html=`<div class="client-main">${item.client_id||item.phone||''} ${item.montant?'- '+item.montant+' F':''} ${d.preuve_url||d.capture_url?'📸':''}`;
-  if(item.statut.includes('valid') && com>0){
-    if(item.service==='forfaits') html+=` <span style="background:#8BC34A;color:#000;padding:1px 4px;border-radius:8px;font-size:7px">COM 4% = ${com} F</span>`;
-    else html+=` <span style="background:#00BCD4;color:#000;padding:1px 4px;border-radius:8px;font-size:7px">COM RETRAIT = ${com} F</span>`;
-  }
-  html+=`</div>`;
-  priorityKeys.forEach(k=>{ if(d[k]===undefined||d[k]===''||d[k]===null) return; html+=`<div class="kv"><b>${k}:</b><span>${String(d[k]).slice(0,60)}</span></div>`; });
-  if(item.statut.includes('valid') && com>0){ html+=`<div class="kv"><b>COM:</b><span style="color:#0f0">${com} F ${item.service==='forfaits'?'(4%)':'(Barème Retrait)'}</span></div>`; }
-  return html;
-}
 function keyOf(item){return item.path+'|'+item.id;}
 function updateBulkBar(){ const bar=document.getElementById('bulkBar'); document.getElementById('bulkCount').innerText=selected.size+' sélectionné(s)'; bar.classList.toggle('show', selected.size>0); const allVisible = currentList.filter(i=>getPriority(i.statut)===0); const checkAll=document.getElementById('checkAll'); if(checkAll) checkAll.checked = allVisible.length>0 && allVisible.every(i=>selected.has(keyOf(i))); }
-function toggleSelect(path,id,checked,el){ const k=path+'|'+id; if(checked) selected.add(k); else selected.delete(k); if(el){ const tr=el.closest('tr'); if(tr) tr.classList.toggle('selected',checked); } updateBulkBar(); }
+function toggleSelect(path,id,checked,el){ const k=path+'|'+id; if(checked) selected.add(k); else selected.delete(k); if(el){ const tr=el.closest('.card'); if(tr) tr.classList.toggle('selected',checked); } updateBulkBar(); }
 function toggleSelectAll(checked){ currentList.forEach(item=>{ if(getPriority(item.statut)!==0) return; const k=keyOf(item); if(checked) selected.add(k); else selected.delete(k); }); render(currentList); }
 function clearSelection(){ selected.clear(); render(currentList); }
 async function bulkAction(newStatut){
-  if(selected.size===0){ alert('Coche au moins 1 commande'); return; }
-  if(!confirm(newStatut.toUpperCase()+' les '+selected.size+' commandes sélectionnées ?')) return;
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; const items=[];
-  selected.forEach(k=>{ const [path,id]=k.split('|'); const item=allData.find(x=>x.path===path&&x.id===id); if(item) items.push(item); up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone(); });
-  await db.ref().update(up);
-  if(newStatut.toLowerCase().includes('valid')){
-    for(const it of items){
-      if(it.path==='commandes_forfaits') await envoyerCommissionForfait(it);
-      if(it.path==='commandes_transferts' && isRetrait(it)) await envoyerCommissionTransfert(it);
-      if(it.path==='commandes_retraits') await envoyerCommissionTransfert(it);
-    }
-  }
-  alert('✅ '+items.length+' commandes -> '+newStatut); selected.clear(); loadAll();
+if(selected.size===0){ showToast('Coche au moins 1 commande',true); return; }
+const btn = newStatut==='validé' ? document.getElementById('btnBulkVal') : document.getElementById('btnBulkAnn');
+if(btn){ btn.disabled=true; btn.innerText='⏳...'; }
+const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; const items=[];
+selected.forEach(k=>{ const [path,id]=k.split('|'); const item=allData.find(x=>x.path===path&&x.id===id); if(item) items.push(item); up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone(); });
+try{
+await db.ref().update(up);
+if(newStatut.toLowerCase().includes('valid')){
+for(const it of items){
+if(it.path==='commandes_forfaits') await envoyerCommissionForfait(it);
+if(it.path==='commandes_transferts' && isRetrait(it)) await envoyerCommissionTransfert(it);
+if(it.path==='commandes_transferts' && isEnvoi(it)) await envoyerCommissionEnvoi(it);
+if(it.path==='commandes_retraits') await envoyerCommissionTransfert(it);
+if(it.path==='commandes_depots') await envoyerCommissionEnvoi(it);
+if(it.path==='commandes_1xbet') await envoyerCommissionXbet(it);
+}
+}
+showToast('✅ '+items.length+' commandes -> '+newStatut);
+selected.clear();
+}catch(e){ showToast('❌ Erreur : '+e.message,true); }
+if(btn){ btn.disabled=false; btn.innerText = newStatut==='validé' ? '✅ TOUT VALIDER' : '❌ TOUT ANNULER'; }
+loadAll();
 }
 function bulkValidate(){ bulkAction('validé'); }
 function bulkCancel(){ bulkAction('annulé'); }
 function render(list){
-  currentList=list; const tb=document.getElementById('tbody'); tb.innerHTML='';
-  if(list.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center">Aucune commande</td></tr>'; updateBulkBar(); return;}
-  list.slice(0,600).forEach((item,idx)=>{
-    let badge='wait'; if(item.statut.includes('valid')) badge='ok'; else if(item.statut.includes('annul')||item.statut.includes('rejet')) badge='no';
-    const hasPreuve = item.data.preuve_url || item.data.capture_url; const isEnCours = getPriority(item.statut)===0; const k=keyOf(item); const isChecked=selected.has(k);
-    const tr=document.createElement('tr'); tr.className=(isEnCours?'en-cours':'')+' clickable'+(isChecked?' selected':''); tr.onclick=function(){ openDetail(item.path,item.id); };
-    tr.innerHTML=`<td class="col-check" onclick="event.stopPropagation()">${isEnCours?`<input type="checkbox" class="chk" ${isChecked?'checked':''} onchange="toggleSelect('${item.path}','${item.id}',this.checked,this)">`:`<span style="font-size:8px;color:#555">-</span>`}</td><td class="col-service"><b style="color:#ffeb3b;font-size:8px">${item.serviceLabel}</b><br><span class="small">${item.id.slice(0,8)}</span>${hasPreuve?'<br><span style="background:#0d6efd;color:#fff;padding:1px 4px;border-radius:8px;font-size:7px">📸</span>':''}</td><td class="col-client">${buildClientDetails(item)}</td><td class="col-statut"><span class="badge ${badge}">${item.statut.toUpperCase().slice(0,12)}</span></td><td class="col-date"><span class="small">${(item.date||'').slice(0,16)}<br>#${idx+1}</span></td><td class="col-action"><button class="btn btn-view" onclick="event.stopPropagation();openDetail('${item.path}','${item.id}')">👁️</button><button class="btn btn-val" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','validé')">✅</button><button class="btn btn-ann" onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','annulé')">❌</button></td>`;
-    tb.appendChild(tr);
-  }); updateBulkBar();
+currentList=list; const el=document.getElementById('list'); el.innerHTML='';
+if(list.length===0){el.innerHTML='<div class="empty">Aucune commande</div>'; updateBulkBar(); return;}
+list.slice(0,600).forEach((item,idx)=>{
+let badge='wait'; let badgeTxt='EN COURS'; if(item.statut.includes('valid')){ badge='ok'; badgeTxt='VALIDÉ'; } else if(item.statut.includes('annul')||item.statut.includes('rejet')){ badge='no'; badgeTxt='ANNULÉ'; }
+const hasPreuve = item.data.preuve_url || item.data.capture_url; const isEnCours = getPriority(item.statut)===0; const k=keyOf(item); const isChecked=selected.has(k);
+const isBusy = processing.has(k);
+const com=getCommissionForItem(item);
+const d=item.data;
+let comHtml='';
+if(item.statut.includes('valid') && com>0){
+if(item.service==='forfaits') comHtml=`<div class="com-box green">Commission 4% • ${com} F</div>`;
+else if(item.service==='1xbet' && isRetrait(item)) comHtml=`<div class="com-box blue">Commission Retrait • ${com} F</div>`;
+else if(item.service==='1xbet') comHtml=`<div class="com-box blue2">Commission 1% Depot • ${com} F</div>`;
+else if(isEnvoi(item)) comHtml=`<div class="com-box yellow">Commission Envoi ${getReseau(item)} • ${com} F</div>`;
+else if(isRetrait(item)) comHtml=`<div class="com-box blue">Commission Retrait • ${com} F</div>`;
+} else if(!item.statut.includes('valid') && com>0){
+comHtml=`<div class="com-box yellow" style="opacity:.8">Si validé : ${com} F • ${getLabelCommission(item)}</div>`;
+}
+const nom = d.client_nom || d.nom || d.beneficiaire || d.numero_beneficiaire || '';
+const typeTxt = d.type || d.motif || '';
+const reseauTxt = getReseau(item) || d.reseau || '';
+const div=document.createElement('div');
+div.className='card'+(isEnCours?' en-cours':'')+(isChecked?' selected':'')+(isBusy?' validating':'');
+div.innerHTML=`<div class="card-top"><div class="card-check">${isEnCours?`<input type="checkbox" class="chk" ${isChecked?'checked':''} onchange="toggleSelect('${item.path}','${item.id}',this.checked,this)">`:''}<div><div class="client-phone">${item.client_id||item.phone||'-'} <span style="color:#fff;font-size:13px">• ${fmt(item.montant)}</span> ${hasPreuve?'📸':''}</div><div class="client-meta">${nom?nom+' • ':''}${typeTxt? typeTxt+' • ':''}#${idx+1}</div></div></div><span class="service">${item.serviceLabel}</span><span class="badge ${badge}">${isBusy?'⏳...':badgeTxt}</span></div><div class="card-grid"><div class="kv"><b>Montant</b><span>${fmt(item.montant)}</span></div><div class="kv"><b>Réseau</b><span>${reseauTxt||'-'}</span></div><div class="kv"><b>Type</b><span>${typeTxt||'-'}</span></div><div class="kv"><b>Date</b><span>${(item.date||'').slice(0,16)||'-'}</span></div></div>${comHtml}<div class="actions"><button class="btn btn-view" onclick="openDetail('${item.path}','${item.id}')">👁️ Voir</button><button class="btn btn-val" ${isBusy?'disabled':''} onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','validé',this)">${isBusy?'⏳':'✅ Valider'}</button><button class="btn btn-ann" ${isBusy?'disabled':''} onclick="event.stopPropagation();quickAction('${item.path}','${item.id}','annulé',this)">❌ Annuler</button></div>`;
+div.onclick=function(e){ if(e.target.tagName!=='BUTTON' && e.target.tagName!=='INPUT') openDetail(item.path,item.id); };
+el.appendChild(div);
+}); updateBulkBar();
 }
 function filtrer(){const q=document.getElementById('search').value.toLowerCase(); if(!q){switchTab(currentTab); return;} const base=currentTab==='all'?allData:allData.filter(d=>d.service===currentTab); const f=base.filter(i=>JSON.stringify(i).toLowerCase().includes(q)); render(f);}
 function openDetail(path,id){
-  const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item;
-  document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id; document.getElementById('customStatus').value=item.statut;
-  let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut actuel</span><b>${item.statut}</b></div>`;
-  if(item.statut.includes('valid')){
-    const com=getCommissionForItem(item);
-    if(item.service==='forfaits') html+=`<div class="row" style="background:#1a3a1a"><span>Commission 4%</span><b style="color:#0f0">${com} F</b></div>`;
-    if(isRetrait(item)) html+=`<div class="row" style="background:#0a2a33"><span>Commission Retrait (Barème)</span><b style="color:#00BCD4">${com} F</b></div>`;
-  }
-  Object.keys(item.data).forEach(k=>{ if(k==='preuve_base64') return; if(k==='preuve_url' || k==='capture_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir</a></b></div>`; else if(typeof item.data[k]!=='object') html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${String(item.data[k]).slice(0,400)}</b></div>`; });
-  document.getElementById('mContent').innerHTML=html;
-  const pc=document.getElementById('preuveCurrent');
-  if(item.data.preuve_url || item.data.capture_url){ const u = item.data.preuve_url || item.data.capture_url; pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée:</div><img src="${u}" class="preuve-img" style="display:block"><div style="font-size:9px"><a href="${u}" target="_blank" style="color:#0d6efd">Ouvrir</a></div>`; } else { pc.innerHTML=`<div style="color:#aaa;font-size:10px">Aucune preuve.</div>`; }
-  document.getElementById('previewImg').style.display='none'; document.getElementById('preuveFile').value=''; document.getElementById('modal').style.display='flex';
+const item=allData.find(x=>x.path===path&&x.id===id); if(!item) return; currentItem=item;
+document.getElementById('mTitle').innerText=item.serviceLabel+' - '+id; document.getElementById('customStatus').value=item.statut;
+let html=`<div class="row"><span>Client</span><b>${item.client_id}</b></div><div class="row"><span>Montant</span><b style="color:#0f0">${item.montant} F</b></div><div class="row"><span>Statut actuel</span><b>${item.statut}</b></div><div class="row"><span>Réseau</span><b>${getReseau(item)||'-'}</b></div>`;
+if(item.statut.includes('valid')){
+const com=getCommissionForItem(item);
+if(item.service==='forfaits') html+=`<div class="row" style="background:#1a3a1a"><span>Commission 4%</span><b style="color:#0f0">${com} F</b></div>`;
+if(item.service==='1xbet' && isRetrait(item)) html+=`<div class="row" style="background:#0a2a33"><span>Commission 1XBET Retrait</span><b style="color:#00BCD4">${com} F</b></div>`;
+if(item.service==='1xbet' && !isRetrait(item)) html+=`<div class="row" style="background:#0a1a33"><span>Commission 1XBET Depot 1%</span><b style="color:#2196F3">${com} F</b></div>`;
+if(isEnvoi(item)) html+=`<div class="row" style="background:#2a2a00"><span>Commission Envoi ${getReseau(item)}</span><b style="color:#ffeb3b">${com} F</b></div>`;
+if(isRetrait(item) && item.service!=='1xbet') html+=`<div class="row" style="background:#0a2a33"><span>Commission Retrait</span><b style="color:#00BCD4">${com} F</b></div>`;
+} else {
+const comPrev=getCommissionForItem(item);
+if(comPrev>0) html+=`<div class="row"><span>Commission si validé</span><b style="color:#ffeb3b">${comPrev} F (${getLabelCommission(item)})</b></div>`;
+}
+Object.keys(item.data).forEach(k=>{ if(k==='preuve_base64') return; if(k==='preuve_url' || k==='capture_url') html+=`<div class="row"><span>Preuve</span><b><a href="${item.data[k]}" target="_blank" style="color:#0d6efd">Voir</a></b></div>`; else if(typeof item.data[k]!=='object') html+=`<div class="row"><span>${k}</span><b style="max-width:60%;word-break:break-all;font-size:11px">${String(item.data[k]).slice(0,400)}</b></div>`; });
+document.getElementById('mContent').innerHTML=html;
+const pc=document.getElementById('preuveCurrent');
+if(item.data.preuve_url || item.data.capture_url){ const u = item.data.preuve_url || item.data.capture_url; pc.innerHTML=`<div style="color:#0f0;font-size:10px">✅ Preuve déjà envoyée:</div><img src="${u}" class="preuve-img" style="display:block"><div style="font-size:9px"><a href="${u}" target="_blank" style="color:#0d6efd">Ouvrir</a></div>`; } else { pc.innerHTML=`<div style="color:#aaa;font-size:10px">Aucune preuve.</div>`; }
+document.getElementById('previewImg').style.display='none'; document.getElementById('preuveFile').value=''; document.getElementById('modal').style.display='flex';
 }
 function closeModal(){document.getElementById('modal').style.display='none'; currentItem=null;}
 document.getElementById('preuveFile').addEventListener('change', function(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=function(ev){ const img=document.getElementById('previewImg'); img.src=ev.target.result; img.style.display='block'; }; reader.readAsDataURL(file); });
-async function doUploadPreuve(){ const file=document.getElementById('preuveFile').files[0]; if(!file){ alert('Choisis une image'); return null; } document.getElementById('upProgress').style.display='block'; document.getElementById('upBar').style.width='40%'; try{ const b64=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=rej; fr.readAsDataURL(file); }); document.getElementById('upBar').style.width='70%'; const url=await uploadToCloudinary(b64); document.getElementById('upBar').style.width='100%'; return url; }catch(e){ alert('Erreur upload: '+e.message); return null; } finally{ setTimeout(()=>{document.getElementById('upProgress').style.display='none'; document.getElementById('upBar').style.width='0%';},1000); } }
+async function doUploadPreuve(){ const file=document.getElementById('preuveFile').files[0]; if(!file){ showToast('Choisis une image',true); return null; } document.getElementById('upProgress').style.display='block'; document.getElementById('upBar').style.width='40%'; try{ const b64=await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.onerror=rej; fr.readAsDataURL(file); }); document.getElementById('upBar').style.width='70%'; const url=await uploadToCloudinary(b64); document.getElementById('upBar').style.width='100%'; return url; }catch(e){ showToast('Erreur upload: '+e.message,true); return null; } finally{ setTimeout(()=>{document.getElementById('upProgress').style.display='none'; document.getElementById('upBar').style.width='0%';},1000); } }
 async function saveCustomStatus(){
-  if(!currentItem) return; const newStatus=document.getElementById('customStatus').value.trim(); if(!newStatus){ alert('Écris un statut'); return; }
-  const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']=newStatus; up[currentItem.path+'/'+currentItem.id+'/status']=newStatus; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/updated_by']=getPhone();
-  await db.ref().update(up);
-  if(newStatus.toLowerCase().includes('valid') && currentItem.path==='commandes_forfaits'){ await envoyerCommissionForfait(currentItem); alert('✅ '+newStatus+' + Commission 4% envoyée'); }
-  else if(newStatus.toLowerCase().includes('valid') && (currentItem.path==='commandes_transferts' || currentItem.path==='commandes_retraits') && isRetrait(currentItem)){ await envoyerCommissionTransfert(currentItem); alert('✅ '+newStatus+' + Commission Retrait '+getCommissionRetrait(currentItem.montant)+' F'); }
-  else { alert('✅ Statut: '+newStatus); }
-  closeModal(); loadAll();
+if(!currentItem) return; const newStatus=document.getElementById('customStatus').value.trim(); if(!newStatus){ showToast('Écris un statut',true); return; }
+const btn=document.getElementById('btnCustomStatus'); btn.disabled=true; btn.innerText='⏳...';
+const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']=newStatus; up[currentItem.path+'/'+currentItem.id+'/status']=newStatus; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/updated_by']=getPhone();
+try{
+await db.ref().update(up);
+if(newStatus.toLowerCase().includes('valid') && currentItem.path==='commandes_forfaits'){ await envoyerCommissionForfait(currentItem); showToast('✅ '+newStatus+' + Commission 4%'); }
+else if(newStatus.toLowerCase().includes('valid') && currentItem.path==='commandes_1xbet'){ await envoyerCommissionXbet(currentItem); showToast('✅ '+newStatus+' + Commission 1XBET '+getCommissionForItem(currentItem)+' F'); }
+else if(newStatus.toLowerCase().includes('valid') && isEnvoi(currentItem)){ await envoyerCommissionEnvoi(currentItem); showToast('✅ '+newStatus+' + Commission Envoi '+getReseau(currentItem)+' '+getCommissionEnvoi(currentItem.montant,getReseau(currentItem))+' F'); }
+else if(newStatus.toLowerCase().includes('valid') && (currentItem.path==='commandes_transferts' || currentItem.path==='commandes_retraits') && isRetrait(currentItem)){ await envoyerCommissionTransfert(currentItem); showToast('✅ '+newStatus+' + Commission Retrait '+getCommissionRetrait(currentItem.montant)+' F'); }
+else { showToast('✅ Statut: '+newStatus); }
+}catch(e){ showToast('❌ '+e.message,true); }
+btn.disabled=false; btn.innerText='💾 Enregistrer ce statut';
+closeModal(); loadAll();
 }
 async function uploadPreuveSeule(){
-  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO; up[currentItem.path+'/'+currentItem.id+'/preuve_by']=getPhone(); up[currentItem.path+'/'+currentItem.id+'/preuve_date_fr']=nowFR;
-  await db.ref().update(up); alert('✅ Preuve envoyée !'); loadAll(); const ph=currentItem.client_id||currentItem.phone; if(ph){ db.ref('notifications/'+ph).push({titre:'Preuve disponible 📸', message:`Votre transfert ${currentItem.montant}F a une preuve`, date:nowFR, preuve_url:url, type:'preuve', commande_id:currentItem.id}); }
+if(!currentItem) return; const btn=document.getElementById('btnPreuveSeule'); btn.disabled=true; btn.innerText='⏳...'; const url=await doUploadPreuve(); btn.disabled=false; btn.innerText='📤 PREUVE SEULE'; if(!url) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url; up[currentItem.path+'/'+currentItem.id+'/preuve_date']=nowISO; up[currentItem.path+'/'+currentItem.id+'/preuve_by']=getPhone(); up[currentItem.path+'/'+currentItem.id+'/preuve_date_fr']=nowFR;
+await db.ref().update(up); showToast('✅ Preuve envoyée !'); loadAll(); const ph=currentItem.client_id||currentItem.phone; if(ph){ db.ref('notifications/'+ph).push({titre:'Preuve disponible 📸', message:`Votre transfert ${currentItem.montant}F a une preuve`, date:nowFR, preuve_url:url, type:'preuve', commande_id:currentItem.id}); }
 }
 async function validerAvecPreuve(){
-  if(!currentItem) return; const url=await doUploadPreuve(); if(!url) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']='validé'; up[currentItem.path+'/'+currentItem.id+'/status']='validé'; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url;
-  await db.ref().update(up);
-  if(currentItem.path==='commandes_forfaits') await envoyerCommissionForfait(currentItem);
-  if((currentItem.path==='commandes_transferts' || currentItem.path==='commandes_retraits') && isRetrait(currentItem)) await envoyerCommissionTransfert(currentItem);
-  alert('✅ Validé + Preuve'); closeModal(); loadAll();
+if(!currentItem) return; const btn=document.getElementById('btnValiderPreuve'); btn.disabled=true; btn.innerText='⏳...'; const url=await doUploadPreuve(); btn.disabled=false; btn.innerText='✅ VALIDER + PREUVE'; if(!url) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[currentItem.path+'/'+currentItem.id+'/statut']='validé'; up[currentItem.path+'/'+currentItem.id+'/status']='validé'; up[currentItem.path+'/'+currentItem.id+'/updated_at']=nowISO; up[currentItem.path+'/'+currentItem.id+'/updated_at_fr']=nowFR; up[currentItem.path+'/'+currentItem.id+'/preuve_url']=url; up[currentItem.path+'/'+currentItem.id+'/capture_url']=url;
+await db.ref().update(up);
+if(currentItem.path==='commandes_forfaits') await envoyerCommissionForfait(currentItem);
+if(currentItem.path==='commandes_1xbet') await envoyerCommissionXbet(currentItem);
+if(isEnvoi(currentItem)) await envoyerCommissionEnvoi(currentItem);
+if((currentItem.path==='commandes_transferts' || currentItem.path==='commandes_retraits') && isRetrait(currentItem)) await envoyerCommissionTransfert(currentItem);
+showToast('✅ Validé + Preuve'); closeModal(); loadAll();
 }
 async function envoyerCommissionForfait(item){
-  try{ const montant=parseFloat(item.montant||0); if(montant<=0) return; const commission=getCommissionForfait(montant); const ph=item.client_id||item.phone; if(!ph) return; const nowFR=new Date().toLocaleString('fr-FR');
-    await db.ref('commissions/'+ph).push({type:'forfait',commande_id:item.id,montant_achat:montant,commission:commission,pourcentage:4,date:nowFR,date_iso:new Date().toISOString(),service:'FORFAITS'});
-    const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
-    await db.ref('notifications/'+ph).push({titre:`Commission 4% : +${commission}F`,message:`Forfait ${montant}F validé. Commission ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
-  }catch(e){ console.error(e); }
+try{ const montant=parseFloat(item.montant||0); if(montant<=0) return; const commission=getCommissionForfait(montant); const ph=item.client_id||item.phone; if(!ph) return; const nowFR=new Date().toLocaleString('fr-FR');
+await db.ref('commissions/'+ph).push({type:'forfait',commande_id:item.id,montant_achat:montant,commission:commission,pourcentage:4,date:nowFR,date_iso:new Date().toISOString(),service:'FORFAITS'});
+const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
+await db.ref('notifications/'+ph).push({titre:`Commission 4% : +${commission}F`,message:`Forfait ${montant}F validé. Commission ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
+}catch(e){ console.error(e); }
 }
 async function envoyerCommissionTransfert(item){
-  try{
-    const montant=parseFloat(item.montant||0); if(montant<=0) return;
-    const commission=getCommissionRetrait(montant);
-    const ph=item.client_id||item.phone; if(!ph) return;
-    const nowFR=new Date().toLocaleString('fr-FR');
-    await db.ref('commissions/'+ph).push({type:'retrait',commande_id:item.id,montant_achat:montant,commission:commission,bareme:'retrait',date:nowFR,date_iso:new Date().toISOString(),service:'TRANSFERT'});
-    const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
-    await db.ref('notifications/'+ph).push({titre:`Commission Retrait : +${commission}F`,message:`Retrait ${montant}F validé. Commission barème ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
-  }catch(e){ console.error(e); }
+try{
+const montant=parseFloat(item.montant||0); if(montant<=0) return;
+const commission=getCommissionRetrait(montant);
+const ph=item.client_id||item.phone; if(!ph) return;
+const nowFR=new Date().toLocaleString('fr-FR');
+await db.ref('commissions/'+ph).push({type:'retrait',commande_id:item.id,montant_achat:montant,commission:commission,bareme:'retrait',date:nowFR,date_iso:new Date().toISOString(),service:'TRANSFERT'});
+const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
+await db.ref('notifications/'+ph).push({titre:`Commission Retrait : +${commission}F`,message:`Retrait ${montant}F validé. Commission barème ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
+}catch(e){ console.error(e); }
 }
-function quickAction(path,id,newStatut){
-  if(!confirm(newStatut.toUpperCase()+' ?')) return; const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone();
-  db.ref().update(up).then(async ()=>{
-    const item=allData.find(x=>x.id===id&&x.path===path);
-    if(path==='commandes_forfaits' && newStatut.toLowerCase().includes('valid')){ if(item) await envoyerCommissionForfait(item); alert('✅ '+newStatut+' + Commission 4%'); }
-    else if((path==='commandes_transferts'||path==='commandes_retraits') && newStatut.toLowerCase().includes('valid') && item && isRetrait(item)){ await envoyerCommissionTransfert(item); alert('✅ '+newStatut+' + Commission Retrait '+getCommissionRetrait(item.montant)+' F'); }
-    else { alert('✅ '+newStatut); }
-    loadAll();
-  });
+async function envoyerCommissionEnvoi(item){
+try{
+const montant=parseFloat(item.montant||0); if(montant<=0) return;
+const reseau=getReseau(item);
+const commission=getCommissionEnvoi(montant,reseau);
+const ph=item.client_id||item.phone; if(!ph) return;
+const nowFR=new Date().toLocaleString('fr-FR');
+await db.ref('commissions/'+ph).push({type:'envoi',commande_id:item.id,montant_achat:montant,commission:commission,reseau:reseau,date:nowFR,date_iso:new Date().toISOString(),service:'TRANSFERT'});
+const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
+await db.ref('notifications/'+ph).push({titre:`Commission Envoi ${reseau} : +${commission}F`,message:`Envoi ${reseau} ${montant}F validé. Commission ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
+}catch(e){ console.error(e); }
 }
-function validerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'validé'); closeModal();}
-function annulerCurrent(){if(!currentItem) return; quickAction(currentItem.path,currentItem.id,'annulé'); closeModal();}
-function notifierCurrent(){if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>alert('Envoyé'));}
+async function envoyerCommissionXbet(item){
+try{
+const montant=parseFloat(item.montant||0); if(montant<=0) return;
+const commission=getCommissionForItem(item);
+const isR=isRetrait(item);
+const ph=item.client_id||item.phone; if(!ph) return;
+const nowFR=new Date().toLocaleString('fr-FR');
+await db.ref('commissions/'+ph).push({type:isR?'retrait_1xbet':'depot_1xbet',commande_id:item.id,montant_achat:montant,commission:commission,pourcentage:isR?0:1,bareme:isR?'retrait':'1pct',date:nowFR,date_iso:new Date().toISOString(),service:'1XBET'});
+const soldeRef=db.ref('users/'+ph+'/solde'); const snap=await soldeRef.once('value'); const ancien=parseFloat(snap.val()||0); await soldeRef.set(ancien+commission);
+await db.ref('notifications/'+ph).push({titre:isR?`Commission 1XBET Retrait : +${commission}F`:`Commission 1XBET Depot 1% : +${commission}F`,message:isR?`1XBET Retrait ${montant}F validé. Commission barème ${commission}F créditée.`:`1XBET Depot ${montant}F validé. Commission 1% ${commission}F créditée.`,date:nowFR,type:'commission',montant:commission});
+}catch(e){ console.error(e); }
+}
+async function quickAction(path,id,newStatut,btnEl){
+const k=path+'|'+id;
+if(processing.has(k)) return;
+processing.add(k);
+if(btnEl){ btnEl.disabled=true; btnEl.innerText='⏳'; }
+const item=allData.find(x=>x.id===id&&x.path===path);
+if(item){
+const oldStatut=item.statut;
+item.statut=newStatut;
+render(currentList);
+try{
+const nowISO=new Date().toISOString(); const nowFR=new Date().toLocaleString('fr-FR'); const up={}; up[path+'/'+id+'/statut']=newStatut; up[path+'/'+id+'/status']=newStatut; up[path+'/'+id+'/updated_at']=nowISO; up[path+'/'+id+'/updated_at_fr']=nowFR; up[path+'/'+id+'/updated_by']=getPhone();
+await db.ref().update(up);
+if(newStatut.toLowerCase().includes('valid')){
+if(path==='commandes_forfaits'){ await envoyerCommissionForfait(item); showToast('✅ Validé + Commission 4% = '+getCommissionForfait(item.montant)+' F'); }
+else if(path==='commandes_1xbet'){ await envoyerCommissionXbet(item); showToast('✅ Validé + Commission 1XBET '+getCommissionForItem(item)+' F'); }
+else if(isEnvoi(item)){ await envoyerCommissionEnvoi(item); showToast('✅ Validé + Commission Envoi '+getReseau(item)+' '+getCommissionEnvoi(item.montant,getReseau(item))+' F'); }
+else if(isRetrait(item)){ await envoyerCommissionTransfert(item); showToast('✅ Validé + Commission Retrait '+getCommissionRetrait(item.montant)+' F'); }
+else { showToast('✅ Validé'); }
+} else { showToast('❌ Annulé'); }
+}catch(e){ item.statut=oldStatut; showToast('❌ Erreur : '+e.message,true); }
+processing.delete(k);
+loadAll();
+} else { processing.delete(k); }
+}
+function validerCurrent(){if(!currentItem) return; const it=currentItem; closeModal(); quickAction(it.path,it.id,'validé',document.getElementById('btnValiderCurrent')); }
+function annulerCurrent(){if(!currentItem) return; const it=currentItem; closeModal(); quickAction(it.path,it.id,'annulé',document.getElementById('btnAnnulerCurrent')); }
+function notifierCurrent(){if(!currentItem) return; let t=prompt('Titre:',currentItem.serviceLabel); if(!t) return; let m=prompt('Message:'); if(!m) return; const ph=currentItem.client_id||currentItem.phone; db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>showToast('🔔 Envoyé'));}
 initTabs();
 firebase.auth().onAuthStateChanged(function(user){ if(user){ loadAll(); } else { firebase.auth().signInAnonymously(); } });
 setInterval(()=>{ refreshData(); }, 30000);
