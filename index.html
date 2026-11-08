@@ -11,15 +11,7 @@ window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async function(OneSignal){
   await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
 });
-async function activerNotifications(){
-  if(window.AppInventor){alert('✅ Notifications APK actives');return;}
-  const OS=window.OneSignal; if(!OS)return alert('OneSignal charge...');
-  const p=await OS.Notifications.requestPermission();
-  if(p) alert('✅ Notifications activées!'); else alert('❌ Permission refusée');
-}
 </script>
-<script>(function(){'use strict';if(window.playablesSDK)return;var HANDLER_NAME='playablesGameEventHandler';var ANDROID_BRIDGE_NAME='_MetaPlayablesBridge';var RAF_FRAME_THRESHOLD=3;var gameReadySent=false;var firstInteractionSent=false;var errorSent=false;var frameCount=0;var originalRAF=window.requestAnimationFrame;function hasIOSBridge(){return!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers[HANDLER_NAME])}function hasAndroidBridge(){return!!(window[ANDROID_BRIDGE_NAME]&&typeof window[ANDROID_BRIDGE_NAME].postEvent==='function')}function isInIframe(){return!!(window.parent&&window.parent!==window)}function sendEvent(eventName,payload){var message={type:eventName,payload:payload||{},timestamp:Date.now()};if(hasIOSBridge()){try{window.webkit.messageHandlers[HANDLER_NAME].postMessage(message)}catch(e){}return}if(hasAndroidBridge()){try{var p=payload||{};p.__secureToken=window.__fbAndroidBridgeAuthToken||'';p.timestamp=message.timestamp;window[ANDROID_BRIDGE_NAME].postEvent(eventName,JSON.stringify(p))}catch(e){}return}if(isInIframe()){try{window.parent.postMessage(message,'*')}catch(e){}return}}function onFrame(){if(gameReadySent)return;frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()});return}originalRAF.call(window,onFrame)}if(originalRAF){window.requestAnimationFrame=function(callback){if(!gameReadySent){return originalRAF.call(window,function(timestamp){frameCount++;if(frameCount>=RAF_FRAME_THRESHOLD&&!gameReadySent){gameReadySent=true;sendEvent('game_ready',{frame_count:frameCount,detected_at:Date.now()})}callback(timestamp)})}return originalRAF.call(window,callback)}}function setupFirstInteractionDetection(){var events=['touchstart','mousedown','keydown'];function onFirstInteraction(){if(firstInteractionSent)return;firstInteractionSent=true;sendEvent('user_interaction_start',null);for(var i=0;i<events.length;i++){document.removeEventListener(events[i],onFirstInteraction,true)}}for(var i=0;i<events.length;i++){document.addEventListener(events[i],onFirstInteraction,true)}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setupFirstInteractionDetection)}else{setupFirstInteractionDetection()}window.addEventListener('error',function(event){if(errorSent)return;errorSent=true;sendEvent('error',{message:event.message||'Unknown error',source:event.filename||'',lineno:event.lineno||0,colno:event.colno||0,auto_captured:true})});window.addEventListener('unhandledrejection',function(event){if(errorSent)return;errorSent=true;var reason=event.reason;sendEvent('error',{message:(reason instanceof Error)?reason.message:String(reason),type:'unhandled_promise_rejection',auto_captured:true})});window.playablesSDK={complete:function(score){sendEvent('game_ended',{score:score,completed:true})},error:function(message){if(errorSent)return;errorSent=true;sendEvent('error',{message:message||'Unknown error',auto_captured:false})},sendEvent:function(eventName,payload){if(!eventName||typeof eventName!=='string')return;sendEvent(eventName,payload)}};if(originalRAF){originalRAF.call(window,onFrame)}})();</script>
-<script>(function(){if(window.__playableTouchPatchInstalled)return;window.__playableTouchPatchInstalled=true;var origAdd=EventTarget.prototype.addEventListener;var blockedTypes={touchstart:1,touchmove:1,wheel:1};EventTarget.prototype.addEventListener=function(type,listener,options){if(blockedTypes[type]){if(options===undefined||options===null){options={passive:true}}else if(typeof options==='boolean'){options={capture:options,passive:true}}else{options=Object.assign({},options,{passive:true})}}return origAdd.call(this,type,listener,options)}})();</script>
 <script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
@@ -29,14 +21,10 @@ async function activerNotifications(){
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
 let db,database;
-self.FIREBASE_APPCHECK_DEBUG_TOKEN=true;
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 database=firebase.database();db=database;
-firebase.auth().onAuthStateChanged(function(user){
-  if(user){ tryAutoLogin(); } else { firebase.auth().signInAnonymously().catch(e=>console.log(e)); }
-});
-if(typeof firebase.appCheck==='function')firebase.appCheck().setTokenAutoRefreshEnabled(false);
+firebase.auth().onAuthStateChanged(function(user){ if(user){ tryAutoLogin(); } else { firebase.auth().signInAnonymously().catch(e=>console.log(e)); } });
 </script>
 <script>
 window.lastPidSauve=null;
@@ -58,171 +46,226 @@ setInterval(function(){
 },1500);
 </script>
 <style>
-footer{display:none}
-body{margin:0;padding:5px;font-family:Arial,sans-serif;background:#010;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;box-sizing:border-box}
-.app-container{width:100%;max-width:100%;min-height:calc(100vh - 10px);margin:0 auto;padding:12px;background:#010;border:9px solid #ffc;border-radius:10px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.4);box-sizing:border-box;text-align:center;position:relative}
-.header-actions{display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.btn-action-top{padding:1px 1px;font-size:5px}
-.btn-action-top{background:#ff5000;color:#fff;border:1px solid #fff;padding:5px 8px;font-size:11px;font-weight:bold;border-radius:4px;cursor:pointer}
-.btn-action-top.retrait{background:#c00;color:#fff}
-.notif-bell{position:relative;cursor:pointer;font-size:20px;background:#1e1e1e;border:1px solid #fff;border-radius:6px;padding:5px 10px;margin-right:auto}
-.notif-count{position:absolute;top:-8px;right:-8px;background:#ff5000;color:#fff;font-size:11px;font-weight:bold;border-radius:50%;padding:2px 6px;min-width:18px;text-align:center;display:none}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+*{box-sizing:border-box}
+:root{--bg:#0f0f0f;--card:#1a1a1a;--card2:#111;--text:#fff;--muted:#aaa;--border:#2a2a2a;--input-bg:#000;--nav:#000;--accent:#ffeb3b;--accent2:#ff5000}
+body.light-mode{--bg:#f2f2f2;--card:#fff;--card2:#f8f8f8;--text:#111;--muted:#555;--border:#ddd;--input-bg:#fff;--nav:#fff;--accent:#E65100;--accent2:#E65100}
+body{margin:0;padding:0;font-family:system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app-container{width:100%;max-width:480px;margin:0 auto;background:var(--bg);min-height:100vh;padding:12px 12px 90px;position:relative;color:var(--text)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:4px 0 10px;position:sticky;top:0;background:var(--bg);z-index:20}
+.logo{font-weight:900;font-size:15px;color:var(--accent)}
+.logo span{color:var(--text)}
+.logo small{display:block;font-size:9px;color:var(--muted);font-weight:400}
+.top-icons{display:flex;gap:6px}
+.icon-btn{background:var(--card);border:1px solid var(--border);width:38px;height:38px;border-radius:999px;font-size:16px;cursor:pointer;position:relative;color:var(--text)}
+.notif-count{position:absolute;top:-4px;right:-4px;background:#ff5000;color:#fff;font-size:10px;font-weight:900;border-radius:999px;padding:1px 5px;display:none}
+.header-actions{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.btn-action-top{background:var(--card);color:var(--text);border:1px solid var(--border);padding:8px 10px;font-size:11px;font-weight:800;border-radius:999px;cursor:pointer}
+.btn-action-top.orange{background:#ff5000;border-color:#ff5000;color:#fff}
+.btn-action-top.red{background:#c00;border-color:#c00;color:#fff}
+.user-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;position:relative}
+.user-card-top{display:flex;justify-content:space-between;align-items:flex-start}
+.profile-line{font-size:16px;font-weight:900}
+.profile-line small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.btn-logout{background:var(--input-bg);color:#ff5555;border:1px solid var(--border);padding:6px 10px;font-size:9px;font-weight:900;border-radius:999px;cursor:pointer}
+.soldes-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px}
+.solde-box{background:var(--input-bg);border-radius:12px;padding:10px 6px;text-align:center;border:1px solid var(--border)}
+.solde-box span{display:block;font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.5px}
+.solde-box b{display:block;font-size:14px;margin-top:3px}
+.solde-hint{font-size:10px;color:var(--accent);text-align:center;margin-top:8px;font-weight:800}
+.guide-banner{background:linear-gradient(135deg,#ff5000,#ff8c00);border-radius:14px;padding:12px;text-align:left;margin-bottom:12px;color:#fff}
+.guide-banner b{font-size:14px}
+.guide-banner p{font-size:12px;line-height:1.5;margin:6px 0 8px}
+.guide-btn{background:#fff;color:#E65100;border:none;padding:10px;border-radius:999px;font-weight:900;font-size:12px;cursor:pointer;width:100%}
+.section-title{font-size:12px;font-weight:900;color:var(--accent);margin:12px 0 8px;letter-spacing:.5px}
+.services-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.service-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;color:var(--text)}
+.service-card:active{transform:scale(.97)}
+.service-card .ico{font-size:22px}
+.service-card .name{font-size:11px;font-weight:900;margin-top:4px}
+.service-card .sub{font-size:9px;color:var(--muted)}
+.service-card.wide{grid-column:span 3;background:#ff5000!important;border-color:#ff5000!important;color:#fff!important}
+.service-card.wide .sub{color:#ffe8d0}
+.service-card.orange{background:#ff5000!important;border-color:#ff5000!important;color:#fff!important}
+.service-card.orange .sub{color:#ffe8d0}
+.service-card.has-new{border-color:#ffeb3b;box-shadow:0 0 0 1px #ffeb3b}
+body.light-mode .service-card.has-new{border-color:#E65100;box-shadow:0 0 0 1px #E65100}
 @keyframes borderPulse{0%{box-shadow:0 0 4px rgba(255,80,0,.4)}50%{box-shadow:0 0 14px rgba(255,80,0,.9)}100%{box-shadow:0 0 4px rgba(255,80,0,.4)}}
-/* STYLE RETIRER APPLIQUE AUX SERVICES - COPIE EXACTE */
-.service-btn-new{
-  background:#ff5000!important;
-  color:#fff!important;
-  border:4px solid #aaa!important;
-  border-left:9px solid #fff!important;
-  border-right:15px solid #fff!important;
-  padding:12px 4px!important;
-  font-size:12px!important;
-  font-weight:bold!important;
-  border-radius:4px!important;
-  cursor:pointer;
-  text-transform:uppercase;
-  position:relative;transition:all .3s
-}
-.service-btn-new.has-new{animation:borderPulse 1.2s infinite; border-left-color:#ffeb3b!important}
-.input-group{text-align:left;margin-bottom:8px}
-.input-label{display:block;font-size:12px;color:#fff;margin-bottom:4px;font-weight:bold}
-.input-field,.select-field{width:100%;padding:8px;border-radius:4px;border:5px solid #ff5000;box-sizing:border-box;text-align:center;font-size:14px;font-weight:bold;background:#ff5000;color:#fff}
-.dark-field{background:#1e1e1e!important;color:#fff!important;border:2px solid #fff!important}
-.btn-submit{width:100%;background:#ff5000;color:#fff;border:5px solid #aaaa;padding:10px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-top:5px;display:block}
-.btn-link{background:#500;border:none;color:#fff;text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;display:inline-block}
-.user-header{background:#010;padding:8px;border-radius:6px;border:20px solid #1e1e1e;border-left:12px solid #c00;border-right:14px solid #aaa;margin-bottom:10px;position:relative;text-align:left;cursor:pointer}
-.profile-line{font-size:14px;font-weight:bold;margin-bottom:2px;width:65%}
-.solde-val{font-size:18px;font-weight:bold;color:#0f0}
-.btn-logout{position:absolute;top:1px;right:8px;background:#010;color:#c00;border:4px solid #aaa;border-left:12px solid#fff;border-right:6px solid#fff;padding:5px 10px;font-size:8px;font-weight:bold;border-radius:10px;cursor:pointer}
-.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px}
-.tab-btn{padding:10px 4px;font-size:10px;font-weight:bold;background:#fb3b;color:#fff;border:1px solid #fff;border-radius:4px;cursor:pointer;text-transform:uppercase}
-.tab-btn.btn-home{grid-column:span 2;background:#010;border:10px solid#aaa;color:#fff;font-size:12px;border-right:18px solid#fff;border-left:18px solid #fff!important}
-.tab-btn.btn-full{grid-column:span 2}
-.service-panel{background:#010;color:#fff;padding:10px;border-radius:6px;text-align:left}
-.sub-panel h4{margin:0 0 8px 0;color:#fff;border-bottom:2px solid #fff;padding-bottom:3px;font-size:14px;text-transform:uppercase}
-.about-section{margin-top:15px;padding-top:10px;border-top:1px dashed #666;font-size:11px;background:#010}
-.partners-container{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:5px}
-.partner-logo{width:50px;height:25px;border:1px solid #fff;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:#fff}
-.partner-mtn{background:#fc0;color:#000;border-color:#000}.partner-moov{background:#f60}.partner-celtis{background:#09f}.partner-canal{background:#000}.partner-sbee{background:#2b8a3e}.partner-1xbet{background:#03a}
-.status-msg{display:none;font-size:12px;font-weight:bold;margin-top:8px;text-align:center;color:#006400}
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:15px;box-sizing:border-box}
-.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
-.modal-msg{font-size:15px;margin-bottom:18px}
+.service-card.has-new{animation:borderPulse 1.2s infinite}
+.info-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:12px;text-align:left}
+.info-card h4{margin:0 0 8px;color:var(--accent);font-size:13px}
+.info-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dotted var(--border);font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-row span:last-child{font-weight:900;color:#0f0;white-space:nowrap}
+body.light-mode .info-row span:last-child{color:#1B8A2A}
+.input-group{text-align:left;margin-bottom:10px}
+.input-label{display:block;font-size:12px;font-weight:800;margin-bottom:4px}
+.input-field{width:100%;padding:12px;border-radius:10px;border:1px solid #ff5000;background:#ff5000;color:#fff;text-align:center;font-size:14px;font-weight:800;outline:none}
+.btn-submit{width:100%;background:#ff5000;color:#fff;border:none;padding:13px;font-size:14px;font-weight:900;cursor:pointer;border-radius:12px;margin-top:6px}
+.btn-link{background:none;border:none;color:var(--text);text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px}
+.partners{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:8px}
+.partner-logo{padding:6px 10px;border-radius:999px;font-size:10px;font-weight:900;border:1px solid #333}
+.partner-mtn{background:#fc0;color:#000}.partner-moov{background:#f60;color:#fff}.partner-celtis{background:#09f;color:#fff}.partner-1xbet{background:#03a;color:#fff}.partner-canal{background:#000;color:#fff}.partner-sbee{background:#2b8a3e;color:#fff}
+.bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:var(--nav);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:100}
+.nav-item{background:none;border:none;color:var(--muted);cursor:pointer;text-align:center;font-size:9px;font-weight:800;padding:4px 2px}
+.nav-item.active{color:#ff5000}
+.nav-item .ico{font-size:20px;display:block}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:flex-end;justify-content:center;z-index:9998}
+.modal-box{background:var(--card);color:var(--text);padding:16px;border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:92vh;overflow:auto}
+.modal-msg{font-size:14px;margin-bottom:14px;text-align:center}
 .modal-btns{display:flex;gap:8px}
-.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
-.btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#ddd;color:#000}
-.app-container.dark-mode{background:#000000!important;color:#fff!important;border-color:#444!important}
-/* MODAL CODE SECRET SOLDE */
-.pin-input{width:100%;padding:14px;border-radius:8px;border:3px solid #ff5000;background:#000;color:#fff;text-align:center;font-size:22px;font-weight:bold;letter-spacing:8px;box-sizing:border-box}
+.modal-btn{flex:1;padding:12px;border:none;border-radius:10px;font-weight:900;cursor:pointer}
+.btn-yes{background:#28a745;color:#fff}.btn-no{background:#333;color:#fff}
+body.light-mode .btn-no{background:#ddd;color:#111}
+.pin-input{width:100%;padding:14px;border-radius:10px;border:2px solid #ff5000;background:var(--input-bg);color:var(--text);text-align:center;font-size:22px;font-weight:900;letter-spacing:8px}
+.guide-step{background:var(--card2);border-radius:12px;padding:11px;text-align:left;margin-bottom:8px;font-size:12px;line-height:1.5;border:1px solid var(--border)}
+.guide-step b{color:var(--accent)}
+.step-num{background:#ff5000;color:#fff;width:24px;height:24px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;margin-right:6px}
+.sim-box{background:var(--input-bg);border:2px dashed var(--accent);border-radius:12px;padding:10px;margin-top:8px}
+.sim-box input,.sim-box select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-weight:800;margin:6px 0;text-align:center}
+.sim-result{background:#1a3a1a;border-radius:10px;padding:10px;text-align:center;font-weight:900;color:#0f0;font-size:15px;margin-top:6px}
+body.light-mode .sim-result{background:#E8F5E9;color:#1B8A2A}
 </style>
 </head>
 <body>
 <div class="app-container">
-<button id="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:8px;left:1px;z-index:9999;background:#000;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🌙</button>
-<div id="splash-zone" style="display:flex;min-height:60vh;align-items:center;justify-content:center;flex-direction:column;color:#ffeb3b;font-weight:bold;font-size:14px"><div style="font-size:40px">⏳</div><div>Chargement...</div></div>
+<div class="topbar">
+<div class="logo">MAYNE <span>ILLIMINET</span><small>E-SERVICES • Cotonou, Bénin</small></div>
+<div class="top-icons">
+<button class="icon-btn" onclick="openGuide()">❓</button>
+<button class="icon-btn" onclick="toggleTheme()" id="theme-toggle">🌙</button>
+<button class="icon-btn" onclick="location.href='notifications.html'">🔔<span id="notif-count" class="notif-count">0</span></button>
+</div>
+</div>
+<div id="splash-zone" style="display:flex;min-height:60vh;align-items:center;justify-content:center;flex-direction:column;color:var(--accent);font-weight:bold;font-size:14px"><div style="font-size:40px">⏳</div><div>Chargement...</div></div>
 <div id="logged-out-zone" style="display:none">
-  <div id="login-interface" style="display:none">
-    <h3 style="margin-top:0;margin-bottom:30px;color:#ffeb3b">BIENVENUE SUR ACTIFER</h3>
-    <div style="color:#aaa;font-weight:bold;text-align:center;font-size:14px;">Simplifiez votre quotidien grâce à une interface conçue pour des transactions rapides, fiables et 100% sécurisées</div>
-    <div style="color:#fff;font-weight:bold;text-align:center;font-size:15px;margin-top:10px;">S'INSCRIRE OU SE CONNECTER ICI</div>
-    <div class="input-group"><label class="input-label">Numéro de téléphone :</label><input type="text" id="login-id" class="input-field"></div>
-    <div class="input-group"><label class="input-label">Mot de passe :</label><input type="password" id="login-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
-    <button type="button" class="btn-submit" style="background:#ff5000" onclick="executerConnexion()">Se connecter</button>
-    <button type="button" class="btn-link" onclick="afficherFormulaireInscription()">Créer un compte</button>
-  </div>
-  <div id="register-interface" style="display:none;">
-    <h3 style="margin-top:0;margin-bottom:15px;">BIENVENUE SUR ACTIFER</h3>
-    <div class="input-group"><label class="input-label">Nom et Prénom :</label><input type="text" id="reg-name" class="input-field" placeholder="Ex: PAD MAT"></div>
-    <div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="reg-id" class="input-field"></div>
-    <div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field" placeholder="Ex: jean@gmail.com"></div>
-    <div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
-    <div class="input-group" style="border:2px dashed #ffeb3b;border-radius:6px;padding:6px;background:rgba(255,80,0,.15)"><label class="input-label" style="color:#ffeb3b">Code Parrain / Invitation (facultatif) :</label><input type="text" id="reg-parrain" class="input-field" placeholder="Ex: 0158612131 - Laisse vide si pas de parrain"></div>
-    <button type="button" class="btn-submit" style="background-color:#ff5000!important;" onclick="executerInscription()">Valider</button>
-    <button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
-  </div>
-  <div id="verify-interface" style="display:none;"><h3 style="color:#ffeb3b">VÉRIFIE TON EMAIL</h3><div style="color:#fff;font-size:13px;margin-bottom:10px;">Code envoyé à <b id="verify-email-affiche"></b></div><div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres"></div><button type="button" class="btn-submit" onclick="verifierCodeEmail()">Vérifier</button><button type="button" class="btn-link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button></div>
+<div class="guide-banner">
+<b>👋 Bienvenue sur MAYNE — Gagne en aidant tes proches</b>
+<p>Tu peux acheter pour toi <b>ou pour tes proches</b> : forfait pour ta maman, transfert pour ton frère, 1XBET pour ton ami. À chaque fois, tu gagnes un petit bonus.</p>
+<button class="guide-btn" onclick="openGuide()">🎓 VOIR COMMENT TU GAGNES — 1 MIN</button>
 </div>
-<div id="logged-in-zone" style="display:none;">
-  <div class="header-actions">
-    <div class="notif-bell" onclick="location.href='notifications.html'" style="position:absolute;top:50px;left:1px;z-index:9999;background:#010;color:#fff;border:1px solid #fff;padding:6px 8px;font-size:14px;font-weight:bold;border-radius:4px;cursor:pointer;">🔔<span id="notif-count" class="notif-count">0</span></div>
-    <div class="btn" onclick="location.href='updates.html'" style="background:#010;border:5px solid #aaa;border-left:7px solid #fff;color:#fff;border-right:8px solid#fff;padding:1px">⬇️MAJ </div>
-    <div class="btn" onclick="location.href='admin.html'" style="background:#010;border:5px solid #aaa;border-left:7px solid #fff;color:#fff;border-right:8px solid#fff;padding:1px">PUB</div>
-    <button class="btn-action-top" onclick="location.href='compte.html'" style="background:#010;border:5px solid #aaa;border-right:9px solid#fff;border-left:9px solid #fff">Profil👤</button>
-    <button class="btn-action-top" onclick="location.href='depot.html'" style="background:#fb3b;border:3px solid#aaa;border-left:8px solid #fff;border-right:15px solid#fff">📥Recharger</button>
-    <button class="btn-action-top retrait" onclick="location.href='retrait.html'" style="background:#ff5000;border:4px solid#aaa;border-left:9px solid #fff;border-right: 15px solid#fff">📤RETIRER</button>
-  </div>
-
-  <!-- ZONE SOLDES CLIQUABLE + CODE SECRET -->
-  <div class="user-header" onclick="handleClickSolde(event)">
-    <button type="button" class="btn-logout" onclick="event.stopPropagation();executerDeconnexion()">DÉCONNEXION</button>
-    <div class="profile-line" id="user-name"><b>CHARGEMENT...</div>
-    <div style="font-size:10px;color:#e0e0e0;display:flex;justify-content:space-between;align-items:center"><b>SOLDE :</b><span onclick="event.stopPropagation();handleClickSolde(event)" style="cursor:pointer;font-size:20px;background:#aaaa;top:1px;padding:20 50px">👁️</span></div>
-    <div class="solde-val"><span id="user-balance"><b>0</span> F</div>
-    <div style="font-size:10px;color:#e0e0e0;margin-top:4px;"><b>BONUS :</div><div class="solde-val" style="color:#ffeb3b"><span id="user-commission"><b>0</span> F</div><div style="font-size:10px;color:#fff;"><b>SOLDE EPARGNE :</div><div class="solde-val" style="color:#FF5000;font-size:15px"><span id="user-recompense"><b>0</span> F</div>
-    <div id="solde-hint" style="font-size:9px;color:#ffeb3b;margin-top:6px;text-align:center">🔒 Touchez pour afficher avec votre code secret</div>
-  </div>
-
-  <div class="services-grid">
-    <button class="tab-btn btn-home" onclick="location.href='live.html'">SCORE⚽LIVE</button>
-    <!-- SERVICES STYLE RETIRER - SUPPRESSION IMMOBILIER / LIVRAISON -->
-    <button id="btn-market" class="tab-btn service-btn-new" onclick="location.href='market.html'">Market</button>
-    <button id="btn-1xbet" class="tab-btn service-btn-new" onclick="location.href='1xbet.html'">1XBET</button>
-    <button id="btn-facture" class="tab-btn service-btn-new" onclick="location.href='factures.html'">Facture</button>
-    <button id="btn-epargne" class="tab-btn service-btn-new" onclick="location.href='epargne.html'">Épargne</button>
-    <button id="btn-transfert" class="tab-btn service-btn-new" onclick="location.href='transfert.html'">TRANSFERT</button>
-    <button id="btn-p2p" class="tab-btn service-btn-new" onclick="location.href='p2p.html'">🚀 P2P/P2M</button>
-    <button id="btn-messagerie" class="tab-btn btn-full service-btn-new" onclick="location.href='messagerie.html'">💬 Messagerie</button>
-    <button id="btn-forfait" class="tab-btn btn-full service-btn-new" onclick="location.href='forfaits.html'">Forfait & Crédit</button>
-  </div>
-  <footer style="display:none;background:#010;color:#aaa; padding:24px 16px; text-align:center; font-size:11px; margin-top:50px; border-top:1px solid #333; line-height:1.6">
-    <div style="margin-bottom:10px;"><strong style="color:#fff; font-size:13px;">MAYNE SERVICE</strong> © 2023</div>
-    <div style="margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
-      <a href="about.html" style="background:#010;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid #fff">À propos</a>
-      <a href="privacy.html" style="background:#010;border:4px solid#aaa;border-left:9px solid #fff;border-right:6px solid#fff">Confidentialité</a>
-      <a href="conditions.html" style="background:#010;border:4px solid#aaa;border-left:12px solid#fff;border-right:6px solid#fff">CGU</a>
-    </div>
-  <div style="margin-top:14px; font-size:10px; color:#aaa; line-height:1.7">
-    <b style="color:#fff">Agent commercial marchand agréé MTN - MOOV - CELTIS</b><br>
-    SIMs marchandes & accepteurs - Vente forfaits, crédits, transfert d'argent national & international via corridors officiels<br>
-    Paiement factures SBEE, SONEB, CANAL+ via canaux agréés<br>
-    <span style="color:#ffbb00">Recharge 1XBET via partenaire agent 1XBET agréé — MAYNE SERVICE n'est pas 1XBET. 1XBET est une marque indépendante. 18+ Jeu responsable.</span><br><br>
-    MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671 — Cotonou, Bénin<br>
-    contact : mayneactifer@gmail.com
-  </div>
-  </footer>
-  <div class="service-panel">
-    <div id="menu-principal" class="sub-panel">
-      <h4 style="color:#fff;border-bottom-color:#fff;">ACTIFER-MGAP</h4>
-      <div class="about-section">
-        <center><b style="color:#fff;">NOS PARTENAIRES</b></center>
-        <div class="partners-container">
-          <div class="partner-logo partner-mtn">MTN</div>
-          <div class="partner-logo partner-moov">MOOV</div>
-          <div class="partner-logo partner-celtis">CELTIS</div>
-          <div class="partner-logo partner-1xbet">1XBET</div>
-          <div class="partner-logo partner-canal">CANAL+</div>
-          <div class="partner-logo partner-sbee">SBEE</div>
-        </div>
-      </div>
-    </div>
-  </div>
+<div id="login-interface" style="display:none">
+<h3 style="margin:0 0 6px;color:var(--accent);text-align:center">BIENVENUE SUR ACTIFER</h3>
+<p style="color:var(--muted);font-size:13px;text-align:center;line-height:1.5">Transactions rapides, fiables et 100% sécurisées</p>
+<div class="input-group"><label class="input-label">Numéro de téléphone :</label><input type="text" id="login-id" class="input-field"></div>
+<div class="input-group"><label class="input-label">Mot de passe :</label><input type="password" id="login-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
+<button type="button" class="btn-submit" onclick="executerConnexion()">Se connecter</button>
+<button type="button" class="btn-link" onclick="afficherFormulaireInscription()">Créer un compte</button>
 </div>
+<div id="register-interface" style="display:none">
+<h3 style="text-align:center">BIENVENUE SUR ACTIFER</h3>
+<div class="input-group"><label class="input-label">Nom et Prénom :</label><input type="text" id="reg-name" class="input-field" placeholder="Ex: PAD MAT"></div>
+<div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="reg-id" class="input-field"></div>
+<div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field" placeholder="Ex: jean@gmail.com"></div>
+<div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
+<div class="input-group" style="border:2px dashed #ff5000;border-radius:10px;padding:8px;background:rgba(255,80,0,.12)"><label class="input-label" style="color:var(--accent)">Code Parrain (facultatif) — Gagne 100 F :</label><input type="text" id="reg-parrain" class="input-field" placeholder="Ex: 0158612131"></div>
+<button type="button" class="btn-submit" onclick="executerInscription()">Valider</button>
+<button type="button" class="btn-link" onclick="afficherFormulaireConnexion()">Déjà inscrit? Connexion</button>
+</div>
+<div id="verify-interface" style="display:none"><h3 style="color:var(--accent);text-align:center">VÉRIFIE TON EMAIL</h3><div style="font-size:13px;margin-bottom:10px;text-align:center">Code envoyé à <b id="verify-email-affiche"></b></div><div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres"></div><button type="button" class="btn-submit" onclick="verifierCodeEmail()">Vérifier</button><button type="button" class="btn-link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button></div>
+<div class="info-card">
+<h4>🎁 CE QUE TOI TU GAGNES</h4>
+<div class="info-row"><span>📱 Forfait — pour toi ou tes proches</span><span>1,2%</span></div>
+<div class="info-row"><span>📤 Transfert Envoi</span><span>0,12%</span></div>
+<div class="info-row"><span>💸 Transfert Retrait — 1/3 du barème</span><span>1/3</span></div>
+<div class="info-row"><span>🎰 1XBET</span><span>0,2%</span></div>
+<div class="info-row"><span>🎉 Parrainage — 1 ami inscrit</span><span>+ 100 F</span></div>
+<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Exemple : Forfait 10 000 F pour ta maman → tu gagnes 120 F. C'est ton BONUS.</div>
+</div>
+</div>
+<div id="logged-in-zone" style="display:none">
+<div class="header-actions">
+<button class="btn-action-top" onclick="location.href='depot.html'">📥 Recharger</button>
+<button class="btn-action-top red" onclick="location.href='retrait.html'">📤 RETIRER</button>
+<button class="btn-action-top" onclick="location.href='compte.html'">👤 Profil</button>
+<button class="btn-action-top orange" onclick="openGuide()">❓ Guide</button>
+</div>
+<div class="user-card" onclick="handleClickSolde(event)">
+<div class="user-card-top">
+<div><div class="profile-line" id="user-name">CHARGEMENT...<small>Appuie sur 👁️ pour voir tes soldes</small></div></div>
+<button type="button" class="btn-logout" onclick="event.stopPropagation();executerDeconnexion()">DÉCONNEXION</button>
+</div>
+<div class="soldes-grid">
+<div class="solde-box"><span>SOLDE</span><b style="color:#0f0" id="user-balance">••••••</b><small style="font-size:9px;color:var(--muted)">F</small></div>
+<div class="solde-box"><span>BONUS</span><b style="color:var(--accent)" id="user-commission">••••••</b><small style="font-size:9px;color:var(--muted)">F</small></div>
+<div class="solde-box"><span>ÉPARGNE</span><b style="color:#FF5000" id="user-recompense">••••••</b><small style="font-size:9px;color:var(--muted)">F</small></div>
+</div>
+<div class="solde-hint" id="solde-hint">🔒 Touchez pour afficher avec votre code secret</div>
+</div>
+<div class="guide-banner">
+<b>🎁 Tu peux gagner en aidant tes proches</b>
+<p>Forfait pour ta maman, transfert pour ton frère, 1XBET pour ton ami → à chaque fois ton <b>BONUS</b> monte. Ex : Forfait 10 000 F = <b>+120 F</b>.</p>
+<button class="guide-btn" onclick="openGuide()">🎓 VOIR TES GAINS + SIMULATEUR</button>
+</div>
+<div class="section-title">NOS SERVICES</div>
+<div class="services-grid">
+<div class="service-card" id="btn-market" onclick="location.href='market.html'"><div class="ico">🛒</div><div class="name">Market</div><div class="sub">Achats</div></div>
+<div class="service-card" id="btn-1xbet" onclick="location.href='1xbet.html'"><div class="ico">🎰</div><div class="name">1XBET</div><div class="sub">Tu gagnes 0,2%</div></div>
+<div class="service-card" id="btn-facture" onclick="location.href='factures.html'"><div class="ico">🧾</div><div class="name">Facture</div><div class="sub">SBEE • SONEB</div></div>
+<div class="service-card" id="btn-epargne" onclick="location.href='epargne.html'"><div class="ico">🐷</div><div class="name">Épargne</div><div class="sub">Mets de côté</div></div>
+<div class="service-card orange" id="btn-transfert" onclick="location.href='transfert.html'"><div class="ico">💸</div><div class="name">TRANSFERT</div><div class="sub">Envoi 0,12% • Retrait 1/3</div></div>
+<div class="service-card" id="btn-p2p" onclick="location.href='p2p.html'"><div class="ico">🚀</div><div class="name">P2P/P2M</div><div class="sub">Entre users</div></div>
+<div class="service-card wide" id="btn-forfait" onclick="location.href='forfaits.html'"><div class="ico">📱</div><div class="name">Forfait & Crédit — Tu gagnes 1,2%</div><div class="sub">MTN • MOOV • CELTIS • Le plus utilisé</div></div>
+</div>
+<div class="info-card">
+<h4>❓ COMMENT ÇA MARCHE ?</h4>
+<div class="info-row"><span>1️⃣ Recharge ton compte</span><span>📥</span></div>
+<div class="info-row"><span>2️⃣ Choisis un service, pour toi ou un proche</span><span>👆</span></div>
+<div class="info-row"><span>3️⃣ Suis EN COURS → VALIDÉ, ton BONUS monte</span><span>🔔</span></div>
+<div style="text-align:center;margin-top:8px"><button onclick="openGuide()" style="background:#ff5000;color:#fff;border:none;padding:9px 14px;border-radius:999px;font-weight:900;cursor:pointer">📖 GUIDE COMPLET</button></div>
+</div>
+<div class="info-card">
+<h4>NOS PARTENAIRES</h4>
+<div class="partners"><span class="partner-logo partner-mtn">MTN</span><span class="partner-logo partner-moov">MOOV</span><span class="partner-logo partner-celtis">CELTIS</span><span class="partner-logo partner-1xbet">1XBET</span><span class="partner-logo partner-canal">CANAL+</span><span class="partner-logo partner-sbee">SBEE</span></div>
+<div style="font-size:10px;color:var(--muted);line-height:1.6;margin-top:10px;text-align:center">Agent agréé MTN - MOOV - CELTIS<br>MAYNE SERVICE — RCCM : RB/ABC/23 A 92514 — IFU : 0202311667671 — Cotonou, Bénin<br>mayneactifer@gmail.com<br><span style="color:#E65100">Recharge 1XBET via partenaire agent agréé — MAYNE n'est pas 1XBET. 18+ Jeu responsable.</span></div>
+</div>
+</div>
+</div>
+<div class="bottom-nav">
+<button class="nav-item active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="ico">🏠</span>Accueil</button>
+<button class="nav-item" onclick="location.href='live.html'"><span class="ico">⚽</span>Score Live</button>
+<button class="nav-item" onclick="location.href='messagerie.html'"><span class="ico">💬</span>Messagerie</button>
+<button class="nav-item" onclick="location.href='compte.html'"><span class="ico">👤</span>Profil</button>
+<button class="nav-item" onclick="openGuide()"><span class="ico">❓</span>Aide</button>
 </div>
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
 <div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
-
-<!-- MODAL CODE SECRET SOLDES -->
-<div id="pin-solde-modal" class="modal-overlay"><div class="modal-box" style="max-width:320px;border:3px solid #ff5000">
-  <div style="font-size:28px">🔒</div>
-  <div style="font-weight:bold;color:#ffeb3b;font-size:15px;margin:6px 0">CODE SECRET</div>
-  <div style="font-size:12px;color:#ccc;margin-bottom:10px">Entrez votre code à 6 chiffres<br>pour voir vos soldes</div>
-  <input type="password" id="pin-solde-input" class="pin-input" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off">
-  <div id="pin-solde-error" style="color:#ff5555;font-size:12px;font-weight:bold;min-height:16px;margin-top:6px"></div>
-  <div class="modal-btns" style="margin-top:10px"><button class="modal-btn btn-no" onclick="fermerPinSolde()">Annuler</button><button class="modal-btn btn-yes" onclick="verifierPinSolde()">Afficher 👁️</button></div>
-  <div style="font-size:10px;color:#888;margin-top:8px">C'est le même code que pour vous connecter</div>
+<div id="pin-solde-modal" class="modal-overlay"><div class="modal-box" style="max-width:320px">
+<div style="font-size:28px;text-align:center">🔒</div>
+<div style="font-weight:900;color:var(--accent);font-size:15px;margin:6px 0;text-align:center">CODE SECRET</div>
+<div style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center">Entrez votre code à 6 chiffres<br>pour voir vos soldes</div>
+<input type="password" id="pin-solde-input" class="pin-input" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off">
+<div id="pin-solde-error" style="color:#ff5555;font-size:12px;font-weight:bold;min-height:16px;margin-top:6px;text-align:center"></div>
+<div class="modal-btns" style="margin-top:10px"><button class="modal-btn btn-no" onclick="fermerPinSolde()">Annuler</button><button class="modal-btn btn-yes" onclick="verifierPinSolde()">Afficher 👁️</button></div>
+<div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center">C'est le même code que pour vous connecter</div>
 </div></div>
-
+<div id="guide-modal" class="modal-overlay"><div class="modal-box">
+<div style="text-align:center"><div style="font-size:30px">🎓</div><div style="font-weight:900;color:var(--accent);font-size:16px">COMMENT TU GAGNES ?</div><div style="font-size:11px;color:var(--muted)">Pour toi OU pour tes proches — même gain</div></div>
+<div class="guide-step"><span class="step-num">1</span><b>RECHARGE ton compte</b><br>Appuie sur <b>📥 Recharger</b>. Sans solde, tu ne peux pas lancer de service.</div>
+<div class="guide-step"><span class="step-num">2</span><b>CHOISIS un service — pour toi ou un proche</b><br>Forfait pour ta maman, transfert pour ton frère, 1XBET pour ton ami. Tu mets le numéro du proche, pas forcément le tien.</div>
+<div class="guide-step"><span class="step-num">3</span><b>SUIS ton statut + ton BONUS</b><br>Ta commande passe <b>EN COURS</b> → <b>VALIDÉE</b>. Dès que c'est validé, ton BONUS monte tout seul. Tu peux le retirer.</div>
+<div style="font-weight:900;color:#1B8A2A;font-size:14px;margin:10px 0 6px">💰 TES GAINS — À CHAQUE FOIS</div>
+<div class="guide-step"><b>📱 FORFAIT = 1,2% pour TOI</b><br>Forfait 5 000 F → <b>60 F</b> • 10 000 F → <b>120 F</b> • 20 000 F → <b>240 F</b></div>
+<div class="guide-step"><b>📤 TRANSFERT ENVOI = 0,12% pour TOI</b><br>Envoi 50 000 F → <b>60 F</b> • 100 000 F → <b>120 F</b> • 500 000 F → <b>600 F</b></div>
+<div class="guide-step"><b>💸 TRANSFERT RETRAIT = 1/3 du barème pour TOI</b><br>Retrait 5 000 F (barème 45 F) → <b>15 F</b> • 10 000 F (76 F) → <b>25 F</b> • 20 000 F (125 F) → <b>42 F</b> • 50 000 F (275 F) → <b>92 F</b> • 100 000 F (387 F) → <b>129 F</b> • 200 000 F (1 170 F) → <b>390 F</b></div>
+<div class="guide-step"><b>🎰 1XBET = 0,2% pour TOI</b><br>Dépôt ou Retrait 50 000 F → <b>100 F</b> • 100 000 F → <b>200 F</b></div>
+<div class="guide-step"><b>🎉 PARRAINAGE = 100 F / filleul</b><br>Tu donnes ton numéro comme code parrain. Chaque ami inscrit → <b>+100 F</b>. 10 amis = <b>1 000 F</b>.</div>
+<div style="font-weight:900;color:var(--accent);font-size:13px;margin:10px 0 6px">🧮 SIMULATEUR — TES GAINS</div>
+<div class="sim-box">
+<select id="sim-service" onchange="calcSim()">
+<option value="forfait">📱 FORFAIT — TOI 1,2%</option>
+<option value="envoi">📤 TRANSFERT ENVOI — TOI 0,12%</option>
+<option value="retrait">💸 TRANSFERT RETRAIT — TOI 1/3 barème</option>
+<option value="xbet">🎰 1XBET — TOI 0,2%</option>
+<option value="parrainage">🎉 PARRAINAGE — TOI 100 F / filleul</option>
+</select>
+<input type="number" id="sim-montant" value="10000" placeholder="Montant en F" oninput="calcSim()">
+<div class="sim-result" id="sim-result">Tu gagnes : 120 F</div>
+<div style="font-size:10px;color:var(--muted);text-align:center;margin-top:4px" id="sim-detail">Forfait 10 000 F × 1,2% = 120 F</div>
+<div style="font-size:10px;color:var(--muted);text-align:center;margin-top:4px">Pour parrainage, mets le nombre de filleuls dans Montant. Ex : 10 = 10 filleuls</div>
+</div>
+<div class="guide-step"><b>💡 ASTUCE</b><br>1. Commence petit.<br>2. Ne partage jamais ton code secret.<br>3. Tes gains sont dans <b>BONUS</b>. Retire avec <b>📤 RETIRER</b>.</div>
+<div class="modal-btns" style="margin-top:12px"><button class="modal-btn btn-no" onclick="closeGuide()">Fermer</button><button class="modal-btn btn-yes" onclick="closeGuide(true)">✅ J'AI COMPRIS</button></div>
+</div></div>
 <script>
 const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
@@ -230,21 +273,47 @@ const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4i
 let tempPhone='',tempEmail='';
 const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,d=null)=>{try{const v=localStorage.getItem('mayne_'+k);return v?JSON.parse(v):d;}catch{return d;}}};
 let sessionTimer=null,currentUserId=null,currentUserSolde=0,currentUserRecompense=0,confirmCallback=null;
-// SOLDES TOUJOURS MASQUES AU DEPART - JAMAIS EN CLAIR SANS CODE
-let soldeMasque=true;
-let soldeDeverrouille=false;
-let soldeTimer=null;
-
+let soldeMasque=true; let soldeDeverrouille=false; let soldeTimer=null;
+function applyTheme(){
+  const saved=localStorage.getItem('mayne_theme')||'dark';
+  const isLight=saved==='light';
+  document.body.classList.toggle('light-mode',isLight);
+  const btn=document.getElementById('theme-toggle'); if(btn) btn.innerText=isLight?'☀️':'🌙';
+}
+function toggleTheme(){
+  const isLight=document.body.classList.contains('light-mode');
+  const next=isLight?'dark':'light';
+  localStorage.setItem('mayne_theme',next);
+  applyTheme();
+}
+function openGuide(){ document.getElementById('guide-modal').style.display='flex'; }
+function closeGuide(compris){ document.getElementById('guide-modal').style.display='none'; if(compris) localStorage.setItem('mayne_tuto_vu','1'); }
+function getBaremeRetrait(m){
+  if(m<=5000) return 45; if(m<=10000) return 76; if(m<=20000) return 125; if(m<=50000) return 275; if(m<=100000) return 387; return 1170;
+}
+function calcSim(){
+  const svc=document.getElementById('sim-service').value;
+  const m=parseFloat(document.getElementById('sim-montant').value)||0;
+  let gain=0, detail='';
+  if(svc==='forfait'){ gain=Math.round(m*0.012); detail=`Forfait ${m.toLocaleString()} F × 1,2% = ${gain.toLocaleString()} F`; }
+  if(svc==='envoi'){ gain=Math.round(m*0.0012); detail=`Envoi ${m.toLocaleString()} F × 0,12% = ${gain.toLocaleString()} F`; }
+  if(svc==='retrait'){ const bar=getBaremeRetrait(m); gain=Math.round(bar/3); detail=`Retrait ${m.toLocaleString()} F → barème ${bar} F ÷ 3 = ${gain} F`; }
+  if(svc==='xbet'){ gain=Math.round(m*0.002); detail=`1XBET ${m.toLocaleString()} F × 0,2% = ${gain.toLocaleString()} F`; }
+  if(svc==='parrainage'){ gain=m*100; detail=`${m} filleul(s) × 100 F = ${gain.toLocaleString()} F`; }
+  const r=document.getElementById('sim-result'); if(r) r.innerText='Tu gagnes : '+gain.toLocaleString()+' F';
+  const d=document.getElementById('sim-detail'); if(d) d.innerText=detail;
+}
 function demarrerTimerSession(){clearInterval(sessionTimer);sessionTimer=setInterval(()=>{TinyDB.put('current_user_last',Date.now());},60000);}
 function tryAutoLogin(){
-  const splash=document.getElementById('splash-zone'),out=document.getElementById('logged-out-zone'),inZ=document.getElementById('logged-in-zone'),login=document.getElementById('login-interface'),reg=document.getElementById('register-interface'),verif=document.getElementById('verify-interface'),foot=document.querySelector('footer');
+  const splash=document.getElementById('splash-zone'),out=document.getElementById('logged-out-zone'),inZ=document.getElementById('logged-in-zone');
   const saved=TinyDB.get('current_user')||JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!saved||!saved.phone){splash.style.display='none';inZ.style.display='none';out.style.display='block';login.style.display='block';reg.style.display='none';verif.style.display='none';if(foot)foot.style.display='none';return;}
+  if(!saved||!saved.phone){splash.style.display='none';inZ.style.display='none';out.style.display='block';document.getElementById('login-interface').style.display='block';return;}
   if(Date.now()-(TinyDB.get('current_user_last')||Date.now())>7*24*60*60*1000){executerDeconnexion();return;}
-  currentUserId=saved.phone; splash.style.display='none';out.style.display='none';login.style.display='none';reg.style.display='none';verif.style.display='none';if(foot)foot.style.display='block';
-  // reset verrouillage à chaque ouverture
+  currentUserId=saved.phone; splash.style.display='none';out.style.display='none';document.getElementById('login-interface').style.display='none';
   soldeMasque=true; soldeDeverrouille=false; sessionStorage.removeItem('mayne_solde_unlocked');
   chargerSessionDepuisFirebase(saved.phone);
+  setTimeout(()=>{ if(!localStorage.getItem('mayne_tuto_vu')) openGuide(); },800);
+  calcSim();
 }
 function chargerSessionDepuisFirebase(phone){
   database.ref('clients/'+phone).on('value',v=>{
@@ -255,58 +324,20 @@ function chargerSessionDepuisFirebase(phone){
     maj('user-balance',currentUserSolde);maj('user-commission',data.commission||0);maj('user-recompense',currentUserRecompense);
     appliquerEtatSolde();
   });
-window.OneSignalDeferred.push(async function(OneSignal){
-  try{
-    const ph=String(phone).replace(/\D/g,'');
-    await OneSignal.login(ph);
-    await OneSignal.User.addTags({phone:ph});
-    const subId=await OneSignal.User.pushSubscription.id;
-    if(subId){
-      database.ref('clients/'+ph+'/onesignal_id').set(subId);
-      database.ref('clients/'+ph+'/phone').set(ph);
-      fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(ph)+'&playerId='+encodeURIComponent(subId)});
-    }
-  }catch(e){}
-});
   ecouterClocheEtBordures(); demarrerTimerSession();
 }
-
-// ===== CODE SECRET SOLDES =====
 function handleClickSolde(e){
-  if(soldeMasque){
-    // demande le code
-    document.getElementById('pin-solde-error').innerText='';
-    document.getElementById('pin-solde-input').value='';
-    document.getElementById('pin-solde-modal').style.display='flex';
-    setTimeout(()=>document.getElementById('pin-solde-input').focus(),100);
-  } else {
-    // déjà visible -> re-masquer
-    masquerSoldes();
-  }
+  if(soldeMasque){ document.getElementById('pin-solde-error').innerText=''; document.getElementById('pin-solde-input').value=''; document.getElementById('pin-solde-modal').style.display='flex'; setTimeout(()=>document.getElementById('pin-solde-input').focus(),100); }
+  else { masquerSoldes(); }
 }
 function fermerPinSolde(){ document.getElementById('pin-solde-modal').style.display='none'; }
 function appliquerEtatSolde(){
   const hint=document.getElementById('solde-hint');
-  ['user-balance','user-commission','user-recompense'].forEach(id=>{
-    const el=document.getElementById(id); if(!el) return;
-    el.innerText = soldeMasque ? '••••••' : (el.dataset.vrai||'0');
-  });
+  ['user-balance','user-commission','user-recompense'].forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.innerText = soldeMasque ? '••••••' : (el.dataset.vrai||'0'); });
   if(hint) hint.innerText = soldeMasque ? '🔒 Touchez pour afficher avec votre code secret' : '👁️ Soldes visibles - Touchez pour masquer';
 }
-function afficherSoldes(){
-  soldeMasque=false; soldeDeverrouille=true;
-  sessionStorage.setItem('mayne_solde_unlocked','1');
-  appliquerEtatSolde();
-  // re-masque auto après 60 sec
-  clearTimeout(soldeTimer);
-  soldeTimer=setTimeout(()=>{ masquerSoldes(); }, 60000);
-}
-function masquerSoldes(){
-  soldeMasque=true; soldeDeverrouille=false;
-  sessionStorage.removeItem('mayne_solde_unlocked');
-  clearTimeout(soldeTimer);
-  appliquerEtatSolde();
-}
+function afficherSoldes(){ soldeMasque=false; soldeDeverrouille=true; sessionStorage.setItem('mayne_solde_unlocked','1'); appliquerEtatSolde(); clearTimeout(soldeTimer); soldeTimer=setTimeout(()=>{ masquerSoldes(); }, 60000); }
+function masquerSoldes(){ soldeMasque=true; soldeDeverrouille=false; sessionStorage.removeItem('mayne_solde_unlocked'); clearTimeout(soldeTimer); appliquerEtatSolde(); }
 function verifierPinSolde(){
   const code=document.getElementById('pin-solde-input').value.trim();
   const err=document.getElementById('pin-solde-error');
@@ -315,45 +346,27 @@ function verifierPinSolde(){
   const hash=CryptoJS.MD5(code).toString();
   database.ref('clients/'+currentUserId+'/pin').once('value').then(s=>{
     const dbPin=String(s.val()||'');
-    if(dbPin===hash || dbPin===code){
-      fermerPinSolde();
-      afficherSoldes();
-    } else {
-      err.innerText='❌ Code incorrect';
-      document.getElementById('pin-solde-input').value='';
-      document.getElementById('pin-solde-input').focus();
-    }
+    if(dbPin===hash || dbPin===code){ fermerPinSolde(); afficherSoldes(); }
+    else { err.innerText='❌ Code incorrect'; document.getElementById('pin-solde-input').value=''; document.getElementById('pin-solde-input').focus(); }
   });
 }
-// Entrée clavier = valider
-document.addEventListener('DOMContentLoaded',()=>{
-  const inp=document.getElementById('pin-solde-input');
-  if(inp) inp.addEventListener('keydown',e=>{ if(e.key==='Enter') verifierPinSolde(); });
-});
-// Ancienne fonction toggleSolde -> maintenant = handleClickSolde (gardée pour compatibilité)
+document.addEventListener('DOMContentLoaded',()=>{ applyTheme(); const inp=document.getElementById('pin-solde-input'); if(inp) inp.addEventListener('keydown',e=>{ if(e.key==='Enter') verifierPinSolde(); }); calcSim(); });
 function toggleSolde(){ handleClickSolde(); }
-
 function ecouterClocheEtBordures(){
   if(!currentUserId)return;
   db.ref('notifications/'+currentUserId).on('value',snap=>{
     let c=snap.numChildren(),badge=document.getElementById('notif-count');
-    if(badge){badge.style.display=c>0?'block':'none';badge.innerText=c>99?'99+':c;if(c>0)badge.style.animation='pulse 1s infinite';}
+    if(badge){badge.style.display=c>0?'block':'none';badge.innerText=c>99?'99+':c;}
   });
-  const map={'commandes_p2p_p2m':'btn-p2p','commandes_marketplace':'btn-market','commandes_1xbet':'btn-1xbet','commandes_factures':'btn-facture','commandes_forfaits':'btn-forfait','commandes_epargne':'btn-epargne','conversations':'btn-messagerie'};
+  const map={'commandes_p2p_p2m':'btn-p2p','commandes_marketplace':'btn-market','commandes_1xbet':'btn-1xbet','commandes_factures':'btn-facture','commandes_forfaits':'btn-forfait','commandes_epargne':'btn-epargne'};
   Object.entries(map).forEach(([path,btnId])=>{
-    if(path==='conversations'){
-      database.ref(path).on('value',snap=>{let has=false;snap.forEach(ch=>{if(ch.key.includes(currentUserId)){let msgs=Object.values(ch.child('messages').val()||{});msgs.forEach(m=>{if(m.senderId!==currentUserId&&!m.vu)has=true;});}});const btn=document.getElementById(btnId);if(btn)btn.classList.toggle('has-new',has);});
-    } else {
-      database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',s=>{let has=false;s.forEach(ch=>{if((ch.val().statut||'').toLowerCase().includes('en cours'))has=true;});const btn=document.getElementById(btnId);if(btn)btn.classList.toggle('has-new',has);});
-    }
+    database.ref(path).orderByChild('client_id').equalTo(currentUserId).on('value',s=>{let has=false;s.forEach(ch=>{if((ch.val().statut||'').toLowerCase().includes('en cours'))has=true;});const btn=document.getElementById(btnId);if(btn)btn.classList.toggle('has-new',has);});
   });
 }
-window.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{['user-balance','user-commission','user-recompense'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(soldeMasque){if(!el.dataset.vrai)el.dataset.vrai=el.innerText;el.innerText='••••••';}});},200);});
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-function toggleTheme(){const app=document.querySelector('.app-container');const btn=document.getElementById('theme-toggle');const isDark=!app.classList.contains('dark-mode');app.classList.toggle('dark-mode');localStorage.setItem('mayne_theme',isDark?'dark':'light');btn.innerText=isDark?'☀️':'🌙';}
 function afficherFormulaireInscription(){document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('register-interface').style.display='block';}
 function afficherFormulaireConnexion(){document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';}
 function executerConnexion(){
@@ -363,28 +376,9 @@ function executerConnexion(){
     if(!s.exists())return showAlert('Numéro ou mot de passe incorrect');
     const dbPin=String(s.val().pin); if(dbPin!==pinHache&&dbPin!==p)return showAlert('Numéro ou mot de passe incorrect');
     const data=s.val(); if(data.email_verified===false){tempPhone=i;tempEmail=data.email;document.getElementById('verify-email-affiche').innerText=data.email;envoyerCodeEmail(data.email);return showAlert('Vérifie ton email');}
-    currentUserId=i;
-    TinyDB.put('current_user',{phone:i});
-    TinyDB.put('current_user_last',Date.now());
-    localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
-    if(!window.AppInventor){
-      window.OneSignalDeferred.push(async function(OneSignal){
-        const phone = String(i).replace(/\D/g,'');
-        await OneSignal.login(phone);
-        await OneSignal.User.addTags({phone:phone});
-        const subId = await OneSignal.User.pushSubscription.id;
-        if(subId){
-          database.ref('clients/'+i+'/onesignal_id').set(subId);
-          database.ref('clients/'+i+'/phone').set(phone);
-          try{fetch(ONESIGNAL_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(subId)});}catch(e){}
-        }
-      });
-    }
-    if(window.AppInventor)window.AppInventor.setWebViewString('USER_'+currentUserId);
+    currentUserId=i; TinyDB.put('current_user',{phone:i}); TinyDB.put('current_user_last',Date.now()); localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
     if(dbPin===p)database.ref('clients/'+i).update({pin:pinHache});
-    // soldes restent masqués même après connexion
-    soldeMasque=true; soldeDeverrouille=false;
-    chargerSessionDepuisFirebase(i);
+    soldeMasque=true; soldeDeverrouille=false; chargerSessionDepuisFirebase(i);
   });
 }
 function executerInscription(){
@@ -406,7 +400,7 @@ function executerInscription(){
 }
 function envoyerCodeEmail(email,isResend=false){const mail=email||tempEmail;fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('sent')){document.getElementById('login-interface').style.display='none';document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='block';showAlert(isResend?'Code renvoyé!':'Code envoyé à '+mail);}});}
 function verifierCodeEmail(){const code=document.getElementById('verify-code').value.trim();if(!code)return;fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('ok')){database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{showAlert('Email vérifié!');document.getElementById('verify-interface').style.display='none';document.getElementById('login-interface').style.display='block';document.getElementById('login-id').value=tempPhone;});}else showAlert('Code incorrect');});}
-function executerDeconnexion(){TinyDB.put('current_user',null);localStorage.removeItem('mayne_current_user');clearInterval(sessionTimer);masquerSoldes();if(currentUserId){database.ref('clients/'+currentUserId).off();['notifications'].forEach(p=>{database.ref(p).off();});}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
+function executerDeconnexion(){TinyDB.put('current_user',null);localStorage.removeItem('mayne_current_user');clearInterval(sessionTimer);masquerSoldes();if(currentUserId){database.ref('clients/'+currentUserId).off();}currentUserId=null;document.getElementById('logged-in-zone').style.display='none';document.getElementById('logged-out-zone').style.display='block';}
 </script>
 </body>
 </html>
