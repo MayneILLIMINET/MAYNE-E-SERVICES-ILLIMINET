@@ -1,59 +1,132 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Epargne MAYNE</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Épargne MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#500;color:#fff;display:flex;justify-content:center}
-.app{max-width:430px;border:5px solid #fff;width:100%;padding-bottom:90px;background:#500;min-height:100vh}
-.top{display:flex;justify-content:space-between;align-items:center;padding:16px}
-.avatar{width:44px;height:44px;border-radius:50%;background:#feb3;display:flex;align-items:center;justify-content:center;font-weight:800}
-.card{margin:12px 16px;background:#1e1e1e;border:3px solid #fff;border-radius:22px;padding:18px;color:#fff}
-.montant{font-size:20px;font-weight:800;margin:10px 0}
-.sub{font-size:20px;color:#fff;display:flex;gap:20px;margin-bottom:20px}
-.btn{width:100%;background:#c00;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff;cursor:pointer}
-.pills{display:flex;gap:10px;padding:10px 16px}
-.pill{flex:1;background:#aaaa;border-radius:100px;padding:12px;text-align:center;font-weight:700;cursor:pointer}
-.kyc{margin:12px 16px;background:#1e1e1e;border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center}
-.list{padding:16px}
-.item{background:#000;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;cursor:pointer}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
-.bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer}
-.bnav.active{background:#000;color:#d6f78c;border-radius:100px;padding:8px 16px;font-weight:700}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,Arial}
+:root{--bg:#0f0f0f;--card:#1a1a1a;--card2:#222;--text:#fff;--muted:#aaa;--border:#2a2a2a;--nav:#000;--accent:#ff5000}
+body.light-mode{--bg:#f2f2f2;--card:#fff;--card2:#f8f8f8;--text:#111;--muted:#666;--border:#ddd;--nav:#fff}
+body{background:var(--bg);color:var(--text);display:flex;justify-content:center;min-height:100vh}
+.app{max-width:480px;width:100%;padding:12px 12px 100px;background:var(--bg);min-height:100vh}
+.top{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 12px}
+.user{display:flex;gap:10px;align-items:center}
+.avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#ff5000,#ff8c00);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#fff}
+.uname{font-weight:900;font-size:15px}
+.uemail{font-size:11px;color:var(--muted)}
+.icon-btn{background:var(--card);border:1px solid var(--border);width:40px;height:40px;border-radius:999px;font-size:16px;cursor:pointer;color:var(--text);position:relative}
+.balance-card{background:linear-gradient(135deg,#ff5000,#ff8c00);border-radius:22px;padding:18px;color:#fff;margin-bottom:12px;box-shadow:0 8px 24px rgba(255,80,0,.25)}
+.balance-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;opacity:.95}
+.balance-top button{background:rgba(255,255,255,.22);border:none;color:#fff;width:32px;height:32px;border-radius:999px;cursor:pointer;font-size:14px}
+.montant{font-size:32px;font-weight:900;margin:6px 0 12px;letter-spacing:-.5px}
+.soldes-row{display:flex;gap:10px}
+.mini-box{flex:1;background:rgba(0,0,0,.28);border-radius:14px;padding:10px}
+.mini-box span{font-size:10px;font-weight:800;letter-spacing:.5px;opacity:.9}
+.mini-box b{font-size:15px;display:block;margin-top:2px}
+.btn-retrait{width:100%;background:#fff;color:#E65100;border:none;border-radius:999px;padding:13px;font-weight:900;font-size:14px;cursor:pointer;margin-top:12px}
+.bloc-pill{margin-top:10px;background:rgba(0,0,0,.35);border-radius:999px;padding:8px 12px;font-size:11px;font-weight:700;line-height:1.4}
+.pills{display:flex;gap:8px;margin-bottom:14px}
+.pill{flex:1;border-radius:999px;padding:13px;text-align:center;font-weight:900;font-size:13px;cursor:pointer;border:none}
+.pill-primary{background:#ff5000;color:#fff}
+.pill-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.kyc{margin-bottom:14px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.kyc b{font-size:13px}
+.kyc span{font-size:11px;color:var(--muted)}
+.kyc button{background:#ff5000;border:none;color:#fff;border-radius:999px;padding:9px 14px;font-weight:900;font-size:12px;cursor:pointer}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:6px 2px 10px}
+.section-head h3{font-size:16px;font-weight:900}
+.section-head span{font-size:11px;color:var(--muted);font-weight:700}
+.empty{background:var(--card);border:1px dashed var(--border);border-radius:16px;padding:26px;text-align:center}
+.empty .big{font-size:36px}
+.empty p{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5}
+.empty button{background:#ff5000;color:#fff;border:none;padding:11px 18px;border-radius:999px;font-weight:900;margin-top:12px;cursor:pointer}
+/* CARTE HISTORIQUE PRO */
+.ep-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:10px;cursor:pointer}
+.ep-card:active{transform:scale(.98)}
+.ep-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.ep-left{display:flex;gap:10px;align-items:center}
+.ep-ico{width:44px;height:44px;border-radius:14px;background:#ff5000;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.ep-name{font-weight:900;font-size:14px;line-height:1.2}
+.ep-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.ep-amount{text-align:right;flex-shrink:0}
+.ep-amount b{font-size:15px}
+.ep-amount span{display:block;font-size:10px;color:var(--muted)}
+.badge{display:inline-block;font-size:10px;font-weight:900;padding:4px 8px;border-radius:999px;margin-top:6px}
+.badge-locked{background:#fff3e0;color:#E65100}
+.badge-free{background:#E8F5E9;color:#1B8A2A}
+.badge-group{background:#E3F2FD;color:#1565C0}
+.progress{height:7px;background:var(--border);border-radius:999px;margin-top:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#ff5000,#ff8c00);border-radius:999px;transition:width .4s}
+.progress-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px}
+.progress-row b{color:var(--text)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--nav);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:100}
+.nav-item{background:none;border:none;color:var(--muted);cursor:pointer;text-align:center;font-size:9px;font-weight:800;padding:4px 2px}
+.nav-item.active{color:#ff5000}
+.nav-item .ico{font-size:20px;display:block}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.show{display:flex}
-.sheet{background:#500;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px;max-height:92vh;overflow:auto}
-.input{width:100%;background:#aaaa;color:#fff;padding:13px;border:1px solid #fff;border-radius:12px;margin:6px 0}
-.opt{border:1px solid #aaa;border-radius:16px;padding:14px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#000}
-.opt.active{border-color:#ff5000;background:#ff5000}
+.sheet{background:var(--card);color:var(--text);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px;max-height:92vh;overflow:auto}
+.input{width:100%;background:var(--bg);color:var(--text);padding:13px;border:1px solid var(--border);border-radius:12px;margin:6px 0}
+.opt{border:1px solid var(--border);border-radius:16px;padding:14px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:var(--card2)}
+.opt.active{border-color:#ff5000;background:#ff5000;color:#fff}
 .navrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.navbtn{background:transparent;border:1px solid #fff;color:#fff;border-radius:100px;padding:6px 12px;font-size:12px;cursor:pointer}
+.navbtn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:100px;padding:6px 12px;font-size:12px;cursor:pointer}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:15px}
-.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
+.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:14px;max-width:320px;width:100%;text-align:center}
+.modal-box button{background:#ff5000;color:#fff;border:none;padding:11px 16px;border-radius:999px;font-weight:900;cursor:pointer;margin-top:12px}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">A</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#888"></span></div></div><div><button class="bnav" onclick="location.href='notifications.html'">NOTIF</button></div></div>
-<div class="card"><div style="font-size:12px;color:#a8c0b6;display:flex;justify-content:space-between">Solde Principal<span onclick="toggleSolde()" style="cursor:pointer">O</span></div><div class="montant" id="solde">0.00 XOF</div><div class="sub"><div style="color:#fe3a">BONUS<br><b id="com">0 XOF</b></div><div style="color:#4CAF50">Solde_Epargne<br><b id="rec">0 XOF</b></div></div><button class="btn" onclick="openR()">Retirer de l'argent</button><small id="blocInfo" style="display:none;color:#ff9999;font-size:11px;margin-top:8px"></small></div>
-<div class="pills"><div class="pill" onclick="openN()">+ Nouvelle epargne</div><div class="pill" onclick="document.querySelector('.list').scrollIntoView({behavior:'smooth'})">Mes epargnes</div></div>
-<div class="kyc" id="kyc"><div><b>Verification d'identite</b><br><span style="font-size:11px">Retrait apres KYC valide</span></div><button style="background:#aaaa;border:none;border-radius:100px;padding:8px 14px;font-weight:700" onclick="location.href='kyc.html'">Verifier</button></div>
-<div class="list"><h3>Historique d'epargne</h3><div id="histo"></div></div>
+<div class="top">
+<div class="user"><div class="avatar" id="av">A</div><div><div class="uname" id="uname">Chargement...</div><div class="uemail" id="uemail"></div></div></div>
+<button class="icon-btn" onclick="location.href='notifications.html'">🔔</button>
 </div>
-<div class="bottom"><button class="bnav" onclick="location.href='index.html'">RETOUR</button><button class="bnav active">COFFRE-FORT</button><button class="bnav">↕</button><button class="bnav" onclick="location.href='compte.html'">INFOS</button></div>
+
+<div class="balance-card">
+<div class="balance-top"><span>Solde Principal</span><button onclick="toggleSolde()" id="eyeBtn">👁️</button></div>
+<div class="montant" id="solde">0.00 XOF</div>
+<div class="soldes-row">
+<div class="mini-box"><span>🎁 BONUS</span><b id="com">0 XOF</b></div>
+<div class="mini-box"><span>🐷 ÉPARGNE</span><b id="rec">0 XOF</b></div>
+</div>
+<button class="btn-retrait" onclick="openR()">Retirer de l'argent →</button>
+<div class="bloc-pill" id="blocInfo" style="display:none"></div>
+</div>
+
+<div class="pills">
+<button class="pill pill-primary" onclick="openN()">+ Nouvelle épargne</button>
+<button class="pill pill-secondary" onclick="document.querySelector('.list').scrollIntoView({behavior:'smooth'})">Mes épargnes</button>
+</div>
+
+<div class="kyc" id="kyc"><div><b>✅ Vérification d'identité</b><br><span>Retrait après KYC validé</span></div><button onclick="location.href='kyc.html'">Vérifier</button></div>
+
+<div class="list">
+<div class="section-head"><h3>Historique d'épargne</h3><span id="histoCount"></span></div>
+<div id="histo"></div>
+</div>
+</div>
+
+<div class="bottom-nav">
+<button class="nav-item" onclick="location.href='index.html'"><span class="ico">🏠</span>Accueil</button>
+<button class="nav-item" onclick="location.href='live.html'"><span class="ico">⚽</span>Score Live</button>
+<button class="nav-item" onclick="location.href='messagerie.html'"><span class="ico">💬</span>Messagerie</button>
+<button class="nav-item" onclick="location.href='compte.html'"><span class="ico">👤</span>Profil</button>
+<button class="nav-item" onclick="location.href='index.html'"><span class="ico">❓</span>Aide</button>
+</div>
+
 <div class="modal" id="mnew" onclick="if(event.target===this)closeM()"><div class="sheet">
-<div id="step0"><div class="navrow"><span></span><button class="navbtn" onclick="closeM()">X Fermer</button></div><div style="text-align:center;padding:10px"><div style="font-size:50px">🐷</div><h2>Creer une tontine</h2></div><div class="opt" onclick="choisirType('groupe')"><div><b>Tontine de groupe</b></div><div>></div></div><div class="opt" onclick="choisirType('perso')"><div><b>Epargne personnelle</b></div><div>></div></div><button class="input" style="background:#333" onclick="closeM()">Annuler</button></div>
-<div id="step1" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(0)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Epargne personnelle</h3><input id="nomEp" class="input" placeholder="MOTO" value="MOTO"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'📱')">📱</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'👔')">👔</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'💻')">💻</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🏍️')">🏍️</div></div><button class="input" style="background:#0f3d2e;border-radius:100px" onclick="goStep(2)">Continuer</button></div>
-<div id="step2" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(1)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Type epargne</h3><div class="opt active" onclick="setRythme(this,'A mon rythme')"><div><b>A mon rythme</b></div><div>O</div></div><div class="opt" onclick="setRythme(this,'A une date precise')"><div><b>A une date precise</b></div><div>O</div></div><div id="dateFixeBox" style="display:none;background:#000;padding:12px;border-radius:12px"><input id="dateFixe" type="date" class="input" style="background:#fff;color:#000"></div><h3>Objectif?</h3><div id="objLabel" style="text-align:center">0.00 XOF</div><input id="objectif" type="number" class="input" placeholder="10000" oninput="objLabel.textContent=(this.value||0)+' XOF'"><button class="input" style="background:#ff5000;border-radius:100px" onclick="goStep(3)">Continuer</button></div>
-<div id="step3" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(2)">Retour</button><button class="navbtn" onclick="closeM()">X</button></div><h3>Frequence</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>O</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>O</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>O</span></div><div class="opt" id="blocBox"><div><b id="blocLabel">Bloquer</b></div><input type="checkbox" id="bloque"></div><input id="montant" type="number" class="input" placeholder="Premier depot"><input id="wa" class="input" placeholder="WhatsApp"><button class="input" style="background:#0f3d2e;border-radius:100px" onclick="placerLegal()">Creer</button></div>
+<div id="step0"><div class="navrow"><span></span><button class="navbtn" onclick="closeM()">✕ Fermer</button></div><div style="text-align:center;padding:10px"><div style="font-size:50px">🐷</div><h2>Créer une tontine</h2><p style="color:var(--muted);font-size:13px;margin-top:6px">Choisis ton type d'épargne</p></div><div class="opt" onclick="choisirType('groupe')"><div><b>Tontine de groupe</b><br><small style="opacity:.8">Avec tes proches</small></div><div>›</div></div><div class="opt" onclick="choisirType('perso')"><div><b>Épargne personnelle</b><br><small style="opacity:.8">Pour toi seul</small></div><div>›</div></div><button class="input" style="background:var(--card2)" onclick="closeM()">Annuler</button></div>
+<div id="step1" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(0)">← Retour</button><button class="navbtn" onclick="closeM()">✕</button></div><h3>Épargne personnelle</h3><input id="nomEp" class="input" placeholder="Ex : MOTO" value="MOTO"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="opt active" style="justify-content:center" onclick="pickIcon(this,'📱')">📱</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'👔')">👔</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'💻')">💻</div><div class="opt" style="justify-content:center" onclick="pickIcon(this,'🏍️')">🏍️</div></div><button class="input" style="background:#ff5000;color:#fff;border-radius:999px" onclick="goStep(2)">Continuer →</button></div>
+<div id="step2" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(1)">← Retour</button><button class="navbtn" onclick="closeM()">✕</button></div><h3>Type d'épargne</h3><div class="opt active" onclick="setRythme(this,'A mon rythme')"><div><b>A mon rythme</b></div><div>●</div></div><div class="opt" onclick="setRythme(this,'A une date precise')"><div><b>A une date précise</b></div><div>○</div></div><div id="dateFixeBox" style="display:none;background:var(--card2);padding:12px;border-radius:12px"><input id="dateFixe" type="date" class="input"></div><h3 style="margin-top:12px">Objectif ?</h3><div id="objLabel" style="text-align:center;font-weight:900">0.00 XOF</div><input id="objectif" type="number" class="input" placeholder="10000" oninput="objLabel.textContent=(this.value||0)+' XOF'"><button class="input" style="background:#ff5000;color:#fff;border-radius:999px" onclick="goStep(3)">Continuer →</button></div>
+<div id="step3" style="display:none"><div class="navrow"><button class="navbtn" onclick="goStep(2)">← Retour</button><button class="navbtn" onclick="closeM()">✕</button></div><h3>Fréquence</h3><div class="opt" onclick="setFreq(this,'Par jour')"><span>Par jour</span><span>○</span></div><div class="opt" onclick="setFreq(this,'Par semaine')"><span>Par semaine</span><span>○</span></div><div class="opt active" onclick="setFreq(this,'Par mois')"><span>Par mois</span><span>●</span></div><div class="opt" id="blocBox"><div><b id="blocLabel">🔒 Bloquer mon épargne</b><br><small style="opacity:.8">Jusqu'à l'échéance</small></div><input type="checkbox" id="bloque"></div><input id="montant" type="number" class="input" placeholder="Premier dépôt"><input id="wa" class="input" placeholder="WhatsApp"><button class="input" style="background:#ff5000;color:#fff;border-radius:999px" onclick="placerLegal()">Créer mon épargne</button></div>
 </div></div>
-<div class="modal" id="mret"><div class="sheet"><div class="navrow"><span>Retrait direct</span><button class="navbtn" onclick="closeM()">X</button></div><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;border-radius:100px" onclick="retirer()">Demander</button></div></div>
+<div class="modal" id="mret"><div class="sheet"><div class="navrow"><span><b>Retrait direct</b></span><button class="navbtn" onclick="closeM()">✕</button></div><input id="rmont" type="number" placeholder="Montant" class="input"><input id="rwa" placeholder="WhatsApp" class="input"><button class="input" style="background:#c0392b;color:#fff;border-radius:999px" onclick="retirer()">Demander le retrait</button></div></div>
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg"></div><button onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg"></div><div style="display:flex;gap:8px"><button onclick="doConfirm(false)">Non</button><button onclick="doConfirm(true)">Oui</button></div></div></div>
+<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg"></div><div style="display:flex;gap:8px;justify-content:center"><button onclick="doConfirm(false)">Non</button><button onclick="doConfirm(true)">Oui</button></div></div></div>
 <script>
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
@@ -67,34 +140,58 @@ function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;do
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
+function fmt(n){return Number(n||0).toLocaleString('fr-FR')+' XOF';}
 function displayUser(u){if(!u)return;var full=((u.prenom||'')+' '+(u.nom||'')).trim()||u.nom||'Client';document.getElementById('uname').textContent=full;document.getElementById('uemail').textContent=u.email||u.phone||'';document.getElementById('av').textContent=(full[0]||'A').toUpperCase();document.getElementById('wa').value=u.phone||'';document.getElementById('rwa').value=u.phone||'';}
 async function chargerInfosCompte(){var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!u||!u.phone){location.href='index.html';return null;}var k=u.phone.replace(/[^0-9]/g,'');displayUser(u);try{var c=await db.ref('clients/'+k).once('value');var us=await db.ref('users/'+k).once('value');var m=Object.assign({},u,c.val()||{},us.val()||{});localStorage.setItem('mayne_current_user',JSON.stringify(m));displayUser(m);return k;}catch(e){return k;}}
 function parseEcheance(s){if(!s)return null;var p=s.split('/');if(p.length!==3)return null;return new Date(p[2]+'-'+p[1]+'-'+p[0]);}
 async function init(){
 uid=await chargerInfosCompte();if(!uid)return;
-db.ref('clients/'+uid).on('value',function(s){var d=s.val()||{};soldePrincipal=+d.solde||0;soldeEpargne=+d.solde_epargne||0;document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';document.getElementById('rec').textContent=soldeEpargne.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';if(d.verifie)document.getElementById('kyc').style.display='none';updateBlocUI();if(soldeEpargne<=0){document.getElementById('histo').innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';}});
-db.ref('epargne/'+uid).on('value',function(s){var c=document.getElementById('histo');blockedEpargnes=[];blockedTotal=0;if(!s.exists()||soldeEpargne<=0){c.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';updateBlocUI();return;}var h='',cnt=0;s.forEach(function(ch){var v=ch.val();var key=ch.key;var collecte=+(v.montantCollecte!=null?v.montantCollecte:v.montant||0);if(v.type==='Retrait')return;if(collecte<=0)return;if(v.bloque){var fin=parseEcheance(v.echeance);if(fin&&fin>new Date()){blockedEpargnes.push(v);blockedTotal+=collecte;}}cnt++;h='<div class=item onclick="location.href=\'epargne-detail.html?id='+key+'\'"><div><b>'+(v.icon||'')+' '+(v.nom||v.type)+'</b><br><small>'+v.date+' - '+(v.frequence||'')+' '+(v.bloque?' - Bloquee '+v.echeance:'')+'</small></div><b>'+collecte+' XOF</b></div>'+h;});c.innerHTML=cnt?h:'<div style="background:#fff;border-radius:16px;padding:24px;text-align:center;color:#000">Aucune epargne active</div>';updateBlocUI();});
+db.ref('clients/'+uid).on('value',function(s){var d=s.val()||{};soldePrincipal=+d.solde||0;soldeEpargne=+d.solde_epargne||0;document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'••••••';document.getElementById('rec').textContent=soldeEpargne.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';if(d.verifie)document.getElementById('kyc').style.display='none';updateBlocUI();});
+db.ref('epargne/'+uid).on('value',function(s){
+  var c=document.getElementById('histo');blockedEpargnes=[];blockedTotal=0;
+  if(!s.exists()){c.innerHTML='<div class="empty"><div class="big">🐷</div><p>Aucune épargne active.<br>Commence ta première épargne dès maintenant.</p><button onclick="openN()">+ Créer une épargne</button></div>';document.getElementById('histoCount').textContent='';updateBlocUI();return;}
+  var h='',cnt=0;var items=[];
+  s.forEach(function(ch){var v=ch.val();v._key=ch.key;items.push(v);});
+  items.reverse();
+  items.forEach(function(v){
+    var collecte=+(v.montantCollecte!=null?v.montantCollecte:v.montant||0);
+    if(v.type==='Retrait')return; if(collecte<=0)return;
+    var isBlocked=false,fin=parseEcheance(v.echeance);
+    if(v.bloque && fin && fin>new Date()){blockedEpargnes.push(v);blockedTotal+=collecte;isBlocked=true;}
+    var obj=+v.objectif||0; var pct=obj>0?Math.min(100,Math.round(collecte/obj*100)):0;
+    cnt++;
+    h+='<div class="ep-card" onclick="location.href=\'epargne-detail.html?id='+v._key+'\'">'
+      +'<div class="ep-top"><div class="ep-left"><div class="ep-ico">'+(v.icon||'🐷')+'</div><div><div class="ep-name">'+(v.nom||v.type||'Épargne')+'</div><div class="ep-meta">'+(v.date||'')+' • '+(v.frequence||'')+'</div></div></div>'
+      +'<div class="ep-amount"><b>'+collecte.toLocaleString('fr-FR')+' XOF</b><span>'+(obj>0?'Objectif '+obj.toLocaleString('fr-FR')+' XOF':'Sans objectif')+'</span></div></div>'
+      +(isBlocked?'<span class="badge badge-locked">🔒 Bloquée jusqu\'au '+v.echeance+'</span>':'<span class="badge badge-free">✅ Disponible</span>')
+      +(obj>0?'<div class="progress"><div class="progress-fill" style="width:'+pct+'%"></div></div><div class="progress-row"><span><b>'+pct+'%</b> atteint</span><span>Reste '+(obj-collecte>0?(obj-collecte).toLocaleString('fr-FR')+' XOF':'Objectif atteint 🎉')+'</span></div>':'')
+      +'</div>';
+  });
+  c.innerHTML=cnt?h:'<div class="empty"><div class="big">🐷</div><p>Aucune épargne active.</p><button onclick="openN()">+ Créer une épargne</button></div>';
+  document.getElementById('histoCount').textContent=cnt?cnt+' épargne(s)':'';
+  updateBlocUI();
+});
 }
-function updateBlocUI(){var info=document.getElementById('blocInfo');var blockedReel=Math.min(blockedTotal,soldeEpargne);var dispo=Math.max(0,soldeEpargne-blockedReel);if(blockedEpargnes.length>0&&soldeEpargne>0){info.style.display='block';info.innerHTML='⚠️ '+blockedReel+' XOF bloques jusqu au '+blockedEpargnes[0].echeance+'. Dispo : '+dispo+' XOF';}else{info.style.display='none';}}
-function toggleSolde(){vis=!vis;document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'------';}
+function updateBlocUI(){var info=document.getElementById('blocInfo');var blockedReel=Math.min(blockedTotal,soldeEpargne);var dispo=Math.max(0,soldeEpargne-blockedReel);if(blockedEpargnes.length>0&&soldeEpargne>0){info.style.display='block';info.innerHTML='⚠️ '+blockedReel.toLocaleString('fr-FR')+' XOF bloqués jusqu\'au '+blockedEpargnes[0].echeance+' • Dispo : '+dispo.toLocaleString('fr-FR')+' XOF';}else{info.style.display='none';}}
+function toggleSolde(){vis=!vis;document.getElementById('solde').textContent=vis?soldePrincipal.toFixed(2)+' XOF':'••••••';document.getElementById('eyeBtn').textContent=vis?'👁️':'🙈';}
 function openN(){document.getElementById('mnew').classList.add('show');goStep(0);}
-function openR(){var b=Math.min(blockedTotal,soldeEpargne);var d=Math.max(0,soldeEpargne-b);if(soldeEpargne<=0){showAlert('Solde epargne vide');return;}if(b>0&&d<=0){showAlert('Retrait bloque : '+b+' XOF jusqu au '+blockedEpargnes[0].echeance);return;}document.getElementById('mret').classList.add('show');}
+function openR(){var b=Math.min(blockedTotal,soldeEpargne);var d=Math.max(0,soldeEpargne-b);if(soldeEpargne<=0){showAlert('Solde épargne vide');return;}if(b>0&&d<=0){showAlert('Retrait bloqué : '+b+' XOF jusqu\'au '+blockedEpargnes[0].echeance);return;}document.getElementById('mret').classList.add('show');}
 function closeM(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('show')})}
 function goStep(n){['step0','step1','step2','step3'].forEach(function(id,i){document.getElementById(id).style.display=i===n?'block':'none';});}
-function choisirType(t){if(t==='perso')goStep(1);else showAlert('Groupe bientot');}
+function choisirType(t){if(t==='perso')goStep(1);else showAlert('Tontine de groupe bientôt disponible');}
 function pickIcon(el,i){icon=i;el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.remove('active')});el.classList.add('active');}
-function setRythme(el,r){rythme=r;document.getElementById('step2').querySelectorAll('.opt').forEach(function(o){o.classList.remove('active');o.lastElementChild.textContent='O';});el.classList.add('active');el.lastElementChild.textContent='X';document.getElementById('dateFixeBox').style.display=r==='A une date precise'?'block':'none';}
-function setFreq(el,f){frequence=f;el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.remove('active');o.lastElementChild.textContent='O';});el.classList.add('active');el.lastElementChild.textContent='X';}
+function setRythme(el,r){rythme=r;document.getElementById('step2').querySelectorAll('.opt').forEach(function(o){o.classList.remove('active');o.lastElementChild.textContent='○';});el.classList.add('active');el.lastElementChild.textContent='●';document.getElementById('dateFixeBox').style.display=r==='A une date precise'?'block':'none';}
+function setFreq(el,f){frequence=f;el.parentNode.querySelectorAll('.opt').forEach(function(o){o.classList.remove('active');o.lastElementChild.textContent='○';});el.classList.add('active');el.lastElementChild.textContent='●';}
 function placerLegal(){
 var nom=document.getElementById('nomEp').value.trim()||'Mayne';var obj=Number(document.getElementById('objectif').value)||0;var mt=Number(document.getElementById('montant').value);
-if(!mt)return showAlert('Montant');if(mt>soldePrincipal)return showAlert('Solde insuffisant');
+if(!mt)return showAlert('Entre un montant');if(mt>soldePrincipal)return showAlert('Solde insuffisant');
 var echeance,joursRestants,tours,bloque;var intervalDays=frequence==='Par jour'?1:frequence==='Par semaine'?7:30;var intervalSec=intervalDays*86400;
-if(rythme==='A une date precise'){var dv=document.getElementById('dateFixe').value;if(!dv)return showAlert('Date fixe');var sel=new Date(dv);var today=new Date();today.setHours(0,0,0,0);var diff=Math.ceil((sel-today)/86400000);if(diff<=0)return showAlert('Date future');echeance=sel.toLocaleDateString('fr-FR');joursRestants=diff;tours=obj>0?Math.ceil(obj/mt):Math.max(1,Math.ceil(diff/intervalDays));bloque=true;}else{tours=obj>0?Math.ceil(obj/mt):5;var total=tours*intervalDays;joursRestants=Math.max(0,total-intervalDays);var d=new Date();d.setDate(d.getDate()+joursRestants);echeance=d.toLocaleDateString('fr-FR');bloque=document.getElementById('bloque').checked;}
-db.ref('clients/'+uid).once('value').then(function(s){var c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt,solde_epargne:(+c.solde_epargne||0)+mt});}).then(function(){return db.ref('epargne/'+uid).push().set({type:'Epargne personnelle',nom:nom,icon:icon,objectif:obj,montant:mt,montantCollecte:mt,rythme:rythme,frequence:frequence,bloque:bloque,echeance:echeance,joursRestants:joursRestants,tours:tours,prochainDepot:new Date(Date.now()+intervalSec*1000).toISOString(),date:new Date().toLocaleString('fr-FR'),statut:'actif'});}).then(function(){notifEpargne("Nouvelle epargne","Tontine "+nom+" creee: "+mt+" XOF - "+frequence+" - Bloquee jusqu au "+echeance);showAlert('Cree '+nom);closeM();});
+if(rythme==='A une date precise'){var dv=document.getElementById('dateFixe').value;if(!dv)return showAlert('Choisis une date fixe');var sel=new Date(dv);var today=new Date();today.setHours(0,0,0,0);var diff=Math.ceil((sel-today)/86400000);if(diff<=0)return showAlert('Choisis une date future');echeance=sel.toLocaleDateString('fr-FR');joursRestants=diff;tours=obj>0?Math.ceil(obj/mt):Math.max(1,Math.ceil(diff/intervalDays));bloque=true;}else{tours=obj>0?Math.ceil(obj/mt):5;var total=tours*intervalDays;joursRestants=Math.max(0,total-intervalDays);var d=new Date();d.setDate(d.getDate()+joursRestants);echeance=d.toLocaleDateString('fr-FR');bloque=document.getElementById('bloque').checked;}
+db.ref('clients/'+uid).once('value').then(function(s){var c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)-mt,solde_epargne:(+c.solde_epargne||0)+mt});}).then(function(){return db.ref('epargne/'+uid).push().set({type:'Epargne personnelle',nom:nom,icon:icon,objectif:obj,montant:mt,montantCollecte:mt,rythme:rythme,frequence:frequence,bloque:bloque,echeance:echeance,joursRestants:joursRestants,tours:tours,prochainDepot:new Date(Date.now()+intervalSec*1000).toISOString(),date:new Date().toLocaleString('fr-FR'),statut:'actif'});}).then(function(){notifEpargne("Nouvelle epargne","Tontine "+nom+" créée: "+mt+" XOF - "+frequence+" - Bloquée jusqu'au "+echeance);showAlert('Épargne '+nom+' créée ✅');closeM();});
 }
 function retirer(){
-var mt=Number(document.getElementById('rmont').value);if(!mt)return showAlert('Montant');var b=Math.min(blockedTotal,soldeEpargne);var d=Math.max(0,soldeEpargne-b);if(mt>d)return showAlert('Max dispo '+d);
-db.ref('epargne/'+uid).once('value').then(function(snap){var reste=mt,upd={};snap.forEach(function(ch){if(reste<=0)return;var v=ch.val(),k=ch.key;if(v.type==='Retrait'||v.bloque)return;var col=+(v.montantCollecte||0);if(col<=0)return;var take=Math.min(col,reste);upd['epargne/'+uid+'/'+k+'/montantCollecte']=col-take;reste-=take;});return db.ref().update(upd);}).then(function(){return db.ref('clients/'+uid).once('value');}).then(function(s){var c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});}).then(function(){notifEpargne("Retrait epargne","Retrait direct "+mt+" XOF");showAlert('Retrait '+mt+' XOF');closeM();});
+var mt=Number(document.getElementById('rmont').value);if(!mt)return showAlert('Entre un montant');var b=Math.min(blockedTotal,soldeEpargne);var d=Math.max(0,soldeEpargne-b);if(mt>d)return showAlert('Max dispo : '+d.toLocaleString('fr-FR')+' XOF');
+db.ref('epargne/'+uid).once('value').then(function(snap){var reste=mt,upd={};snap.forEach(function(ch){if(reste<=0)return;var v=ch.val(),k=ch.key;if(v.type==='Retrait'||v.bloque)return;var col=+(v.montantCollecte||0);if(col<=0)return;var take=Math.min(col,reste);upd['epargne/'+uid+'/'+k+'/montantCollecte']=col-take;reste-=take;});return db.ref().update(upd);}).then(function(){return db.ref('clients/'+uid).once('value');}).then(function(s){var c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+mt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});}).then(function(){notifEpargne("Retrait epargne","Retrait direct "+mt+" XOF");showAlert('Retrait '+mt+' XOF ✅');closeM();});
 }firebase.auth().onAuthStateChanged(function(user){
   if(user){ init(); } 
   else { firebase.auth().signInAnonymously(); }
