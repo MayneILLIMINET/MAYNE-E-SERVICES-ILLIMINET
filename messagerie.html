@@ -14,14 +14,14 @@ const CLOUDINARY_CLOUD_NAME="dkzpkvidk";
 const CLOUDINARY_PRESET_AUDIO="mayneaudio";
 const CLOUDINARY_PRESET_IMAGE="mayneimages";
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
-// === AUDIO = 100% WEB, même dans l'app AppInventor ===
-// On ne passe PLUS par AppInventor pour l'audio, donc plus de STOP_AUDIO / AUDIO_URL_ à gérer dans les blocs
-const FORCE_WEB_AUDIO=true;
+const IS_APP = !!(window.AppInventor && window.AppInventor.getWebViewString);
 async function pushJS(destId,titre,msg){ if(!destId) return; try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})}); }catch(e){} }
 function dbg(msg){ console.log('[MAYNE AUDIO]',msg); const el=document.getElementById('audio-debug'); if(el){ el.style.display='block'; el.textContent='DEBUG: '+msg; } }
-async function uploadAudioToCloudinary(blob){
+function sendToApp(msg){ if(window.AppInventor){ try{ window.AppInventor.setWebViewString(msg); }catch(e){} } }
+async function uploadAudioToCloudinary(blob, fileName){
   const fd=new FormData();
-  fd.append('file', blob, 'vocal_'+Date.now()+'.wav');
+  // On garde le nom / extension d'origine (m4a, 3gp, mp3, wav...) - Cloudinary auto détecte
+  fd.append('file', blob, fileName || ('vocal_'+Date.now()+'.m4a'));
   fd.append('upload_preset', CLOUDINARY_PRESET_AUDIO);
   fd.append('folder','audio');
   const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});
@@ -30,14 +30,9 @@ async function uploadAudioToCloudinary(blob){
   return j.secure_url;
 }
 async function uploadImageToCloudinary(blob){
-  const fd=new FormData();
-  fd.append('file',blob,'img_'+Date.now()+'.jpg');
-  fd.append('upload_preset',CLOUDINARY_PRESET_IMAGE);
-  fd.append('folder','images');
+  const fd=new FormData(); fd.append('file',blob,'img_'+Date.now()+'.jpg'); fd.append('upload_preset',CLOUDINARY_PRESET_IMAGE); fd.append('folder','images');
   const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
-  const j=await res.json();
-  if(!j.secure_url) throw new Error(j.error?.message||'Upload image échoué');
-  return j.secure_url;
+  const j=await res.json(); if(!j.secure_url) throw new Error(j.error?.message||'Upload image échoué'); return j.secure_url;
 }
 </script>
 <style>
@@ -166,6 +161,7 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 <button class="nav-item" onclick="location.href='index.html'"><span class="ico">❓</span>Aide</button>
 </div>
 <input type="file" id="file-picker" accept="image/*" style="display:none" onchange="onFilePicked(event)">
+<input type="file" id="audio-picker" accept="audio/*" capture style="display:none" onchange="onAudioPicked(event)">
 <script>
 let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null;
 window.currentConvId=null;
@@ -191,17 +187,33 @@ const STICKERS={
 };
 function getThumb(url,w){ if(!url) return ''; if(url.includes('/upload/')) return url.replace('/upload/','/upload/w_'+w+',q_auto,f_auto/'); return url; }
 function openImage(url){ document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
-// Photos : on garde AppInventor si on est dans l'app, sinon file picker web
-function pickImageChat(){ if(window.AppInventor && !FORCE_WEB_AUDIO){ window.AppInventor.setWebViewString('PICK_CHAT'); } else if(window.AppInventor){ window.AppInventor.setWebViewString('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
+function pickImageChat(){ if(window.AppInventor){ sendToApp('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
 async function onFilePicked(e){
   const f=e.target.files[0]; if(!f||!window.currentConvId) return;
+  try{ const url=await uploadImageToCloudinary(f); const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }catch(err){ alert('Photo échouée : '+err.message); } e.target.value='';
+}
+// === NOUVEAU : DANS L'APP, le vocal passe par le sélecteur natif Android, pas par getUserMedia ===
+async function onAudioPicked(e){
+  const f=e.target.files[0]; e.target.value='';
+  if(!f||!window.currentConvId) return;
+  dbg('Fichier audio reçu: '+f.name+' size='+f.size+' type='+f.type);
+  if(f.size<1000){ alert('Enregistrement trop court'); return; }
+  // Durée approximative via un audio temporaire
+  let duree=0;
+  try{ const tmpUrl=URL.createObjectURL(f); const tmp=new Audio(tmpUrl); duree=await new Promise(res=>{ tmp.onloadedmetadata=()=>{ res(Math.floor(tmp.duration)||0); }; tmp.onerror=()=>res(0); setTimeout(()=>res(0),1500); }); URL.revokeObjectURL(tmpUrl); }catch(err){}
+  const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi sur Cloudinary...'; up.classList.add('show'); }
+  // On montre la barre d'enregistrement le temps de l'upload pour que l'utilisateur voie que ça envoie
+  const recBox=document.getElementById('rec-box'); if(recBox) recBox.classList.add('show');
+  const inputBox=document.getElementById('input-box'); if(inputBox) inputBox.style.display='none';
   try{
-    const url=await uploadImageToCloudinary(f);
-    const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
-    database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()});
-    pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo');
-  }catch(err){ alert('Photo échouée : '+err.message); }
-  e.target.value='';
+    const cloudUrl=await uploadAudioToCloudinary(f, f.name);
+    dbg('Cloudinary OK '+cloudUrl.substring(0,70));
+    recElapsed = duree || 0;
+    await pushAudioMessage(cloudUrl);
+    dbg('Push OK - vocal envoyé');
+  }catch(err){ dbg('ERREUR Cloudinary: '+err.message); alert('Envoi vocal échoué : '+err.message); }
+  if(up) up.classList.remove('show');
+  resetRecUI();
 }
 function fmtTime(s){ const m=Math.floor(s/60); const sec=s%60; return m+':'+String(sec).padStart(2,'0'); }
 function waveHtml(n){ let h=''; for(let i=0;i<n;i++){ const ht=5+Math.floor(Math.random()*24); h+='<span style="height:'+ht+'px"></span>'; } return h; }
@@ -211,193 +223,102 @@ function renderStickers(cat){ document.querySelectorAll('.sticker-tab').forEach(
 function sendSticker(emoji){ if(!window.currentConvId) return; const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'sticker',texte:emoji,createdAt:Date.now()}); pushJS(otherId,'🧩 Sticker - '+document.getElementById('user-name').innerText,emoji); document.getElementById('sticker-panel').classList.remove('show'); }
 function toggleSpeed(){ recSpeed=recSpeed===1?1.5:recSpeed===1.5?2:1; const b=document.getElementById('rec-speed'); if(b) b.textContent=recSpeed+'×'; }
 function togglePlayAudio(id){
-  const aud=document.getElementById('aud-'+id); if(!aud) return;
-  const btn=document.getElementById('play-'+id);
+  const aud=document.getElementById('aud-'+id); if(!aud) return; const btn=document.getElementById('play-'+id);
   document.querySelectorAll('audio').forEach(a=>{ if(a.id!=='aud-'+id) a.pause(); });
   if(previewAudio) previewAudio.pause();
-  dbg('Lecture vocal '+id);
-  if(aud.paused){ aud.playbackRate=recSpeed; aud.play().then(()=>dbg('Lecture OK')).catch(e=>{ dbg('ERREUR lecture: '+e.message); alert('Audio illisible : '+e.message); }); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
+  if(aud.paused){ aud.playbackRate=recSpeed; aud.play().then(()=>dbg('Lecture OK')).catch(e=>{ alert('Audio illisible : '+e.message); }); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
 }
 function togglePreview(){
   if(!recPaused) return;
+  if(IS_APP) return;
   if(previewPlaying && previewAudio){ previewAudio.pause(); previewPlaying=false; const b=document.getElementById('preview-play'); if(b) b.textContent='▶️'; const l=document.getElementById('listen-label'); if(l) l.textContent='Écouter'; return; }
   if(!wavChunks.length){ alert('Rien à écouter'); return; }
   if(previewUrl) URL.revokeObjectURL(previewUrl);
-  const blob=wavEncode(wavChunks, wavSampleRate);
-  previewUrl=URL.createObjectURL(blob);
+  previewUrl=URL.createObjectURL(wavEncode(wavChunks, wavSampleRate));
   if(previewAudio) previewAudio.pause();
-  previewAudio=new Audio(previewUrl);
-  previewAudio.playbackRate=recSpeed;
-  previewPlaying=true;
+  previewAudio=new Audio(previewUrl); previewAudio.playbackRate=recSpeed; previewPlaying=true;
   const b=document.getElementById('preview-play'); if(b) b.textContent='⏸️';
   const l=document.getElementById('listen-label'); if(l) l.textContent='En écoute...';
   const wave=document.getElementById('preview-wave'); if(wave) wave.innerHTML=waveHtml(24);
-  previewAudio.ontimeupdate=()=>{
-    const pct=previewAudio.duration?previewAudio.currentTime/previewAudio.duration:0;
-    const spans=document.querySelectorAll('#preview-wave span');
-    spans.forEach((s,i)=>{ s.style.background=i/spans.length<pct?'#00a884':'rgba(255,255,255,.4)'; });
-    const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(Math.floor(previewAudio.currentTime))+' / '+fmtTime(recElapsed);
-  };
+  previewAudio.ontimeupdate=()=>{ const pct=previewAudio.duration?previewAudio.currentTime/previewAudio.duration:0; const spans=document.querySelectorAll('#preview-wave span'); spans.forEach((s,i)=>{ s.style.background=i/spans.length<pct?'#00a884':'rgba(255,255,255,.4)'; }); const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(Math.floor(previewAudio.currentTime))+' / '+fmtTime(recElapsed); };
   previewAudio.onended=()=>{ previewPlaying=false; if(b) b.textContent='▶️'; if(l) l.textContent='Écouter'; const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(recElapsed)+' / '+fmtTime(recElapsed); };
-  previewAudio.play().catch(()=>{ alert('Aperçu indisponible, envoie puis écoute dans la conversation'); previewPlaying=false; });
+  previewAudio.play().catch(()=>{ alert('Aperçu indisponible'); previewPlaying=false; });
 }
 async function startRecording(){
+  // DANS L'APP : on n'utilise NI getUserMedia NI SoundRecorder AppInventor
+  // On ouvre l'enregistreur natif Android via le sélecteur de fichier audio
+  if(IS_APP){
+    dbg('APP : ouverture enregistreur natif Android...');
+    document.getElementById('audio-picker').click();
+    return;
+  }
   if(isRecording) return;
   isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
-  if(inputBox) inputBox.style.display='none';
-  if(recBox) recBox.classList.add('show');
+  if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show');
   const mic=document.getElementById('btn-rec'); if(mic) mic.style.display='none';
   const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
   const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show');
   const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show');
-  updateRecWave();
-  clearInterval(recTimer);
+  updateRecWave(); clearInterval(recTimer);
   recTimer=setInterval(()=>{ if(!recPaused){ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); } },300);
-  // TOUJOURS WEB, même dans l'app - pas de REC_AUDIO
-  dbg('Mode WEB WAV - demande micro...');
-  try{
-    wavStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    wavCtx=new (window.AudioContext||window.webkitAudioContext)();
-    wavSampleRate=wavCtx.sampleRate;
-    wavSource=wavCtx.createMediaStreamSource(wavStream);
-    wavProcessor=wavCtx.createScriptProcessor(4096,1,1);
-    wavProcessor.onaudioprocess=e=>{ if(recPaused) return; const d=e.inputBuffer.getChannelData(0); wavChunks.push(new Float32Array(d)); };
-    wavSource.connect(wavProcessor); wavProcessor.connect(wavCtx.destination);
-    dbg('Enregistrement WAV démarré sr='+wavSampleRate);
-  }catch(e){ dbg('ERREUR micro: '+e.message+' - Autorise le micro pour le WebViewer dans AppInventor'); alert('Micro refusé : '+e.message+'\n\nDans AppInventor : coche la permission RECORD_AUDIO + dans les propriétés du WebViewer, autorise l accès au micro. Sinon teste dans Chrome.'); cancelRecording(); }
+  dbg('WEB WAV : demande micro...');
+  try{ wavStream=await navigator.mediaDevices.getUserMedia({audio:true}); wavCtx=new (window.AudioContext||window.webkitAudioContext)(); wavSampleRate=wavCtx.sampleRate; wavSource=wavCtx.createMediaStreamSource(wavStream); wavProcessor=wavCtx.createScriptProcessor(4096,1,1); wavProcessor.onaudioprocess=e=>{ if(recPaused) return; wavChunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); }; wavSource.connect(wavProcessor); wavProcessor.connect(wavCtx.destination); dbg('WAV démarré'); }catch(e){ dbg('ERREUR micro WEB: '+e.message); alert('Micro refusé'); cancelRecording(); }
 }
 function togglePauseRec(){
+  if(IS_APP) return;
   if(!isRecording) return;
-  if(!recPaused){
-    recPaused=true;
-    recElapsed=Math.floor((Date.now()-recStartTime)/1000);
-    if(wavCtx && wavCtx.state==='running'){ wavCtx.suspend(); }
-    const label=document.getElementById('pause-label'); if(label) label.textContent='Reprendre';
-    const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='🎙️';
-    const prev=document.getElementById('rec-preview'); if(prev) prev.classList.add('show');
-    const listen=document.getElementById('btn-listen'); if(listen) listen.classList.add('show');
-    const t=document.getElementById('preview-time'); if(t) t.textContent='0:00 / '+fmtTime(recElapsed);
-    const w=document.getElementById('preview-wave'); if(w) w.innerHTML=waveHtml(24);
-  } else {
-    recPaused=false;
-    if(previewAudio) previewAudio.pause(); previewPlaying=false;
-    const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show');
-    const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show');
-    const label=document.getElementById('pause-label'); if(label) label.textContent='Pause';
-    const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
-    recStartTime=Date.now()-recElapsed*1000;
-    if(wavCtx && wavCtx.state==='suspended'){ wavCtx.resume(); }
-  }
+  if(!recPaused){ recPaused=true; recElapsed=Math.floor((Date.now()-recStartTime)/1000); if(wavCtx && wavCtx.state==='running') wavCtx.suspend();
+    const label=document.getElementById('pause-label'); if(label) label.textContent='Reprendre'; const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='🎙️';
+    const prev=document.getElementById('rec-preview'); if(prev) prev.classList.add('show'); const listen=document.getElementById('btn-listen'); if(listen) listen.classList.add('show');
+    const t=document.getElementById('preview-time'); if(t) t.textContent='0:00 / '+fmtTime(recElapsed); const w=document.getElementById('preview-wave'); if(w) w.innerHTML=waveHtml(24);
+  } else { recPaused=false; if(previewAudio) previewAudio.pause(); previewPlaying=false; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show'); const label=document.getElementById('pause-label'); if(label) label.textContent='Pause'; const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️'; recStartTime=Date.now()-recElapsed*1000; if(wavCtx && wavCtx.state==='suspended') wavCtx.resume(); }
 }
-function stopWav(){
-  try{ if(wavProcessor) wavProcessor.disconnect(); }catch(e){}
-  try{ if(wavSource) wavSource.disconnect(); }catch(e){}
-  try{ if(wavCtx) wavCtx.close(); }catch(e){}
-  if(wavStream) wavStream.getTracks().forEach(t=>t.stop());
-  wavCtx=null; wavProcessor=null; wavSource=null; wavStream=null;
-}
+function stopWav(){ try{ if(wavProcessor) wavProcessor.disconnect(); }catch(e){} try{ if(wavSource) wavSource.disconnect(); }catch(e){} try{ if(wavCtx) wavCtx.close(); }catch(e){} if(wavStream) wavStream.getTracks().forEach(t=>t.stop()); wavCtx=null; wavProcessor=null; wavSource=null; wavStream=null; }
 function cancelRecording(){
+  if(IS_APP){ resetRecUI(); return; }
   if(!isRecording && !wavChunks.length) { resetRecUI(); return; }
   isRecording=false; recPaused=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  stopWav(); wavChunks=[];
-  dbg('Annulé');
-  resetRecUI();
+  stopWav(); wavChunks=[]; resetRecUI();
 }
 async function pushAudioMessage(url){
   dbg('Push Firebase '+url.substring(0,70));
-  try{
-    const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
-    const ref=await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false});
-    dbg('Push OK '+ref.key);
-    pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
-  }catch(e){ dbg('ERREUR Push: '+e.message); alert('Push échoué: '+e.message); }
+  try{ const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); const ref=await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false}); dbg('Push OK '+ref.key); pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal'); }catch(e){ dbg('ERREUR Push: '+e.message); alert('Push échoué: '+e.message); }
 }
 async function stopAndSendRecording(){
-  dbg('Clic Envoyer - mode WEB direct');
+  if(IS_APP){ return; }
   if(!isRecording && !wavChunks.length) return;
-  isRecording=false; clearInterval(recTimer);
-  if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  const blob=wavEncode(wavChunks, wavSampleRate);
-  dbg('Blob WAV size='+blob.size);
-  if(!blob || blob.size<1000){ dbg('Blob vide'); resetRecUI(); return; }
-  const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi sur Cloudinary...'; up.classList.add('show'); }
-  try{
-    const cloudUrl=await uploadAudioToCloudinary(blob);
-    dbg('Cloudinary OK '+cloudUrl.substring(0,70));
-    await pushAudioMessage(cloudUrl);
-  }catch(e){ dbg('ERREUR Cloudinary: '+e.message); alert('Envoi vocal échoué : '+e.message); }
-  if(up) up.classList.remove('show');
-  stopWav(); wavChunks=[];
-  resetRecUI();
+  isRecording=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false;
+  const blob=wavEncode(wavChunks, wavSampleRate); dbg('Blob WAV size='+blob.size);
+  if(!blob || blob.size<1000){ resetRecUI(); return; }
+  const up=document.getElementById('rec-upload'); if(up) up.classList.add('show');
+  try{ const cloudUrl=await uploadAudioToCloudinary(blob, 'vocal_'+Date.now()+'.wav'); dbg('Cloudinary OK'); await pushAudioMessage(cloudUrl); }catch(e){ dbg('ERREUR Cloudinary: '+e.message); alert('Envoi vocal échoué : '+e.message); }
+  if(up) up.classList.remove('show'); stopWav(); wavChunks=[]; resetRecUI();
 }
 function resetRecUI(){
-  const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
-  if(inputBox) inputBox.style.display='flex';
-  if(recBox) recBox.classList.remove('show');
+  const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='flex'; if(recBox) recBox.classList.remove('show');
   const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('locked'); mic.innerText='🎙️'; mic.style.transform=''; }
-  const label=document.getElementById('pause-label'); if(label) label.textContent='Pause';
-  const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
-  const t=document.getElementById('rec-time'); if(t) t.textContent='0:00';
-  const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show');
-  const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show');
-  const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show');
+  const label=document.getElementById('pause-label'); if(label) label.textContent='Pause'; const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
+  const t=document.getElementById('rec-time'); if(t) t.textContent='0:00'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show'); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show');
 }
 function initMicSwipe(){
   const mic=document.getElementById('btn-rec'); if(!mic) return;
-  mic.addEventListener('touchstart',e=>{ micStartY=e.touches[0].clientY; micSwipeUp=false; const hint=document.getElementById('lock-hint'); if(hint) hint.classList.add('show'); },{passive:true});
-  mic.addEventListener('touchmove',e=>{
-    const dy=micStartY - e.touches[0].clientY;
-    if(dy>60){ micSwipeUp=true; mic.style.transform='translateY(-'+Math.min(dy,60)+'px)'; if(!isRecording) startRecording(); }
-    if(dy<-40 && isRecording && !micLocked){ cancelRecording(); }
-  },{passive:true});
-  mic.addEventListener('touchend',e=>{
-    const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
-    mic.style.transform='translateY(0)';
-    if(micSwipeUp && isRecording){ micLocked=true; return; }
-    if(!isRecording && !micSwipeUp){ startRecording(); }
-  },{passive:true});
+  // Dans l'app, un simple clic ouvre l'enregistreur natif. Pas de swipe.
+  mic.addEventListener('click',()=>{ if(IS_APP){ startRecording(); } });
+  mic.addEventListener('touchstart',e=>{ micStartY=e.touches[0].clientY; micSwipeUp=false; const hint=document.getElementById('lock-hint'); if(hint && !IS_APP) hint.classList.add('show'); },{passive:true});
+  mic.addEventListener('touchmove',e=>{ if(IS_APP) return; const dy=micStartY - e.touches[0].clientY; if(dy>60){ micSwipeUp=true; mic.style.transform='translateY(-'+Math.min(dy,60)+'px)'; if(!isRecording) startRecording(); } if(dy<-40 && isRecording && !micLocked){ cancelRecording(); } },{passive:true});
+  mic.addEventListener('touchend',e=>{ if(IS_APP) return; const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); mic.style.transform='translateY(0)'; if(micSwipeUp && isRecording){ micLocked=true; return; } if(!isRecording && !micSwipeUp){ startRecording(); } },{passive:true});
   mic.addEventListener('mousedown',e=>{ micStartY=e.clientY; });
-  mic.addEventListener('mouseup',e=>{ const dy=micStartY-e.clientY; if(dy>40){ startRecording(); } });
+  mic.addEventListener('mouseup',e=>{ if(IS_APP) return; const dy=micStartY-e.clientY; if(dy>40){ startRecording(); } });
 }
-function setReply(nom,texte){
-  replyTo={nom,texte};
-  const p=document.getElementById('reply-preview');
-  if(p){ p.style.display='block'; p.innerHTML='<span class="close" onclick="clearReply()">✕</span><b>'+nom+'</b><span>'+texte.substring(0,80)+'</span>'; }
-  const inp=document.getElementById('msg-input'); if(inp) inp.focus();
-}
+function setReply(nom,texte){ replyTo={nom,texte}; const p=document.getElementById('reply-preview'); if(p){ p.style.display='block'; p.innerHTML='<span class="close" onclick="clearReply()">✕</span><b>'+nom+'</b><span>'+texte.substring(0,80)+'</span>'; } const inp=document.getElementById('msg-input'); if(inp) inp.focus(); }
 function clearReply(){ replyTo=null; const p=document.getElementById('reply-preview'); if(p) p.style.display='none'; }
-function initSwipe(){
-  const scroll=document.getElementById('chat-scroll'); if(!scroll) return;
-  scroll.addEventListener('touchstart',e=>{
-    const b=e.target.closest('.msg-bubble'); if(!b) return;
-    const t=e.touches[0]; swipeStartX=t.clientX; swipeStartY=t.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''};
-    b.style.transition='none';
-  },{passive:true});
-  scroll.addEventListener('touchmove',e=>{
-    if(!swipeEl) return;
-    const t=e.touches[0]; const dx=t.clientX-swipeStartX; const dy=t.clientY-swipeStartY;
-    if(Math.abs(dy)>30) return;
-    if(dx>0 && dx<120){ swipeEl.style.transform='translateX('+dx+'px)'; const row=swipeEl.closest('.msg-row'); if(row) row.classList.add('swiping'); }
-  },{passive:true});
-  scroll.addEventListener('touchend',e=>{
-    if(!swipeEl) return;
-    const dx=e.changedTouches[0].clientX-swipeStartX;
-    const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping');
-    swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)';
-    if(dx>65 && swipeData && swipeData.texte){ setReply(swipeData.nom, swipeData.texte); }
-    swipeEl=null; swipeData=null;
-  },{passive:true});
-}
-// Photos via AppInventor uniquement - plus de boucle audio
+function initSwipe(){ const scroll=document.getElementById('chat-scroll'); if(!scroll) return; scroll.addEventListener('touchstart',e=>{ const b=e.target.closest('.msg-bubble'); if(!b) return; const t=e.touches[0]; swipeStartX=t.clientX; swipeStartY=t.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; b.style.transition='none'; },{passive:true}); scroll.addEventListener('touchmove',e=>{ if(!swipeEl) return; const t=e.touches[0]; const dx=t.clientX-swipeStartX; const dy=t.clientY-swipeStartY; if(Math.abs(dy)>30) return; if(dx>0 && dx<120){ swipeEl.style.transform='translateX('+dx+'px)'; const row=swipeEl.closest('.msg-row'); if(row) row.classList.add('swiping'); } },{passive:true}); scroll.addEventListener('touchend',e=>{ if(!swipeEl) return; const dx=e.changedTouches[0].clientX-swipeStartX; const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping'); swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)'; if(dx>65 && swipeData && swipeData.texte){ setReply(swipeData.nom, swipeData.texte); } swipeEl=null; swipeData=null; },{passive:true}); }
+// Photos via AppInventor uniquement - l'audio ne passe plus par AppInventor
 setInterval(async ()=>{
-  if(!window.AppInventor) return;
-  let d=null;
-  try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; }
-  if(!d) return;
-  if(!d.startsWith('CHAT_')) return;
+  if(!window.AppInventor) return; let d=null; try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; } if(!d) return; if(!d.startsWith('CHAT_')) return;
   let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString('');
   const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
   database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()});
@@ -405,46 +326,14 @@ setInterval(async ()=>{
 },400);
 function rechercherUtilisateur(){ const q=document.getElementById('recherche-user-input').value.trim().toLowerCase(); const zone=document.getElementById('resultats-recherche'); if(!q){zone.style.display='none';return;} database.ref('clients').once('value').then(s=>{let h='',c=0; s.forEach(ch=>{const cid=ch.key;const nom=ch.val().nom||'';if(cid===currentUserId)return;if(nom.toLowerCase().includes(q)||cid.includes(q)){c++;h+='<div class="search-item" onclick="selectionnerUserPourChat(\''+cid+'\',\''+nom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="width:36px;height:36px;font-size:13px">'+nom.substring(0,2).toUpperCase()+'</div><div>'+nom+'<br><small style="color:#8696a0">'+cid+'</small></div></div>';}}); zone.innerHTML=c?h:'<div style="padding:12px;color:#8696a0">Aucun utilisateur</div>';zone.style.display='block';});}
 function selectionnerUserPourChat(cid,nom){document.getElementById('recherche-user-input').value='';document.getElementById('resultats-recherche').style.display='none';ouvrirConversation([currentUserId,cid].sort().join('_'),nom);}
-function chargerMessagerie(){
-  if(window.currentConvId) return;
-  database.ref('conversations').once('value').then(snapConv=>{
-    database.ref('clients').once('value').then(snapClients=>{
-      if(window.currentConvId) return;
-      const clients=snapClients.val()||{};
-      const feed=document.getElementById('messagerie-feed');
-      let convs=[];
-      snapConv.forEach(ch=>{
-        const convId=ch.key;
-        if(!convId.includes(currentUserId)) return;
-        const msgs=ch.child('messages').val();
-        if(!msgs) return;
-        const arr=Object.entries(msgs).map(([k,v])=>({...v,_k:k})).sort((a,b)=>b.createdAt-a.createdAt);
-        const unread=Object.values(msgs).filter(m=>m.senderId!==currentUserId && !m.vu).length;
-        convs.push({id:convId,last:arr[0],unread});
-      });
-      convs.sort((a,b)=>b.last.createdAt-a.last.createdAt);
-      let html='';
-      convs.forEach(c=>{
-        const otherId=c.id.split('_').find(id=>id!==currentUserId);
-        const amiNom = clients[otherId]?.nom || c.last.senderNom || otherId;
-        const init=amiNom.substring(0,2).toUpperCase();
-        const prev=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':c.last.type==='sticker'?'🧩 Sticker':c.last.type==='call'?'📞 Appel vocal':(c.last.texte||'').substring(0,40);
-        const h=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-        const colors=['#00a884','#ff5000','#7f66ff','#0084ff','#e91e63','#009688'];
-        const bg=colors[amiNom.length % colors.length];
-        html+='<div class="chat-card" onclick="ouvrirConversation(\''+c.id+'\',\''+amiNom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="background:'+bg+'">'+init+'</div><div class="chat-main"><div class="chat-name">'+amiNom+'</div><div class="chat-preview">'+(c.last.senderId===currentUserId?'<b style="color:#53bdeb">Vous : </b>':'')+prev+'</div></div><div class="chat-meta"><div class="chat-time '+(c.unread?'unread':'')+'">'+h+'</div>'+(c.unread?'<div class="unread-badge">'+c.unread+'</div>':'')+'</div></div>';
-      });
-      feed.classList.remove('chat-mode');
-      feed.innerHTML=html||'<div class="empty-chat"><div style="font-size:48px">💬</div><p><b>Aucune conversation</b><br>Recherche un utilisateur en haut<br>pour démarrer une discussion.</p></div>';
-      database.ref('conversations').on('value',()=>{ if(!window.currentConvId) chargerMessagerie(); });
-    });
-  });
-}
+function chargerMessagerie(){ if(window.currentConvId) return; database.ref('conversations').once('value').then(snapConv=>{ database.ref('clients').once('value').then(snapClients=>{ if(window.currentConvId) return; const clients=snapClients.val()||{}; const feed=document.getElementById('messagerie-feed'); let convs=[]; snapConv.forEach(ch=>{ const convId=ch.key; if(!convId.includes(currentUserId)) return; const msgs=ch.child('messages').val(); if(!msgs) return; const arr=Object.entries(msgs).map(([k,v])=>({...v,_k:k})).sort((a,b)=>b.createdAt-a.createdAt); const unread=Object.values(msgs).filter(m=>m.senderId!==currentUserId && !m.vu).length; convs.push({id:convId,last:arr[0],unread}); }); convs.sort((a,b)=>b.last.createdAt-a.last.createdAt); let html=''; convs.forEach(c=>{ const otherId=c.id.split('_').find(id=>id!==currentUserId); const amiNom = clients[otherId]?.nom || c.last.senderNom || otherId; const init=amiNom.substring(0,2).toUpperCase(); const prev=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':c.last.type==='sticker'?'🧩 Sticker':c.last.type==='call'?'📞 Appel vocal':(c.last.texte||'').substring(0,40); const h=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); const colors=['#00a884','#ff5000','#7f66ff','#0084ff','#e91e63','#009688']; const bg=colors[amiNom.length % colors.length]; html+='<div class="chat-card" onclick="ouvrirConversation(\''+c.id+'\',\''+amiNom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="background:'+bg+'">'+init+'</div><div class="chat-main"><div class="chat-name">'+amiNom+'</div><div class="chat-preview">'+(c.last.senderId===currentUserId?'<b style="color:#53bdeb">Vous : </b>':'')+prev+'</div></div><div class="chat-meta"><div class="chat-time '+(c.unread?'unread':'')+'">'+h+'</div>'+(c.unread?'<div class="unread-badge">'+c.unread+'</div>':'')+'</div></div>'; }); feed.classList.remove('chat-mode'); feed.innerHTML=html||'<div class="empty-chat"><div style="font-size:48px">💬</div><p><b>Aucune conversation</b><br>Recherche un utilisateur en haut<br>pour démarrer une discussion.</p></div>'; database.ref('conversations').on('value',()=>{ if(!window.currentConvId) chargerMessagerie(); }); }); }); }
 function retourListe(){ if(window.currentConvId){ database.ref(`conversations/${window.currentConvId}/messages`).off(); database.ref(`conversations/${window.currentConvId}/typing`).off(); database.ref(`conversations/${window.currentConvId}/recording`).off(); } database.ref('conversations').off(); window.currentConvId=null; replyTo=null; if(isRecording) cancelRecording(); document.getElementById('search-zone').style.display='block'; const f=document.getElementById('messagerie-feed'); f.classList.remove('chat-mode'); f.innerHTML=''; chargerMessagerie(); }
 function ouvrirConversation(convId,nom){
   database.ref('conversations').off(); window.currentConvId=convId; replyTo=null;
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
-  feed.innerHTML='<div class="chat-wrapper"><div id="audio-debug"></div><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ <b>Glisse vers le haut</b> pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button><button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button><button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button><button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  const pauseBtn = IS_APP ? '' : '<button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button>';
+  const listenBtn = IS_APP ? '' : '<button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button>';
+  feed.innerHTML='<div class="chat-wrapper"><div id="audio-debug"></div><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ <b>Glisse vers le haut</b> pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button>'+pauseBtn+listenBtn+'<button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
   const otherId=convId.split('_').find(id=>id!==currentUserId);
@@ -453,62 +342,19 @@ function ouvrirConversation(convId,nom){
   database.ref(`conversations/${convId}/recording`).on('value',s=>{let e=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val())e=true;});const el=document.getElementById('rec-indicator'); if(el) el.style.display=e?'flex':'none'; });
   database.ref(`conversations/${convId}/messages`).orderByChild('createdAt').on('value',snap=>{
     const scroll=document.getElementById('chat-scroll'); if(!scroll)return; let html='';
-    snap.forEach(m=>{
-      const v=m.val(); const key=m.key; const isMe=v.senderId===currentUserId; const h=new Date(v.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      const tick=isMe?(v.vu?' <span style="color:#53bdeb">✓✓</span>':' <span style="color:#8696a0">✓</span>'):'';
-      const imgUrl = v.url || v.image || v.photo || '';
-      const safeNom=(v.senderNom||'').replace(/'/g,"").replace(/"/g,'');
-      const safeTxt=(v.texte||'').replace(/'/g,"").replace(/"/g,'').substring(0,120);
-      let quoteHtml='';
-      if(v.replyTo){ quoteHtml='<div class="quote"><b>'+v.replyTo.nom+'</b><span>'+v.replyTo.texte+'</span></div>'; }
-      if(v.type==='text'){
-        let txt=v.texte||''; let extra='';
-        const murl=txt.match(/https:\/\/res\.cloudinary\.com\/[^\s]+\.(jpg|png|jpeg)/);
-        if(murl){ extra='<img src="'+getThumb(murl[0],600)+'" onclick="openImage(\''+getThumb(murl[0],1000)+'\')" style="margin-top:6px;max-width:220px;border-radius:8px;display:block;cursor:pointer">'; }
-        html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" data-nom="'+safeNom+'" data-texte="'+safeTxt+'">'+quoteHtml+txt+extra+'<span class="msg-time">'+h+tick+'</span></div></div>';
-      }
-      else if(v.type==='sticker'){
-        html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble sticker-bubble" data-nom="'+safeNom+'" data-texte="'+(v.texte||'🧩')+'">'+(v.texte||'🧩')+'<span class="msg-time">'+h+tick+'</span></div></div>';
-      }
-      else if(v.type==='call'){
-        html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="call-bubble '+(isMe?'':'received')+'"><div class="call-icon">📞</div><div style="flex:1"><b>Appel vocal</b><span>'+(v.statut||'Sans réponse')+'</span></div><span style="font-size:11px;color:#cfd8dc">'+h+tick+'</span></div></div>';
-      }
-      else if(v.type==='image'){
-        const thumb=getThumb(imgUrl,600); const big=getThumb(imgUrl,1000)||imgUrl;
-        html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" style="padding:3px" data-nom="'+safeNom+'" data-texte="📷 Photo">'+quoteHtml+'<img src="'+thumb+'" loading="lazy" onerror="this.src=\''+imgUrl+'\'" onclick="openImage(\''+big+'\')" style="max-width:220px;border-radius:8px;display:block;cursor:pointer"><span class="msg-time">'+h+tick+'</span></div></div>';
-      }
-      else if(v.type==='audio'){
-        const init=v.senderNom? v.senderNom.substring(0,2).toUpperCase() : 'MA';
-        const duree=v.duree?fmtTime(v.duree):'0:10';
-        html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="audio-bubble '+(isMe?'sent':'received')+'"><div class="audio-avatar">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" preload="auto" style="display:none"></audio></div></div>';
-      }
-      if(v.senderId!==currentUserId&&!v.vu) m.ref.update({vu:true});
-    });
-    const wasBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 80;
-    scroll.innerHTML=html;
-    if(wasBottom || scroll.scrollTop===0) scroll.scrollTop=scroll.scrollHeight;
+    snap.forEach(m=>{ const v=m.val(); const key=m.key; const isMe=v.senderId===currentUserId; const h=new Date(v.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); const tick=isMe?(v.vu?' <span style="color:#53bdeb">✓✓</span>':' <span style="color:#8696a0">✓</span>'):''; const imgUrl = v.url || v.image || v.photo || ''; const safeNom=(v.senderNom||'').replace(/'/g,"").replace(/"/g,''); const safeTxt=(v.texte||'').replace(/'/g,"").replace(/"/g,'').substring(0,120); let quoteHtml=''; if(v.replyTo){ quoteHtml='<div class="quote"><b>'+v.replyTo.nom+'</b><span>'+v.replyTo.texte+'</span></div>'; }
+      if(v.type==='text'){ let txt=v.texte||''; let extra=''; const murl=txt.match(/https:\/\/res\.cloudinary\.com\/[^\s]+\.(jpg|png|jpeg)/); if(murl){ extra='<img src="'+getThumb(murl[0],600)+'" onclick="openImage(\''+getThumb(murl[0],1000)+'\')" style="margin-top:6px;max-width:220px;border-radius:8px;display:block;cursor:pointer">'; } html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" data-nom="'+safeNom+'" data-texte="'+safeTxt+'">'+quoteHtml+txt+extra+'<span class="msg-time">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='sticker'){ html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble sticker-bubble" data-nom="'+safeNom+'" data-texte="'+(v.texte||'🧩')+'">'+(v.texte||'🧩')+'<span class="msg-time">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='call'){ html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="call-bubble '+(isMe?'':'received')+'"><div class="call-icon">📞</div><div style="flex:1"><b>Appel vocal</b><span>'+(v.statut||'Sans réponse')+'</span></div><span style="font-size:11px;color:#cfd8dc">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='image'){ const thumb=getThumb(imgUrl,600); const big=getThumb(imgUrl,1000)||imgUrl; html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" style="padding:3px" data-nom="'+safeNom+'" data-texte="📷 Photo">'+quoteHtml+'<img src="'+thumb+'" loading="lazy" onerror="this.src=\''+imgUrl+'\'" onclick="openImage(\''+big+'\')" style="max-width:220px;border-radius:8px;display:block;cursor:pointer"><span class="msg-time">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='audio'){ const init=v.senderNom? v.senderNom.substring(0,2).toUpperCase() : 'MA'; const duree=v.duree?fmtTime(v.duree):'0:10'; html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="audio-bubble '+(isMe?'sent':'received')+'"><div class="audio-avatar">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" preload="auto" style="display:none"></audio></div></div>'; }
+      if(v.senderId!==currentUserId&&!v.vu) m.ref.update({vu:true}); });
+    const wasBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 80; scroll.innerHTML=html; if(wasBottom || scroll.scrollTop===0) scroll.scrollTop=scroll.scrollHeight;
   });
 }
-function lancerAppel(cid){
-  const otherId=cid.split('_').find(id=>id!==currentUserId);
-  database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'call',statut:'Sans réponse',createdAt:Date.now()});
-  pushJS(otherId,'📞 Appel vocal - '+document.getElementById('user-name').innerText,'Appel vocal manqué');
-}
-function onInputChange(inp,cid){
-  jeTape(cid);
-  const hasText=inp.value.trim().length>0;
-  const mic=document.getElementById('btn-rec'); const send=document.getElementById('btn-send');
-  if(isRecording) return;
-  if(mic) mic.style.display=hasText?'none':'flex';
-  if(send) send.style.display=hasText?'flex':'none';
-}
-function envoyerDirect(cid){
-  const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return;
-  const otherId = cid.split('_').find(id=>id!==currentUserId);
-  database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,replyTo:replyTo||null,createdAt:Date.now()});
-  pushJS(otherId, '💬 '+document.getElementById('user-name').innerText, t.substring(0,90));
-  i.value=''; clearReply(); onInputChange(i,cid);
-}
+function lancerAppel(cid){ const otherId=cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'call',statut:'Sans réponse',createdAt:Date.now()}); pushJS(otherId,'📞 Appel vocal - '+document.getElementById('user-name').innerText,'Appel vocal manqué'); }
+function onInputChange(inp,cid){ jeTape(cid); const hasText=inp.value.trim().length>0; const mic=document.getElementById('btn-rec'); const send=document.getElementById('btn-send'); if(isRecording) return; if(mic) mic.style.display=hasText?'none':'flex'; if(send) send.style.display=hasText?'flex':'none'; }
+function envoyerDirect(cid){ const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return; const otherId = cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,replyTo:replyTo||null,createdAt:Date.now()}); pushJS(otherId, '💬 '+document.getElementById('user-name').innerText, t.substring(0,90)); i.value=''; clearReply(); onInputChange(i,cid); }
 function jeTape(cid){database.ref(`conversations/${cid}/typing/${currentUserId}`).set(true);clearTimeout(window.typTO);window.typTO=setTimeout(()=>{database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);},1500);}
 function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const nom=v.val()?.nom||currentUserId;document.getElementById('user-name').innerText=nom;document.getElementById('my-avatar').innerText=nom.substring(0,1).toUpperCase();});chargerMessagerie();}
 firebase.auth().onAuthStateChanged(function(user){ if(user){ init(); } else { firebase.auth().signInAnonymously(); } });
