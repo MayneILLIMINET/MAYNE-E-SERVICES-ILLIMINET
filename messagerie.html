@@ -20,7 +20,6 @@ function dbg(msg){ console.log('[MAYNE AUDIO]',msg); const el=document.getElemen
 function sendToApp(msg){ if(window.AppInventor){ try{ window.AppInventor.setWebViewString(msg); }catch(e){} } }
 async function uploadAudioToCloudinary(blob, fileName){
   const fd=new FormData();
-  // On garde le nom / extension d'origine (m4a, 3gp, mp3, wav...) - Cloudinary auto détecte
   fd.append('file', blob, fileName || ('vocal_'+Date.now()+'.m4a'));
   fd.append('upload_preset', CLOUDINARY_PRESET_AUDIO);
   fd.append('folder','audio');
@@ -166,7 +165,7 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null;
 window.currentConvId=null;
 let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null;
-let micStartY=0,micLocked=false,micSwipeUp=false;
+let micStartY=0,micLocked=false,micSwipeUp=false,micPickerOpenedAt=0;
 let wavCtx=null,wavStream=null,wavProcessor=null,wavSource=null,wavChunks=[],wavSampleRate=44100;
 function wavEncode(chunks, sampleRate){
   let total=0; chunks.forEach(c=>total+=c.length);
@@ -192,22 +191,19 @@ async function onFilePicked(e){
   const f=e.target.files[0]; if(!f||!window.currentConvId) return;
   try{ const url=await uploadImageToCloudinary(f); const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }catch(err){ alert('Photo échouée : '+err.message); } e.target.value='';
 }
-// === NOUVEAU : DANS L'APP, le vocal passe par le sélecteur natif Android, pas par getUserMedia ===
 async function onAudioPicked(e){
   const f=e.target.files[0]; e.target.value='';
   if(!f||!window.currentConvId) return;
-  dbg('Fichier audio reçu: '+f.name+' size='+f.size+' type='+f.type);
+  dbg('Fichier audio reçu: '+f.name+' size='+f.size);
   if(f.size<1000){ alert('Enregistrement trop court'); return; }
-  // Durée approximative via un audio temporaire
   let duree=0;
   try{ const tmpUrl=URL.createObjectURL(f); const tmp=new Audio(tmpUrl); duree=await new Promise(res=>{ tmp.onloadedmetadata=()=>{ res(Math.floor(tmp.duration)||0); }; tmp.onerror=()=>res(0); setTimeout(()=>res(0),1500); }); URL.revokeObjectURL(tmpUrl); }catch(err){}
-  const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi sur Cloudinary...'; up.classList.add('show'); }
-  // On montre la barre d'enregistrement le temps de l'upload pour que l'utilisateur voie que ça envoie
   const recBox=document.getElementById('rec-box'); if(recBox) recBox.classList.add('show');
   const inputBox=document.getElementById('input-box'); if(inputBox) inputBox.style.display='none';
+  const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi sur Cloudinary...'; up.classList.add('show'); }
   try{
     const cloudUrl=await uploadAudioToCloudinary(f, f.name);
-    dbg('Cloudinary OK '+cloudUrl.substring(0,70));
+    dbg('Cloudinary OK');
     recElapsed = duree || 0;
     await pushAudioMessage(cloudUrl);
     dbg('Push OK - vocal envoyé');
@@ -244,14 +240,16 @@ function togglePreview(){
   previewAudio.onended=()=>{ previewPlaying=false; if(b) b.textContent='▶️'; if(l) l.textContent='Écouter'; const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(recElapsed)+' / '+fmtTime(recElapsed); };
   previewAudio.play().catch(()=>{ alert('Aperçu indisponible'); previewPlaying=false; });
 }
+function openNativeRecorder(){
+  // Anti double-ouverture : click + touchend déclenchent 2 fois sur Android
+  const now=Date.now();
+  if(now - micPickerOpenedAt < 800) return;
+  micPickerOpenedAt=now;
+  dbg('APP : ouverture enregistreur natif Android...');
+  document.getElementById('audio-picker').click();
+}
 async function startRecording(){
-  // DANS L'APP : on n'utilise NI getUserMedia NI SoundRecorder AppInventor
-  // On ouvre l'enregistreur natif Android via le sélecteur de fichier audio
-  if(IS_APP){
-    dbg('APP : ouverture enregistreur natif Android...');
-    document.getElementById('audio-picker').click();
-    return;
-  }
+  if(IS_APP){ openNativeRecorder(); return; }
   if(isRecording) return;
   isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
@@ -305,18 +303,44 @@ function resetRecUI(){
 }
 function initMicSwipe(){
   const mic=document.getElementById('btn-rec'); if(!mic) return;
-  // Dans l'app, un simple clic ouvre l'enregistreur natif. Pas de swipe.
-  mic.addEventListener('click',()=>{ if(IS_APP){ startRecording(); } });
-  mic.addEventListener('touchstart',e=>{ micStartY=e.touches[0].clientY; micSwipeUp=false; const hint=document.getElementById('lock-hint'); if(hint && !IS_APP) hint.classList.add('show'); },{passive:true});
-  mic.addEventListener('touchmove',e=>{ if(IS_APP) return; const dy=micStartY - e.touches[0].clientY; if(dy>60){ micSwipeUp=true; mic.style.transform='translateY(-'+Math.min(dy,60)+'px)'; if(!isRecording) startRecording(); } if(dy<-40 && isRecording && !micLocked){ cancelRecording(); } },{passive:true});
-  mic.addEventListener('touchend',e=>{ if(IS_APP) return; const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); mic.style.transform='translateY(0)'; if(micSwipeUp && isRecording){ micLocked=true; return; } if(!isRecording && !micSwipeUp){ startRecording(); } },{passive:true});
+  // === APP : 1 seul geste = appui OU swipe vers le haut, les 2 ouvrent l'enregistreur ===
+  // On n'utilise que touchend pour éviter que click + touchend ouvrent 2 fois le sélecteur
+  if(IS_APP){
+    mic.addEventListener('touchstart',e=>{ micStartY=e.touches[0].clientY; micSwipeUp=false; const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='🎙️ Appuie pour enregistrer'; hint.classList.add('show'); } },{passive:true});
+    mic.addEventListener('touchmove',e=>{
+      const dy=micStartY - e.touches[0].clientY;
+      if(dy>50){ micSwipeUp=true; mic.style.transform='translateY(-'+Math.min(dy,50)+'px)'; const hint=document.getElementById('lock-hint'); if(hint) hint.textContent='🎙️ Relâche pour enregistrer'; }
+    },{passive:true});
+    mic.addEventListener('touchend',e=>{
+      e.preventDefault();
+      const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
+      mic.style.transform='translateY(0)';
+      // Appui simple OU swipe vers le haut = même action : ouvrir l'enregistreur
+      openNativeRecorder();
+    },{passive:false});
+    // Fallback souris / Chrome desktop dans WebViewer
+    mic.addEventListener('click',e=>{ e.preventDefault(); openNativeRecorder(); });
+    return;
+  }
+  // === WEB / Chrome : swipe vers le haut pour verrouiller, comme WhatsApp ===
+  mic.addEventListener('touchstart',e=>{ micStartY=e.touches[0].clientY; micSwipeUp=false; const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='⬆️ Glisse vers le haut pour verrouiller'; hint.classList.add('show'); } },{passive:true});
+  mic.addEventListener('touchmove',e=>{
+    const dy=micStartY - e.touches[0].clientY;
+    if(dy>60){ micSwipeUp=true; mic.style.transform='translateY(-'+Math.min(dy,60)+'px)'; if(!isRecording) startRecording(); }
+    if(dy<-40 && isRecording && !micLocked){ cancelRecording(); }
+  },{passive:true});
+  mic.addEventListener('touchend',e=>{
+    const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
+    mic.style.transform='translateY(0)';
+    if(micSwipeUp && isRecording){ micLocked=true; return; }
+    if(!isRecording && !micSwipeUp){ startRecording(); }
+  },{passive:true});
   mic.addEventListener('mousedown',e=>{ micStartY=e.clientY; });
-  mic.addEventListener('mouseup',e=>{ if(IS_APP) return; const dy=micStartY-e.clientY; if(dy>40){ startRecording(); } });
+  mic.addEventListener('mouseup',e=>{ const dy=micStartY-e.clientY; if(dy>40){ startRecording(); } });
 }
 function setReply(nom,texte){ replyTo={nom,texte}; const p=document.getElementById('reply-preview'); if(p){ p.style.display='block'; p.innerHTML='<span class="close" onclick="clearReply()">✕</span><b>'+nom+'</b><span>'+texte.substring(0,80)+'</span>'; } const inp=document.getElementById('msg-input'); if(inp) inp.focus(); }
 function clearReply(){ replyTo=null; const p=document.getElementById('reply-preview'); if(p) p.style.display='none'; }
 function initSwipe(){ const scroll=document.getElementById('chat-scroll'); if(!scroll) return; scroll.addEventListener('touchstart',e=>{ const b=e.target.closest('.msg-bubble'); if(!b) return; const t=e.touches[0]; swipeStartX=t.clientX; swipeStartY=t.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; b.style.transition='none'; },{passive:true}); scroll.addEventListener('touchmove',e=>{ if(!swipeEl) return; const t=e.touches[0]; const dx=t.clientX-swipeStartX; const dy=t.clientY-swipeStartY; if(Math.abs(dy)>30) return; if(dx>0 && dx<120){ swipeEl.style.transform='translateX('+dx+'px)'; const row=swipeEl.closest('.msg-row'); if(row) row.classList.add('swiping'); } },{passive:true}); scroll.addEventListener('touchend',e=>{ if(!swipeEl) return; const dx=e.changedTouches[0].clientX-swipeStartX; const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping'); swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)'; if(dx>65 && swipeData && swipeData.texte){ setReply(swipeData.nom, swipeData.texte); } swipeEl=null; swipeData=null; },{passive:true}); }
-// Photos via AppInventor uniquement - l'audio ne passe plus par AppInventor
 setInterval(async ()=>{
   if(!window.AppInventor) return; let d=null; try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; } if(!d) return; if(!d.startsWith('CHAT_')) return;
   let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString('');
@@ -333,7 +357,8 @@ function ouvrirConversation(convId,nom){
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
   const pauseBtn = IS_APP ? '' : '<button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button>';
   const listenBtn = IS_APP ? '' : '<button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button>';
-  feed.innerHTML='<div class="chat-wrapper"><div id="audio-debug"></div><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ <b>Glisse vers le haut</b> pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button>'+pauseBtn+listenBtn+'<button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  const lockText = IS_APP ? '🎙️ Appuie pour enregistrer' : '⬆️ Glisse vers le haut pour verrouiller';
+  feed.innerHTML='<div class="chat-wrapper"><div id="audio-debug"></div><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">'+lockText+'</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button>'+pauseBtn+listenBtn+'<button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
   const otherId=convId.split('_').find(id=>id!==currentUserId);
