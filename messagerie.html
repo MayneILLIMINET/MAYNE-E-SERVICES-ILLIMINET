@@ -14,15 +14,11 @@ const CLOUDINARY_CLOUD_NAME="dkzpkvidk";
 const CLOUDINARY_PRESET_AUDIO="mayneaudio";
 const CLOUDINARY_PRESET_IMAGE="mayneimages";
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+// === AUDIO = 100% WEB, même dans l'app AppInventor ===
+// On ne passe PLUS par AppInventor pour l'audio, donc plus de STOP_AUDIO / AUDIO_URL_ à gérer dans les blocs
+const FORCE_WEB_AUDIO=true;
 async function pushJS(destId,titre,msg){ if(!destId) return; try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})}); }catch(e){} }
 function dbg(msg){ console.log('[MAYNE AUDIO]',msg); const el=document.getElementById('audio-debug'); if(el){ el.style.display='block'; el.textContent='DEBUG: '+msg; } }
-// FIX ECHO : on mémorise ce qu'on envoie, la boucle ignore l'écho
-let lastSentToApp='';
-function sendToApp(msg){
-  lastSentToApp=msg;
-  if(window.AppInventor){ try{ window.AppInventor.setWebViewString(msg); }catch(e){} }
-  dbg('-> AppInventor: '+msg);
-}
 async function uploadAudioToCloudinary(blob){
   const fd=new FormData();
   fd.append('file', blob, 'vocal_'+Date.now()+'.wav');
@@ -171,11 +167,10 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 </div>
 <input type="file" id="file-picker" accept="image/*" style="display:none" onchange="onFilePicked(event)">
 <script>
-let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null,waitingAudio=false;
+let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null;
 window.currentConvId=null;
 let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null;
 let micStartY=0,micLocked=false,micSwipeUp=false;
-// --- ENREGISTREUR WAV (remplace MediaRecorder) ---
 let wavCtx=null,wavStream=null,wavProcessor=null,wavSource=null,wavChunks=[],wavSampleRate=44100;
 function wavEncode(chunks, sampleRate){
   let total=0; chunks.forEach(c=>total+=c.length);
@@ -196,7 +191,8 @@ const STICKERS={
 };
 function getThumb(url,w){ if(!url) return ''; if(url.includes('/upload/')) return url.replace('/upload/','/upload/w_'+w+',q_auto,f_auto/'); return url; }
 function openImage(url){ document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
-function pickImageChat(){ if(window.AppInventor){ sendToApp('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
+// Photos : on garde AppInventor si on est dans l'app, sinon file picker web
+function pickImageChat(){ if(window.AppInventor && !FORCE_WEB_AUDIO){ window.AppInventor.setWebViewString('PICK_CHAT'); } else if(window.AppInventor){ window.AppInventor.setWebViewString('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
 async function onFilePicked(e){
   const f=e.target.files[0]; if(!f||!window.currentConvId) return;
   try{
@@ -224,7 +220,6 @@ function togglePlayAudio(id){
 }
 function togglePreview(){
   if(!recPaused) return;
-  if(window.AppInventor){ sendToApp('PREVIEW_AUDIO'); return; }
   if(previewPlaying && previewAudio){ previewAudio.pause(); previewPlaying=false; const b=document.getElementById('preview-play'); if(b) b.textContent='▶️'; const l=document.getElementById('listen-label'); if(l) l.textContent='Écouter'; return; }
   if(!wavChunks.length){ alert('Rien à écouter'); return; }
   if(previewUrl) URL.revokeObjectURL(previewUrl);
@@ -248,7 +243,7 @@ function togglePreview(){
 }
 async function startRecording(){
   if(isRecording) return;
-  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null; waitingAudio=false;
+  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
   if(inputBox) inputBox.style.display='none';
@@ -260,8 +255,8 @@ async function startRecording(){
   updateRecWave();
   clearInterval(recTimer);
   recTimer=setInterval(()=>{ if(!recPaused){ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); } },300);
-  if(window.AppInventor){ sendToApp('REC_AUDIO_'+window.currentConvId); return; }
-  dbg('Mode WEB : WAV AudioContext');
+  // TOUJOURS WEB, même dans l'app - pas de REC_AUDIO
+  dbg('Mode WEB WAV - demande micro...');
   try{
     wavStream=await navigator.mediaDevices.getUserMedia({audio:true});
     wavCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -271,15 +266,14 @@ async function startRecording(){
     wavProcessor.onaudioprocess=e=>{ if(recPaused) return; const d=e.inputBuffer.getChannelData(0); wavChunks.push(new Float32Array(d)); };
     wavSource.connect(wavProcessor); wavProcessor.connect(wavCtx.destination);
     dbg('Enregistrement WAV démarré sr='+wavSampleRate);
-  }catch(e){ dbg('ERREUR micro: '+e.message); alert('Micro refusé'); cancelRecording(); }
+  }catch(e){ dbg('ERREUR micro: '+e.message+' - Autorise le micro pour le WebViewer dans AppInventor'); alert('Micro refusé : '+e.message+'\n\nDans AppInventor : coche la permission RECORD_AUDIO + dans les propriétés du WebViewer, autorise l accès au micro. Sinon teste dans Chrome.'); cancelRecording(); }
 }
 function togglePauseRec(){
   if(!isRecording) return;
   if(!recPaused){
     recPaused=true;
     recElapsed=Math.floor((Date.now()-recStartTime)/1000);
-    if(window.AppInventor){ sendToApp('PAUSE_AUDIO'); }
-    else if(wavCtx && wavCtx.state==='running'){ wavCtx.suspend(); }
+    if(wavCtx && wavCtx.state==='running'){ wavCtx.suspend(); }
     const label=document.getElementById('pause-label'); if(label) label.textContent='Reprendre';
     const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='🎙️';
     const prev=document.getElementById('rec-preview'); if(prev) prev.classList.add('show');
@@ -294,8 +288,7 @@ function togglePauseRec(){
     const label=document.getElementById('pause-label'); if(label) label.textContent='Pause';
     const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
     recStartTime=Date.now()-recElapsed*1000;
-    if(window.AppInventor){ sendToApp('RESUME_AUDIO'); }
-    else if(wavCtx && wavCtx.state==='suspended'){ wavCtx.resume(); }
+    if(wavCtx && wavCtx.state==='suspended'){ wavCtx.resume(); }
   }
 }
 function stopWav(){
@@ -307,11 +300,9 @@ function stopWav(){
 }
 function cancelRecording(){
   if(!isRecording && !wavChunks.length) { resetRecUI(); return; }
-  isRecording=false; recPaused=false; clearInterval(recTimer); waitingAudio=false;
+  isRecording=false; recPaused=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  if(!window.AppInventor) stopWav();
-  wavChunks=[];
-  if(window.AppInventor) sendToApp('CANCEL_AUDIO');
+  stopWav(); wavChunks=[];
   dbg('Annulé');
   resetRecUI();
 }
@@ -325,22 +316,14 @@ async function pushAudioMessage(url){
   }catch(e){ dbg('ERREUR Push: '+e.message); alert('Push échoué: '+e.message); }
 }
 async function stopAndSendRecording(){
-  dbg('Clic Envoyer AppInventor='+(!!window.AppInventor)+' paused='+recPaused);
-  if(window.AppInventor){
-    waitingAudio=true;
-    sendToApp('STOP_AUDIO');
-    isRecording=false; clearInterval(recTimer);
-    const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi via AppInventor...'; up.classList.add('show'); }
-    setTimeout(()=>{ if(waitingAudio){ dbg('TIMEOUT AppInventor pas de AUDIO_URL_'); alert('AppInventor n a pas renvoyé AUDIO_URL_ - vérifie tes blocs STOP_AUDIO : il doit uploader sur Cloudinary (mayneaudio) puis set WebViewString = AUDIO_URL_ + url'); waitingAudio=false; resetRecUI(); } },15000);
-    return;
-  }
+  dbg('Clic Envoyer - mode WEB direct');
   if(!isRecording && !wavChunks.length) return;
   isRecording=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const blob=wavEncode(wavChunks, wavSampleRate);
   dbg('Blob WAV size='+blob.size);
   if(!blob || blob.size<1000){ dbg('Blob vide'); resetRecUI(); return; }
-  const up=document.getElementById('rec-upload'); if(up) up.classList.add('show');
+  const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi sur Cloudinary...'; up.classList.add('show'); }
   try{
     const cloudUrl=await uploadAudioToCloudinary(blob);
     dbg('Cloudinary OK '+cloudUrl.substring(0,70));
@@ -408,35 +391,17 @@ function initSwipe(){
     swipeEl=null; swipeData=null;
   },{passive:true});
 }
-// BOUCLE APPINVENTOR : ignore l'écho de ce qu'on vient d'envoyer
+// Photos via AppInventor uniquement - plus de boucle audio
 setInterval(async ()=>{
   if(!window.AppInventor) return;
   let d=null;
   try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; }
   if(!d) return;
-  if(d===lastSentToApp) return; // <-- C'EST L'ECHO, on ignore
-  // On ne traite QUE les messages qui viennent d'AppInventor
-  if(!(d.startsWith('AUDIO_URL_')||d.startsWith('PREVIEW_URL_')||d.startsWith('CHAT_')||d==='REC_STOP')) return;
-  dbg('<< AppInventor: '+d.substring(0,60));
+  if(!d.startsWith('CHAT_')) return;
+  let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString('');
   const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
-  if(d.startsWith('CHAT_')){
-    let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString(''); lastSentToApp='';
-    database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()});
-    pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo');
-  }
-  else if(d.startsWith('AUDIO_URL_')){
-    let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp='';
-    waitingAudio=false;
-    await pushAudioMessage(u);
-    resetRecUI();
-  }
-  else if(d.startsWith('PREVIEW_URL_')){
-    let u=d.replace('PREVIEW_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp='';
-    if(previewAudio) previewAudio.pause();
-    previewAudio=new Audio(u);
-    previewAudio.play().catch(e=>dbg('Erreur preview: '+e.message));
-  }
-  else if(d==='REC_STOP'){ window.AppInventor.setWebViewString(''); lastSentToApp=''; resetRecUI(); }
+  database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()});
+  pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo');
 },400);
 function rechercherUtilisateur(){ const q=document.getElementById('recherche-user-input').value.trim().toLowerCase(); const zone=document.getElementById('resultats-recherche'); if(!q){zone.style.display='none';return;} database.ref('clients').once('value').then(s=>{let h='',c=0; s.forEach(ch=>{const cid=ch.key;const nom=ch.val().nom||'';if(cid===currentUserId)return;if(nom.toLowerCase().includes(q)||cid.includes(q)){c++;h+='<div class="search-item" onclick="selectionnerUserPourChat(\''+cid+'\',\''+nom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="width:36px;height:36px;font-size:13px">'+nom.substring(0,2).toUpperCase()+'</div><div>'+nom+'<br><small style="color:#8696a0">'+cid+'</small></div></div>';}}); zone.innerHTML=c?h:'<div style="padding:12px;color:#8696a0">Aucun utilisateur</div>';zone.style.display='block';});}
 function selectionnerUserPourChat(cid,nom){document.getElementById('recherche-user-input').value='';document.getElementById('resultats-recherche').style.display='none';ouvrirConversation([currentUserId,cid].sort().join('_'),nom);}
