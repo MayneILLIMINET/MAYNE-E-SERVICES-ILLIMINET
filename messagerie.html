@@ -10,8 +10,32 @@
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const database=firebase.database();
+// === CLOUDINARY MAYNE - DÉJÀ REMPLI AVEC TES VALEURS ===
+const CLOUDINARY_CLOUD_NAME="dkzpkvidk";
+const CLOUDINARY_PRESET_AUDIO="mayneaudio";
+const CLOUDINARY_PRESET_IMAGE="mayneimages";
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 async function pushJS(destId,titre,msg){ if(!destId) return; try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})}); }catch(e){} }
+async function uploadAudioToCloudinary(blob){
+  const fd=new FormData();
+  fd.append('file',blob,'vocal_'+Date.now()+'.webm');
+  fd.append('upload_preset',CLOUDINARY_PRESET_AUDIO);
+  fd.append('folder','audio');
+  const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/video/upload',{method:'POST',body:fd});
+  const j=await res.json();
+  if(!j.secure_url) throw new Error(j.error?.message||'Upload Cloudinary échoué');
+  return j.secure_url;
+}
+async function uploadImageToCloudinary(blob){
+  const fd=new FormData();
+  fd.append('file',blob,'img_'+Date.now()+'.jpg');
+  fd.append('upload_preset',CLOUDINARY_PRESET_IMAGE);
+  fd.append('folder','images');
+  const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+  const j=await res.json();
+  if(!j.secure_url) throw new Error(j.error?.message||'Upload image échoué');
+  return j.secure_url;
+}
 </script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;height:100dvh;overflow:hidden}
@@ -61,7 +85,6 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .audio-bubble{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;min-width:270px;max-width:310px;background:#005c4b}
 .audio-bubble.received{background:#202c33}
 .audio-avatar{width:44px;height:44px;border-radius:50%;background:#0084ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;overflow:hidden}
-.audio-avatar img{width:100%;height:100%;object-fit:cover}
 .audio-play{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
 .audio-wave{flex:1;height:32px;display:flex;align-items:center;gap:2px;cursor:pointer}
 .audio-wave span{width:3px;border-radius:99px;background:rgba(255,255,255,.45);display:block}
@@ -87,7 +110,6 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .send-btn{width:52px;height:52px;border-radius:50%;background:#00a884;color:#fff;border:none;font-size:20px;cursor:pointer;flex-shrink:0;display:none;align-items:center;justify-content:center}
 .lock-hint{position:absolute;right:8px;bottom:78px;background:#111b21;border:1px solid #2a3942;color:#aebac1;font-size:11px;font-weight:700;padding:6px 10px;border-radius:999px;display:none;z-index:20}
 .lock-hint.show{display:block}
-/* ENREGISTREMENT + ECOUTER AVANT ENVOI */
 .rec-box{display:none;flex:1;background:#202c33;border-radius:22px;padding:10px 12px 8px;flex-direction:column;gap:10px}
 .rec-box.show{display:flex}
 .rec-top{display:flex;align-items:center;gap:12px}
@@ -100,14 +122,15 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .rec-preview-play{width:36px;height:36px;border-radius:50%;background:#00a884;color:#fff;border:none;font-size:16px;cursor:pointer;flex-shrink:0}
 .rec-preview-wave{flex:1;height:24px;display:flex;align-items:center;gap:2px}
 .rec-preview-wave span{width:3px;background:rgba(255,255,255,.4);border-radius:99px;display:block}
-.rec-preview-wave span.played{background:#00a884}
-.rec-preview-time{color:#fff;font-size:13px;font-weight:800;min-width:38px;text-align:right}
+.rec-preview-time{color:#fff;font-size:13px;font-weight:800;min-width:78px;text-align:right}
 .rec-bottom{display:flex;align-items:center;gap:10px}
 .rec-trash{width:44px;height:44px;border-radius:50%;background:#2a0a0a;border:none;color:#ff5252;font-size:20px;cursor:pointer;flex-shrink:0}
 .rec-pause{flex:1;background:#2a3942;border:none;color:#fff;border-radius:999px;padding:13px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
 .rec-listen{flex:1;background:#00a884;border:none;color:#fff;border-radius:999px;padding:13px;font-size:15px;font-weight:800;cursor:pointer;display:none;align-items:center;justify-content:center;gap:8px}
 .rec-listen.show{display:flex}
 .rec-send{width:52px;height:52px;border-radius:50%;background:#fff;color:#111;border:none;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.rec-upload{font-size:11px;color:#aebac1;text-align:center;display:none}
+.rec-upload.show{display:block}
 .sticker-panel{display:none;background:#233138;border-top:1px solid #2a3942;padding:10px;max-height:260px;overflow-y:auto}
 .sticker-panel.show{display:block}
 .sticker-tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
@@ -138,8 +161,9 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 <button class="nav-item" onclick="location.href='compte.html'"><span class="ico">👤</span>Profil</button>
 <button class="nav-item" onclick="location.href='index.html'"><span class="ico">❓</span>Aide</button>
 </div>
+<input type="file" id="file-picker" accept="image/*" style="display:none" onchange="onFilePicked(event)">
 <script>
-let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,mediaRecorder=null,recChunks=[],recStream=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null;
+let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,mediaRecorder=null,recChunks=[],recSegments=[],recStream=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null;
 window.currentConvId=null;
 let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null;
 let micStartY=0,micLocked=false,micSwipeUp=false;
@@ -153,7 +177,17 @@ const STICKERS={
 };
 function getThumb(url,w){ if(!url) return ''; if(url.includes('/upload/')) return url.replace('/upload/','/upload/w_'+w+',q_auto,f_auto/'); return url; }
 function openImage(url){ document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
-function pickImageChat(){ if(window.AppInventor) window.AppInventor.setWebViewString('PICK_CHAT'); }
+function pickImageChat(){ if(window.AppInventor){ window.AppInventor.setWebViewString('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
+async function onFilePicked(e){
+  const f=e.target.files[0]; if(!f||!window.currentConvId) return;
+  try{
+    const url=await uploadImageToCloudinary(f);
+    const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
+    database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()});
+    pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo');
+  }catch(err){ alert('Photo échouée : '+err.message); }
+  e.target.value='';
+}
 function fmtTime(s){ const m=Math.floor(s/60); const sec=s%60; return m+':'+String(sec).padStart(2,'0'); }
 function waveHtml(n){ let h=''; for(let i=0;i<n;i++){ const ht=5+Math.floor(Math.random()*24); h+='<span style="height:'+ht+'px"></span>'; } return h; }
 function updateRecWave(){ const w=document.getElementById('rec-wave'); if(!w) return; w.innerHTML=waveHtml(28); }
@@ -165,24 +199,41 @@ function togglePlayAudio(id){
   const aud=document.getElementById('aud-'+id); if(!aud) return;
   const btn=document.getElementById('play-'+id);
   document.querySelectorAll('audio').forEach(a=>{ if(a.id!=='aud-'+id) a.pause(); });
-  if(aud.paused){ aud.playbackRate=recSpeed; aud.play(); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
+  if(previewAudio) previewAudio.pause();
+  if(aud.paused){ aud.playbackRate=recSpeed; aud.play().catch(e=>{ alert('Audio illisible'); }); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
 }
-/* ECOUTER AVANT ENVOI */
+function startOneSegment(){
+  return new Promise((res,rej)=>{
+    if(!recStream) return rej('no stream');
+    try{
+      mediaRecorder=new MediaRecorder(recStream,{mimeType:MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'audio/mp4'});
+      recChunks=[];
+      mediaRecorder.ondataavailable=e=>{ if(e.data && e.data.size>0) recChunks.push(e.data); };
+      mediaRecorder.onstop=()=>{ if(recChunks.length) recSegments.push(new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/webm'})); recChunks=[]; res(); };
+      mediaRecorder.start(250);
+    }catch(e){ rej(e); }
+  });
+}
+function stopCurrentSegment(){
+  return new Promise(res=>{
+    if(!mediaRecorder || mediaRecorder.state==='inactive'){ res(); return; }
+    mediaRecorder.onstop=()=>{ if(recChunks.length) recSegments.push(new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/webm'})); recChunks=[]; res(); };
+    try{ mediaRecorder.stop(); }catch(e){ res(); }
+  });
+}
+function buildCombinedBlob(){ if(!recSegments.length) return null; return new Blob(recSegments,{type:'audio/webm'}); }
 function buildPreviewUrl(){
   if(previewUrl) URL.revokeObjectURL(previewUrl);
-  if(!recChunks.length) return null;
-  const blob=new Blob(recChunks,{type:'audio/webm'});
+  const blob=buildCombinedBlob();
+  if(!blob) return null;
   previewUrl=URL.createObjectURL(blob);
   return previewUrl;
 }
 function togglePreview(){
-  if(!recPaused){ return; }
+  if(!recPaused) return;
   if(previewPlaying && previewAudio){ previewAudio.pause(); previewPlaying=false; const b=document.getElementById('preview-play'); if(b) b.textContent='▶️'; const l=document.getElementById('listen-label'); if(l) l.textContent='Écouter'; return; }
   const url=buildPreviewUrl();
-  if(!url){
-    if(window.AppInventor){ window.AppInventor.setWebViewString('PREVIEW_AUDIO'); }
-    return;
-  }
+  if(!url){ if(window.AppInventor) window.AppInventor.setWebViewString('PREVIEW_AUDIO'); return; }
   if(previewAudio) previewAudio.pause();
   previewAudio=new Audio(url);
   previewAudio.playbackRate=recSpeed;
@@ -197,10 +248,11 @@ function togglePreview(){
     const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(Math.floor(previewAudio.currentTime))+' / '+fmtTime(recElapsed);
   };
   previewAudio.onended=()=>{ previewPlaying=false; if(b) b.textContent='▶️'; if(l) l.textContent='Écouter'; const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(recElapsed)+' / '+fmtTime(recElapsed); };
+  previewAudio.play().catch(()=>{ alert('Impossible de lire ce vocal'); previewPlaying=false; });
 }
-function startRecording(){
+async function startRecording(){
   if(isRecording) return;
-  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); recChunks=[]; previewUrl=null;
+  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); recChunks=[]; recSegments=[]; previewUrl=null;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
   if(inputBox) inputBox.style.display='none';
@@ -213,68 +265,87 @@ function startRecording(){
   clearInterval(recTimer);
   recTimer=setInterval(()=>{ if(!recPaused){ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); } },300);
   if(window.AppInventor){ window.AppInventor.setWebViewString('REC_AUDIO_'+window.currentConvId); return; }
-  navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{ recStream=s; mediaRecorder=new MediaRecorder(s); recChunks=[]; mediaRecorder.ondataavailable=e=>{ if(e.data.size) recChunks.push(e.data); }; mediaRecorder.start(); }).catch(e=>{});
+  try{
+    recStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    await startOneSegment();
+  }catch(e){ alert('Micro refusé - autorise le micro'); cancelRecording(); }
 }
-function togglePauseRec(){
+async function togglePauseRec(){
   if(!isRecording) return;
-  recPaused=!recPaused;
-  const label=document.getElementById('pause-label'); if(label) label.textContent=recPaused?'Reprendre':'Pause';
-  const icon=document.getElementById('pause-icon'); if(icon) icon.textContent=recPaused?'🎙️':'⏸️';
-  const prev=document.getElementById('rec-preview'); const listen=document.getElementById('btn-listen');
-  if(recPaused){
+  if(!recPaused){
+    recPaused=true;
     recElapsed=Math.floor((Date.now()-recStartTime)/1000);
-    if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.pause();
-    if(window.AppInventor) window.AppInventor.setWebViewString('PAUSE_AUDIO');
-    if(prev) prev.classList.add('show');
-    if(listen) listen.classList.add('show');
+    if(window.AppInventor){ window.AppInventor.setWebViewString('PAUSE_AUDIO'); }
+    else { await stopCurrentSegment(); }
+    const label=document.getElementById('pause-label'); if(label) label.textContent='Reprendre';
+    const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='🎙️';
+    const prev=document.getElementById('rec-preview'); if(prev) prev.classList.add('show');
+    const listen=document.getElementById('btn-listen'); if(listen) listen.classList.add('show');
     const t=document.getElementById('preview-time'); if(t) t.textContent='0:00 / '+fmtTime(recElapsed);
     const w=document.getElementById('preview-wave'); if(w) w.innerHTML=waveHtml(24);
   } else {
-    recStartTime=Date.now()-recElapsed*1000;
+    recPaused=false;
     if(previewAudio) previewAudio.pause(); previewPlaying=false;
-    if(prev) prev.classList.remove('show');
-    if(listen) listen.classList.remove('show');
-    if(mediaRecorder && mediaRecorder.state==='paused') mediaRecorder.resume();
-    if(window.AppInventor) window.AppInventor.setWebViewString('RESUME_AUDIO');
+    const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show');
+    const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show');
+    const label=document.getElementById('pause-label'); if(label) label.textContent='Pause';
+    const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
+    recStartTime=Date.now()-recElapsed*1000;
+    if(window.AppInventor){ window.AppInventor.setWebViewString('RESUME_AUDIO'); }
+    else { await startOneSegment(); }
   }
 }
 function cancelRecording(){
-  if(!isRecording) return;
+  if(!isRecording && !recSegments.length) { resetRecUI(); return; }
   isRecording=false; recPaused=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  if(mediaRecorder && mediaRecorder.state!=='inactive'){ try{ mediaRecorder.stop(); }catch(e){} }
   if(recStream) recStream.getTracks().forEach(t=>t.stop());
+  recSegments=[]; recChunks=[];
   if(window.AppInventor) window.AppInventor.setWebViewString('CANCEL_AUDIO');
   resetRecUI();
 }
-function stopAndSendRecording(){
-  if(!isRecording) return;
+async function pushAudioMessage(url){
+  const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
+  await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false});
+  pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
+}
+async function stopAndSendRecording(){
+  if(!isRecording && !recSegments.length) return;
+  if(isRecording && !recPaused){
+    if(window.AppInventor){
+      window.AppInventor.setWebViewString('STOP_AUDIO');
+      isRecording=false; clearInterval(recTimer);
+      return;
+    } else {
+      await stopCurrentSegment();
+    }
+  }
   isRecording=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  if(window.AppInventor){ window.AppInventor.setWebViewString('STOP_AUDIO'); resetRecUI(); return; }
-  if(mediaRecorder && mediaRecorder.state!=='inactive'){
-    mediaRecorder.onstop=()=>{
-      const blob=new Blob(recChunks,{type:'audio/webm'});
-      const url=URL.createObjectURL(blob);
-      const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
-      database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed});
-      pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
-      if(recStream) recStream.getTracks().forEach(t=>t.stop());
-      resetRecUI();
-    };
-    mediaRecorder.stop();
-  } else resetRecUI();
+  const blob=buildCombinedBlob();
+  if(!blob || blob.size<100){ resetRecUI(); return; }
+  const up=document.getElementById('rec-upload'); if(up) up.classList.add('show');
+  try{
+    const cloudUrl=await uploadAudioToCloudinary(blob);
+    await pushAudioMessage(cloudUrl);
+  }catch(e){ alert('Envoi vocal échoué : '+e.message); }
+  if(up) up.classList.remove('show');
+  if(recStream) recStream.getTracks().forEach(t=>t.stop());
+  recSegments=[]; recChunks=[];
+  resetRecUI();
 }
 function resetRecUI(){
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
   if(inputBox) inputBox.style.display='flex';
   if(recBox) recBox.classList.remove('show');
-  const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('locked'); mic.innerText='🎙️'; }
+  const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('locked'); mic.innerText='🎙️'; mic.style.transform=''; }
   const label=document.getElementById('pause-label'); if(label) label.textContent='Pause';
   const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
   const t=document.getElementById('rec-time'); if(t) t.textContent='0:00';
   const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show');
   const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show');
+  const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show');
 }
 function initMicSwipe(){
   const mic=document.getElementById('btn-rec'); if(!mic) return;
@@ -322,7 +393,7 @@ function initSwipe(){
     swipeEl=null; swipeData=null;
   },{passive:true});
 }
-setInterval(()=>{
+setInterval(async ()=>{
   if(!window.AppInventor) return;
   let d=window.AppInventor.getWebViewString(); if(!d) return;
   const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
@@ -332,9 +403,9 @@ setInterval(()=>{
     pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo');
   }
   else if(d.startsWith('AUDIO_URL_')){
-    let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString(''); resetRecUI();
-    database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:u,createdAt:Date.now()});
-    pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
+    let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString('');
+    await pushAudioMessage(u);
+    resetRecUI();
   }
   else if(d==='REC_STOP'){ window.AppInventor.setWebViewString(''); resetRecUI(); }
 },400);
@@ -379,7 +450,7 @@ function retourListe(){ if(window.currentConvId){ database.ref(`conversations/${
 function ouvrirConversation(convId,nom){
   database.ref('conversations').off(); window.currentConvId=convId; replyTo=null;
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
-  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ <b>Glisse vers le haut</b> pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button><button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button><button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button><button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ <b>Glisse vers le haut</b> pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button><button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button><button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button><button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
   const otherId=convId.split('_').find(id=>id!==currentUserId);
@@ -415,7 +486,7 @@ function ouvrirConversation(convId,nom){
       else if(v.type==='audio'){
         const init=v.senderNom? v.senderNom.substring(0,2).toUpperCase() : 'MA';
         const duree=v.duree?fmtTime(v.duree):'0:10';
-        html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="audio-bubble '+(isMe?'sent':'received')+'"><div class="audio-avatar">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" style="display:none"></audio></div></div>';
+        html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="audio-bubble '+(isMe?'sent':'received')+'"><div class="audio-avatar">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" preload="auto" style="display:none"></audio></div></div>';
       }
       if(v.senderId!==currentUserId&&!v.vu) m.ref.update({vu:true});
     });
