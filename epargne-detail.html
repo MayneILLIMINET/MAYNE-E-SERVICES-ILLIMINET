@@ -1,64 +1,117 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mayne - Detail</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Mayne - Détail Épargne</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#fff;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#500;padding-bottom:90px}
-.top{display:flex;color:#fff;justify-content:space-between;align-items:center;padding:16px}
-.card{margin:12px 16px;background:#ff5000;border-radius:22px;padding:20px;color:#fff}
-.mont{font-size:42px;font-weight:900;text-align:center;margin:6px 0}
-.subcard{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px;margin-top:12px}
-.white{background:#fff;border-radius:16px;padding:14px}
-.btns{display:flex;gap:12px;padding:16px}
-.btn{flex:1;border:none;border-radius:100px;padding:14px;font-weight:800;cursor:pointer}
-.btnW{background:#ff1000;color:#fff}
-.btnG{background:#ffbb0a;color:#fff}
-.timer{margin:16px;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;color:#fff}
-.timer.ok{background:#ff5000}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,Arial}
+:root{--bg:#0f0f0f;--card:#1a1a1a;--card2:#222;--text:#fff;--muted:#aaa;--border:#2a2a2a;--nav:#000}
+body.light-mode{--bg:#f2f2f2;--card:#fff;--card2:#f8f8f8;--text:#111;--muted:#666;--border:#ddd;--nav:#fff}
+body{background:var(--bg);display:flex;justify-content:center;color:var(--text)}
+.app{max-width:480px;width:100%;min-height:100vh;background:var(--bg);padding:12px 12px 100px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:6px 2px 14px}
+.back{width:36px;height:36px;background:var(--card);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;font-size:18px}
+.card{background:linear-gradient(135deg,#ff5000,#ff8c00);border-radius:22px;padding:20px;color:#fff;box-shadow:0 8px 24px rgba(255,80,0,.25)}
+.mont{font-size:38px;font-weight:900;text-align:center;margin:6px 0;letter-spacing:-.5px}
+.card-meta{display:flex;justify-content:space-between;margin-top:14px;border-top:1px solid rgba(255,255,255,.25);padding-top:12px}
+.card-meta div{text-align:center;flex:1}
+.card-meta b{font-size:20px}
+.card-meta small{opacity:.9;font-size:11px}
+.subcard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.white{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px}
+.white small{color:var(--muted);font-size:11px}
+.white b{font-size:14px}
+.btns{display:flex;gap:10px;padding:14px 0}
+.btn{flex:1;border:none;border-radius:999px;padding:14px;font-weight:900;cursor:pointer;font-size:14px}
+.btnW{background:#fff;color:#E65100}
+.btnG{background:#1B8A2A;color:#fff}
+.timer{border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;color:#fff;margin-bottom:6px}
+.timer.ok{background:#1B8A2A}
 .timer.late{background:#c0392b}
-.tours{display:flex;gap:12px;overflow:auto;padding:0 16px 10px}
-.tour{min-width:170px;background:#fff;border-radius:16px;padding:12px;border:1px solid #eee}
-.tour.paye{border-color:#0f3d2e;background:#eaffea}
-.tour.avenir{background:#fff}
-.hist-wrap{margin:16px;background:#fff;border-radius:16px;padding:12px}
-.hist-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;font-size:13px}
+/* CYCLE 31 JOURS - PAS DE VRAI CALENDRIER */
+.cal-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:16px;margin-top:6px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cal-head button{background:var(--card2);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:20px;font-weight:900}
+.cal-head button:disabled{opacity:.25}
+.cal-title{text-align:center}
+.cal-title b{font-size:17px}
+.cal-title span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.cal-progress{height:6px;background:var(--border);border-radius:999px;overflow:hidden;margin-bottom:12px}
+.cal-progress-fill{height:100%;background:linear-gradient(90deg,#ff5000,#ff8c00);border-radius:999px}
+.cal-legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.legend{font-size:10px;font-weight:800;padding:5px 9px;border-radius:999px}
+.legend-paye{background:#E8F5E9;color:#1B8A2A}
+.legend-venir{background:#FFF3E0;color:#E65100}
+.legend-today{border:2px solid #ff5000;color:var(--text)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.cal-day{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:var(--card2);border:1px solid var(--border);cursor:pointer;line-height:1.1}
+.cal-day.paye{background:#1B8A2A;color:#fff;border-color:#1B8A2A}
+.cal-day.venir{background:#ff5000;color:#fff;border-color:#ff5000}
+.cal-day.today{box-shadow:0 0 0 2px #ff5000}
+.cal-day small{font-size:7px;font-weight:900;letter-spacing:.3px;margin-top:1px}
+.cal-day.empty{visibility:hidden}
+.cal-info{margin-top:12px;background:var(--card2);border-radius:14px;padding:12px;font-size:12px;line-height:1.6}
+.cal-info b{color:#ff5000}
+.hist-wrap{margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px}
+.hist-item{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;gap:10px}
 .hist-item:last-child{border:none}
-.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800}
-.badge-depot{background:#0f3d2e;color:#d6f78c}
-.badge-retrait{background:#ff5000;color:#fff}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.badge{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900;display:inline-block}
+.badge-depot{background:#E8F5E9;color:#1B8A2A}
+.badge-retrait{background:#FFE9E9;color:#c0392b}
+.totaux{display:flex;gap:8px;margin-bottom:10px}
+.totaux div{flex:1;padding:10px;border-radius:12px;text-align:center}
+.totaux .dep{background:#E8F5E9;color:#111}
+.totaux .ret{background:#FFE9E9;color:#111}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.show{display:flex}
-.sheet{background:#000;color:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px}
-.input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;margin:6px 0}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;z-index:10}
-.bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer}
-.bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;font-weight:700}
+.sheet{background:var(--card);color:var(--text);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px;max-height:92vh;overflow:auto}
+.input{width:100%;padding:13px;border:1px solid var(--border);border-radius:12px;margin:6px 0;background:var(--bg);color:var(--text)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--nav);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:100}
+.nav-item{background:none;border:none;color:var(--muted);cursor:pointer;text-align:center;font-size:9px;font-weight:800;padding:4px 2px}
+.nav-item.active{color:#ff5000}
+.nav-item .ico{font-size:20px;display:block}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="top"><div style="display:flex;align-items:center;gap:10px"><div onclick="location.href='epargne.html'" style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#000;font-weight:bold">‹</div><b id="nomTop">Mayne</b></div><div>⚙️</div></div>
-<div class="card"><div style="text-align:center;color:#fff9;font-size:13px">Montant collecte <span onclick="toggle()" style="cursor:pointer">👁️</span></div><div class="mont" id="collecte">0.0 XOF</div><div style="display:flex;justify-content:space-between;margin-top:12px;border-top:1px solid rgba(255,255,255,.2);padding-top:12px"><div style="text-align:center;flex:1">Jours restants<br><b id="jours" style="font-size:22px">0</b><br><small id="statutJour"></small></div><div style="width:1px;background:rgba(255,255,255,.2)"></div><div style="text-align:center;flex:1">Echeance<br><b id="dateFin">-</b></div></div></div>
-<div class="btns"><button class="btn btnW" onclick="openRet()">↓ Retirer</button><button class="btn btnG" onclick="openDep()">↑ Depot</button></div>
-<div class="subcard"><div class="white"><small>Frequence</small><br><b id="freq">Par mois</b></div><div class="white"><small>Contribution</small><br><b id="contrib">2000 XOF</b></div></div>
-<div class="timer ok" id="timerBox"><div>⏳</div><div><b id="timerTitle">Prochain depot dans :</b><br><span id="countdown"></span></div></div>
-<h3 style="padding:16px;color:#fff">Tours a venir</h3><div class="tours" id="tours"></div>
+<div class="top"><div style="display:flex;align-items:center;gap:10px"><div class="back" onclick="location.href='epargne.html'">‹</div><b id="nomTop" style="font-size:16px">Mayne</b></div><div style="font-size:20px">⚙️</div></div>
+<div class="card"><div style="text-align:center;font-size:13px;opacity:.95">Montant collecté <span onclick="toggle()" style="cursor:pointer">👁️</span></div><div class="mont" id="collecte">0.0 XOF</div><div class="card-meta"><div>Jours restants<br><b id="jours">0</b><br><small id="statutJour"></small></div><div style="width:1px;background:rgba(255,255,255,.25)"></div><div>Échéance<br><b id="dateFin">-</b></div></div></div>
+<div class="btns"><button class="btn btnW" onclick="openRet()">↓ Retirer</button><button class="btn btnG" onclick="openDep()">↑ Dépôt</button></div>
+<div class="subcard"><div class="white"><small>Fréquence</small><br><b id="freq">Par mois</b></div><div class="white"><small>Contribution</small><br><b id="contrib">2000 XOF</b></div></div>
+<div class="timer ok" id="timerBox" style="margin-top:12px"><div>⏳</div><div><b id="timerTitle">Prochain dépôt dans :</b><br><span id="countdown"></span></div></div>
 
-<h3 style="padding:16px;color:#fff;display:flex;justify-content:space-between">Historique <span id="histTotal" style="font-size:12px;background:#000;padding:4px 8px;border-radius:20px">0 ops</span></h3>
-<div class="hist-wrap" id="histWrap"><div style="text-align:center;padding:20px;color:#888">Aucun historique</div></div>
-
+<h3 style="padding:14px 2px 8px;display:flex;justify-content:space-between;align-items:center">Tours — 31 jours <span id="tourSummary" style="font-size:11px;background:var(--card);padding:4px 10px;border-radius:999px;border:1px solid var(--border)">—</span></h3>
+<div class="cal-card">
+<div class="cal-head">
+<button id="btnPrev" onclick="changeCycle(-1)">‹</button>
+<div class="cal-title"><b id="calCycle">Cycle 1</b><span id="calSous">Cycle 1 / 1 • Total 1 cycle</span></div>
+<button id="btnNext" onclick="changeCycle(1)">›</button>
 </div>
-<div class="bottom"><button class="bnav" onclick="location.href='epargne.html'">← EPARGNE</button><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav active">INFOS👤</button></div>
-<div class="modal" id="mAlert"><div class="sheet" style="text-align:center"><p id="alertTxt"></p><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="closeM()">OK</button></div></div>
-<div class="modal" id="mConfirm"><div class="sheet" style="text-align:center"><p id="confirmTxt"></p><div style="display:flex;gap:10px"><button class="input" style="background:#eee;flex:1;border-radius:100px;color:#000" onclick="closeM()">Annuler</button><button class="input" style="background:#0f3d2e;color:#fff;flex:1;border-radius:100px" id="confirmOk">Continuer</button></div></div></div>
-<div class="modal" id="mDep"><div class="sheet"><h3>Depot</h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#0f3d2e;color:#fff;border-radius:100px" onclick="deposer()">Confirmer</button><button class="input" style="background:#333;border-radius:100px;color:#fff" onclick="closeM()">Annuler</button></div></div>
-<div class="modal" id="mRet"><div class="sheet"><h3>Retrait</h3><input id="rMont" type="number" class="input" placeholder="Montant"><p id="penal" style="font-size:12px;color:#e74c3c;display:none">Bloquee : 5% penalite</p><button class="input" style="background:#c0392b;color:#fff;border-radius:100px" onclick="retirer()">Retirer</button><button class="input" style="background:#333;border-radius:100px;color:#fff" onclick="closeM()">Annuler</button></div></div>
+<div class="cal-progress"><div class="cal-progress-fill" id="calProgress" style="width:0%"></div></div>
+<div class="cal-legend"><span class="legend legend-paye">✓ Payé</span><span class="legend legend-venir">● À venir</span><span class="legend legend-today">◯ Aujourd'hui</span></div>
+<div class="cal-grid" id="calGrid"></div>
+<div class="cal-info" id="calInfo">Touche un jour pour voir le tour.</div>
+</div>
+
+<h3 style="padding:14px 2px 8px;display:flex;justify-content:space-between">Historique <span id="histTotal" style="font-size:12px;background:var(--card);padding:4px 8px;border-radius:999px;border:1px solid var(--border)">0 ops</span></h3>
+<div class="hist-wrap" id="histWrap"><div style="text-align:center;padding:20px;color:var(--muted)">Aucun historique</div></div>
+</div>
+
+<div class="bottom-nav">
+<button class="nav-item" onclick="location.href='index.html'"><span class="ico">🏠</span>Accueil</button>
+<button class="nav-item" onclick="location.href='live.html'"><span class="ico">⚽</span>Score Live</button>
+<button class="nav-item" onclick="location.href='messagerie.html'"><span class="ico">💬</span>Messagerie</button>
+<button class="nav-item" onclick="location.href='compte.html'"><span class="ico">👤</span>Profil</button>
+<button class="nav-item" onclick="location.href='index.html'"><span class="ico">❓</span>Aide</button>
+</div>
+
+<div class="modal" id="mAlert"><div class="sheet" style="text-align:center"><p id="alertTxt"></p><button class="input" style="background:#ff5000;color:#fff;border-radius:999px" onclick="closeM()">OK</button></div></div>
+<div class="modal" id="mConfirm"><div class="sheet" style="text-align:center"><p id="confirmTxt"></p><div style="display:flex;gap:10px"><button class="input" style="background:var(--card2);flex:1;border-radius:999px" onclick="closeM()">Annuler</button><button class="input" style="background:#1B8A2A;color:#fff;flex:1;border-radius:999px" id="confirmOk">Continuer</button></div></div></div>
+<div class="modal" id="mDep"><div class="sheet"><h3>Dépôt</h3><input id="dMont" type="number" class="input" placeholder="Montant"><button class="input" style="background:#1B8A2A;color:#fff;border-radius:999px" onclick="deposer()">Confirmer</button><button class="input" style="background:var(--card2);border-radius:999px" onclick="closeM()">Annuler</button></div></div>
+<div class="modal" id="mRet"><div class="sheet"><h3>Retrait</h3><input id="rMont" type="number" class="input" placeholder="Montant"><p id="penal" style="font-size:12px;color:#e74c3c;display:none">Bloquée : 5% pénalité</p><button class="input" style="background:#c0392b;color:#fff;border-radius:999px" onclick="retirer()">Retirer</button><button class="input" style="background:var(--card2);border-radius:999px" onclick="closeM()">Annuler</button></div></div>
 <script>
 const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
@@ -74,7 +127,9 @@ function pushNotif(titre,msg){
   db.ref('notifications/'+ADMIN_UID).push({titre,message:msg+" - "+uid,date:dateStr});
 }
 let uid,eid,data,vis=true,timer=null,targetTime=null;
+let cycleActuel=0, cycles=[];
 function getIntervalSec(f){const x=(f||'').toLowerCase();if(x.includes('jour'))return 86400;if(x.includes('semaine'))return 604800;return 2592000;}
+function getIntervalDays(f){const x=(f||'').toLowerCase();if(x.includes('jour'))return 1;if(x.includes('semaine'))return 7;return 30;}
 function getCollecte(){return Number(data.montantCollecte??data.montant??0);}
 function init(){
   const u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!u){location.href='index.html';return;}
@@ -89,53 +144,100 @@ function init(){
     document.getElementById('jours').textContent=Math.abs(jr);
     document.getElementById('statutJour').textContent=jr<0?'En retard':jr===0?"Aujourd'hui":'Restants';
     document.getElementById('penal').style.display=data.bloque?'block':'none';
-    renderTours();
+    buildCycles();
     const interval=getIntervalSec(data.frequence);
     targetTime=data.prochainDepot?new Date(data.prochainDepot):new Date(Date.now()+interval*1000);
     startCountdown();
   });
-  // HISTORIQUE LISTENER
   db.ref('epargne/'+uid+'/'+eid+'/historique').orderByChild('timestamp').on('value',snap=>{
     const arr=[]; snap.forEach(c=>{ arr.push({id:c.key,...c.val()}); });
     arr.sort((a,b)=>b.timestamp-a.timestamp);
     renderHist(arr);
   });
 }
+/* 1 CYCLE = 31 JOURS - PAS DE MOIS RÉEL */
+function buildCycles(){
+  const contrib=+data.montant||2000;
+  const obj=+data.objectif||contrib*5;
+  const nbTours=Math.max(1,Math.ceil(obj/contrib));
+  const collecte=getCollecte();
+  const payes=Math.floor(collecte/contrib);
+  const intervalDays=getIntervalDays(data.frequence);
+  // Chaque tour = 1 jour dans le cycle, on découpe par paquets de 31
+  const totalCycles=Math.max(1,Math.ceil(nbTours/31));
+  cycles=[];
+  for(let c=0;c<totalCycles;c++){
+    const debut=c*31+1; const fin=Math.min((c+1)*31, nbTours);
+    const jours=[];
+    for(let tourNum=debut; tourNum<=fin; tourNum++){
+      jours.push({jour: tourNum - c*31, tourNum, paye: tourNum<=payes, contrib, intervalDays});
+    }
+    cycles.push({cycle:c+1, debut, fin, jours, totalCycles});
+  }
+  // Cycle du prochain tour non payé, sinon cycle actuel
+  let idx=0;
+  const prochainTour=payes+1;
+  if(prochainTour<=nbTours) idx=Math.floor((prochainTour-1)/31);
+  if(window._cycleInitDone){ idx=cycleActuel; if(idx>=cycles.length) idx=cycles.length-1; if(idx<0) idx=0; }
+  cycleActuel=idx; window._cycleInitDone=true;
+  document.getElementById('tourSummary').textContent=payes+' / '+nbTours+' payés • '+totalCycles+' cycle(s)';
+  renderCycle();
+}
+function renderCycle(){
+  const cyc=cycles[cycleActuel]; if(!cyc) return;
+  const totalCycles=cycles.length;
+  document.getElementById('calCycle').textContent='Cycle '+(cycleActuel+1);
+  document.getElementById('calSous').textContent='Cycle '+(cycleActuel+1)+' / '+totalCycles+' • Total '+totalCycles+' cycle(s) • '+cyc.jours.length+' jour(s) ce cycle';
+  document.getElementById('btnPrev').disabled=cycleActuel===0;
+  document.getElementById('btnNext').disabled=cycleActuel===totalCycles-1;
+  // Progression globale
+  const contrib=+data.montant||2000; const obj=+data.objectif||contrib*5;
+  const nbTours=Math.max(1,Math.ceil(obj/contrib)); const payes=Math.floor(getCollecte()/contrib);
+  const pct=Math.round(payes/nbTours*100);
+  document.getElementById('calProgress').style.width=pct+'%';
+  // Grille 31 jours : 1 à 31, cases vides à la fin si cycle incomplet
+  let h='';
+  for(let j=1;j<=31;j++){
+    const tour=cyc.jours.find(t=>t.jour===j);
+    if(!tour){ h+='<div class="cal-day empty"></div>'; continue; }
+    let cls='cal-day '+(tour.paye?'paye':'venir');
+    // Jour actuel du cycle = jour où on en est (payés + 1)
+    const jourActuel=(payes % 31)+1;
+    const estAujourdhui = (cycleActuel===Math.floor(payes/31) && j===jourActuel);
+    if(estAujourdhui) cls+=' today';
+    h+='<div class="'+cls+'" onclick="selectJour('+j+')"><span>'+j+'</span><small>'+(tour.paye?'✓ PAYÉ':'TOUR '+tour.tourNum)+'</small></div>';
+  }
+  document.getElementById('calGrid').innerHTML=h;
+  const prochain=cyc.jours.find(t=>!t.paye)||cyc.jours[0];
+  if(prochain) showTourInfo(prochain, cyc);
+}
+function selectJour(jour){
+  const cyc=cycles[cycleActuel];
+  const tour=cyc.jours.find(t=>t.jour===jour);
+  if(!tour){ document.getElementById('calInfo').innerHTML='📅 <b>Jour '+jour+'</b> — Aucun tour ce jour-là.'; return; }
+  showTourInfo(tour, cyc);
+}
+function showTourInfo(t, cyc){
+  document.getElementById('calInfo').innerHTML=(t.paye?'✅ <b>Tour '+t.tourNum+' — Payé</b>':'🟠 <b>Tour '+t.tourNum+' — À venir</b>')+' • Jour <b>'+t.jour+' / 31</b> • Cycle <b>'+cyc.cycle+' / '+cyc.totalCycles+'</b> • <b>'+t.contrib.toLocaleString('fr-FR')+' XOF</b> • '+(data.frequence||'');
+}
+function changeCycle(delta){
+  let n=cycleActuel+delta;
+  if(n<0) n=0; if(n>=cycles.length) n=cycles.length-1;
+  cycleActuel=n; renderCycle();
+}
 function renderHist(list){
   document.getElementById('histTotal').textContent=list.length+' ops';
   const wrap=document.getElementById('histWrap');
-  if(list.length===0){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:#888">Aucun historique</div>'; return; }
+  if(list.length===0){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">Aucun historique</div>'; return; }
   let h=''; let totalDepot=0,totalRetrait=0;
   list.forEach(it=>{
     if(it.type==='depot') totalDepot+=Number(it.montant||0);
     else totalRetrait+=Number(it.montant||0);
     const isDepot=it.type==='depot';
-    h+=`<div class="hist-item">
-      <div><span class="badge ${isDepot?'badge-depot':'badge-retrait'}">${isDepot?'DEPOT':'RETRAIT'}</span><br><small style="color:#888">${it.date_fr||''}</small>${it.penalite?'<br><small style="color:red">Pénalité: '+it.penalite+'F</small>':''}</div>
-      <div style="text-align:right"><b style="color:${isDepot?'green':'#c0392b'}">${isDepot?'+':'-'}${it.montant} XOF</b><br><small>Reçu: ${it.montantFinal??it.montant}F</small><br><small style="color:#888">Collecte après: ${it.collecteApres}F</small></div>
-    </div>`;
+    h+='<div class="hist-item"><div><span class="badge '+(isDepot?'badge-depot':'badge-retrait')+'">'+(isDepot?'DÉPÔT':'RETRAIT')+'</span><br><small style="color:var(--muted)">'+(it.date_fr||'')+'</small>'+(it.penalite?'<br><small style="color:red">Pénalité: '+it.penalite+'F</small>':'')+'</div><div style="text-align:right"><b style="color:'+(isDepot?'#1B8A2A':'#c0392b')+'">'+(isDepot?'+':'-')+Number(it.montant).toLocaleString('fr-FR')+' XOF</b><br><small>Reçu: '+(it.montantFinal??it.montant)+'F</small><br><small style="color:var(--muted)">Collecte après: '+it.collecteApres+'F</small></div></div>';
   });
-  h=`<div style="display:flex;gap:8px;margin-bottom:10px"><div style="flex:1;background:#eaffea;padding:8px;border-radius:10px;text-align:center"><small>Total dépôts</small><br><b style="color:green">+${totalDepot} F</b></div><div style="flex:1;background:#ffe9e9;padding:8px;border-radius:10px;text-align:center"><small>Total retraits</small><br><b style="color:#c0392b">-${totalRetrait} F</b></div></div>`+h;
+  h='<div class="totaux"><div class="dep"><small>Total dépôts</small><br><b style="color:#1B8A2A">+'+totalDepot.toLocaleString('fr-FR')+' F</b></div><div class="ret"><small>Total retraits</small><br><b style="color:#c0392b">-'+totalRetrait.toLocaleString('fr-FR')+' F</b></div></div>'+h;
   wrap.innerHTML=h;
-}
-function renderTours(){
-  const contrib=+data.montant||2000;
-  const obj=+data.objectif||contrib*5;
-  const tours=Math.max(1,Math.ceil(obj/contrib));
-  const collecte=getCollecte();
-  const payes=Math.floor(collecte/contrib);
-  let h='';
-  for(let i=1;i<=tours;i++){
-    const isPaye=i<=payes;
-    h+=`<div class="tour ${isPaye?'paye':'avenir'}">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <b style="background:${isPaye?'#0f3d2e':'#eee'};color:${isPaye?'#fff':'#000'};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center">${String(i).padStart(2,'0')}</b>
-        <span style="font-size:11px;background:${isPaye?'#0f3d2e':'#ffbb0a'};color:${isPaye?'#fff':'#000'};border-radius:100px;padding:4px 8px">${isPaye?'✓ Payé':'A venir'}</span>
-      </div>
-      <div style="margin-top:8px;font-size:12px">Tour ${i}</div><b>${contrib} XOF</b><br><small style="color:${isPaye?'green':'#888'}">${isPaye?'Passé':'Futur'}</small>
-    </div>`;
-  }
-  document.getElementById('tours').innerHTML=h;
 }
 function startCountdown(){
   clearInterval(timer);
@@ -153,7 +255,7 @@ function startCountdown(){
       cd.textContent=j+'j '+h+'h de retard';
     }else{
       box.className='timer ok';
-      title.textContent='Prochain depot dans :';
+      title.textContent='Prochain dépôt dans :';
       const j=Math.floor(diff/86400000);
       const h=Math.floor((diff%86400000)/3600000);
       const m=Math.floor((diff%3600000)/60000);
@@ -167,75 +269,30 @@ function openRet(){document.getElementById('mRet').classList.add('show')}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show'))}
 function showAlert(t){closeM();document.getElementById('alertTxt').textContent=t;document.getElementById('mAlert').classList.add('show');}
 function showConfirm(t,cb){closeM();document.getElementById('confirmTxt').textContent=t;document.getElementById('mConfirm').classList.add('show');document.getElementById('confirmOk').onclick=()=>{closeM();cb();};}
-
 function deposer(){
   const mt=Number(document.getElementById('dMont').value);if(!mt)return showAlert('Montant');
   const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);
   const newCollecte=getCollecte()+mt;const newJours=Math.max(0,(data.joursRestants??0)-(mt/contrib)*(interval/86400));
   const newProchain=new Date(Date.now()+interval*1000).toISOString();
   const now=new Date(); const date_fr=now.toLocaleString('fr-FR');
-  
   db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours),prochainDepot:newProchain})
  .then(()=>db.ref('clients/'+uid).once('value')).then(s=>db.ref('clients/'+uid).update({solde_epargne:(+s.val().solde_epargne||0)+mt}))
- .then(()=>{
-    return db.ref('epargne/'+uid+'/'+eid+'/historique').push({
-      type:'depot',
-      montant:mt,
-      montantFinal:mt,
-      penalite:0,
-      collecteAvant:getCollecte(),
-      collecteApres:newCollecte,
-      timestamp:now.getTime(),
-      date_iso:now.toISOString(),
-      date_fr:date_fr,
-      frequence:data.frequence
-    });
-  })
- .then(()=>{
-    pushNotif("Dépôt épargne","Dépôt "+mt+" XOF sur "+data.nom+" - "+data.frequence);
-    document.getElementById('dMont').value=''; closeM();
-  });
+ .then(()=>{return db.ref('epargne/'+uid+'/'+eid+'/historique').push({type:'depot',montant:mt,montantFinal:mt,penalite:0,collecteAvant:getCollecte(),collecteApres:newCollecte,timestamp:now.getTime(),date_iso:now.toISOString(),date_fr:date_fr,frequence:data.frequence});})
+ .then(()=>{pushNotif("Dépôt épargne","Dépôt "+mt+" XOF sur "+data.nom+" - "+data.frequence);document.getElementById('dMont').value='';closeM();});
 }
-function retirer(){const mt=Number(document.getElementById('rMont').value);if(!mt)return showAlert('Montant');if(mt>getCollecte())return showAlert('Insuffisant');let penalty=0,finalMt=mt;if(data.bloque){const p=(data.echeance||'').split('/');const fin=p.length===3?new Date(p[2]+'-'+p[1]+'-'+p[0]):null;if(fin&&fin>new Date()){penalty=Math.round(mt*0.05);finalMt=mt-penalty;return showConfirm(`Bloquée: pénalité 5% = ${penalty}F. Tu recevras ${finalMt}F`,()=>doRetrait(mt,finalMt,penalty));}}doRetrait(mt,finalMt,penalty);}
+function retirer(){const mt=Number(document.getElementById('rMont').value);if(!mt)return showAlert('Montant');if(mt>getCollecte())return showAlert('Insuffisant');let penalty=0,finalMt=mt;if(data.bloque){const p=(data.echeance||'').split('/');const fin=p.length===3?new Date(p[2]+'-'+p[1]+'-'+p[0]):null;if(fin&&fin>new Date()){penalty=Math.round(mt*0.05);finalMt=mt-penalty;return showConfirm('Bloquée: pénalité 5% = '+penalty+'F. Tu recevras '+finalMt+'F',()=>doRetrait(mt,finalMt,penalty));}}doRetrait(mt,finalMt,penalty);}
 function doRetrait(mt,finalMt,penalty){
   const contrib=+data.montant||1000;const interval=getIntervalSec(data.frequence);
   const collecteAvant=getCollecte();
   const newCollecte=Math.max(0,collecteAvant-mt);const newJours=(data.joursRestants??0)+(mt/contrib)*(interval/86400);
   const now=new Date(); const date_fr=now.toLocaleString('fr-FR');
-  
   db.ref('epargne/'+uid+'/'+eid).update({montantCollecte:newCollecte,joursRestants:Math.round(newJours)})
- .then(()=>db.ref('clients/'+uid).once('value')).then(s=>{
-    const c=s.val()||{};
-    return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});
-  }).then(()=>{
-    return db.ref('epargne/'+uid+'/'+eid+'/historique').push({
-      type:'retrait',
-      montant:mt,
-      montantFinal:finalMt,
-      penalite:penalty,
-      collecteAvant:collecteAvant,
-      collecteApres:newCollecte,
-      timestamp:now.getTime(),
-      date_iso:now.toISOString(),
-      date_fr:date_fr
-    });
-  }).then(()=>{
-    if(penalty>0){
-      return db.ref('clients/'+ADMIN_UID).once('value').then(a=>{
-        const ad=a.val()||{};
-        return db.ref('clients/'+ADMIN_UID).update({recompense:(+ad.recompense||0)+penalty});
-      }).then(()=>{
-        pushNotif("Retrait avec pénalité","Retrait "+mt+" XOF sur "+data.nom+" - Pénalité "+penalty+"F → Recompense admin. Reçu "+finalMt+"F");
-      });
-    }else{
-      pushNotif("Retrait épargne","Retrait "+mt+" XOF sur "+data.nom+" - Reçu "+finalMt+"F");
-    }
-  }).then(()=>{ document.getElementById('rMont').value=''; closeM(); });
+ .then(()=>db.ref('clients/'+uid).once('value')).then(s=>{const c=s.val()||{};return db.ref('clients/'+uid).update({solde:(+c.solde||0)+finalMt,solde_epargne:Math.max(0,(+c.solde_epargne||0)-mt)});}).then(()=>{return db.ref('epargne/'+uid+'/'+eid+'/historique').push({type:'retrait',montant:mt,montantFinal:finalMt,penalite:penalty,collecteAvant:collecteAvant,collecteApres:newCollecte,timestamp:now.getTime(),date_iso:now.toISOString(),date_fr:date_fr});}).then(()=>{
+    if(penalty>0){return db.ref('clients/'+ADMIN_UID).once('value').then(a=>{const ad=a.val()||{};return db.ref('clients/'+ADMIN_UID).update({recompense:(+ad.recompense||0)+penalty});}).then(()=>{pushNotif("Retrait avec pénalité","Retrait "+mt+" XOF sur "+data.nom+" - Pénalité "+penalty+"F → Recompense admin. Reçu "+finalMt+"F");});}
+    else{pushNotif("Retrait épargne","Retrait "+mt+" XOF sur "+data.nom+" - Reçu "+finalMt+"F");}
+  }).then(()=>{document.getElementById('rMont').value='';closeM();});
 }
-firebase.auth().onAuthStateChanged(function(user){
-  if(user){ init(); } 
-  else { firebase.auth().signInAnonymously(); }
-});
+firebase.auth().onAuthStateChanged(function(user){if(user){init();}else{firebase.auth().signInAnonymously();}});
 </script>
 </body>
 </html>
