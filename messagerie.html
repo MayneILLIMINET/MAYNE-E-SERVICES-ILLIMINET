@@ -10,12 +10,16 @@
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const database=firebase.database();
-// === CLOUDINARY MAYNE - DÉJÀ REMPLI AVEC TES VALEURS ===
 const CLOUDINARY_CLOUD_NAME="dkzpkvidk";
 const CLOUDINARY_PRESET_AUDIO="mayneaudio";
 const CLOUDINARY_PRESET_IMAGE="mayneimages";
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 async function pushJS(destId,titre,msg){ if(!destId) return; try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})}); }catch(e){} }
+function dbg(msg){
+  console.log('[MAYNE AUDIO]',msg);
+  const el=document.getElementById('audio-debug');
+  if(el){ el.style.display='block'; el.textContent='DEBUG: '+msg; }
+}
 async function uploadAudioToCloudinary(blob){
   const fd=new FormData();
   fd.append('file',blob,'vocal_'+Date.now()+'.webm');
@@ -68,6 +72,7 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .chat-top{flex-shrink:0;height:62px;background:#202c33;color:#fff;display:flex;align-items:center;gap:10px;padding:0 10px}
 .chat-top-avatar{width:38px;height:38px;border-radius:50%;background:#ff5000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
 .chat-container{flex:1;min-height:0;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:8px;background:#0b141a}
+#audio-debug{display:none;background:#ffcc00;color:#000;font-size:11px;font-weight:800;padding:6px 10px;text-align:center}
 .msg-row{display:flex;width:100%;position:relative}
 .msg-row.left{justify-content:flex-start}
 .msg-row.right{justify-content:flex-end}
@@ -163,7 +168,7 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 </div>
 <input type="file" id="file-picker" accept="image/*" style="display:none" onchange="onFilePicked(event)">
 <script>
-let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,mediaRecorder=null,recChunks=[],recSegments=[],recStream=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null;
+let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,mediaRecorder=null,recChunks=[],recSegments=[],recStream=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null,waitingAudio=false,waitingAudioSince=0;
 window.currentConvId=null;
 let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null;
 let micStartY=0,micLocked=false,micSwipeUp=false;
@@ -200,7 +205,8 @@ function togglePlayAudio(id){
   const btn=document.getElementById('play-'+id);
   document.querySelectorAll('audio').forEach(a=>{ if(a.id!=='aud-'+id) a.pause(); });
   if(previewAudio) previewAudio.pause();
-  if(aud.paused){ aud.playbackRate=recSpeed; aud.play().catch(e=>{ alert('Audio illisible'); }); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
+  dbg('Lecture vocal '+id+' url='+aud.src.substring(0,60));
+  if(aud.paused){ aud.playbackRate=recSpeed; aud.play().then(()=>dbg('Lecture OK')).catch(e=>{ dbg('ERREUR lecture: '+e.message); alert('Audio illisible : '+e.message); }); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
 }
 function startOneSegment(){
   return new Promise((res,rej)=>{
@@ -231,9 +237,15 @@ function buildPreviewUrl(){
 }
 function togglePreview(){
   if(!recPaused) return;
+  // MODE APPINVENTOR : pas de blob web, on demande à AppInventor
+  if(window.AppInventor){
+    dbg('Demande PREVIEW_AUDIO à AppInventor (si ton bloc ne le gère pas, rien ne jouera)');
+    window.AppInventor.setWebViewString('PREVIEW_AUDIO');
+    return;
+  }
   if(previewPlaying && previewAudio){ previewAudio.pause(); previewPlaying=false; const b=document.getElementById('preview-play'); if(b) b.textContent='▶️'; const l=document.getElementById('listen-label'); if(l) l.textContent='Écouter'; return; }
   const url=buildPreviewUrl();
-  if(!url){ if(window.AppInventor) window.AppInventor.setWebViewString('PREVIEW_AUDIO'); return; }
+  if(!url){ alert('Rien à écouter'); return; }
   if(previewAudio) previewAudio.pause();
   previewAudio=new Audio(url);
   previewAudio.playbackRate=recSpeed;
@@ -252,7 +264,7 @@ function togglePreview(){
 }
 async function startRecording(){
   if(isRecording) return;
-  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); recChunks=[]; recSegments=[]; previewUrl=null;
+  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); recChunks=[]; recSegments=[]; previewUrl=null; waitingAudio=false;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
   if(inputBox) inputBox.style.display='none';
@@ -264,18 +276,20 @@ async function startRecording(){
   updateRecWave();
   clearInterval(recTimer);
   recTimer=setInterval(()=>{ if(!recPaused){ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); } },300);
-  if(window.AppInventor){ window.AppInventor.setWebViewString('REC_AUDIO_'+window.currentConvId); return; }
+  if(window.AppInventor){ dbg('Envoi REC_AUDIO à AppInventor'); window.AppInventor.setWebViewString('REC_AUDIO_'+window.currentConvId); return; }
+  dbg('Mode WEB : getUserMedia');
   try{
     recStream=await navigator.mediaDevices.getUserMedia({audio:true});
     await startOneSegment();
-  }catch(e){ alert('Micro refusé - autorise le micro'); cancelRecording(); }
+    dbg('Enregistrement WEB démarré');
+  }catch(e){ dbg('ERREUR micro: '+e.message); alert('Micro refusé'); cancelRecording(); }
 }
 async function togglePauseRec(){
   if(!isRecording) return;
   if(!recPaused){
     recPaused=true;
     recElapsed=Math.floor((Date.now()-recStartTime)/1000);
-    if(window.AppInventor){ window.AppInventor.setWebViewString('PAUSE_AUDIO'); }
+    if(window.AppInventor){ dbg('Envoi PAUSE_AUDIO (UI seulement)'); window.AppInventor.setWebViewString('PAUSE_AUDIO'); }
     else { await stopCurrentSegment(); }
     const label=document.getElementById('pause-label'); if(label) label.textContent='Reprendre';
     const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='🎙️';
@@ -291,45 +305,56 @@ async function togglePauseRec(){
     const label=document.getElementById('pause-label'); if(label) label.textContent='Pause';
     const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
     recStartTime=Date.now()-recElapsed*1000;
-    if(window.AppInventor){ window.AppInventor.setWebViewString('RESUME_AUDIO'); }
+    if(window.AppInventor){ dbg('Envoi RESUME_AUDIO'); window.AppInventor.setWebViewString('RESUME_AUDIO'); }
     else { await startOneSegment(); }
   }
 }
 function cancelRecording(){
   if(!isRecording && !recSegments.length) { resetRecUI(); return; }
-  isRecording=false; recPaused=false; clearInterval(recTimer);
+  isRecording=false; recPaused=false; clearInterval(recTimer); waitingAudio=false;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   if(mediaRecorder && mediaRecorder.state!=='inactive'){ try{ mediaRecorder.stop(); }catch(e){} }
   if(recStream) recStream.getTracks().forEach(t=>t.stop());
   recSegments=[]; recChunks=[];
   if(window.AppInventor) window.AppInventor.setWebViewString('CANCEL_AUDIO');
+  dbg('Enregistrement annulé');
   resetRecUI();
 }
 async function pushAudioMessage(url){
-  const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
-  await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false});
-  pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
+  dbg('Push Firebase audio url='+url.substring(0,70)+' duree='+recElapsed);
+  try{
+    const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
+    const ref=await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false});
+    dbg('Push OK key='+ref.key);
+    pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
+  }catch(e){ dbg('ERREUR Push Firebase: '+e.message); alert('Push Firebase échoué: '+e.message); }
 }
 async function stopAndSendRecording(){
-  if(!isRecording && !recSegments.length) return;
-  if(isRecording && !recPaused){
-    if(window.AppInventor){
-      window.AppInventor.setWebViewString('STOP_AUDIO');
-      isRecording=false; clearInterval(recTimer);
-      return;
-    } else {
-      await stopCurrentSegment();
-    }
+  dbg('Clic Envoyer - isRecording='+isRecording+' recPaused='+recPaused+' AppInventor='+(!!window.AppInventor));
+  // === FIX PRINCIPAL : en AppInventor on envoie TOUJOURS STOP_AUDIO, même en pause ===
+  if(window.AppInventor){
+    waitingAudio=true; waitingAudioSince=Date.now();
+    window.AppInventor.setWebViewString('STOP_AUDIO');
+    dbg('Envoi STOP_AUDIO -> j attends AUDIO_URL_ ...');
+    isRecording=false; clearInterval(recTimer);
+    const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi en cours via AppInventor...'; up.classList.add('show'); }
+    setTimeout(()=>{ if(waitingAudio){ dbg('TIMEOUT 12s : AppInventor n a pas renvoyé AUDIO_URL_ - Vérifie tes blocs AppInventor STOP_AUDIO / Cloudinary'); alert('AppInventor n a pas renvoyé AUDIO_URL_ après 12s. Vérifie tes blocs : STOP_AUDIO doit uploader sur Cloudinary (preset mayneaudio) puis faire set WebViewString = AUDIO_URL_ + url'); waitingAudio=false; resetRecUI(); } },12000);
+    return;
   }
+  // === MODE WEB ===
+  if(!isRecording && !recSegments.length) return;
+  if(isRecording && !recPaused){ await stopCurrentSegment(); }
   isRecording=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const blob=buildCombinedBlob();
-  if(!blob || blob.size<100){ resetRecUI(); return; }
+  if(!blob || blob.size<100){ dbg('Blob vide size='+(blob?blob.size:0)); resetRecUI(); return; }
   const up=document.getElementById('rec-upload'); if(up) up.classList.add('show');
   try{
+    dbg('Upload Cloudinary mayneaudio size='+blob.size);
     const cloudUrl=await uploadAudioToCloudinary(blob);
+    dbg('Cloudinary OK '+cloudUrl.substring(0,70));
     await pushAudioMessage(cloudUrl);
-  }catch(e){ alert('Envoi vocal échoué : '+e.message); }
+  }catch(e){ dbg('ERREUR Cloudinary: '+e.message); alert('Envoi vocal échoué : '+e.message); }
   if(up) up.classList.remove('show');
   if(recStream) recStream.getTracks().forEach(t=>t.stop());
   recSegments=[]; recChunks=[];
@@ -395,7 +420,10 @@ function initSwipe(){
 }
 setInterval(async ()=>{
   if(!window.AppInventor) return;
-  let d=window.AppInventor.getWebViewString(); if(!d) return;
+  let d=null;
+  try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; }
+  if(!d) return;
+  dbg('WebViewString reçu: '+d.substring(0,60));
   const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
   if(d.startsWith('CHAT_')){
     let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString('');
@@ -404,8 +432,17 @@ setInterval(async ()=>{
   }
   else if(d.startsWith('AUDIO_URL_')){
     let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString('');
+    dbg('AUDIO_URL_ reçu, je push...');
+    waitingAudio=false;
     await pushAudioMessage(u);
     resetRecUI();
+  }
+  else if(d.startsWith('PREVIEW_URL_')){
+    let u=d.replace('PREVIEW_URL_',''); window.AppInventor.setWebViewString('');
+    dbg('PREVIEW_URL_ reçu, lecture...');
+    if(previewAudio) previewAudio.pause();
+    previewAudio=new Audio(u);
+    previewAudio.play().catch(e=>dbg('Erreur lecture preview: '+e.message));
   }
   else if(d==='REC_STOP'){ window.AppInventor.setWebViewString(''); resetRecUI(); }
 },400);
@@ -450,7 +487,7 @@ function retourListe(){ if(window.currentConvId){ database.ref(`conversations/${
 function ouvrirConversation(convId,nom){
   database.ref('conversations').off(); window.currentConvId=convId; replyTo=null;
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
-  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ <b>Glisse vers le haut</b> pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button><button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button><button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button><button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  feed.innerHTML='<div class="chat-wrapper"><div id="audio-debug"></div><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ <b>Glisse vers le haut</b> pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button><button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button><button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button><button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
   const otherId=convId.split('_').find(id=>id!==currentUserId);
