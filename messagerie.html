@@ -15,17 +15,20 @@ const CLOUDINARY_PRESET_AUDIO="mayneaudio";
 const CLOUDINARY_PRESET_IMAGE="mayneimages";
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 async function pushJS(destId,titre,msg){ if(!destId) return; try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})}); }catch(e){} }
-function dbg(msg){
-  console.log('[MAYNE AUDIO]',msg);
-  const el=document.getElementById('audio-debug');
-  if(el){ el.style.display='block'; el.textContent='DEBUG: '+msg; }
+function dbg(msg){ console.log('[MAYNE AUDIO]',msg); const el=document.getElementById('audio-debug'); if(el){ el.style.display='block'; el.textContent='DEBUG: '+msg; } }
+// FIX ECHO : on mémorise ce qu'on envoie, la boucle ignore l'écho
+let lastSentToApp='';
+function sendToApp(msg){
+  lastSentToApp=msg;
+  if(window.AppInventor){ try{ window.AppInventor.setWebViewString(msg); }catch(e){} }
+  dbg('-> AppInventor: '+msg);
 }
 async function uploadAudioToCloudinary(blob){
   const fd=new FormData();
-  fd.append('file',blob,'vocal_'+Date.now()+'.webm');
-  fd.append('upload_preset',CLOUDINARY_PRESET_AUDIO);
+  fd.append('file', blob, 'vocal_'+Date.now()+'.wav');
+  fd.append('upload_preset', CLOUDINARY_PRESET_AUDIO);
   fd.append('folder','audio');
-  const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/video/upload',{method:'POST',body:fd});
+  const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});
   const j=await res.json();
   if(!j.secure_url) throw new Error(j.error?.message||'Upload Cloudinary échoué');
   return j.secure_url;
@@ -168,10 +171,21 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 </div>
 <input type="file" id="file-picker" accept="image/*" style="display:none" onchange="onFilePicked(event)">
 <script>
-let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,mediaRecorder=null,recChunks=[],recSegments=[],recStream=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null,waitingAudio=false,waitingAudioSince=0;
+let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null,waitingAudio=false;
 window.currentConvId=null;
 let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null;
 let micStartY=0,micLocked=false,micSwipeUp=false;
+// --- ENREGISTREUR WAV (remplace MediaRecorder) ---
+let wavCtx=null,wavStream=null,wavProcessor=null,wavSource=null,wavChunks=[],wavSampleRate=44100;
+function wavEncode(chunks, sampleRate){
+  let total=0; chunks.forEach(c=>total+=c.length);
+  const data=new Float32Array(total); let off=0; chunks.forEach(c=>{ data.set(c,off); off+=c.length; });
+  const buf=new ArrayBuffer(44+total*2); const view=new DataView(buf);
+  function str(o,s){ for(let i=0;i<s.length;i++) view.setUint8(o+i,s.charCodeAt(i)); }
+  str(0,'RIFF'); view.setUint32(4,36+total*2,true); str(8,'WAVE'); str(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true); view.setUint32(24,sampleRate,true); view.setUint32(28,sampleRate*2,true); view.setUint16(32,2,true); view.setUint16(34,16,true); str(36,'data'); view.setUint32(40,total*2,true);
+  for(let i=0;i<total;i++){ let s=Math.max(-1,Math.min(1,data[i])); view.setInt16(44+i*2, s<0? s*0x8000 : s*0x7FFF, true); }
+  return new Blob([view],{type:'audio/wav'});
+}
 const STICKERS={
   "😍 Amour":["😍","🥰","😘","❤️","💋","💖","💘","💝","😻","🫶","💕","❤️‍🔥"],
   "😂 Drôle":["😂","🤣","😅","😆","🤪","😜","🤡","😹","😆","🤭","😁","😄"],
@@ -182,7 +196,7 @@ const STICKERS={
 };
 function getThumb(url,w){ if(!url) return ''; if(url.includes('/upload/')) return url.replace('/upload/','/upload/w_'+w+',q_auto,f_auto/'); return url; }
 function openImage(url){ document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
-function pickImageChat(){ if(window.AppInventor){ window.AppInventor.setWebViewString('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
+function pickImageChat(){ if(window.AppInventor){ sendToApp('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
 async function onFilePicked(e){
   const f=e.target.files[0]; if(!f||!window.currentConvId) return;
   try{
@@ -205,49 +219,19 @@ function togglePlayAudio(id){
   const btn=document.getElementById('play-'+id);
   document.querySelectorAll('audio').forEach(a=>{ if(a.id!=='aud-'+id) a.pause(); });
   if(previewAudio) previewAudio.pause();
-  dbg('Lecture vocal '+id+' url='+aud.src.substring(0,60));
+  dbg('Lecture vocal '+id);
   if(aud.paused){ aud.playbackRate=recSpeed; aud.play().then(()=>dbg('Lecture OK')).catch(e=>{ dbg('ERREUR lecture: '+e.message); alert('Audio illisible : '+e.message); }); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
-}
-function startOneSegment(){
-  return new Promise((res,rej)=>{
-    if(!recStream) return rej('no stream');
-    try{
-      mediaRecorder=new MediaRecorder(recStream,{mimeType:MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'audio/mp4'});
-      recChunks=[];
-      mediaRecorder.ondataavailable=e=>{ if(e.data && e.data.size>0) recChunks.push(e.data); };
-      mediaRecorder.onstop=()=>{ if(recChunks.length) recSegments.push(new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/webm'})); recChunks=[]; res(); };
-      mediaRecorder.start(250);
-    }catch(e){ rej(e); }
-  });
-}
-function stopCurrentSegment(){
-  return new Promise(res=>{
-    if(!mediaRecorder || mediaRecorder.state==='inactive'){ res(); return; }
-    mediaRecorder.onstop=()=>{ if(recChunks.length) recSegments.push(new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/webm'})); recChunks=[]; res(); };
-    try{ mediaRecorder.stop(); }catch(e){ res(); }
-  });
-}
-function buildCombinedBlob(){ if(!recSegments.length) return null; return new Blob(recSegments,{type:'audio/webm'}); }
-function buildPreviewUrl(){
-  if(previewUrl) URL.revokeObjectURL(previewUrl);
-  const blob=buildCombinedBlob();
-  if(!blob) return null;
-  previewUrl=URL.createObjectURL(blob);
-  return previewUrl;
 }
 function togglePreview(){
   if(!recPaused) return;
-  // MODE APPINVENTOR : pas de blob web, on demande à AppInventor
-  if(window.AppInventor){
-    dbg('Demande PREVIEW_AUDIO à AppInventor (si ton bloc ne le gère pas, rien ne jouera)');
-    window.AppInventor.setWebViewString('PREVIEW_AUDIO');
-    return;
-  }
+  if(window.AppInventor){ sendToApp('PREVIEW_AUDIO'); return; }
   if(previewPlaying && previewAudio){ previewAudio.pause(); previewPlaying=false; const b=document.getElementById('preview-play'); if(b) b.textContent='▶️'; const l=document.getElementById('listen-label'); if(l) l.textContent='Écouter'; return; }
-  const url=buildPreviewUrl();
-  if(!url){ alert('Rien à écouter'); return; }
+  if(!wavChunks.length){ alert('Rien à écouter'); return; }
+  if(previewUrl) URL.revokeObjectURL(previewUrl);
+  const blob=wavEncode(wavChunks, wavSampleRate);
+  previewUrl=URL.createObjectURL(blob);
   if(previewAudio) previewAudio.pause();
-  previewAudio=new Audio(url);
+  previewAudio=new Audio(previewUrl);
   previewAudio.playbackRate=recSpeed;
   previewPlaying=true;
   const b=document.getElementById('preview-play'); if(b) b.textContent='⏸️';
@@ -260,11 +244,11 @@ function togglePreview(){
     const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(Math.floor(previewAudio.currentTime))+' / '+fmtTime(recElapsed);
   };
   previewAudio.onended=()=>{ previewPlaying=false; if(b) b.textContent='▶️'; if(l) l.textContent='Écouter'; const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(recElapsed)+' / '+fmtTime(recElapsed); };
-  previewAudio.play().catch(()=>{ alert('Impossible de lire ce vocal'); previewPlaying=false; });
+  previewAudio.play().catch(()=>{ alert('Aperçu indisponible, envoie puis écoute dans la conversation'); previewPlaying=false; });
 }
 async function startRecording(){
   if(isRecording) return;
-  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); recChunks=[]; recSegments=[]; previewUrl=null; waitingAudio=false;
+  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null; waitingAudio=false;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
   if(inputBox) inputBox.style.display='none';
@@ -276,21 +260,26 @@ async function startRecording(){
   updateRecWave();
   clearInterval(recTimer);
   recTimer=setInterval(()=>{ if(!recPaused){ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); } },300);
-  if(window.AppInventor){ dbg('Envoi REC_AUDIO à AppInventor'); window.AppInventor.setWebViewString('REC_AUDIO_'+window.currentConvId); return; }
-  dbg('Mode WEB : getUserMedia');
+  if(window.AppInventor){ sendToApp('REC_AUDIO_'+window.currentConvId); return; }
+  dbg('Mode WEB : WAV AudioContext');
   try{
-    recStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    await startOneSegment();
-    dbg('Enregistrement WEB démarré');
+    wavStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    wavCtx=new (window.AudioContext||window.webkitAudioContext)();
+    wavSampleRate=wavCtx.sampleRate;
+    wavSource=wavCtx.createMediaStreamSource(wavStream);
+    wavProcessor=wavCtx.createScriptProcessor(4096,1,1);
+    wavProcessor.onaudioprocess=e=>{ if(recPaused) return; const d=e.inputBuffer.getChannelData(0); wavChunks.push(new Float32Array(d)); };
+    wavSource.connect(wavProcessor); wavProcessor.connect(wavCtx.destination);
+    dbg('Enregistrement WAV démarré sr='+wavSampleRate);
   }catch(e){ dbg('ERREUR micro: '+e.message); alert('Micro refusé'); cancelRecording(); }
 }
-async function togglePauseRec(){
+function togglePauseRec(){
   if(!isRecording) return;
   if(!recPaused){
     recPaused=true;
     recElapsed=Math.floor((Date.now()-recStartTime)/1000);
-    if(window.AppInventor){ dbg('Envoi PAUSE_AUDIO (UI seulement)'); window.AppInventor.setWebViewString('PAUSE_AUDIO'); }
-    else { await stopCurrentSegment(); }
+    if(window.AppInventor){ sendToApp('PAUSE_AUDIO'); }
+    else if(wavCtx && wavCtx.state==='running'){ wavCtx.suspend(); }
     const label=document.getElementById('pause-label'); if(label) label.textContent='Reprendre';
     const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='🎙️';
     const prev=document.getElementById('rec-preview'); if(prev) prev.classList.add('show');
@@ -305,59 +294,60 @@ async function togglePauseRec(){
     const label=document.getElementById('pause-label'); if(label) label.textContent='Pause';
     const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
     recStartTime=Date.now()-recElapsed*1000;
-    if(window.AppInventor){ dbg('Envoi RESUME_AUDIO'); window.AppInventor.setWebViewString('RESUME_AUDIO'); }
-    else { await startOneSegment(); }
+    if(window.AppInventor){ sendToApp('RESUME_AUDIO'); }
+    else if(wavCtx && wavCtx.state==='suspended'){ wavCtx.resume(); }
   }
 }
+function stopWav(){
+  try{ if(wavProcessor) wavProcessor.disconnect(); }catch(e){}
+  try{ if(wavSource) wavSource.disconnect(); }catch(e){}
+  try{ if(wavCtx) wavCtx.close(); }catch(e){}
+  if(wavStream) wavStream.getTracks().forEach(t=>t.stop());
+  wavCtx=null; wavProcessor=null; wavSource=null; wavStream=null;
+}
 function cancelRecording(){
-  if(!isRecording && !recSegments.length) { resetRecUI(); return; }
+  if(!isRecording && !wavChunks.length) { resetRecUI(); return; }
   isRecording=false; recPaused=false; clearInterval(recTimer); waitingAudio=false;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  if(mediaRecorder && mediaRecorder.state!=='inactive'){ try{ mediaRecorder.stop(); }catch(e){} }
-  if(recStream) recStream.getTracks().forEach(t=>t.stop());
-  recSegments=[]; recChunks=[];
-  if(window.AppInventor) window.AppInventor.setWebViewString('CANCEL_AUDIO');
-  dbg('Enregistrement annulé');
+  if(!window.AppInventor) stopWav();
+  wavChunks=[];
+  if(window.AppInventor) sendToApp('CANCEL_AUDIO');
+  dbg('Annulé');
   resetRecUI();
 }
 async function pushAudioMessage(url){
-  dbg('Push Firebase audio url='+url.substring(0,70)+' duree='+recElapsed);
+  dbg('Push Firebase '+url.substring(0,70));
   try{
     const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId);
     const ref=await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false});
-    dbg('Push OK key='+ref.key);
+    dbg('Push OK '+ref.key);
     pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal');
-  }catch(e){ dbg('ERREUR Push Firebase: '+e.message); alert('Push Firebase échoué: '+e.message); }
+  }catch(e){ dbg('ERREUR Push: '+e.message); alert('Push échoué: '+e.message); }
 }
 async function stopAndSendRecording(){
-  dbg('Clic Envoyer - isRecording='+isRecording+' recPaused='+recPaused+' AppInventor='+(!!window.AppInventor));
-  // === FIX PRINCIPAL : en AppInventor on envoie TOUJOURS STOP_AUDIO, même en pause ===
+  dbg('Clic Envoyer AppInventor='+(!!window.AppInventor)+' paused='+recPaused);
   if(window.AppInventor){
-    waitingAudio=true; waitingAudioSince=Date.now();
-    window.AppInventor.setWebViewString('STOP_AUDIO');
-    dbg('Envoi STOP_AUDIO -> j attends AUDIO_URL_ ...');
+    waitingAudio=true;
+    sendToApp('STOP_AUDIO');
     isRecording=false; clearInterval(recTimer);
-    const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi en cours via AppInventor...'; up.classList.add('show'); }
-    setTimeout(()=>{ if(waitingAudio){ dbg('TIMEOUT 12s : AppInventor n a pas renvoyé AUDIO_URL_ - Vérifie tes blocs AppInventor STOP_AUDIO / Cloudinary'); alert('AppInventor n a pas renvoyé AUDIO_URL_ après 12s. Vérifie tes blocs : STOP_AUDIO doit uploader sur Cloudinary (preset mayneaudio) puis faire set WebViewString = AUDIO_URL_ + url'); waitingAudio=false; resetRecUI(); } },12000);
+    const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi via AppInventor...'; up.classList.add('show'); }
+    setTimeout(()=>{ if(waitingAudio){ dbg('TIMEOUT AppInventor pas de AUDIO_URL_'); alert('AppInventor n a pas renvoyé AUDIO_URL_ - vérifie tes blocs STOP_AUDIO : il doit uploader sur Cloudinary (mayneaudio) puis set WebViewString = AUDIO_URL_ + url'); waitingAudio=false; resetRecUI(); } },15000);
     return;
   }
-  // === MODE WEB ===
-  if(!isRecording && !recSegments.length) return;
-  if(isRecording && !recPaused){ await stopCurrentSegment(); }
+  if(!isRecording && !wavChunks.length) return;
   isRecording=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  const blob=buildCombinedBlob();
-  if(!blob || blob.size<100){ dbg('Blob vide size='+(blob?blob.size:0)); resetRecUI(); return; }
+  const blob=wavEncode(wavChunks, wavSampleRate);
+  dbg('Blob WAV size='+blob.size);
+  if(!blob || blob.size<1000){ dbg('Blob vide'); resetRecUI(); return; }
   const up=document.getElementById('rec-upload'); if(up) up.classList.add('show');
   try{
-    dbg('Upload Cloudinary mayneaudio size='+blob.size);
     const cloudUrl=await uploadAudioToCloudinary(blob);
     dbg('Cloudinary OK '+cloudUrl.substring(0,70));
     await pushAudioMessage(cloudUrl);
   }catch(e){ dbg('ERREUR Cloudinary: '+e.message); alert('Envoi vocal échoué : '+e.message); }
   if(up) up.classList.remove('show');
-  if(recStream) recStream.getTracks().forEach(t=>t.stop());
-  recSegments=[]; recChunks=[];
+  stopWav(); wavChunks=[];
   resetRecUI();
 }
 function resetRecUI(){
@@ -418,33 +408,35 @@ function initSwipe(){
     swipeEl=null; swipeData=null;
   },{passive:true});
 }
+// BOUCLE APPINVENTOR : ignore l'écho de ce qu'on vient d'envoyer
 setInterval(async ()=>{
   if(!window.AppInventor) return;
   let d=null;
   try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; }
   if(!d) return;
-  dbg('WebViewString reçu: '+d.substring(0,60));
+  if(d===lastSentToApp) return; // <-- C'EST L'ECHO, on ignore
+  // On ne traite QUE les messages qui viennent d'AppInventor
+  if(!(d.startsWith('AUDIO_URL_')||d.startsWith('PREVIEW_URL_')||d.startsWith('CHAT_')||d==='REC_STOP')) return;
+  dbg('<< AppInventor: '+d.substring(0,60));
   const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
   if(d.startsWith('CHAT_')){
-    let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString('');
+    let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString(''); lastSentToApp='';
     database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()});
     pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo');
   }
   else if(d.startsWith('AUDIO_URL_')){
-    let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString('');
-    dbg('AUDIO_URL_ reçu, je push...');
+    let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp='';
     waitingAudio=false;
     await pushAudioMessage(u);
     resetRecUI();
   }
   else if(d.startsWith('PREVIEW_URL_')){
-    let u=d.replace('PREVIEW_URL_',''); window.AppInventor.setWebViewString('');
-    dbg('PREVIEW_URL_ reçu, lecture...');
+    let u=d.replace('PREVIEW_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp='';
     if(previewAudio) previewAudio.pause();
     previewAudio=new Audio(u);
-    previewAudio.play().catch(e=>dbg('Erreur lecture preview: '+e.message));
+    previewAudio.play().catch(e=>dbg('Erreur preview: '+e.message));
   }
-  else if(d==='REC_STOP'){ window.AppInventor.setWebViewString(''); resetRecUI(); }
+  else if(d==='REC_STOP'){ window.AppInventor.setWebViewString(''); lastSentToApp=''; resetRecUI(); }
 },400);
 function rechercherUtilisateur(){ const q=document.getElementById('recherche-user-input').value.trim().toLowerCase(); const zone=document.getElementById('resultats-recherche'); if(!q){zone.style.display='none';return;} database.ref('clients').once('value').then(s=>{let h='',c=0; s.forEach(ch=>{const cid=ch.key;const nom=ch.val().nom||'';if(cid===currentUserId)return;if(nom.toLowerCase().includes(q)||cid.includes(q)){c++;h+='<div class="search-item" onclick="selectionnerUserPourChat(\''+cid+'\',\''+nom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="width:36px;height:36px;font-size:13px">'+nom.substring(0,2).toUpperCase()+'</div><div>'+nom+'<br><small style="color:#8696a0">'+cid+'</small></div></div>';}}); zone.innerHTML=c?h:'<div style="padding:12px;color:#8696a0">Aucun utilisateur</div>';zone.style.display='block';});}
 function selectionnerUserPourChat(cid,nom){document.getElementById('recherche-user-input').value='';document.getElementById('resultats-recherche').style.display='none';ouvrirConversation([currentUserId,cid].sort().join('_'),nom);}
