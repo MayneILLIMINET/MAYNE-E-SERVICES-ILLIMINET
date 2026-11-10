@@ -92,7 +92,6 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .fab{pointer-events:auto;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .fab-text{width:48px;height:48px;border-radius:14px;background:var(--bg3);color:var(--text);font-size:20px}
 .fab-photo{width:58px;height:58px;border-radius:16px;background:#fff;color:#111;font-size:24px}
-/* CHAT + DATES + SELECTION */
 .chat-wrapper{flex:1;min-height:0;height:100%;display:flex;flex-direction:column;background:var(--bg)}
 .chat-top{flex-shrink:0;height:62px;background:var(--top);color:var(--text);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border)}
 .chat-top-avatar{width:38px;height:38px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;overflow:hidden;cursor:pointer;flex-shrink:0}
@@ -259,10 +258,22 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .chat-menu-sheet{width:100%;max-width:480px;background:var(--bg2);border-radius:20px 20px 0 0;padding:10px 10px calc(16px + env(safe-area-inset-bottom))}
 .chat-menu-sheet button{width:100%;background:transparent;border:none;padding:15px;text-align:left;font-size:16px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)}
 .chat-menu-sheet button.danger{color:#FF3B30}
+.photo-actions{position:fixed;inset:auto 0 0 0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:100000}
+.photo-actions.show{display:flex}
+.photo-actions .sheet button{margin-top:8px}
 </style>
 </head>
 <body data-theme="light">
 <div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
+
+<div id="photo-actions" class="photo-actions" onclick="if(event.target===this) this.classList.remove('show')">
+  <div class="sheet">
+    <h3>Photo de profil</h3>
+    <button class="btn btn-orange" onclick="document.getElementById('photo-actions').classList.remove('show'); openImage(window.viewedPhoto||window.myPhoto)">🔍 Voir en grand</button>
+    <button class="btn btn-grey" id="photo-change-btn" onclick="document.getElementById('photo-actions').classList.remove('show'); pickProfilePhoto()">📷 Changer la photo</button>
+    <button class="btn btn-grey" onclick="document.getElementById('photo-actions').classList.remove('show')">Annuler</button>
+  </div>
+</div>
 
 <div id="profile-modal" onclick="if(event.target===this) closeProfile()">
   <div class="profile-sheet">
@@ -345,30 +356,28 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 let currentUserId=null,isRecording=false,replyTo=null,recStartTime=0,recElapsed=0,recTimer=null,previewAudio=null,previewPlaying=false,waitingAudio=false;
 let pendingAudioUrl=null, pendingAudioDuree=0, pendingBlob=null;
 window.currentConvId=null; window.currentOtherId=null; window.currentOtherName=''; window._profileId=null; window._profilePhoto='';
+window.myPhoto=''; window.viewedPhoto=''; window.currentOtherPhoto='';
 let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null,swipeActive=false;
 let micStartX=0,micStartY=0,micLocked=false,micCancelled=false,micStarted=false;
 let mediaRecorder=null, mediaStream=null, mediaChunks=[];
 let currentTab='discussions';
 let allGroups=[], curGroupIndex=0, curItemIndex=0, viewerProgress=null;
 let pendingPhotoBlob=null, pendingPhotoUrl=null, selectedColor='#D63E00';
-let selectedMsgs=new Set(), selectionMode=false, longPressTimer=null;
+let selectedMsgs=new Set(), selectionMode=false, longPressTimer=null, lastTouchTime=0;
 const COLORS=['#D63E00','#FF5000','#111111','#1E88E5','#00897B','#6A1B9A','#E91E63','#F9A825'];
 function applyTheme(t){ document.body.setAttribute('data-theme',t); localStorage.setItem('mayne_theme',t); const b=document.getElementById('theme-btn'); if(b) b.textContent=t==='dark'?'☀️':'🌙'; }
 function toggleTheme(){ applyTheme((document.body.getAttribute('data-theme')||'light')==='light'?'dark':'light'); }
 (function(){ const s=localStorage.getItem('mayne_theme'); if(s) applyTheme(s); else if(window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark'); else applyTheme('light'); })();
-// --- DATES ---
 function isSameDay(a,b){ const x=new Date(a), y=new Date(b); return x.getFullYear()===y.getFullYear() && x.getMonth()===y.getMonth() && x.getDate()===y.getDate(); }
 function dateLabel(ts){
   const now=new Date(), d=new Date(ts);
   const yesterday=new Date(now); yesterday.setDate(now.getDate()-1);
   if(isSameDay(ts, now)) return "Aujourd'hui";
   if(isSameDay(ts, yesterday)) return "Hier";
-  // Ex : mardi 01 avril 2027
   const s=new Intl.DateTimeFormat('fr-FR',{weekday:'long', day:'2-digit', month:'long', year:'numeric'}).format(d);
   return s.charAt(0).toUpperCase()+s.slice(1);
 }
 function dayKey(ts){ const d=new Date(ts); return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); }
-// --- SUPPRESSION / SELECTION ---
 function updateSelectBar(){
   const bar=document.getElementById('select-bar'); if(!bar) return;
   if(!selectionMode || selectedMsgs.size===0){ bar.classList.remove('show'); return; }
@@ -393,7 +402,8 @@ function exitSelection(){
 }
 async function deleteSelected(){
   if(!selectedMsgs.size || !window.currentConvId) return;
-  if(!confirm('Supprimer '+selectedMsgs.size+' message(s) pour toi seul ?\nL\'autre personne les gardera.')) return;
+  const n=selectedMsgs.size;
+  if(!confirm('Supprimer '+n+' message(s) pour toi seul ?\nL\'autre personne les gardera.')) return;
   const updates={};
   selectedMsgs.forEach(k=>{ updates['conversations/'+window.currentConvId+'/messages/'+k+'/deletedFor/'+currentUserId]=true; });
   await database.ref().update(updates);
@@ -412,7 +422,6 @@ async function deleteConversation(){
 }
 function openChatMenu(){ document.getElementById('chat-menu').classList.add('show'); }
 function closeChatMenu(){ document.getElementById('chat-menu').classList.remove('show'); }
-// --- INVITER ---
 function getInviteLink(){ return APP_URL+'?invite='+encodeURIComponent(currentUserId||''); }
 function getInviteText(){ const nom=document.getElementById('user-name').innerText||'Un ami'; return 'Salut 👋 '+nom+' t\'invite sur MAYNE ! Discute, poste des statuts 24h, envoie des vocaux et des photos. Rejoins-moi ici : '+getInviteLink(); }
 function openInviteModal(){ if(!currentUserId) return alert('Connecte-toi d\'abord'); document.getElementById('invite-link').textContent=getInviteLink(); document.getElementById('invite-modal').classList.add('show'); try{ database.ref('invitations/'+currentUserId).update({lastInvite:Date.now(), link:getInviteLink()}); }catch(e){} }
@@ -423,7 +432,7 @@ function inviteSMS(){ window.location.href='sms:?body='+encodeURIComponent(getIn
 async function shareInvite(){ const text=getInviteText(); if(navigator.share){ try{ await navigator.share({title:'MAYNE - Rejoins-moi', text:text, url:getInviteLink()}); }catch(e){ copyInviteLink(); } } else copyInviteLink(); }
 function inviteByPhone(){ const raw=document.getElementById('invite-phone').value.trim().replace(/[^0-9+]/g,''); if(raw.length<8) return alert('Entre un numéro valide'); let num=raw; if(num.startsWith('0')) num='229'+num.substring(1); if(!num.startsWith('229') && num.length===8) num='229'+num; num=num.replace('+',''); const msg=getInviteText(); database.ref('invitations/'+currentUserId+'/byPhone/'+num).set({phone:num, at:Date.now()}); window.open('https://wa.me/'+num+'?text='+encodeURIComponent(msg),'_blank'); }
 function switchTab(tab){
-  if(window.currentConvId && tab==='actus') return;
+  if(window.currentConvId){ const target=tab; retourListe(); setTimeout(()=>switchTab(target), 80); return; }
   currentTab=tab;
   document.getElementById('tab-discussions').classList.toggle('active', tab==='discussions');
   document.getElementById('tab-actus').classList.toggle('active', tab==='actus');
@@ -445,7 +454,9 @@ function openMyProfile(){ if(!currentUserId) return; openProfile(currentUserId, 
 function openProfile(userId, fallbackName){
   if(!userId) return; window._profileId=userId;
   database.ref('clients/'+userId).once('value').then(snap=>{
-    const c=snap.val()||{}; const nom=c.nom||fallbackName||userId; const num=c.phone||c.telephone||c.numero||userId; const photo=getUserPhoto(c); const online=c.status&&c.status.online; window._profilePhoto=photo||'';
+    const c=snap.val()||{}; const nom=c.nom||fallbackName||userId; const num=c.phone||c.telephone||c.numero||userId; const photo=getUserPhoto(c); const online=c.status&&c.status.online;
+    window.viewedPhoto=photo||'';
+    if(userId===currentUserId) window.myPhoto=photo||'';
     const isMe=userId===currentUserId; const av=document.getElementById('profile-avatar'); av.innerHTML=photo?'<img src="'+getThumb(photo,400)+'">':nom.substring(0,1).toUpperCase();
     document.getElementById('profile-edit-badge').style.display=isMe?'flex':'none';
     document.getElementById('btn-change-photo').classList.toggle('show', isMe);
@@ -455,10 +466,21 @@ function openProfile(userId, fallbackName){
   });
 }
 function closeProfile(){ document.getElementById('profile-modal').classList.remove('show'); }
-function onProfileAvatarClick(){ if(window._profileId===currentUserId) pickProfilePhoto(); else if(window._profilePhoto) openImage(window._profilePhoto); }
+function onProfileAvatarClick(){
+  const isMe=window._profileId===currentUserId;
+  const btn=document.getElementById('photo-change-btn'); if(btn) btn.style.display=isMe?'block':'none';
+  document.getElementById('photo-actions').classList.add('show');
+}
 function pickProfilePhoto(){ if(window.AppInventor) sendToApp('PICK_PROFILE'); else document.getElementById('profile-picker').click(); }
 async function onProfilePicked(e){ const f=e.target.files[0]; e.target.value=''; if(!f) return; try{ const url=await uploadImageToCloudinary(f); await saveProfilePhoto(url); }catch(err){ alert('Photo échouée : '+err.message); } }
-async function saveProfilePhoto(url){ if(!currentUserId) return; await database.ref('clients/'+currentUserId).update({photo:url,photoUrl:url,avatar:url}); window._profilePhoto=url; document.getElementById('profile-avatar').innerHTML='<img src="'+getThumb(url,400)+'">'; document.getElementById('my-avatar').innerHTML='<img src="'+getThumb(url,200)+'">'; closeProfile(); setTimeout(()=>openMyProfile(),200); }
+async function saveProfilePhoto(url){
+  if(!currentUserId) return;
+  await database.ref('clients/'+currentUserId).update({photo:url,photoUrl:url,avatar:url});
+  window.myPhoto=url; window.viewedPhoto=url;
+  const av=document.getElementById('profile-avatar'); if(av) av.innerHTML='<img src="'+getThumb(url,400)+'">';
+  const mine=document.getElementById('my-avatar'); if(mine) mine.innerHTML='<img src="'+getThumb(url,200)+'">';
+  closeProfile(); setTimeout(()=>openMyProfile(),250);
+}
 function formatPhone(n){ n=String(n||''); if(n.length>=8 && !n.startsWith('+')) return '+229 '+n; return n; }
 function pickImageChat(){ if(window.AppInventor) sendToApp('PICK_CHAT'); else document.getElementById('file-picker').click(); }
 async function onFilePicked(e){ const f=e.target.files[0]; if(!f||!window.currentConvId) return; try{ const url=await uploadImageToCloudinary(f); const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }catch(err){ alert('Photo échouée : '+err.message); } e.target.value=''; }
@@ -482,8 +504,8 @@ function setReply(nom,texte){ replyTo={nom,texte}; const p=document.getElementBy
 function clearReply(){ replyTo=null; const p=document.getElementById('reply-preview'); if(p) p.style.display='none'; }
 function initSwipe(){
   const scroll=document.getElementById('chat-scroll'); if(!scroll) return;
-  // Appui long = sélection / Tap = sélection si mode actif
   scroll.addEventListener('touchstart',e=>{
+    lastTouchTime=Date.now();
     const row=e.target.closest('.msg-row'); if(!row) return;
     const key=row.dataset.key; if(!key) return;
     if(selectionMode){ toggleSelect(key); return; }
@@ -508,8 +530,8 @@ function initSwipe(){
     if(swipeActive && dx>60 && swipeData && swipeData.texte && !selectionMode){ setReply(swipeData.nom, swipeData.texte); }
     swipeEl=null; swipeData=null; swipeActive=false;
   },{passive:true});
-  // PC : clic droit / double-clic = sélection, clic simple en mode sélection
   scroll.addEventListener('click',e=>{
+    if(Date.now()-lastTouchTime < 600) return;
     const row=e.target.closest('.msg-row'); if(!row) return;
     if(selectionMode){ toggleSelect(row.dataset.key); }
   });
@@ -532,7 +554,7 @@ function loadStatus(){
 function renderActus(){
   const feed=document.getElementById('actus-feed'); if(!feed) return;
   const mine=allGroups.find(g=>g.uid===currentUserId); const others=allGroups.filter(g=>g.uid!==currentUserId);
-  const myName=document.getElementById('user-name').innerText||'Moi'; const myPhoto=window._profilePhoto||'';
+  const myName=document.getElementById('user-name').innerText||'Moi'; const myPhoto=window.myPhoto||'';
   function statusAvatar(group){ const last=group.items[group.items.length-1]; if(last.type==='image') return '<img src="'+getThumb(last.url,200)+'">'; const txt=(last.texte||'').substring(0,18); return '<div class="status-mini-text" style="background:'+(last.bg||'#D63E00')+'">'+txt+'</div>'; }
   function profileAvatar(nom, photo){ if(photo) return '<img src="'+getThumb(photo,200)+'">'; return nom.substring(0,1).toUpperCase(); }
   let h='<div class="actus-title">Statut</div>';
@@ -557,11 +579,11 @@ function openTextModal(){ const c=document.getElementById('status-colors'); c.in
 function closeTextModal(){ document.getElementById('text-modal').classList.remove('show'); }
 function selectColor(col,el){ selectedColor=col; document.querySelectorAll('.color').forEach(d=>d.classList.remove('active')); el.classList.add('active'); updateTextPreview(); }
 function updateTextPreview(){ const t=document.getElementById('status-text').value||'Aperçu'; const p=document.getElementById('text-preview'); p.textContent=t; p.style.background=selectedColor; }
-async function publishTextStatus(){ const txt=document.getElementById('status-text').value.trim(); if(!txt) return alert('Écris quelque chose'); const cap=document.getElementById('status-caption').value.trim(); await database.ref('statuts/'+currentUserId).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,senderPhoto:window._profilePhoto||'',type:'text',texte:txt,bg:selectedColor,caption:cap,createdAt:Date.now()}); closeTextModal(); document.getElementById('status-text').value=''; document.getElementById('status-caption').value=''; }
+async function publishTextStatus(){ const txt=document.getElementById('status-text').value.trim(); if(!txt) return alert('Écris quelque chose'); const cap=document.getElementById('status-caption').value.trim(); await database.ref('statuts/'+currentUserId).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,senderPhoto:window.myPhoto||'',type:'text',texte:txt,bg:selectedColor,caption:cap,createdAt:Date.now()}); closeTextModal(); document.getElementById('status-text').value=''; document.getElementById('status-caption').value=''; }
 function pickStatusPhoto(){ if(window.AppInventor) sendToApp('PICK_STATUS'); else document.getElementById('status-picker').click(); }
 async function onStatusPicked(e){ const f=e.target.files[0]; e.target.value=''; if(!f) return; pendingPhotoBlob=f; const url=URL.createObjectURL(f); const img=document.getElementById('photo-preview'); img.src=url; img.style.display='block'; document.getElementById('photo-modal').classList.add('show'); }
 function closePhotoModal(){ document.getElementById('photo-modal').classList.remove('show'); pendingPhotoBlob=null; pendingPhotoUrl=null; }
-async function publishPhotoStatus(){ const cap=document.getElementById('photo-caption').value.trim(); try{ let url=pendingPhotoUrl; if(pendingPhotoBlob && !url) url=await uploadImageToCloudinary(pendingPhotoBlob); if(!url) return alert('Choisis une photo'); await database.ref('statuts/'+currentUserId).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,senderPhoto:window._profilePhoto||'',type:'image',url:url,caption:cap,createdAt:Date.now()}); closePhotoModal(); document.getElementById('photo-caption').value=''; }catch(err){ alert('Publication échouée : '+err.message); } }
+async function publishPhotoStatus(){ const cap=document.getElementById('photo-caption').value.trim(); try{ let url=pendingPhotoUrl; if(pendingPhotoBlob && !url) url=await uploadImageToCloudinary(pendingPhotoBlob); if(!url) return alert('Choisis une photo'); await database.ref('statuts/'+currentUserId).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,senderPhoto:window.myPhoto||'',type:'image',url:url,caption:cap,createdAt:Date.now()}); closePhotoModal(); document.getElementById('photo-caption').value=''; }catch(err){ alert('Publication échouée : '+err.message); } }
 setInterval(async ()=>{
   if(!window.AppInventor) return; let d=null; try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; } if(!d) return; if(d===lastSentToApp) return;
   if(!(d.startsWith('AUDIO_URL_')||d.startsWith('CHAT_')||d.startsWith('PROFILE_URL_')||d.startsWith('STATUS_URL_'))) return;
@@ -589,10 +611,10 @@ function ouvrirConversation(convId,nom){
   database.ref('conversations').off(); window.currentConvId=convId; replyTo=null; exitSelection();
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; document.getElementById('main-tabs').style.display='none'; feed.classList.add('chat-mode');
   const otherId=convId.split('_').find(id=>id!==currentUserId); window.currentOtherId=otherId; window.currentOtherName=nom;
-  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+nom.replace(/'/g,"\\'")+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+nom.replace(/'/g,"\\'")+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span id="select-count">0 sélectionné(s)</span><div style="flex:1"></div><button class="cancel" onclick="exitSelection()">Annuler</button><button class="del" onclick="deleteSelected()">🗑️ Supprimer</button></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-trash" onclick="discardPendingAudio()">🗑️</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="if(window.currentOtherPhoto) openImage(window.currentOtherPhoto); else openProfile(window.currentOtherId, window.currentOtherName)">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+nom.replace(/'/g,"\\'")+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span id="select-count">0 sélectionné(s)</span><div style="flex:1"></div><button class="cancel" onclick="exitSelection()">Annuler</button><button class="del" onclick="deleteSelected()">🗑️ Supprimer</button></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-trash" onclick="discardPendingAudio()">🗑️</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
-  database.ref('clients/'+otherId).once('value').then(s=>{ const photo=getUserPhoto(s.val()||{}); const av=document.getElementById('chat-top-avatar'); if(av && photo) av.innerHTML='<img src="'+getThumb(photo,200)+'">'; });
+  database.ref('clients/'+otherId).once('value').then(s=>{ const photo=getUserPhoto(s.val()||{}); window.currentOtherPhoto=photo?getThumb(photo,1000):''; const av=document.getElementById('chat-top-avatar'); if(av && photo) av.innerHTML='<img src="'+getThumb(photo,200)+'">'; });
   database.ref('clients/'+otherId+'/status').on('value',s=>{ const el=document.getElementById('online-text'); if(!el) return; const on=s.val()&&s.val().online; el.innerText=on?'en ligne':'hors ligne'; });
   database.ref(`conversations/${convId}/typing`).on('value',s=>{let e=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val())e=true;});const el=document.getElementById('typing-indicator'); if(el) el.style.display=e?'block':'none'; });
   database.ref(`conversations/${convId}/recording`).on('value',s=>{let e=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val())e=true;});const el=document.getElementById('rec-indicator'); if(el) el.style.display=e?'flex':'none'; });
@@ -619,7 +641,7 @@ function lancerAppel(cid){ const otherId=cid.split('_').find(id=>id!==currentUse
 function onInputChange(inp,cid){ jeTape(cid); const hasText=inp.value.trim().length>0; const mic=document.getElementById('btn-rec'); const send=document.getElementById('btn-send'); if(isRecording) return; if(mic) mic.style.display=hasText?'none':'flex'; if(send) send.style.display=hasText?'flex':'none'; }
 function envoyerDirect(cid){ const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return; const otherId = cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,replyTo:replyTo||null,createdAt:Date.now()}); pushJS(otherId, '💬 '+document.getElementById('user-name').innerText, t.substring(0,90)); i.value=''; clearReply(); onInputChange(i,cid); }
 function jeTape(cid){database.ref(`conversations/${cid}/typing/${currentUserId}`).set(true);clearTimeout(window.typTO);window.typTO=setTimeout(()=>{database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);},1500);}
-function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const c=v.val()||{};const nom=c.nom||currentUserId;document.getElementById('user-name').innerText=nom;const photo=getUserPhoto(c);const av=document.getElementById('my-avatar'); if(av) av.innerHTML=photo? '<img src="'+getThumb(photo,200)+'">' : nom.substring(0,1).toUpperCase();});chargerMessagerie();}
+function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const c=v.val()||{};const nom=c.nom||currentUserId;window.myPhoto=getUserPhoto(c);document.getElementById('user-name').innerText=nom;const photo=getUserPhoto(c);const av=document.getElementById('my-avatar'); if(av) av.innerHTML=photo? '<img src="'+getThumb(photo,200)+'">' : nom.substring(0,1).toUpperCase();});chargerMessagerie();}
 firebase.auth().onAuthStateChanged(function(user){ if(user){ init(); } else { firebase.auth().signInAnonymously(); } });
 </script>
 </body>
