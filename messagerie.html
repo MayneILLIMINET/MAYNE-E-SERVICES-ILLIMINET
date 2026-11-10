@@ -39,7 +39,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .topbar{flex-shrink:0;background:var(--top);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
 .top-left{display:flex;gap:10px;align-items:center}
 .my-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;overflow:hidden;cursor:pointer}
-.my-avatar img{width:100%;height:100%;object-fit:cover}
+.my-avatar img{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .top-name{color:var(--text);font-weight:900;font-size:15px;line-height:1.1}
 .top-name small{display:block;font-size:11px;color:var(--text2);font-weight:400}
 .top-actions button{background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:6px}
@@ -58,7 +58,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .chat-card{padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border);background:var(--bg)}
 .chat-card:active{background:var(--bg3)}
 .msg-avatar{width:50px;height:50px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;font-size:17px;overflow:hidden;cursor:pointer}
-.msg-avatar img{width:100%;height:100%;object-fit:cover}
+.msg-avatar img{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .chat-main{flex:1;min-width:0}
 .chat-name{font-weight:700;color:var(--text);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-preview{font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
@@ -95,7 +95,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .chat-wrapper{flex:1;min-height:0;height:100%;display:flex;flex-direction:column;background:var(--bg)}
 .chat-top{flex-shrink:0;height:62px;background:var(--top);color:var(--text);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border)}
 .chat-top-avatar{width:38px;height:38px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;overflow:hidden;cursor:pointer;flex-shrink:0}
-.chat-top-avatar img{width:100%;height:100%;object-fit:cover}
+.chat-top-avatar img{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .chat-top-info{flex:1;line-height:1.2;cursor:pointer;min-width:0}
 .chat-top-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-container{flex:1;min-height:0;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
@@ -125,7 +125,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .audio-bubble.received{background:var(--audio-other);color:var(--text)}
 .audio-avatar{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.25);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;overflow:hidden;cursor:pointer}
 .audio-bubble.received .audio-avatar{background:var(--orange-dark)}
-.audio-avatar img{width:100%;height:100%;object-fit:cover}
+.audio-avatar img{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .audio-play{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:none;color:#fff;font-size:14px;cursor:pointer;flex-shrink:0}
 .audio-bubble.received .audio-play{background:var(--orange-dark)}
 .audio-wave{flex:1;height:28px;display:flex;align-items:center;gap:2px;cursor:pointer}
@@ -191,8 +191,10 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .nav-item{background:none;border:none;color:#8696a0;cursor:pointer;text-align:center;font-size:9px;font-weight:800;padding:4px 2px}
 .nav-item.active{color:#FF5000}
 .nav-item .ico{font-size:20px;display:block}
-#img-viewer{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99999}
-#img-viewer img{max-width:96%;max-height:96%;border-radius:10px}
+#img-viewer{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:14px}
+#img-viewer img{max-width:96%;max-height:82%;border-radius:10px}
+#img-viewer .viewer-photo-btns{display:flex;gap:10px}
+#img-viewer .viewer-photo-btns button{border:none;border-radius:999px;padding:12px 16px;font-weight:900;cursor:pointer;font-size:14px}
 #profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:99998}
 #profile-modal.show{display:flex}
 .profile-sheet{width:100%;max-width:480px;background:var(--bg2);border-radius:20px 20px 0 0;padding:12px 16px calc(20px + env(safe-area-inset-bottom));animation:slideUp .25s ease}
@@ -200,8 +202,8 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .profile-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 14px}
 .profile-top{display:flex;gap:14px;align-items:center}
 .profile-avatar{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative}
-.profile-avatar img{width:100%;height:100%;object-fit:cover}
-.profile-edit-badge{position:absolute;right:0;bottom:0;width:26px;height:26px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid var(--bg2)}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.profile-edit-badge{position:absolute;right:0;bottom:0;width:26px;height:26px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid var(--bg2);pointer-events:none}
 .profile-name{color:var(--text);font-size:20px;font-weight:900;line-height:1.2}
 .profile-num{color:var(--text2);font-size:14px;margin-top:4px}
 .profile-status{color:var(--orange);font-size:12px;font-weight:700;margin-top:2px}
@@ -214,9 +216,8 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .profile-btn{flex:1;border:none;border-radius:999px;padding:13px;font-size:14px;font-weight:800;cursor:pointer}
 .profile-btn.msg{background:var(--orange-dark);color:#fff}
 .profile-btn.close{background:var(--input2);color:var(--text)}
-.profile-btn.edit{background:#111;color:#fff;display:none}
+.profile-btn.edit{background:#111;color:#fff}
 [data-theme="dark"] .profile-btn.edit{background:#fff;color:#111}
-.profile-btn.edit.show{display:block}
 #viewer{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:99999;color:#fff}
 #viewer.show{display:flex}
 .viewer-bars{display:flex;gap:4px;padding:10px 10px 0}
@@ -258,22 +259,10 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .chat-menu-sheet{width:100%;max-width:480px;background:var(--bg2);border-radius:20px 20px 0 0;padding:10px 10px calc(16px + env(safe-area-inset-bottom))}
 .chat-menu-sheet button{width:100%;background:transparent;border:none;padding:15px;text-align:left;font-size:16px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)}
 .chat-menu-sheet button.danger{color:#FF3B30}
-.photo-actions{position:fixed;inset:auto 0 0 0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:100000}
-.photo-actions.show{display:flex}
-.photo-actions .sheet button{margin-top:8px}
 </style>
 </head>
 <body data-theme="light">
-<div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
-
-<div id="photo-actions" class="photo-actions" onclick="if(event.target===this) this.classList.remove('show')">
-  <div class="sheet">
-    <h3>Photo de profil</h3>
-    <button class="btn btn-orange" onclick="document.getElementById('photo-actions').classList.remove('show'); openImage(window.viewedPhoto||window.myPhoto)">🔍 Voir en grand</button>
-    <button class="btn btn-grey" id="photo-change-btn" onclick="document.getElementById('photo-actions').classList.remove('show'); pickProfilePhoto()">📷 Changer la photo</button>
-    <button class="btn btn-grey" onclick="document.getElementById('photo-actions').classList.remove('show')">Annuler</button>
-  </div>
-</div>
+<div id="img-viewer" onclick="closeImageViewer()"><img id="img-viewer-pic"><div class="viewer-photo-btns" onclick="event.stopPropagation()"><button style="background:#fff;color:#111" onclick="closeImageViewer()">Fermer</button><button id="img-viewer-change-btn" style="background:#D63E00;color:#fff;display:none" onclick="closeImageViewer(); pickProfilePhoto()">📷 Changer cette photo</button></div></div>
 
 <div id="profile-modal" onclick="if(event.target===this) closeProfile()">
   <div class="profile-sheet">
@@ -445,7 +434,15 @@ function switchTab(tab){
 function getThumb(u,w){ if(!u) return ''; if(u.includes('/upload/')) return u.replace('/upload/','/upload/w_'+w+',q_auto,f_auto/'); return u; }
 function getUserPhoto(c){ return c?.photo || c?.photoUrl || c?.avatar || c?.image || ''; }
 function avatarHtml(nom, photo){ const init=(nom||'?').substring(0,2).toUpperCase(); if(photo) return '<img src="'+getThumb(photo,200)+'">'; return init; }
-function openImage(url){ if(!url) return; document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
+function openImage(url, isProfilePhoto){
+  if(!url) return;
+  const v=document.getElementById('img-viewer');
+  document.getElementById('img-viewer-pic').src=url;
+  const changeBtn=document.getElementById('img-viewer-change-btn');
+  if(changeBtn) changeBtn.style.display=(isProfilePhoto && window._profileId===currentUserId)?'block':'none';
+  v.style.display='flex';
+}
+function closeImageViewer(){ document.getElementById('img-viewer').style.display='none'; }
 function fmtTime(s){ const m=Math.floor(s/60); const sec=s%60; return m+':'+String(sec).padStart(2,'0'); }
 function waveHtml(n){ let h=''; for(let i=0;i<n;i++){ const ht=5+Math.floor(Math.random()*24); h+='<span style="height:'+ht+'px"></span>'; } return h; }
 function updateRecWave(){ const w=document.getElementById('rec-wave'); if(!w) return; w.innerHTML=waveHtml(28); }
@@ -457,32 +454,43 @@ function openProfile(userId, fallbackName){
     const c=snap.val()||{}; const nom=c.nom||fallbackName||userId; const num=c.phone||c.telephone||c.numero||userId; const photo=getUserPhoto(c); const online=c.status&&c.status.online;
     window.viewedPhoto=photo||'';
     if(userId===currentUserId) window.myPhoto=photo||'';
-    const isMe=userId===currentUserId; const av=document.getElementById('profile-avatar'); av.innerHTML=photo?'<img src="'+getThumb(photo,400)+'">':nom.substring(0,1).toUpperCase();
-    document.getElementById('profile-edit-badge').style.display=isMe?'flex':'none';
-    document.getElementById('btn-change-photo').classList.toggle('show', isMe);
-    document.getElementById('profile-name').textContent=nom; document.getElementById('profile-num').textContent=formatPhone(num); document.getElementById('profile-status').textContent=online?'● en ligne':'○ hors ligne';
-    document.getElementById('profile-row-nom').textContent=nom; document.getElementById('profile-row-num').textContent=formatPhone(num); document.getElementById('profile-row-id').textContent=userId;
+    const isMe=userId===currentUserId;
+    const av=document.getElementById('profile-avatar');
+    av.innerHTML=photo?'<img src="'+getThumb(photo,400)+'">':nom.substring(0,1).toUpperCase();
+    av.onclick=onProfileAvatarClick;
+    av.style.cursor='pointer';
+    const badge=document.getElementById('profile-edit-badge'); if(badge) badge.style.display=isMe?'flex':'none';
+    const changeBtn=document.getElementById('btn-change-photo'); if(changeBtn) changeBtn.style.display=isMe?'block':'none';
+    document.getElementById('profile-name').textContent=nom;
+    document.getElementById('profile-num').textContent=formatPhone(num);
+    document.getElementById('profile-status').textContent=online?'● en ligne':'○ hors ligne';
+    document.getElementById('profile-row-nom').textContent=nom;
+    document.getElementById('profile-row-num').textContent=formatPhone(num);
+    document.getElementById('profile-row-id').textContent=userId;
     document.getElementById('profile-modal').classList.add('show');
   });
 }
 function closeProfile(){ document.getElementById('profile-modal').classList.remove('show'); }
 function onProfileAvatarClick(){
-  const isMe=window._profileId===currentUserId;
-  const btn=document.getElementById('photo-change-btn'); if(btn) btn.style.display=isMe?'block':'none';
-  document.getElementById('photo-actions').classList.add('show');
+  const photo = window.viewedPhoto || window.myPhoto;
+  if(photo){ openImage(getThumb(photo,1000)||photo, true); }
+  else if(window._profileId===currentUserId){ pickProfilePhoto(); }
 }
-function pickProfilePhoto(){ if(window.AppInventor) sendToApp('PICK_PROFILE'); else document.getElementById('profile-picker').click(); }
+function pickProfilePhoto(){
+  if(window.AppInventor){ sendToApp('PICK_PROFILE_'+Date.now()); }
+  else { const p=document.getElementById('profile-picker'); if(p){ p.value=''; p.click(); } }
+}
 async function onProfilePicked(e){ const f=e.target.files[0]; e.target.value=''; if(!f) return; try{ const url=await uploadImageToCloudinary(f); await saveProfilePhoto(url); }catch(err){ alert('Photo échouée : '+err.message); } }
 async function saveProfilePhoto(url){
   if(!currentUserId) return;
   await database.ref('clients/'+currentUserId).update({photo:url,photoUrl:url,avatar:url});
   window.myPhoto=url; window.viewedPhoto=url;
-  const av=document.getElementById('profile-avatar'); if(av) av.innerHTML='<img src="'+getThumb(url,400)+'">';
+  const av=document.getElementById('profile-avatar'); if(av){ av.innerHTML='<img src="'+getThumb(url,400)+'">'; av.onclick=onProfileAvatarClick; }
   const mine=document.getElementById('my-avatar'); if(mine) mine.innerHTML='<img src="'+getThumb(url,200)+'">';
-  closeProfile(); setTimeout(()=>openMyProfile(),250);
+  closeProfile(); closeImageViewer(); setTimeout(()=>openMyProfile(),250);
 }
 function formatPhone(n){ n=String(n||''); if(n.length>=8 && !n.startsWith('+')) return '+229 '+n; return n; }
-function pickImageChat(){ if(window.AppInventor) sendToApp('PICK_CHAT'); else document.getElementById('file-picker').click(); }
+function pickImageChat(){ if(window.AppInventor) sendToApp('PICK_CHAT_'+Date.now()); else document.getElementById('file-picker').click(); }
 async function onFilePicked(e){ const f=e.target.files[0]; if(!f||!window.currentConvId) return; try{ const url=await uploadImageToCloudinary(f); const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }catch(err){ alert('Photo échouée : '+err.message); } e.target.value=''; }
 const STICKERS={ "😍 Amour":["😍","🥰","😘","❤️","💋","💖","💘","💝","😻","🫶","💕","❤️‍🔥"], "😂 Drôle":["😂","🤣","😅","😆","🤪","😜","🤡","😹","😆","🤭","😁","😄"], "👋 Salut":["👋","🙏","🤝","👍","👏","✌️","🤞","🫡","👊","🙌","👋🏽","🤙"], "😢 Triste":["😢","😭","🥺","😔","😞","😥","🫂","💔","😿","😩","😤","😠"], "🎉 Fête":["🎉","🎊","🥳","🍾","🎂","🎁","✨","🔥","💃","🕺","🥂","🎈"], "🐷 MAYNE":["🐷","💰","📱","⚽","🎰","🛒","🚀","💸","🏆","👑","🦁","🐯"] };
 function toggleStickers(){ const p=document.getElementById('sticker-panel'); if(!p) return; const show=!p.classList.contains('show'); p.classList.toggle('show',show); if(show) renderStickers('😍 Amour'); }
@@ -493,7 +501,7 @@ function showAudioPreview(){ const recBox=document.getElementById('rec-box'); if
 function togglePreview(){ if(!pendingAudioUrl) return; let aud=document.getElementById('preview-aud'); if(!aud){ aud=document.createElement('audio'); aud.id='preview-aud'; aud.src=pendingAudioUrl; aud.style.display='none'; document.body.appendChild(aud); } if(previewPlaying && !aud.paused){ aud.pause(); previewPlaying=false; document.getElementById('preview-play').textContent='▶️'; return; } aud.play().catch(()=>{}); previewPlaying=true; document.getElementById('preview-play').textContent='⏸️'; aud.ontimeupdate=()=>{ const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(Math.floor(aud.currentTime))+' / '+fmtTime(pendingAudioDuree||recElapsed); }; aud.onended=()=>{ previewPlaying=false; document.getElementById('preview-play').textContent='▶️'; }; }
 async function confirmSendPendingAudio(){ if(!pendingAudioUrl) return; const url=pendingAudioUrl; const duree=pendingAudioDuree||recElapsed; const old=recElapsed; recElapsed=duree; await pushAudioMessage(url); recElapsed=old; pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; if(previewAudio) previewAudio.pause(); previewPlaying=false; const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); } resetRecUI(); }
 function discardPendingAudio(){ pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; if(previewAudio) previewAudio.pause(); previewPlaying=false; const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); } resetRecUI(); }
-async function startRecording(){ if(isRecording) return; pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; mediaChunks=[]; isRecording=true; micStarted=true; recElapsed=0; recStartTime=Date.now(); if(previewAudio) previewAudio.pause(); previewPlaying=false; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.classList.add('recording'); mic.style.display='flex'; } const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='Glisse vers le haut pour verrouiller'; hint.classList.remove('locked'); hint.classList.add('show'); } updateRecWave(); clearInterval(recTimer); recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); },300); if(IS_APP){ sendToApp('PICK_AUDIO'); return; } try{ mediaStream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(mediaStream); mediaChunks=[]; mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) mediaChunks.push(e.data); }; mediaRecorder.start(250); }catch(e){ alert('Micro refusé : '+e.message); cancelRecording(); } }
+async function startRecording(){ if(isRecording) return; pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; mediaChunks=[]; isRecording=true; micStarted=true; recElapsed=0; recStartTime=Date.now(); if(previewAudio) previewAudio.pause(); previewPlaying=false; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.classList.add('recording'); mic.style.display='flex'; } const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='Glisse vers le haut pour verrouiller'; hint.classList.remove('locked'); hint.classList.add('show'); } updateRecWave(); clearInterval(recTimer); recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); },300); if(IS_APP){ sendToApp('PICK_AUDIO_'+Date.now()); return; } try{ mediaStream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(mediaStream); mediaChunks=[]; mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) mediaChunks.push(e.data); }; mediaRecorder.start(250); }catch(e){ alert('Micro refusé : '+e.message); cancelRecording(); } }
 function stopMedia(){ try{ if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop(); }catch(e){} try{ if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop()); }catch(e){} mediaRecorder=null; mediaStream=null; }
 function cancelRecording(){ if(IS_APP) sendToApp('CANCEL_AUDIO'); isRecording=false; micStarted=false; micLocked=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false; if(!IS_APP) stopMedia(); mediaChunks=[]; pendingAudioUrl=null; resetRecUI(); }
 async function pushAudioMessage(url){ try{ const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false}); pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal'); }catch(e){ alert('Push échoué: '+e.message); } }
@@ -580,7 +588,7 @@ function closeTextModal(){ document.getElementById('text-modal').classList.remov
 function selectColor(col,el){ selectedColor=col; document.querySelectorAll('.color').forEach(d=>d.classList.remove('active')); el.classList.add('active'); updateTextPreview(); }
 function updateTextPreview(){ const t=document.getElementById('status-text').value||'Aperçu'; const p=document.getElementById('text-preview'); p.textContent=t; p.style.background=selectedColor; }
 async function publishTextStatus(){ const txt=document.getElementById('status-text').value.trim(); if(!txt) return alert('Écris quelque chose'); const cap=document.getElementById('status-caption').value.trim(); await database.ref('statuts/'+currentUserId).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,senderPhoto:window.myPhoto||'',type:'text',texte:txt,bg:selectedColor,caption:cap,createdAt:Date.now()}); closeTextModal(); document.getElementById('status-text').value=''; document.getElementById('status-caption').value=''; }
-function pickStatusPhoto(){ if(window.AppInventor) sendToApp('PICK_STATUS'); else document.getElementById('status-picker').click(); }
+function pickStatusPhoto(){ if(window.AppInventor) sendToApp('PICK_STATUS_'+Date.now()); else document.getElementById('status-picker').click(); }
 async function onStatusPicked(e){ const f=e.target.files[0]; e.target.value=''; if(!f) return; pendingPhotoBlob=f; const url=URL.createObjectURL(f); const img=document.getElementById('photo-preview'); img.src=url; img.style.display='block'; document.getElementById('photo-modal').classList.add('show'); }
 function closePhotoModal(){ document.getElementById('photo-modal').classList.remove('show'); pendingPhotoBlob=null; pendingPhotoUrl=null; }
 async function publishPhotoStatus(){ const cap=document.getElementById('photo-caption').value.trim(); try{ let url=pendingPhotoUrl; if(pendingPhotoBlob && !url) url=await uploadImageToCloudinary(pendingPhotoBlob); if(!url) return alert('Choisis une photo'); await database.ref('statuts/'+currentUserId).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,senderPhoto:window.myPhoto||'',type:'image',url:url,caption:cap,createdAt:Date.now()}); closePhotoModal(); document.getElementById('photo-caption').value=''; }catch(err){ alert('Publication échouée : '+err.message); } }
