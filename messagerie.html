@@ -19,7 +19,7 @@ async function pushJS(destId,titre,msg){ if(!destId) return; try{ await fetch(ON
 let lastSentToApp='';
 function sendToApp(msg){ lastSentToApp=msg; if(window.AppInventor){ try{ window.AppInventor.setWebViewString(msg); }catch(e){} } }
 async function uploadAudioToCloudinary(blob, fileName){
-  const fd=new FormData(); fd.append('file', blob, fileName || ('vocal_'+Date.now()+'.wav')); fd.append('upload_preset', CLOUDINARY_PRESET_AUDIO); fd.append('folder','audio');
+  const fd=new FormData(); fd.append('file', blob, fileName || ('vocal_'+Date.now()+'.webm')); fd.append('upload_preset', CLOUDINARY_PRESET_AUDIO); fd.append('folder','audio');
   const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});
   const j=await res.json(); if(!j.secure_url) throw new Error(j.error?.message||'Upload Cloudinary échoué'); return j.secure_url;
 }
@@ -30,33 +30,32 @@ async function uploadImageToCloudinary(blob){
 }
 </script>
 <style>
-/* ===== DESIGN MAYNE : ORANGE + GRIS CLAIR / NOIR + ORANGE SOMBRE ===== */
+/* MAYNE : CLAIR = Gris + Orange sombre | SOMBRE = Noir + Orange sombre */
 :root{
-  --orange:#FF5000; --orange2:#FF8C00;
+  --orange:#FF5000; --orange-dark:#D63E00; --orange-deep:#A82E00;
   --bg:#F2F2F2; --bg2:#FFFFFF; --bg3:#E9E9E9;
   --top:#FFFFFF; --input:#FFFFFF; --input2:#EDEDED;
   --text:#111111; --text2:#6B6B6B; --text3:#999999;
-  --bubble-me:#FF5000; --bubble-me-text:#FFFFFF;
+  --bubble-me:#D63E00; --bubble-me-text:#FFFFFF;
   --bubble-other:#FFFFFF; --bubble-other-text:#111111;
-  --audio-me:#FF5000; --audio-other:#FFFFFF;
+  --audio-me:#D63E00; --audio-other:#FFFFFF;
   --border:#E0E0E0; --shadow:0 1px 6px rgba(0,0,0,.08);
-  --quote:#FF5000;
 }
 [data-theme="dark"]{
-  --bg:#000000; --bg2:#111111; --bg3:#1C1C1C;
-  --top:#111111; --input:#1C1C1C; --input2:#2A2A2A;
+  --bg:#0A0A0A; --bg2:#111111; --bg3:#1C1C1C;
+  --top:#111111; --input:#1C1C1C; --input2:#222222;
   --text:#FFFFFF; --text2:#A0A0A0; --text3:#777777;
-  --bubble-me:#FF5000; --bubble-me-text:#FFFFFF;
+  --bubble-me:#A82E00; --bubble-me-text:#FFFFFF;
   --bubble-other:#1C1C1C; --bubble-other-text:#FFFFFF;
-  --audio-me:#FF5000; --audio-other:#1C1C1C;
-  --border:#2A2A2A; --shadow:0 1px 6px rgba(0,0,0,.4);
+  --audio-me:#A82E00; --audio-other:#1C1C1C;
+  --border:#2A2A2A; --shadow:0 1px 6px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box}html,body{margin:0;height:100dvh;overflow:hidden}
-body{background:var(--bg);display:flex;justify-content:center;font-family:system-ui,-apple-system,Arial;color:var(--text);transition:background .2s}
+body{background:var(--bg);display:flex;justify-content:center;font-family:system-ui,-apple-system,Arial;color:var(--text)}
 .app-container{width:100%;max-width:480px;height:100dvh;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;position:relative;padding-bottom:68px}
 .topbar{flex-shrink:0;background:var(--top);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
 .top-left{display:flex;gap:10px;align-items:center}
-.my-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;overflow:hidden;cursor:pointer}
+.my-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;overflow:hidden;cursor:pointer}
 .my-avatar img{width:100%;height:100%;object-fit:cover}
 .top-name{color:var(--text);font-weight:900;font-size:15px;line-height:1.1}
 .top-name small{display:block;font-size:11px;color:var(--text2);font-weight:400}
@@ -69,7 +68,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 #messagerie-feed.chat-mode{padding:0;overflow:hidden}
 .chat-card{padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--border);background:var(--bg)}
 .chat-card:active{background:var(--bg3)}
-.msg-avatar{width:50px;height:50px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;font-size:17px;overflow:hidden;cursor:pointer}
+.msg-avatar{width:50px;height:50px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;font-size:17px;overflow:hidden;cursor:pointer}
 .msg-avatar img{width:100%;height:100%;object-fit:cover}
 .chat-main{flex:1;min-width:0}
 .chat-name{font-weight:700;color:var(--text);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -81,7 +80,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .empty-chat{color:var(--text2);text-align:center;padding:50px 20px}
 .chat-wrapper{flex:1;min-height:0;height:100%;display:flex;flex-direction:column;background:var(--bg)}
 .chat-top{flex-shrink:0;height:62px;background:var(--top);color:var(--text);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border)}
-.chat-top-avatar{width:38px;height:38px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;overflow:hidden;cursor:pointer;flex-shrink:0}
+.chat-top-avatar{width:38px;height:38px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;overflow:hidden;cursor:pointer;flex-shrink:0}
 .chat-top-avatar img{width:100%;height:100%;object-fit:cover}
 .chat-top-info{flex:1;line-height:1.2;cursor:pointer;min-width:0}
 .chat-top-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -95,25 +94,25 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .msg-left{background:var(--bubble-other);color:var(--bubble-other-text);align-self:flex-start;border-top-left-radius:4px}
 .msg-right{background:var(--bubble-me);color:var(--bubble-me-text);align-self:flex-end;border-top-right-radius:4px}
 .msg-time{font-size:11px;color:var(--text2);margin-left:8px;float:right;margin-top:8px;white-space:nowrap}
-.msg-right .msg-time{color:rgba(255,255,255,.85)}
-.quote{background:rgba(0,0,0,.12);border-left:4px solid var(--quote);border-radius:8px;padding:6px 8px;margin-bottom:6px;font-size:13px}
-.msg-right .quote{background:rgba(0,0,0,.18)}
-.quote b{color:var(--quote);display:block;font-size:13px}
+.msg-right .msg-time{color:rgba(255,255,255,.9)}
+.quote{background:rgba(0,0,0,.12);border-left:4px solid var(--orange);border-radius:8px;padding:6px 8px;margin-bottom:6px;font-size:13px}
+.msg-right .quote{background:rgba(0,0,0,.22)}
+.quote b{color:var(--orange);display:block;font-size:13px}
 .msg-right .quote b{color:#fff}
 .quote span{color:var(--text2)}
-.msg-right .quote span{color:rgba(255,255,255,.85)}
+.msg-right .quote span{color:rgba(255,255,255,.9)}
 .sticker-bubble{font-size:56px;line-height:1;background:transparent!important;box-shadow:none!important;padding:4px!important}
 .audio-bubble{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;min-width:260px;max-width:300px;background:var(--audio-me);color:#fff}
 .audio-bubble.received{background:var(--audio-other);color:var(--text)}
-.audio-avatar{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;overflow:hidden;cursor:pointer}
-.audio-bubble.received .audio-avatar{background:var(--orange)}
+.audio-avatar{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.25);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;overflow:hidden;cursor:pointer}
+.audio-bubble.received .audio-avatar{background:var(--orange-dark)}
 .audio-avatar img{width:100%;height:100%;object-fit:cover}
 .audio-play{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:none;color:#fff;font-size:14px;cursor:pointer;flex-shrink:0}
-.audio-bubble.received .audio-play{background:var(--orange)}
+.audio-bubble.received .audio-play{background:var(--orange-dark)}
 .audio-wave{flex:1;height:28px;display:flex;align-items:center;gap:2px;cursor:pointer}
-.audio-wave span{width:3px;border-radius:99px;background:rgba(255,255,255,.6);display:block}
+.audio-wave span{width:3px;border-radius:99px;background:rgba(255,255,255,.65);display:block}
 .audio-bubble.received .audio-wave span{background:var(--text2)}
-.audio-meta{font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;display:flex;justify-content:space-between}
+.audio-meta{font-size:11px;color:rgba(255,255,255,.9);margin-top:2px;display:flex;justify-content:space-between}
 .audio-bubble.received .audio-meta{color:var(--text2)}
 .call-bubble{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;min-width:220px;background:var(--audio-me);color:#fff}
 .call-bubble.received{background:var(--audio-other);color:var(--text)}
@@ -132,13 +131,12 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .input-bottom{display:flex;align-items:center;gap:2px}
 .input-bottom .spacer{flex:1}
 .mini-icon{background:transparent;border:none;font-size:21px;cursor:pointer;color:var(--text2);padding:4px 6px}
-.mic-btn{width:50px;height:50px;border-radius:50%;background:var(--orange);color:#fff;border:none;font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(255,80,0,.35);touch-action:none;transition:transform .1s;user-select:none;-webkit-user-select:none}
+.mic-btn{width:50px;height:50px;border-radius:50%;background:var(--orange-dark);color:#fff;border:none;font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(214,62,0,.35);touch-action:none;user-select:none;-webkit-user-select:none}
 .mic-btn.recording{background:#FF3B30;transform:scale(1.08)}
-.send-btn{width:50px;height:50px;border-radius:50%;background:var(--orange);color:#fff;border:none;font-size:19px;cursor:pointer;flex-shrink:0;display:none;align-items:center;justify-content:center}
-.lock-hint{position:absolute;right:8px;bottom:72px;background:var(--text);color:var(--bg);font-size:12px;font-weight:700;padding:8px 12px;border-radius:999px;display:none;z-index:20;box-shadow:var(--shadow)}
+.send-btn{width:50px;height:50px;border-radius:50%;background:var(--orange-dark);color:#fff;border:none;font-size:19px;cursor:pointer;flex-shrink:0;display:none;align-items:center;justify-content:center}
+.lock-hint{position:absolute;right:8px;bottom:72px;background:var(--text);color:var(--bg);font-size:12px;font-weight:700;padding:8px 12px;border-radius:999px;display:none;z-index:20}
 .lock-hint.show{display:block}
-.lock-hint.locked{background:var(--orange);color:#fff}
-/* VOCAL - PRO, SANS TEXTE ✅ / PAUSE / 1x */
+.lock-hint.locked{background:var(--orange-dark);color:#fff}
 .rec-box{display:none;flex:1;background:var(--input2);border-radius:999px;padding:6px 8px;align-items:center;gap:8px;min-height:50px}
 .rec-box.show{display:flex}
 .rec-main{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
@@ -149,20 +147,19 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .rec-wave span{width:3px;background:var(--text2);border-radius:99px;display:block}
 .rec-preview{display:none;align-items:center;gap:10px;flex:1;min-width:0}
 .rec-preview.show{display:flex}
-.rec-preview-play{width:36px;height:36px;border-radius:50%;background:var(--orange);color:#fff;border:none;font-size:14px;cursor:pointer;flex-shrink:0}
+.rec-preview-play{width:36px;height:36px;border-radius:50%;background:var(--orange-dark);color:#fff;border:none;font-size:14px;cursor:pointer;flex-shrink:0}
 .rec-preview-wave{flex:1;height:22px;display:flex;align-items:center;gap:2px}
 .rec-preview-wave span{width:3px;background:var(--text2);border-radius:99px;display:block}
 .rec-preview-time{color:var(--text);font-size:13px;font-weight:700;white-space:nowrap}
 .rec-trash{width:40px;height:40px;border-radius:50%;background:transparent;border:none;color:var(--text2);font-size:19px;cursor:pointer;flex-shrink:0}
-.rec-send{width:44px;height:44px;border-radius:50%;background:var(--orange);color:#fff;border:none;font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.rec-send{width:44px;height:44px;border-radius:50%;background:var(--orange-dark);color:#fff;border:none;font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .rec-upload{font-size:11px;color:var(--text2);text-align:center;display:none}
 .rec-upload.show{display:block}
-/* Stickers - tu les gardes */
 .sticker-panel{display:none;background:var(--bg2);border-top:1px solid var(--border);padding:10px;max-height:240px;overflow-y:auto}
 .sticker-panel.show{display:block}
 .sticker-tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
 .sticker-tab{background:var(--input2);border:none;color:var(--text2);padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
-.sticker-tab.active{background:var(--orange);color:#fff}
+.sticker-tab.active{background:var(--orange-dark);color:#fff}
 .sticker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .sticker-item{font-size:44px;text-align:center;cursor:pointer;padding:8px;border-radius:14px;background:var(--bg3)}
 .sticker-item:active{transform:scale(.92)}
@@ -178,9 +175,9 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .profile-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 14px}
 .profile-top{display:flex;gap:14px;align-items:center}
-.profile-avatar{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative}
+.profile-avatar{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative}
 .profile-avatar img{width:100%;height:100%;object-fit:cover}
-.profile-edit-badge{position:absolute;right:0;bottom:0;width:26px;height:26px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid var(--bg2)}
+.profile-edit-badge{position:absolute;right:0;bottom:0;width:26px;height:26px;border-radius:50%;background:var(--orange-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid var(--bg2)}
 .profile-name{color:var(--text);font-size:20px;font-weight:900;line-height:1.2}
 .profile-num{color:var(--text2);font-size:14px;margin-top:4px}
 .profile-status{color:var(--orange);font-size:12px;font-weight:700;margin-top:2px}
@@ -191,7 +188,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .profile-row span:last-child{color:var(--text);font-weight:700;text-align:right;word-break:break-all}
 .profile-actions{display:flex;gap:10px;margin-top:14px}
 .profile-btn{flex:1;border:none;border-radius:999px;padding:13px;font-size:14px;font-weight:800;cursor:pointer}
-.profile-btn.msg{background:var(--orange);color:#fff}
+.profile-btn.msg{background:var(--orange-dark);color:#fff}
 .profile-btn.close{background:var(--input2);color:var(--text)}
 .profile-btn.edit{background:#111;color:#fff;display:none}
 [data-theme="dark"] .profile-btn.edit{background:#fff;color:#111}
@@ -224,7 +221,7 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
   </div>
 </div>
 <div class="app-container">
-<div class="topbar"><div class="top-left"><div class="my-avatar" id="my-avatar" onclick="openMyProfile()">M</div><div class="top-name"><span id="user-name">Chargement...</span><small>Messagerie MAYNE</small></div></div><div class="top-actions"><button id="theme-btn" onclick="toggleTheme()" title="Clair / Sombre">🌙</button><button onclick="document.getElementById('recherche-user-input').focus()">🔍</button><button onclick="location.href='index.html'">🏠</button></div></div>
+<div class="topbar"><div class="top-left"><div class="my-avatar" id="my-avatar" onclick="openMyProfile()">M</div><div class="top-name"><span id="user-name">Chargement...</span><small>Messagerie MAYNE</small></div></div><div class="top-actions"><button id="theme-btn" onclick="toggleTheme()">🌙</button><button onclick="document.getElementById('recherche-user-input').focus()">🔍</button><button onclick="location.href='index.html'">🏠</button></div></div>
 <div id="search-zone" class="search-bar"><input type="text" id="recherche-user-input" class="search-input" placeholder="🔍 Rechercher un utilisateur..." oninput="rechercherUtilisateur()"><div id="resultats-recherche" class="search-results"></div></div>
 <div id="messagerie-feed"></div>
 </div>
@@ -238,25 +235,15 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 <input type="file" id="file-picker" accept="image/*" style="display:none" onchange="onFilePicked(event)">
 <input type="file" id="profile-picker" accept="image/*" style="display:none" onchange="onProfilePicked(event)">
 <script>
-let currentUserId=null,isRecording=false,replyTo=null,recStartTime=0,recElapsed=0,recTimer=null,previewAudio=null,previewPlaying=false,previewUrl=null,waitingAudio=false;
-let pendingAudioUrl=null, pendingAudioDuree=0;
+let currentUserId=null,isRecording=false,replyTo=null,recStartTime=0,recElapsed=0,recTimer=null,previewAudio=null,previewPlaying=false,waitingAudio=false;
+let pendingAudioUrl=null, pendingAudioDuree=0, pendingBlob=null;
 window.currentConvId=null; window.currentOtherId=null; window.currentOtherName=''; window._profileId=null; window._profilePhoto='';
 let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null,swipeActive=false;
-let micStartX=0,micStartY=0,micLocked=false,micCancelled=false,micHoldTimer=null,micStarted=false;
-let wavCtx=null,wavStream=null,wavProcessor=null,wavSource=null,wavChunks=[],wavSampleRate=44100;
-// THEME : orange / gris clair par défaut, noir / orange en sombre
+let micStartX=0,micStartY=0,micLocked=false,micCancelled=false,micStarted=false;
+let mediaRecorder=null, mediaStream=null, mediaChunks=[];
 function applyTheme(t){ document.body.setAttribute('data-theme',t); localStorage.setItem('mayne_theme',t); const b=document.getElementById('theme-btn'); if(b) b.textContent = t==='dark' ? '☀️' : '🌙'; }
 function toggleTheme(){ const cur=document.body.getAttribute('data-theme')||'light'; applyTheme(cur==='light'?'dark':'light'); }
 (function(){ const saved=localStorage.getItem('mayne_theme'); if(saved) applyTheme(saved); else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark'); else applyTheme('light'); })();
-function wavEncode(chunks, sampleRate){
-  let total=0; chunks.forEach(c=>total+=c.length);
-  const data=new Float32Array(total); let off=0; chunks.forEach(c=>{ data.set(c,off); off+=c.length; });
-  const buf=new ArrayBuffer(44+total*2); const view=new DataView(buf);
-  function str(o,s){ for(let i=0;i<s.length;i++) view.setUint8(o+i,s.charCodeAt(i)); }
-  str(0,'RIFF'); view.setUint32(4,36+total*2,true); str(8,'WAVE'); str(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true); view.setUint32(24,sampleRate,true); view.setUint32(28,sampleRate*2,true); view.setUint16(32,2,true); view.setUint16(34,16,true); str(36,'data'); view.setUint32(40,total*2,true);
-  for(let i=0;i<total;i++){ let s=Math.max(-1,Math.min(1,data[i])); view.setInt16(44+i*2, s<0? s*0x8000 : s*0x7FFF, true); }
-  return new Blob([view],{type:'audio/wav'});
-}
 const STICKERS={
   "😍 Amour":["😍","🥰","😘","❤️","💋","💖","💘","💝","😻","🫶","💕","❤️‍🔥"],
   "😂 Drôle":["😂","🤣","😅","😆","🤪","😜","🤡","😹","😆","🤭","😁","😄"],
@@ -325,7 +312,7 @@ function togglePlayAudio(id){
   if(previewAudio) previewAudio.pause();
   if(aud.paused){ aud.play().catch(e=>alert('Audio illisible : '+e.message)); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; }
 }
-// VOCAL - PRO : juste ▶️ / 🗑️ / ➤, pas de texte
+// === VOCAL REPARE ===
 function showAudioPreview(){
   const recBox=document.getElementById('rec-box'); if(recBox) recBox.classList.add('show');
   const inputBox=document.getElementById('input-box'); if(inputBox) inputBox.style.display='none';
@@ -352,21 +339,21 @@ async function confirmSendPendingAudio(){
   const oldElapsed=recElapsed; recElapsed=duree;
   await pushAudioMessage(url);
   recElapsed=oldElapsed;
-  pendingAudioUrl=null; pendingAudioDuree=0;
+  pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); }
   resetRecUI();
 }
 function discardPendingAudio(){
-  pendingAudioUrl=null; pendingAudioDuree=0;
+  pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); }
   resetRecUI();
 }
 async function startRecording(){
   if(isRecording) return;
-  pendingAudioUrl=null; pendingAudioDuree=0;
-  isRecording=true; micStarted=true; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null;
+  pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; mediaChunks=[];
+  isRecording=true; micStarted=true; recElapsed=0; recStartTime=Date.now();
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
   if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show');
@@ -377,14 +364,25 @@ async function startRecording(){
   updateRecWave(); clearInterval(recTimer);
   recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); },300);
   if(IS_APP){ sendToApp('PICK_AUDIO'); return; }
-  try{ wavStream=await navigator.mediaDevices.getUserMedia({audio:true}); wavCtx=new (window.AudioContext||window.webkitAudioContext)(); wavSampleRate=wavCtx.sampleRate; wavSource=wavCtx.createMediaStreamSource(wavStream); wavProcessor=wavCtx.createScriptProcessor(4096,1,1); wavProcessor.onaudioprocess=e=>{ wavChunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); }; wavSource.connect(wavProcessor); wavProcessor.connect(wavCtx.destination); }catch(e){ alert('Micro refusé'); cancelRecording(); }
+  // CHROME : MediaRecorder - fiable
+  try{
+    mediaStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder=new MediaRecorder(mediaStream);
+    mediaChunks=[];
+    mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) mediaChunks.push(e.data); };
+    mediaRecorder.start(250);
+  }catch(e){ alert('Micro refusé : '+e.message); cancelRecording(); }
 }
-function stopWav(){ try{ if(wavProcessor) wavProcessor.disconnect(); }catch(e){} try{ if(wavSource) wavSource.disconnect(); }catch(e){} try{ if(wavCtx) wavCtx.close(); }catch(e){} if(wavStream) wavStream.getTracks().forEach(t=>t.stop()); wavCtx=null; wavProcessor=null; wavSource=null; wavStream=null; }
+function stopMedia(){
+  try{ if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop(); }catch(e){}
+  try{ if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop()); }catch(e){}
+  mediaRecorder=null; mediaStream=null;
+}
 function cancelRecording(){
   if(IS_APP){ sendToApp('CANCEL_AUDIO'); }
   isRecording=false; micStarted=false; micLocked=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  if(!IS_APP) stopWav(); wavChunks=[]; pendingAudioUrl=null;
+  if(!IS_APP) stopMedia(); mediaChunks=[]; pendingAudioUrl=null;
   resetRecUI();
 }
 async function pushAudioMessage(url){
@@ -399,17 +397,27 @@ async function stopAndSendRecording(){
     setTimeout(()=>{ if(waitingAudio){ waitingAudio=false; resetRecUI(); } },15000);
     return;
   }
-  if(!isRecording && !wavChunks.length) return;
+  if(!isRecording && !mediaChunks.length) return;
   isRecording=false; micLocked=false; micStarted=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  const blob=wavEncode(wavChunks, wavSampleRate);
-  if(!blob || blob.size<1000){ resetRecUI(); return; }
   const up=document.getElementById('rec-upload'); if(up){ up.textContent='Préparation...'; up.classList.add('show'); }
+  // On arrête le recorder et on attend le blob
   try{
-    const cloudUrl=await uploadAudioToCloudinary(blob, 'vocal_'+Date.now()+'.wav');
+    const blob = await new Promise((resolve)=>{
+      if(!mediaRecorder || mediaRecorder.state==='inactive'){
+        resolve(new Blob(mediaChunks, {type:'audio/webm'}));
+        return;
+      }
+      mediaRecorder.onstop=()=>{ resolve(new Blob(mediaChunks, {type:'audio/webm'})); };
+      try{ mediaRecorder.stop(); }catch(e){ resolve(new Blob(mediaChunks, {type:'audio/webm'})); }
+    });
+    stopMedia();
+    if(!blob || blob.size<500){ resetRecUI(); return; }
+    pendingBlob=blob;
+    const cloudUrl=await uploadAudioToCloudinary(blob, 'vocal_'+Date.now()+'.webm');
     pendingAudioUrl=cloudUrl; pendingAudioDuree=recElapsed;
     showAudioPreview();
   }catch(e){ alert('Envoi vocal échoué : '+e.message); resetRecUI(); }
-  if(up) up.classList.remove('show'); stopWav(); wavChunks=[];
+  if(up) up.classList.remove('show'); mediaChunks=[];
 }
 function resetRecUI(){
   pendingAudioUrl=null;
@@ -424,7 +432,7 @@ function initMicSwipe(){
   mic.addEventListener('touchstart',e=>{
     if(isRecording) return; if(pendingAudioUrl) return;
     micStartX=e.touches[0].clientX; micStartY=e.touches[0].clientY; micLocked=false; micCancelled=false;
-    micHoldTimer=setTimeout(()=>{ startRecording(); }, 80);
+    startRecording();
   },{passive:true});
   mic.addEventListener('touchmove',e=>{
     if(!isRecording) return;
@@ -436,10 +444,8 @@ function initMicSwipe(){
     if(dx > -40 && micCancelled){ micCancelled=false; if(hint) hint.textContent='Glisse vers le haut pour verrouiller'; }
   },{passive:true});
   mic.addEventListener('touchend',e=>{
-    clearTimeout(micHoldTimer);
     const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
     mic.style.transform='translateY(0)';
-    if(!micStarted && !isRecording && !pendingAudioUrl){ startRecording(); return; }
     if(!isRecording) return;
     if(micCancelled){ cancelRecording(); return; }
     if(micLocked){ if(hint){ hint.textContent='Verrouillé'; hint.classList.add('locked'); hint.classList.add('show'); } return; }
