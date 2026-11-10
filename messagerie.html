@@ -16,9 +16,8 @@ const CLOUDINARY_PRESET_IMAGE="mayneimages";
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 const IS_APP = !!(window.AppInventor && window.AppInventor.getWebViewString);
 async function pushJS(destId,titre,msg){ if(!destId) return; try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})}); }catch(e){} }
-function dbg(msg){ const el=document.getElementById('audio-debug'); if(el){ el.style.display='block'; el.textContent='DEBUG: '+msg; } }
 let lastSentToApp='';
-function sendToApp(msg){ lastSentToApp=msg; if(window.AppInventor){ try{ window.AppInventor.setWebViewString(msg); }catch(e){} } dbg('-> App: '+msg); }
+function sendToApp(msg){ lastSentToApp=msg; if(window.AppInventor){ try{ window.AppInventor.setWebViewString(msg); }catch(e){} } }
 async function uploadAudioToCloudinary(blob, fileName){
   const fd=new FormData(); fd.append('file', blob, fileName || ('vocal_'+Date.now()+'.wav')); fd.append('upload_preset', CLOUDINARY_PRESET_AUDIO); fd.append('folder','audio');
   const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD_NAME+'/auto/upload',{method:'POST',body:fd});
@@ -36,7 +35,8 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .app-container{width:100%;max-width:480px;height:100dvh;background:#0b141a;display:flex;flex-direction:column;overflow:hidden;position:relative;padding-bottom:68px}
 .topbar{flex-shrink:0;background:#202c33;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
 .top-left{display:flex;gap:10px;align-items:center}
-.my-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff5000,#ff8c00);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px}
+.my-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff5000,#ff8c00);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;overflow:hidden;cursor:pointer}
+.my-avatar img{width:100%;height:100%;object-fit:cover}
 .top-name{color:#fff;font-weight:900;font-size:15px;line-height:1.1}
 .top-name small{display:block;font-size:11px;color:#8696a0;font-weight:400}
 .top-actions button{background:transparent;border:none;color:#aebac1;font-size:18px;cursor:pointer;padding:6px}
@@ -48,7 +48,8 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 #messagerie-feed.chat-mode{padding:0;overflow:hidden}
 .chat-card{padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid #1f2c34}
 .chat-card:active{background:#202c33}
-.msg-avatar{width:50px;height:50px;border-radius:50%;background:#00a884;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;font-size:17px}
+.msg-avatar{width:50px;height:50px;border-radius:50%;background:#00a884;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;font-size:17px;overflow:hidden;cursor:pointer}
+.msg-avatar img{width:100%;height:100%;object-fit:cover}
 .chat-main{flex:1;min-width:0}
 .chat-name{font-weight:700;color:#e9edef;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-preview{font-size:13px;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
@@ -59,13 +60,15 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .empty-chat{color:#8696a0;text-align:center;padding:50px 20px}
 .chat-wrapper{flex:1;min-height:0;height:100%;display:flex;flex-direction:column;background:#0b141a}
 .chat-top{flex-shrink:0;height:62px;background:#202c33;color:#fff;display:flex;align-items:center;gap:10px;padding:0 10px}
-.chat-top-avatar{width:38px;height:38px;border-radius:50%;background:#ff5000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
+.chat-top-avatar{width:38px;height:38px;border-radius:50%;background:#ff5000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;overflow:hidden;cursor:pointer;flex-shrink:0}
+.chat-top-avatar img{width:100%;height:100%;object-fit:cover}
+.chat-top-info{flex:1;line-height:1.2;cursor:pointer;min-width:0}
+.chat-top-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-container{flex:1;min-height:0;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:8px;background:#0b141a}
-#audio-debug{display:none;background:#ffcc00;color:#000;font-size:11px;font-weight:800;padding:6px 10px;text-align:center}
 .msg-row{display:flex;width:100%;position:relative}
 .msg-row.left{justify-content:flex-start}
 .msg-row.right{justify-content:flex-end}
-.swipe-icon{position:absolute;left:6px;top:50%;transform:translateY(-50%) scale(.6);opacity:0;font-size:20px;transition:all .15s;pointer-events:none}
+.swipe-icon{position:absolute;left:6px;top:50%;transform:translateY(-50%) scale(.6);opacity:0;font-size:20px;transition:all .15s;pointer-events:none;z-index:2}
 .msg-row.swiping .swipe-icon{opacity:1;transform:translateY(-50%) scale(1)}
 .msg-bubble{max-width:82%;padding:8px 10px 6px;border-radius:12px;font-size:16px;word-break:break-word;line-height:1.35;box-shadow:0 1px 2px rgba(0,0,0,.35);position:relative;transition:transform .1s;touch-action:pan-y;user-select:none}
 .msg-left{background:#202c33;color:#e9edef;align-self:flex-start;border-top-left-radius:0}
@@ -78,7 +81,8 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .sticker-bubble{font-size:64px;line-height:1;background:transparent!important;box-shadow:none!important;padding:4px!important}
 .audio-bubble{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;min-width:270px;max-width:310px;background:#005c4b}
 .audio-bubble.received{background:#202c33}
-.audio-avatar{width:44px;height:44px;border-radius:50%;background:#0084ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;overflow:hidden}
+.audio-avatar{width:44px;height:44px;border-radius:50%;background:#0084ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;overflow:hidden;cursor:pointer}
+.audio-avatar img{width:100%;height:100%;object-fit:cover}
 .audio-play{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
 .audio-wave{flex:1;height:32px;display:flex;align-items:center;gap:2px;cursor:pointer}
 .audio-wave span{width:3px;border-radius:99px;background:rgba(255,255,255,.45);display:block}
@@ -99,14 +103,18 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .input-bottom{display:flex;align-items:center;gap:6px;margin-top:2px}
 .input-bottom .spacer{flex:1}
 .mini-icon{background:transparent;border:none;font-size:22px;cursor:pointer;color:#8696a0;padding:4px}
-.mic-btn{width:52px;height:52px;border-radius:50%;background:#fff;color:#111;border:none;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.4);touch-action:none;transition:transform .1s}
+.mic-btn{width:52px;height:52px;border-radius:50%;background:#fff;color:#111;border:none;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.4);touch-action:none;transition:transform .1s,background .15s;user-select:none;-webkit-user-select:none}
+.mic-btn.recording{background:#ff3b30;color:#fff;transform:scale(1.08)}
 .send-btn{width:52px;height:52px;border-radius:50%;background:#00a884;color:#fff;border:none;font-size:20px;cursor:pointer;flex-shrink:0;display:none;align-items:center;justify-content:center}
-.lock-hint{position:absolute;right:8px;bottom:78px;background:#111b21;border:1px solid #2a3942;color:#aebac1;font-size:11px;font-weight:700;padding:6px 10px;border-radius:999px;display:none;z-index:20}
+.lock-hint{position:absolute;right:8px;bottom:78px;background:#111b21;border:1px solid #2a3942;color:#e9edef;font-size:12px;font-weight:700;padding:8px 12px;border-radius:999px;display:none;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 .lock-hint.show{display:block}
+.lock-hint.locked{background:#00a884;color:#fff;border-color:#00a884}
 .rec-box{display:none;flex:1;background:#202c33;border-radius:22px;padding:10px 12px 8px;flex-direction:column;gap:10px}
 .rec-box.show{display:flex}
 .rec-top{display:flex;align-items:center;gap:12px}
-.rec-time{color:#fff;font-weight:900;font-size:22px;min-width:52px}
+.rec-time{color:#ff5252;font-weight:900;font-size:22px;min-width:52px}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:#ff3b30;flex-shrink:0;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .rec-wave{flex:1;display:flex;align-items:center;gap:3px;height:30px}
 .rec-wave span{width:3px;background:#8696a0;border-radius:99px;display:block}
 .rec-speed{width:32px;height:32px;border-radius:50%;border:1.5px dashed #8696a0;color:#fff;background:transparent;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0}
@@ -138,12 +146,55 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 .nav-item .ico{font-size:20px;display:block}
 #img-viewer{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99999}
 #img-viewer img{max-width:96%;max-height:96%;border-radius:10px}
+/* Fiche profil */
+#profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;z-index:99998}
+#profile-modal.show{display:flex}
+.profile-sheet{width:100%;max-width:480px;background:#111b21;border-radius:20px 20px 0 0;padding:12px 16px calc(20px + env(safe-area-inset-bottom));animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.profile-handle{width:40px;height:4px;background:#2a3942;border-radius:99px;margin:0 auto 14px}
+.profile-top{display:flex;gap:14px;align-items:center}
+.profile-avatar{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#ff5000,#ff8c00);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;overflow:hidden;flex-shrink:0;cursor:pointer}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-name{color:#fff;font-size:20px;font-weight:900;line-height:1.2}
+.profile-num{color:#8696a0;font-size:14px;margin-top:4px}
+.profile-status{color:#00a884;font-size:12px;font-weight:700;margin-top:2px}
+.profile-rows{margin-top:16px;background:#202c33;border-radius:14px;overflow:hidden}
+.profile-row{display:flex;justify-content:space-between;padding:13px 14px;border-bottom:1px solid #2a3942;font-size:14px}
+.profile-row:last-child{border-bottom:none}
+.profile-row span:first-child{color:#8696a0}
+.profile-row span:last-child{color:#e9edef;font-weight:700;text-align:right;word-break:break-all}
+.profile-actions{display:flex;gap:10px;margin-top:14px}
+.profile-btn{flex:1;border:none;border-radius:999px;padding:13px;font-size:14px;font-weight:800;cursor:pointer}
+.profile-btn.msg{background:#00a884;color:#fff}
+.profile-btn.close{background:#2a3942;color:#fff}
 </style>
 </head>
 <body>
 <div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div>
+<div id="profile-modal" onclick="if(event.target===this) closeProfile()">
+  <div class="profile-sheet">
+    <div class="profile-handle"></div>
+    <div class="profile-top">
+      <div class="profile-avatar" id="profile-avatar" onclick="if(window._profilePhoto) openImage(window._profilePhoto)">M</div>
+      <div>
+        <div class="profile-name" id="profile-name">Nom</div>
+        <div class="profile-num" id="profile-num">+229 ...</div>
+        <div class="profile-status" id="profile-status">hors ligne</div>
+      </div>
+    </div>
+    <div class="profile-rows">
+      <div class="profile-row"><span>Nom</span><span id="profile-row-nom">-</span></div>
+      <div class="profile-row"><span>Numéro</span><span id="profile-row-num">-</span></div>
+      <div class="profile-row"><span>Compte</span><span id="profile-row-id">-</span></div>
+    </div>
+    <div class="profile-actions">
+      <button class="profile-btn msg" onclick="closeProfile(); document.getElementById('msg-input')?.focus()">💬 Message</button>
+      <button class="profile-btn close" onclick="closeProfile()">Fermer</button>
+    </div>
+  </div>
+</div>
 <div class="app-container">
-<div class="topbar"><div class="top-left"><div class="my-avatar" id="my-avatar">M</div><div class="top-name"><span id="user-name">Chargement...</span><small>Messagerie MAYNE</small></div></div><div class="top-actions"><button onclick="document.getElementById('recherche-user-input').focus()">🔍</button><button onclick="location.href='index.html'">🏠</button></div></div>
+<div class="topbar"><div class="top-left"><div class="my-avatar" id="my-avatar" onclick="openMyProfile()">M</div><div class="top-name"><span id="user-name">Chargement...</span><small>Messagerie MAYNE</small></div></div><div class="top-actions"><button onclick="document.getElementById('recherche-user-input').focus()">🔍</button><button onclick="location.href='index.html'">🏠</button></div></div>
 <div id="search-zone" class="search-bar"><input type="text" id="recherche-user-input" class="search-input" placeholder="🔍 Rechercher un utilisateur..." oninput="rechercherUtilisateur()"><div id="resultats-recherche" class="search-results"></div></div>
 <div id="messagerie-feed"></div>
 </div>
@@ -155,12 +206,11 @@ body{background:#0b141a;display:flex;justify-content:center;font-family:system-u
 <button class="nav-item" onclick="location.href='index.html'"><span class="ico">❓</span>Aide</button>
 </div>
 <input type="file" id="file-picker" accept="image/*" style="display:none" onchange="onFilePicked(event)">
-<input type="file" id="audio-picker" accept="audio/*" style="display:none" onchange="onAudioPicked(event)">
 <script>
 let currentUserId=null,isRecording=false,replyTo=null,recPaused=false,recStartTime=0,recElapsed=0,recTimer=null,recSpeed=1,previewAudio=null,previewPlaying=false,previewUrl=null,waitingAudio=false;
-window.currentConvId=null;
-let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null;
-let micStartY=0,micLocked=false,micSwipeUp=false,micPickerOpenedAt=0;
+window.currentConvId=null; window.currentOtherId=null; window.currentOtherName='';
+let swipeStartX=0,swipeStartY=0,swipeEl=null,swipeData=null,swipeActive=false;
+let micStartX=0,micStartY=0,micLocked=false,micCancelled=false,micHoldTimer=null,micStarted=false;
 let wavCtx=null,wavStream=null,wavProcessor=null,wavSource=null,wavChunks=[],wavSampleRate=44100;
 function wavEncode(chunks, sampleRate){
   let total=0; chunks.forEach(c=>total+=c.length);
@@ -180,25 +230,41 @@ const STICKERS={
   "🐷 MAYNE":["🐷","💰","📱","⚽","🎰","🛒","🚀","💸","🏆","👑","🦁","🐯"]
 };
 function getThumb(url,w){ if(!url) return ''; if(url.includes('/upload/')) return url.replace('/upload/','/upload/w_'+w+',q_auto,f_auto/'); return url; }
-function openImage(url){ document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
+function getUserPhoto(c){ if(!c) return ''; return c.photo || c.photoUrl || c.avatar || c.image || c.profil || ''; }
+function avatarHtml(nom, photo, sizeStyle){
+  const init=(nom||'?').substring(0,2).toUpperCase();
+  if(photo) return '<img src="'+getThumb(photo,200)+'" alt="'+nom+'">';
+  return init;
+}
+function openImage(url){ if(!url) return; document.getElementById('img-viewer-pic').src=url; document.getElementById('img-viewer').style.display='flex'; }
+// --- FICHE PROFIL ---
+function openMyProfile(){ if(!currentUserId) return; openProfile(currentUserId, document.getElementById('user-name').innerText); }
+function openProfile(userId, fallbackName){
+  if(!userId) return;
+  database.ref('clients/'+userId).once('value').then(snap=>{
+    const c=snap.val()||{};
+    const nom=c.nom || fallbackName || userId;
+    const num=c.phone || c.telephone || c.numero || userId;
+    const photo=getUserPhoto(c);
+    const online=c.status && c.status.online;
+    window._profilePhoto=photo||'';
+    const av=document.getElementById('profile-avatar');
+    av.innerHTML=photo? '<img src="'+getThumb(photo,400)+'">' : nom.substring(0,1).toUpperCase();
+    document.getElementById('profile-name').textContent=nom;
+    document.getElementById('profile-num').textContent=formatPhone(num);
+    document.getElementById('profile-status').textContent=online?'● en ligne':'○ hors ligne';
+    document.getElementById('profile-row-nom').textContent=nom;
+    document.getElementById('profile-row-num').textContent=formatPhone(num);
+    document.getElementById('profile-row-id').textContent=userId;
+    document.getElementById('profile-modal').classList.add('show');
+  });
+}
+function closeProfile(){ document.getElementById('profile-modal').classList.remove('show'); }
+function formatPhone(n){ n=String(n||''); if(n.length>=8 && !n.startsWith('+')) return '+229 '+n; return n; }
 function pickImageChat(){ if(window.AppInventor){ sendToApp('PICK_CHAT'); } else { document.getElementById('file-picker').click(); } }
 async function onFilePicked(e){
   const f=e.target.files[0]; if(!f||!window.currentConvId) return;
   try{ const url=await uploadImageToCloudinary(f); const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }catch(err){ alert('Photo échouée : '+err.message); } e.target.value='';
-}
-// Fallback si jamais le sélecteur fichier est utilisé (ex: Chrome) - pas utilisé dans l'app
-async function onAudioPicked(e){
-  const f=e.target.files[0]; e.target.value='';
-  if(!f||!window.currentConvId) return;
-  dbg('Fichier audio choisi: '+f.name+' size='+f.size);
-  if(f.size<1000){ alert('Fichier trop court'); return; }
-  let duree=0;
-  try{ const u=URL.createObjectURL(f); const tmp=new Audio(u); duree=await new Promise(res=>{ tmp.onloadedmetadata=()=>res(Math.floor(tmp.duration)||0); tmp.onerror=()=>res(0); setTimeout(()=>res(0),1500); }); URL.revokeObjectURL(u); }catch(err){}
-  const recBox=document.getElementById('rec-box'); if(recBox) recBox.classList.add('show');
-  const inputBox=document.getElementById('input-box'); if(inputBox) inputBox.style.display='none';
-  const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi sur Cloudinary...'; up.classList.add('show'); }
-  try{ const url=await uploadAudioToCloudinary(f, f.name); recElapsed=duree||0; await pushAudioMessage(url); }catch(err){ alert('Envoi vocal échoué : '+err.message); }
-  if(up) up.classList.remove('show'); resetRecUI();
 }
 function fmtTime(s){ const m=Math.floor(s/60); const sec=s%60; return m+':'+String(sec).padStart(2,'0'); }
 function waveHtml(n){ let h=''; for(let i=0;i<n;i++){ const ht=5+Math.floor(Math.random()*24); h+='<span style="height:'+ht+'px"></span>'; } return h; }
@@ -229,33 +295,16 @@ function togglePreview(){
   previewAudio.play().catch(()=>{ previewPlaying=false; });
 }
 async function startRecording(){
-  // APP : on envoie PICK_AUDIO à AppInventor, comme PICK_CHAT pour les photos
-  // AppInventor doit faire : SoundRecorder.Start, puis après Stop -> Cloudinary -> AUDIO_URL_
-  // Si tu ne mets pas ce bloc, le bouton ne fera rien - c'est la limite d'AppInventor
-  if(IS_APP){
-    isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); waitingAudio=false;
-    const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
-    if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show');
-    const mic=document.getElementById('btn-rec'); if(mic) mic.style.display='none';
-    updateRecWave(); clearInterval(recTimer);
-    recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); },300);
-    sendToApp('PICK_AUDIO');
-    // Sécurité : si AppInventor n'a pas de bloc PICK_AUDIO, on propose le sélecteur fichier après 1.5s ?
-    // Non, on ne veut pas du sélecteur. On attend la réponse AppInventor.
-    // L'utilisateur appuie sur ➤ dans la barre d'enregistrement pour stopper / envoyer.
-    return;
-  }
   if(isRecording) return;
-  isRecording=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null;
+  isRecording=true; micStarted=true; recPaused=false; recElapsed=0; recStartTime=Date.now(); wavChunks=[]; previewUrl=null;
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box');
   if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show');
-  const mic=document.getElementById('btn-rec'); if(mic) mic.style.display='none';
-  const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
-  const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show');
-  const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show');
+  const mic=document.getElementById('btn-rec'); if(mic){ mic.classList.add('recording'); mic.style.display='flex'; }
+  const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='⬆️ Glisse vers le haut pour verrouiller • ⬅️ Glisse à gauche pour annuler'; hint.classList.remove('locked'); hint.classList.add('show'); }
   updateRecWave(); clearInterval(recTimer);
   recTimer=setInterval(()=>{ if(!recPaused){ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); } },300);
+  if(IS_APP){ sendToApp('PICK_AUDIO'); return; }
   try{ wavStream=await navigator.mediaDevices.getUserMedia({audio:true}); wavCtx=new (window.AudioContext||window.webkitAudioContext)(); wavSampleRate=wavCtx.sampleRate; wavSource=wavCtx.createMediaStreamSource(wavStream); wavProcessor=wavCtx.createScriptProcessor(4096,1,1); wavProcessor.onaudioprocess=e=>{ if(recPaused) return; wavChunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); }; wavSource.connect(wavProcessor); wavProcessor.connect(wavCtx.destination); }catch(e){ alert('Micro refusé'); cancelRecording(); }
 }
 function togglePauseRec(){
@@ -268,27 +317,24 @@ function togglePauseRec(){
 }
 function stopWav(){ try{ if(wavProcessor) wavProcessor.disconnect(); }catch(e){} try{ if(wavSource) wavSource.disconnect(); }catch(e){} try{ if(wavCtx) wavCtx.close(); }catch(e){} if(wavStream) wavStream.getTracks().forEach(t=>t.stop()); wavCtx=null; wavProcessor=null; wavSource=null; wavStream=null; }
 function cancelRecording(){
-  if(IS_APP){ sendToApp('CANCEL_AUDIO'); isRecording=false; clearInterval(recTimer); waitingAudio=false; resetRecUI(); return; }
-  if(!isRecording && !wavChunks.length) { resetRecUI(); return; }
-  isRecording=false; recPaused=false; clearInterval(recTimer);
+  if(IS_APP){ sendToApp('CANCEL_AUDIO'); }
+  isRecording=false; micStarted=false; micLocked=false; recPaused=false; clearInterval(recTimer);
   if(previewAudio) previewAudio.pause(); previewPlaying=false;
-  stopWav(); wavChunks=[]; resetRecUI();
+  if(!IS_APP) stopWav(); wavChunks=[]; resetRecUI();
 }
 async function pushAudioMessage(url){
-  dbg('Push Firebase '+url.substring(0,70));
-  try{ const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); const ref=await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false}); dbg('Push OK '+ref.key); pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal'); }catch(e){ dbg('ERREUR Push: '+e.message); alert('Push échoué: '+e.message); }
+  try{ const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); const ref=await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false}); pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal'); }catch(e){ alert('Push échoué: '+e.message); }
 }
 async function stopAndSendRecording(){
-  // APP : on demande à AppInventor de Stopper + Uploader, il renverra AUDIO_URL_
   if(IS_APP){
     if(!isRecording) return;
-    waitingAudio=true; sendToApp('STOP_AUDIO'); isRecording=false; clearInterval(recTimer);
-    const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi via AppInventor...'; up.classList.add('show'); }
-    setTimeout(()=>{ if(waitingAudio){ dbg('TIMEOUT : pas de AUDIO_URL_'); alert('AppInventor n a pas renvoyé AUDIO_URL_.\n\nIl faut le bloc PICK_AUDIO / STOP_AUDIO dans AppInventor (copie de PICK_CHAT) :\nPICK_AUDIO -> SoundRecorder.Start\nSTOP_AUDIO -> SoundRecorder.Stop -> Cloudinary Upload mayneaudio -> WebViewString = AUDIO_URL_ + url'); waitingAudio=false; resetRecUI(); } },15000);
+    waitingAudio=true; sendToApp('STOP_AUDIO'); isRecording=false; micLocked=false; micStarted=false; clearInterval(recTimer);
+    const up=document.getElementById('rec-upload'); if(up){ up.textContent='☁️ Envoi...'; up.classList.add('show'); }
+    setTimeout(()=>{ if(waitingAudio){ waitingAudio=false; resetRecUI(); } },15000);
     return;
   }
   if(!isRecording && !wavChunks.length) return;
-  isRecording=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false;
+  isRecording=false; micLocked=false; micStarted=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false;
   const blob=wavEncode(wavChunks, wavSampleRate);
   if(!blob || blob.size<1000){ resetRecUI(); return; }
   const up=document.getElementById('rec-upload'); if(up) up.classList.add('show');
@@ -297,52 +343,118 @@ async function stopAndSendRecording(){
 }
 function resetRecUI(){
   const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='flex'; if(recBox) recBox.classList.remove('show');
-  const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.innerText='🎙️'; mic.style.transform=''; }
+  const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('recording'); mic.innerText='🎙️'; mic.style.transform=''; }
+  const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
   const label=document.getElementById('pause-label'); if(label) label.textContent='Pause'; const icon=document.getElementById('pause-icon'); if(icon) icon.textContent='⏸️';
   const t=document.getElementById('rec-time'); if(t) t.textContent='0:00'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const listen=document.getElementById('btn-listen'); if(listen) listen.classList.remove('show'); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show');
 }
 function initMicSwipe(){
   const mic=document.getElementById('btn-rec'); if(!mic) return;
-  if(IS_APP){
-    // Dans l'app : appui OU swipe vers le haut = même action : PICK_AUDIO
-    mic.addEventListener('touchstart',e=>{ micStartY=e.touches[0].clientY; micSwipeUp=false; const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='🎙️ Appuie pour enregistrer'; hint.classList.add('show'); } },{passive:true});
-    mic.addEventListener('touchmove',e=>{ const dy=micStartY - e.touches[0].clientY; if(dy>50){ micSwipeUp=true; mic.style.transform='translateY(-'+Math.min(dy,50)+'px)'; const hint=document.getElementById('lock-hint'); if(hint) hint.textContent='🎙️ Relâche pour enregistrer'; } },{passive:true});
-    mic.addEventListener('touchend',e=>{ e.preventDefault(); const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); mic.style.transform='translateY(0)'; const now=Date.now(); if(now - micPickerOpenedAt < 800) return; micPickerOpenedAt=now; startRecording(); },{passive:false});
-    mic.addEventListener('click',e=>{ e.preventDefault(); const now=Date.now(); if(now - micPickerOpenedAt < 800) return; micPickerOpenedAt=now; startRecording(); });
-    return;
-  }
-  mic.addEventListener('touchstart',e=>{ micStartY=e.touches[0].clientY; micSwipeUp=false; const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='⬆️ Glisse vers le haut pour verrouiller'; hint.classList.add('show'); } },{passive:true});
-  mic.addEventListener('touchmove',e=>{ const dy=micStartY - e.touches[0].clientY; if(dy>60){ micSwipeUp=true; mic.style.transform='translateY(-'+Math.min(dy,60)+'px)'; if(!isRecording) startRecording(); } if(dy<-40 && isRecording && !micLocked){ cancelRecording(); } },{passive:true});
-  mic.addEventListener('touchend',e=>{ const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); mic.style.transform='translateY(0)'; if(micSwipeUp && isRecording){ micLocked=true; return; } if(!isRecording && !micSwipeUp){ startRecording(); } },{passive:true});
-  mic.addEventListener('mousedown',e=>{ micStartY=e.clientY; });
-  mic.addEventListener('mouseup',e=>{ const dy=micStartY-e.clientY; if(dy>40){ startRecording(); } });
+  mic.addEventListener('touchstart',e=>{
+    if(isRecording) return;
+    micStartX=e.touches[0].clientX; micStartY=e.touches[0].clientY; micLocked=false; micCancelled=false;
+    micHoldTimer=setTimeout(()=>{ startRecording(); }, 80);
+  },{passive:true});
+  mic.addEventListener('touchmove',e=>{
+    if(!isRecording) return;
+    const dx=e.touches[0].clientX - micStartX;
+    const dy=micStartY - e.touches[0].clientY;
+    const hint=document.getElementById('lock-hint');
+    if(dy>60 && !micLocked){
+      micLocked=true;
+      if(hint){ hint.textContent='🔒 Verrouillé — appuie sur ➤ pour envoyer'; hint.classList.add('locked'); }
+      mic.style.transform='translateY(-10px)';
+    }
+    if(dx < -80 && !micCancelled){
+      micCancelled=true;
+      if(hint){ hint.textContent='🗑️ Relâche pour annuler'; hint.classList.remove('locked'); }
+    }
+    if(dx > -40 && micCancelled){
+      micCancelled=false;
+      if(hint) hint.textContent='⬆️ Glisse vers le haut pour verrouiller';
+    }
+  },{passive:true});
+  mic.addEventListener('touchend',e=>{
+    clearTimeout(micHoldTimer);
+    const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
+    mic.style.transform='translateY(0)';
+    // Petit tap sans hold -> on démarre quand même comme avant (tap = enregistrer)
+    if(!micStarted && !isRecording){
+      startRecording();
+      return;
+    }
+    if(!isRecording) return;
+    if(micCancelled){ cancelRecording(); return; }
+    if(micLocked){
+      // Verrouillé : on reste en enregistrement, l'utilisateur appuie sur ➤
+      if(hint){ hint.textContent='🔒 Verrouillé — appuie sur ➤ pour envoyer'; hint.classList.add('locked'); hint.classList.add('show'); }
+      return;
+    }
+    // Maintenu puis lâché = envoyer
+    stopAndSendRecording();
+  },{passive:true});
+  // Souris / desktop : clic = démarrer, 2e clic = envoyer
+  mic.addEventListener('click',e=>{
+    if('ontouchstart' in window) return;
+    if(!isRecording) startRecording(); else stopAndSendRecording();
+  });
 }
 function setReply(nom,texte){ replyTo={nom,texte}; const p=document.getElementById('reply-preview'); if(p){ p.style.display='block'; p.innerHTML='<span class="close" onclick="clearReply()">✕</span><b>'+nom+'</b><span>'+texte.substring(0,80)+'</span>'; } const inp=document.getElementById('msg-input'); if(inp) inp.focus(); }
 function clearReply(){ replyTo=null; const p=document.getElementById('reply-preview'); if(p) p.style.display='none'; }
-function initSwipe(){ const scroll=document.getElementById('chat-scroll'); if(!scroll) return; scroll.addEventListener('touchstart',e=>{ const b=e.target.closest('.msg-bubble'); if(!b) return; const t=e.touches[0]; swipeStartX=t.clientX; swipeStartY=t.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; b.style.transition='none'; },{passive:true}); scroll.addEventListener('touchmove',e=>{ if(!swipeEl) return; const t=e.touches[0]; const dx=t.clientX-swipeStartX; const dy=t.clientY-swipeStartY; if(Math.abs(dy)>30) return; if(dx>0 && dx<120){ swipeEl.style.transform='translateX('+dx+'px)'; const row=swipeEl.closest('.msg-row'); if(row) row.classList.add('swiping'); } },{passive:true}); scroll.addEventListener('touchend',e=>{ if(!swipeEl) return; const dx=e.changedTouches[0].clientX-swipeStartX; const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping'); swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)'; if(dx>65 && swipeData && swipeData.texte){ setReply(swipeData.nom, swipeData.texte); } swipeEl=null; swipeData=null; },{passive:true}); }
+// SWIPE GAUCHE -> DROITE SUR UN MESSAGE = REPONDRE
+function initSwipe(){
+  const scroll=document.getElementById('chat-scroll'); if(!scroll) return;
+  scroll.addEventListener('touchstart',e=>{
+    const b=e.target.closest('.msg-bubble'); if(!b) return;
+    const t=e.touches[0]; swipeStartX=t.clientX; swipeStartY=t.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; swipeActive=false; b.style.transition='none';
+  },{passive:true});
+  scroll.addEventListener('touchmove',e=>{
+    if(!swipeEl) return;
+    const t=e.touches[0]; const dx=t.clientX-swipeStartX; const dy=t.clientY-swipeStartY;
+    if(Math.abs(dy)>35){ return; }
+    if(dx>8 && dx<130){
+      swipeActive=true;
+      swipeEl.style.transform='translateX('+dx+'px)';
+      const row=swipeEl.closest('.msg-row'); if(row) row.classList.add('swiping');
+      if(e.cancelable) e.preventDefault();
+    }
+  },{passive:false});
+  scroll.addEventListener('touchend',e=>{
+    if(!swipeEl) return;
+    const dx=e.changedTouches[0].clientX-swipeStartX;
+    const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping');
+    swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)';
+    if(swipeActive && dx>60 && swipeData && swipeData.texte){ setReply(swipeData.nom, swipeData.texte); }
+    swipeEl=null; swipeData=null; swipeActive=false;
+  },{passive:true});
+  // Souris : drag gauche -> droite aussi
+  let mouseDown=false, mouseX=0, mouseEl=null;
+  scroll.addEventListener('mousedown',e=>{ const b=e.target.closest('.msg-bubble'); if(!b) return; mouseDown=true; mouseX=e.clientX; mouseEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; });
+  scroll.addEventListener('mousemove',e=>{ if(!mouseDown||!mouseEl) return; const dx=e.clientX-mouseX; if(dx>8 && dx<130){ mouseEl.style.transform='translateX('+dx+'px)'; const row=mouseEl.closest('.msg-row'); if(row) row.classList.add('swiping'); } });
+  scroll.addEventListener('mouseup',e=>{ if(!mouseDown||!mouseEl) return; const dx=e.clientX-mouseX; const row=mouseEl.closest('.msg-row'); if(row) row.classList.remove('swiping'); mouseEl.style.transition='transform .2s'; mouseEl.style.transform='translateX(0)'; if(dx>60 && swipeData && swipeData.texte) setReply(swipeData.nom, swipeData.texte); mouseDown=false; mouseEl=null; });
+}
 setInterval(async ()=>{
   if(!window.AppInventor) return; let d=null; try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; } if(!d) return; if(d===lastSentToApp) return;
   if(!(d.startsWith('AUDIO_URL_')||d.startsWith('CHAT_'))) return;
-  dbg('<< App: '+d.substring(0,60));
   const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
   if(d.startsWith('CHAT_')){ let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString(''); lastSentToApp=''; database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }
   else if(d.startsWith('AUDIO_URL_')){ let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp=''; waitingAudio=false; await pushAudioMessage(u); resetRecUI(); }
 },400);
-function rechercherUtilisateur(){ const q=document.getElementById('recherche-user-input').value.trim().toLowerCase(); const zone=document.getElementById('resultats-recherche'); if(!q){zone.style.display='none';return;} database.ref('clients').once('value').then(s=>{let h='',c=0; s.forEach(ch=>{const cid=ch.key;const nom=ch.val().nom||'';if(cid===currentUserId)return;if(nom.toLowerCase().includes(q)||cid.includes(q)){c++;h+='<div class="search-item" onclick="selectionnerUserPourChat(\''+cid+'\',\''+nom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="width:36px;height:36px;font-size:13px">'+nom.substring(0,2).toUpperCase()+'</div><div>'+nom+'<br><small style="color:#8696a0">'+cid+'</small></div></div>';}}); zone.innerHTML=c?h:'<div style="padding:12px;color:#8696a0">Aucun utilisateur</div>';zone.style.display='block';});}
+function rechercherUtilisateur(){ const q=document.getElementById('recherche-user-input').value.trim().toLowerCase(); const zone=document.getElementById('resultats-recherche'); if(!q){zone.style.display='none';return;} database.ref('clients').once('value').then(s=>{let h='',c=0; s.forEach(ch=>{const cid=ch.key;const nom=ch.val().nom||'';const photo=getUserPhoto(ch.val()||{});if(cid===currentUserId)return;if(nom.toLowerCase().includes(q)||cid.includes(q)){c++;h+='<div class="search-item" onclick="selectionnerUserPourChat(\''+cid+'\',\''+nom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="width:36px;height:36px;font-size:13px">'+avatarHtml(nom,photo)+'</div><div>'+nom+'<br><small style="color:#8696a0">'+formatPhone(cid)+'</small></div></div>';}}); zone.innerHTML=c?h:'<div style="padding:12px;color:#8696a0">Aucun utilisateur</div>';zone.style.display='block';});}
 function selectionnerUserPourChat(cid,nom){document.getElementById('recherche-user-input').value='';document.getElementById('resultats-recherche').style.display='none';ouvrirConversation([currentUserId,cid].sort().join('_'),nom);}
-function chargerMessagerie(){ if(window.currentConvId) return; database.ref('conversations').once('value').then(snapConv=>{ database.ref('clients').once('value').then(snapClients=>{ if(window.currentConvId) return; const clients=snapClients.val()||{}; const feed=document.getElementById('messagerie-feed'); let convs=[]; snapConv.forEach(ch=>{ const convId=ch.key; if(!convId.includes(currentUserId)) return; const msgs=ch.child('messages').val(); if(!msgs) return; const arr=Object.entries(msgs).map(([k,v])=>({...v,_k:k})).sort((a,b)=>b.createdAt-a.createdAt); const unread=Object.values(msgs).filter(m=>m.senderId!==currentUserId && !m.vu).length; convs.push({id:convId,last:arr[0],unread}); }); convs.sort((a,b)=>b.last.createdAt-a.last.createdAt); let html=''; convs.forEach(c=>{ const otherId=c.id.split('_').find(id=>id!==currentUserId); const amiNom = clients[otherId]?.nom || c.last.senderNom || otherId; const init=amiNom.substring(0,2).toUpperCase(); const prev=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':c.last.type==='sticker'?'🧩 Sticker':c.last.type==='call'?'📞 Appel vocal':(c.last.texte||'').substring(0,40); const h=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); const colors=['#00a884','#ff5000','#7f66ff','#0084ff','#e91e63','#009688']; const bg=colors[amiNom.length % colors.length]; html+='<div class="chat-card" onclick="ouvrirConversation(\''+c.id+'\',\''+amiNom.replace(/'/g,"\\'")+'\')"><div class="msg-avatar" style="background:'+bg+'">'+init+'</div><div class="chat-main"><div class="chat-name">'+amiNom+'</div><div class="chat-preview">'+(c.last.senderId===currentUserId?'<b style="color:#53bdeb">Vous : </b>':'')+prev+'</div></div><div class="chat-meta"><div class="chat-time '+(c.unread?'unread':'')+'">'+h+'</div>'+(c.unread?'<div class="unread-badge">'+c.unread+'</div>':'')+'</div></div>'; }); feed.classList.remove('chat-mode'); feed.innerHTML=html||'<div class="empty-chat"><div style="font-size:48px">💬</div><p><b>Aucune conversation</b><br>Recherche un utilisateur en haut<br>pour démarrer une discussion.</p></div>'; database.ref('conversations').on('value',()=>{ if(!window.currentConvId) chargerMessagerie(); }); }); }); }
-function retourListe(){ if(window.currentConvId){ database.ref(`conversations/${window.currentConvId}/messages`).off(); database.ref(`conversations/${window.currentConvId}/typing`).off(); database.ref(`conversations/${window.currentConvId}/recording`).off(); } database.ref('conversations').off(); window.currentConvId=null; replyTo=null; if(isRecording) cancelRecording(); document.getElementById('search-zone').style.display='block'; const f=document.getElementById('messagerie-feed'); f.classList.remove('chat-mode'); f.innerHTML=''; chargerMessagerie(); }
+function chargerMessagerie(){ if(window.currentConvId) return; database.ref('conversations').once('value').then(snapConv=>{ database.ref('clients').once('value').then(snapClients=>{ if(window.currentConvId) return; const clients=snapClients.val()||{}; const feed=document.getElementById('messagerie-feed'); let convs=[]; snapConv.forEach(ch=>{ const convId=ch.key; if(!convId.includes(currentUserId)) return; const msgs=ch.child('messages').val(); if(!msgs) return; const arr=Object.entries(msgs).map(([k,v])=>({...v,_k:k})).sort((a,b)=>b.createdAt-a.createdAt); const unread=Object.values(msgs).filter(m=>m.senderId!==currentUserId && !m.vu).length; convs.push({id:convId,last:arr[0],unread}); }); convs.sort((a,b)=>b.last.createdAt-a.last.createdAt); let html=''; convs.forEach(c=>{ const otherId=c.id.split('_').find(id=>id!==currentUserId); const amiNom = clients[otherId]?.nom || c.last.senderNom || otherId; const amiPhoto=getUserPhoto(clients[otherId]||{}); const init=amiNom.substring(0,2).toUpperCase(); const prev=c.last.type==='image'?'📷 Photo':c.last.type==='audio'?'🎙️ Vocal':c.last.type==='sticker'?'🧩 Sticker':c.last.type==='call'?'📞 Appel vocal':(c.last.texte||'').substring(0,40); const h=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); const colors=['#00a884','#ff5000','#7f66ff','#0084ff','#e91e63','#009688']; const bg=colors[amiNom.length % colors.length]; html+='<div class="chat-card"><div class="msg-avatar" style="background:'+bg+'" onclick="event.stopPropagation();openProfile(\''+otherId+'\',\''+amiNom.replace(/'/g,"\\'")+'\')">'+avatarHtml(amiNom,amiPhoto)+'</div><div class="chat-main" onclick="ouvrirConversation(\''+c.id+'\',\''+amiNom.replace(/'/g,"\\'")+'\')"><div class="chat-name">'+amiNom+'</div><div class="chat-preview">'+(c.last.senderId===currentUserId?'<b style="color:#53bdeb">Vous : </b>':'')+prev+'</div></div><div class="chat-meta" onclick="ouvrirConversation(\''+c.id+'\',\''+amiNom.replace(/'/g,"\\'")+'\')"><div class="chat-time '+(c.unread?'unread':'')+'">'+h+'</div>'+(c.unread?'<div class="unread-badge">'+c.unread+'</div>':'')+'</div></div>'; }); feed.classList.remove('chat-mode'); feed.innerHTML=html||'<div class="empty-chat"><div style="font-size:48px">💬</div><p><b>Aucune conversation</b><br>Recherche un utilisateur en haut<br>pour démarrer une discussion.</p></div>'; database.ref('conversations').on('value',()=>{ if(!window.currentConvId) chargerMessagerie(); }); }); }); }
+function retourListe(){ if(window.currentConvId){ database.ref(`conversations/${window.currentConvId}/messages`).off(); database.ref(`conversations/${window.currentConvId}/typing`).off(); database.ref(`conversations/${window.currentConvId}/recording`).off(); } database.ref('conversations').off(); window.currentConvId=null; window.currentOtherId=null; replyTo=null; if(isRecording) cancelRecording(); document.getElementById('search-zone').style.display='block'; const f=document.getElementById('messagerie-feed'); f.classList.remove('chat-mode'); f.innerHTML=''; chargerMessagerie(); }
 function ouvrirConversation(convId,nom){
   database.ref('conversations').off(); window.currentConvId=convId; replyTo=null;
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
+  const otherId=convId.split('_').find(id=>id!==currentUserId); window.currentOtherId=otherId; window.currentOtherName=nom;
   const pauseBtn = IS_APP ? '' : '<button class="rec-pause" onclick="togglePauseRec()"><span id="pause-icon">⏸️</span><span id="pause-label">Pause</span></button>';
   const listenBtn = IS_APP ? '' : '<button class="rec-listen" id="btn-listen" onclick="togglePreview()">👂 <span id="listen-label">Écouter</span></button>';
-  const lockText = IS_APP ? '🎙️ Appuie pour enregistrer' : '⬆️ Glisse vers le haut pour verrouiller';
-  const sendLabel = IS_APP ? '➤ Envoyer' : '➤';
-  feed.innerHTML='<div class="chat-wrapper"><div id="audio-debug"></div><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar">'+nom.substring(0,2).toUpperCase()+'</div><div style="line-height:1.2;flex:1"><div style="font-weight:bold">'+nom+'</div><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">'+lockText+'</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi sur Cloudinary...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button>'+pauseBtn+listenBtn+'<button class="rec-send" onclick="stopAndSendRecording()">'+sendLabel+'</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+nom.replace(/'/g,"\\'")+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+nom.replace(/'/g,"\\'")+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#53bdeb">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#f15c6d">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openProfile(\''+otherId+'\',\''+nom.replace(/'/g,"\\'")+'\')">⋮</span></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">⬆️ Glisse vers le haut pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div class="rec-top"><span class="rec-dot"></span><span class="rec-time" id="rec-time">0:00</span><div class="rec-wave" id="rec-wave"></div><button class="rec-speed" id="rec-speed" onclick="toggleSpeed()">1×</button></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">☁️ Envoi...</div><div class="rec-bottom"><button class="rec-trash" onclick="cancelRecording()">🗑️</button>'+pauseBtn+listenBtn+'<button class="rec-send" onclick="stopAndSendRecording()">➤</button></div></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
-  const otherId=convId.split('_').find(id=>id!==currentUserId);
+  // Photo de l'autre en haut du chat
+  database.ref('clients/'+otherId).once('value').then(s=>{ const photo=getUserPhoto(s.val()||{}); const av=document.getElementById('chat-top-avatar'); if(av && photo) av.innerHTML='<img src="'+getThumb(photo,200)+'">'; });
   database.ref('clients/'+otherId+'/status').on('value',s=>{ const el=document.getElementById('online-text'); if(!el) return; const on=s.val()&&s.val().online; el.innerText=on?'en ligne':'hors ligne'; });
   database.ref(`conversations/${convId}/typing`).on('value',s=>{let e=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val())e=true;});const el=document.getElementById('typing-indicator'); if(el) el.style.display=e?'block':'none'; });
   database.ref(`conversations/${convId}/recording`).on('value',s=>{let e=false;s.forEach(ch=>{if(ch.key!==currentUserId&&ch.val())e=true;});const el=document.getElementById('rec-indicator'); if(el) el.style.display=e?'flex':'none'; });
@@ -353,7 +465,7 @@ function ouvrirConversation(convId,nom){
       else if(v.type==='sticker'){ html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble sticker-bubble" data-nom="'+safeNom+'" data-texte="'+(v.texte||'🧩')+'">'+(v.texte||'🧩')+'<span class="msg-time">'+h+tick+'</span></div></div>'; }
       else if(v.type==='call'){ html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="call-bubble '+(isMe?'':'received')+'"><div class="call-icon">📞</div><div style="flex:1"><b>Appel vocal</b><span>'+(v.statut||'Sans réponse')+'</span></div><span style="font-size:11px;color:#cfd8dc">'+h+tick+'</span></div></div>'; }
       else if(v.type==='image'){ const thumb=getThumb(imgUrl,600); const big=getThumb(imgUrl,1000)||imgUrl; html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" style="padding:3px" data-nom="'+safeNom+'" data-texte="📷 Photo">'+quoteHtml+'<img src="'+thumb+'" loading="lazy" onerror="this.src=\''+imgUrl+'\'" onclick="openImage(\''+big+'\')" style="max-width:220px;border-radius:8px;display:block;cursor:pointer"><span class="msg-time">'+h+tick+'</span></div></div>'; }
-      else if(v.type==='audio'){ const init=v.senderNom? v.senderNom.substring(0,2).toUpperCase() : 'MA'; const duree=v.duree?fmtTime(v.duree):'0:10'; html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="audio-bubble '+(isMe?'sent':'received')+'"><div class="audio-avatar">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" preload="auto" style="display:none"></audio></div></div>'; }
+      else if(v.type==='audio'){ const init=v.senderNom? v.senderNom.substring(0,2).toUpperCase() : 'MA'; const duree=v.duree?fmtTime(v.duree):'0:10'; const senderIdForProfile=isMe?currentUserId:otherId; html+='<div class="msg-row '+(isMe?'right':'left')+'"><span class="swipe-icon">↩️</span><div class="audio-bubble '+(isMe?'sent':'received')+'" data-nom="'+safeNom+'" data-texte="🎙️ Vocal"><div class="audio-avatar" onclick="openProfile(\''+senderIdForProfile+'\',\''+safeNom+'\')">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" preload="auto" style="display:none"></audio></div></div>'; }
       if(v.senderId!==currentUserId&&!v.vu) m.ref.update({vu:true}); });
     const wasBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 80; scroll.innerHTML=html; if(wasBottom || scroll.scrollTop===0) scroll.scrollTop=scroll.scrollHeight;
   });
@@ -362,7 +474,7 @@ function lancerAppel(cid){ const otherId=cid.split('_').find(id=>id!==currentUse
 function onInputChange(inp,cid){ jeTape(cid); const hasText=inp.value.trim().length>0; const mic=document.getElementById('btn-rec'); const send=document.getElementById('btn-send'); if(isRecording) return; if(mic) mic.style.display=hasText?'none':'flex'; if(send) send.style.display=hasText?'flex':'none'; }
 function envoyerDirect(cid){ const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return; const otherId = cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,replyTo:replyTo||null,createdAt:Date.now()}); pushJS(otherId, '💬 '+document.getElementById('user-name').innerText, t.substring(0,90)); i.value=''; clearReply(); onInputChange(i,cid); }
 function jeTape(cid){database.ref(`conversations/${cid}/typing/${currentUserId}`).set(true);clearTimeout(window.typTO);window.typTO=setTimeout(()=>{database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);},1500);}
-function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const nom=v.val()?.nom||currentUserId;document.getElementById('user-name').innerText=nom;document.getElementById('my-avatar').innerText=nom.substring(0,1).toUpperCase();});chargerMessagerie();}
+function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const c=v.val()||{};const nom=c.nom||currentUserId;document.getElementById('user-name').innerText=nom;const photo=getUserPhoto(c);const av=document.getElementById('my-avatar'); if(av) av.innerHTML=photo? '<img src="'+getThumb(photo,200)+'">' : nom.substring(0,1).toUpperCase();});chargerMessagerie();}
 firebase.auth().onAuthStateChanged(function(user){ if(user){ init(); } else { firebase.auth().signInAnonymously(); } });
 </script>
 </body>
