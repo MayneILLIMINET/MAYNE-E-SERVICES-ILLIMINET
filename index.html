@@ -11,25 +11,23 @@ window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async function(OneSignal){
   await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
 });
-/* === ONESIGNAL FINAL : utilise onesignal_id comme l'ancien === */
+/* === ONESIGNAL FINAL APK + WEB : utilise onesignal_id === */
 async function activerNotifications(){
-  if(window.AppInventor){alert('✅ Notifications APK actives');return;}
   try{ const p=await window.OneSignal.Notifications.requestPermission(); if(p) alert('✅ Notifications activées!'); else alert('❌ Permission refusée'); }catch(e){ alert('OneSignal charge...'); }
 }
 function syncOneSignal(phone){
-  if(window.AppInventor) return;
   if(!phone) return;
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   OneSignalDeferred.push(async function(OneSignal){
     try{
       const ph=String(phone).replace(/\D/g,'');
-      const perm=await OneSignal.Notifications.permission;
-      if(!perm){
-        const p2=await OneSignal.Notifications.requestPermission();
-        if(!p2) return;
-      }
       let subId=null;
-      for(let i=0;i<10;i++){ subId=await OneSignal.User.pushSubscription.id; if(subId) break; await new Promise(r=>setTimeout(r,1000)); }
+      try{
+        const perm=await OneSignal.Notifications.permission;
+        if(!perm){ await OneSignal.Notifications.requestPermission(); }
+        for(let i=0;i<10;i++){ subId=await OneSignal.User.pushSubscription.id; if(subId) break; await new Promise(r=>setTimeout(r,1000)); }
+      }catch(e){}
+      if(!subId && window.AppInventor){ console.log('[OneSignal] APK attente PID natif'); return; }
       if(!subId) return;
       await database.ref('clients/'+ph+'/onesignal_id').set(subId);
       await database.ref('clients/'+ph+'/phone').set(ph);
@@ -38,15 +36,21 @@ function syncOneSignal(phone){
     }catch(e){ console.log('OneSignal',e); }
   });
 }
+function sauverPID_APK(pid, phone){
+  pid=String(pid||'').trim();
+  phone=String(phone||currentUserId||'').replace(/\D/g,'');
+  if(!pid || !phone) return;
+  database.ref('clients/'+phone+'/onesignal_id').set(pid);
+  database.ref('clients/'+phone+'/phone').set(phone);
+  fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(pid)});
+  console.log('[OneSignal APK] sauvé',pid,phone);
+}
 async function testerOneSignal(){
   const ph=String(currentUserId||'').replace(/\D/g,'');
   if(!ph) return alert('Connecte-toi d’abord');
   syncOneSignal(ph);
   setTimeout(async()=>{
-    try{
-      const s=await database.ref('clients/'+ph+'/onesignal_id').once('value');
-      alert('onesignal_id dans Firebase :\n'+(s.val()||'vide'));
-    }catch(e){}
+    try{ const s=await database.ref('clients/'+ph+'/onesignal_id').once('value'); alert('onesignal_id dans Firebase :\n'+(s.val()||'vide')); }catch(e){}
   },3000);
 }
 </script>
@@ -65,7 +69,7 @@ database=firebase.database();db=database;
 firebase.auth().onAuthStateChanged(function(user){ if(user){ tryAutoLogin(); } else { firebase.auth().signInAnonymously().catch(e=>console.log(e)); } });
 </script>
 <script>
-/* === POLLING PID CORRIGÉ : ne touche JAMAIS au VOCAL, libère le tuyau après lecture === */
+/* === POLLING APK ROBUSTE : accepte PID_xxx_phone OU juste xxx === */
 window.lastPidSauve=null;
 setInterval(function(){
   try{
@@ -73,31 +77,17 @@ setInterval(function(){
     var raw='';
     try{ raw=window.AppInventor.getWebViewString()||''; }catch(e){ return; }
     if(!raw) return;
-    // 1. VOCAL : c'est pour messagerie.html, on ne touche pas
-    if(raw.indexOf('VOCAL_')===0) return;
-    // 2. Déjà traité : on ne relit pas
-    if(raw.indexOf('PID_OK')===0) return;
-    // 3. Seulement PID_xxx_phone ou un ID seul
-    if(raw.indexOf('PID_')!==0){
-      // ID seul sans préfixe (ex: a88a...), on le prend aussi
-      if(!(raw.length>30 && raw.indexOf('-')>0)) return;
-    }
-    var pid='', phone='';
+    var pid='', phone=String(currentUserId||'').replace(/\D/g,'');
     if(raw.indexOf('PID_')===0){
       var parts=raw.split('_');
       pid=parts[1]||'';
-      phone=(parts[2]||'').replace(/\D/g,'');
-    } else {
+      if(parts[2]) phone=parts[2].replace(/\D/g,'');
+    } else if(raw.length>30 && raw.indexOf('-')>0){
       pid=raw.trim();
-      phone=String(currentUserId||'').replace(/\D/g,'');
     }
     if(pid && phone && pid!==window.lastPidSauve){
       window.lastPidSauve=pid;
-      database.ref('clients/'+phone+'/onesignal_id').set(pid);
-      database.ref('clients/'+phone+'/phone').set(phone);
-      try{fetch('https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'phone='+encodeURIComponent(phone)+'&playerId='+encodeURIComponent(pid)});}catch(e){}
-      // Libère WebViewString pour que VOCAL puisse passer après
-      try{ window.AppInventor.setWebViewString('PID_OK_'+pid); }catch(e){}
+      sauverPID_APK(pid, phone);
     }
   }catch(e){}
 },1500);
