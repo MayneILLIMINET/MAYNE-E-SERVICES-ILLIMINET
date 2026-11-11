@@ -89,12 +89,13 @@ body{background:#0e0e0e;color:#fff;font-family:system-ui,-apple-system,sans-seri
 </div>
 <div class="top-actions">
 <a href="statut.html" class="btn btn-home">STATUT 🧭</a>
-<button class="btn btn-orange" id="btnReload" onclick="loadAllCounts()">🔄 RELOAD</button>
+<button class="btn btn-orange" id="btnReload" onclick="loadAllCounts();loadDaily();">🔄 RELOAD</button>
 </div>
 </div>
 <div class="tabs">
 <button class="tab active" id="tab-users" onclick="switchMain('users')">👥 TOUS LES USERS</button>
 <button class="tab" id="tab-cmd" onclick="switchMain('cmd')">📦 COMMANDES <i id="bubble-all">0</i></button>
+<button class="tab" id="tab-daily" onclick="switchMain('daily')">📊 JOURNALIER <i id="bubble-daily">0</i></button>
 </div>
 <div id="sec-users" class="section">
 <div class="h2">1 / TOUS LES USERS — Nom, Prénom, Solde, Commission, Épargne, Numéro, Email</div>
@@ -112,6 +113,21 @@ body{background:#0e0e0e;color:#fff;font-family:system-ui,-apple-system,sans-seri
 <div class="cmd-buttons" id="cmdButtons"></div>
 <input id="searchCmd" class="input" placeholder="🔍 Rechercher client, montant..." oninput="filterCmd()">
 <div class="list" id="listCmd" style="margin-top:10px"><div class="empty">Clique sur un service ci-dessus</div></div>
+</div>
+<div id="sec-daily" class="section" style="display:none">
+<div class="h2">3 / CALCUL JOURNALIER — Aujourd'hui <span id="dailyDate"></span> — Forfaits + Transferts par user</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">
+<input type="date" id="dailyPicker" class="input" style="width:auto;flex:1" onchange="loadDaily(this.value)">
+<button class="btn btn-orange" onclick="loadDaily();document.getElementById('dailyPicker').value=todayKey();">📅 AUJOURD'HUI</button>
+</div>
+<div class="stats">
+<div class="stat"><b id="dTotal" style="color:#0f0">0 F</b><span>CA TOTAL JOUR</span></div>
+<div class="stat"><b id="dForfait" style="color:#ffeb3b">0 F</b><span>FORFAITS JOUR</span></div>
+<div class="stat"><b id="dTransfert" style="color:#0d6efd">0 F</b><span>TRANSFERTS JOUR</span></div>
+<div class="stat"><b id="dUsers">0</b><span>USERS ACTIFS</span></div>
+</div>
+<input id="searchDaily" class="input" placeholder="🔍 Rechercher user journalier..." oninput="renderDaily()">
+<div class="list" id="listDaily" style="margin-top:10px"><div class="empty">Chargement journalier...</div></div>
 </div>
 </div>
 <div id="modal" onclick="if(event.target==this) closeModal()">
@@ -150,12 +166,17 @@ const SERVICES = [
 {key:'echanges', label:'Echanges', path:'commandes_echanges'}
 ];
 let allUsers=[], allCmd=[], currentService=null, processing=new Set();
+let dailyData=[], dailyDateKey=todayKey();
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function switchMain(tab){
 document.getElementById('sec-users').style.display = tab==='users' ? 'block' : 'none';
 document.getElementById('sec-cmd').style.display = tab==='cmd' ? 'block' : 'none';
+document.getElementById('sec-daily').style.display = tab==='daily' ? 'block' : 'none';
 document.getElementById('tab-users').classList.toggle('active', tab==='users');
 document.getElementById('tab-cmd').classList.toggle('active', tab==='cmd');
+document.getElementById('tab-daily').classList.toggle('active', tab==='daily');
 if(tab==='cmd') loadAllCounts();
+if(tab==='daily') loadDaily();
 }
 function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR')+' F'; }
 function loadUsers(){
@@ -270,7 +291,7 @@ if(phone){ db.ref('notifications/'+phone).push({titre:newStatut==='validé'?'✅
 showToast((newStatut==='validé'?'✅ Validé • ':'❌ Annulé • ')+ (item?item.label+' '+fmt(item.montant):''));
 }catch(e){ showToast('❌ '+e.message,true); }
 processing.delete(k);
-loadAllCounts();
+loadAllCounts(); loadDaily();
 }
 function openDetailCmd(path,id){
 const item=allCmd.find(x=>x.path===path && x.id===id); if(!item) return;
@@ -282,7 +303,73 @@ document.getElementById('mActions').innerHTML=`<button class="btn-action btn-val
 document.getElementById('modal').style.display='flex';
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
-firebase.auth().onAuthStateChanged(function(user){ if(user){ loadUsers(); loadAllCounts(); } else { firebase.auth().signInAnonymously(); } });
+// ===== JOURNALIER : FORFAITS + TRANSFERTS =====
+function parseDayKey(raw){
+if(!raw) return '';
+let s=String(raw).trim();
+if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+let m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+let d=new Date(s);
+if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+return '';
+}
+function getUserName(phone){
+let u=allUsers.find(x=>x.phone===phone||x.key===phone);
+return u ? ((u.nom||'')+' '+(u.prenom||'')).trim() : '';
+}
+async function loadDaily(dateStr){
+if(dateStr) dailyDateKey=dateStr; else dailyDateKey=todayKey();
+document.getElementById('dailyDate').innerText='• '+dailyDateKey.split('-').reverse().join('/');
+document.getElementById('dailyPicker').value=dailyDateKey;
+document.getElementById('listDaily').innerHTML='<div class="empty">Calcul journalier...</div>';
+let map={};
+let totF=0, totT=0, totAll=0;
+for(const svc of [{key:'forfaits',path:'commandes_forfaits'},{key:'transferts',path:'commandes_transferts'}]){
+try{
+const snap=await db.ref(svc.path).once('value');
+snap.forEach(ch=>{
+const v=ch.val()||{};
+const day=parseDayKey(v.date||v.created_at||v.createdAt||v.timestamp||ch.key);
+if(day!==dailyDateKey) return;
+const phone=v.client_id||v.phone||v.user||v.client||'Inconnu';
+const montant=Number(v.montant||v.total||v.prix||v.amount||0);
+const statut=((v.statut||v.status||'en cours')+'').toLowerCase();
+const isValide=statut.includes('valid')||statut.includes('succes')||statut.includes('payé')||statut.includes('paye');
+const isAnnule=statut.includes('annul')||statut.includes('rejet')||statut.includes('echec');
+if(!map[phone]) map[phone]={phone, nom:getUserName(phone), f_count:0,f_total:0,f_valide:0,f_encours:0, t_count:0,t_total:0,t_valide:0,t_encours:0, total:0};
+let r=map[phone];
+if(svc.key==='forfaits'){ r.f_count++; r.f_total+=montant; if(isValide) r.f_valide++; else if(!isAnnule) r.f_encours++; totF+=montant; }
+else { r.t_count++; r.t_total+=montant; if(isValide) r.t_valide++; else if(!isAnnule) r.t_encours++; totT+=montant; }
+r.total+=montant; totAll+=montant;
+});
+}catch(e){}
+}
+dailyData=Object.values(map).sort((a,b)=>b.total-a.total);
+document.getElementById('dTotal').innerText=fmt(totAll);
+document.getElementById('dForfait').innerText=fmt(totF);
+document.getElementById('dTransfert').innerText=fmt(totT);
+document.getElementById('dUsers').innerText=dailyData.length;
+document.getElementById('bubble-daily').innerText=dailyData.length;
+document.getElementById('bubble-daily').className=dailyData.length>0?'has':'';
+renderDaily();
+}
+function renderDaily(){
+const q=(document.getElementById('searchDaily')?.value||'').toLowerCase();
+const el=document.getElementById('listDaily');
+let list=dailyData.filter(r=> (r.nom||'').toLowerCase().includes(q)||r.phone.includes(q));
+if(list.length===0){ el.innerHTML='<div class="empty">Aucun forfait / transfert ce jour-là<br><small>Le calcul prend la date de la commande (date / created_at)</small></div>'; return; }
+el.innerHTML='';
+list.forEach((r,idx)=>{
+const div=document.createElement('div'); div.className='card';
+div.innerHTML=`<div class="card-top"><div><div class="user-name">${r.nom||'User'}<small>${r.phone}</small></div><div style="font-size:16px;font-weight:900;color:#0f0;margin-top:4px">Total jour : ${fmt(r.total)}</div></div><span class="badge ok">#${idx+1}</span></div>
+<div class="card-grid two"><div class="kv"><b>📦 FORFAITS</b><span>${r.f_count} cmd • ${fmt(r.f_total)}</span></div><div class="kv"><b>💸 TRANSFERTS</b><span>${r.t_count} cmd • ${fmt(r.t_total)}</span></div></div>
+<div style="display:flex;gap:6px;font-size:11px;color:#aaa;margin-top:2px"><span>✅ Forfait validé: ${r.f_valide}</span><span>⏳ En cours: ${r.f_encours}</span><span>•</span><span>✅ Transfert validé: ${r.t_valide}</span><span>⏳ En cours: ${r.t_encours}</span></div>
+<div style="font-size:11px;color:#ffeb3b;margin-top:8px">Calcul du ${dailyDateKey.split('-').reverse().join('/')} — Forfaits + Transferts</div>`;
+el.appendChild(div);
+});
+}
+firebase.auth().onAuthStateChanged(function(user){ if(user){ loadUsers(); loadAllCounts(); loadDaily(); } else { firebase.auth().signInAnonymously(); } });
 </script>
 </body>
 </html>
