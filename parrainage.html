@@ -1,130 +1,237 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Parrainage - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f5000;color:#fff;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#1e1e1e;padding-bottom:90px;border:5px solid #fff}
-.top{padding:16px;display:flex;justify-content:space-between;align-items:center}
-.card{margin:12px 16px;background:#aaaa;border:10px solid #ff5000;border-radius:22px;padding:18px;text-align:center}
-.code{font-size:32px;font-weight:900;letter-spacing:4px;color:#ffeb3b;background:#000;padding:14px;border-radius:12px;border:2px dashed #ff5000;margin:12px 0}
-.btn{width:100%;border:none;border-radius:100px;padding:14px;font-weight:800;color:#fff;cursor:pointer;margin-top:10px;background:#ff5000}
-.list{padding:16px}.item{background:#000;border-radius:12px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;font-size:12px}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #333}
-.bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer;padding:8px 12px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f2f2f2;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#f6f6f6;padding-bottom:95px}
+.top{padding:16px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#ff5000,#ff7a00);color:#fff;border-radius:0 0 20px 20px}
+.top b{font-size:16px}
+.back{width:38px;height:38px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;font-weight:900}
+.top-profile{text-align:center;padding:14px 16px 0}
+.avatar-wrap{width:76px;height:76px;margin:0 auto;position:relative;cursor:pointer}
+.avatar{width:76px;height:76px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;color:#ff5000;font-weight:900;border:4px solid #fff;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.cam{position:absolute;bottom:0;right:0;width:26px;height:26px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-size:12px}
+.loyalty{background:#fff;margin:12px 16px 0;border-radius:16px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.loyalty b{font-size:13px}
+.stars{font-size:18px;letter-spacing:2px;margin:5px 0}
+.stars span{color:#ddd}
+.stars span.on{color:#ffb400}
+.progress{height:8px;background:#eee;border-radius:999px;overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#ff5000,#ffb400)}
+.loyalty small{font-size:11px;color:#777;display:block;margin-top:6px}
+.card{margin:12px 16px;background:#fff;border-radius:20px;padding:18px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.code{font-size:26px;font-weight:900;letter-spacing:2px;color:#ff5000;background:#fff1e6;padding:13px;border-radius:12px;border:2px dashed #ff5000;margin:12px 0;word-break:break-all}
+.link-box{background:#f6f6f6;border:1px solid #eee;border-radius:12px;padding:11px;text-align:left;font-size:12px;word-break:break-all;color:#333;margin-top:10px}
+.link-box b{color:#111}
+.btn{width:100%;border:none;border-radius:12px;padding:14px;font-weight:900;color:#fff;cursor:pointer;margin-top:8px;background:#ff5000;font-size:14px}
+.btn-green{background:#25D366}
+.btn-dark{background:#111}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin:12px 16px}
+.stat{background:#fff;border-radius:14px;padding:12px 6px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.stat b{display:block;font-size:15px}
+.stat span{font-size:9px;color:#888;font-weight:800}
+.how{background:#fff;border-radius:16px;padding:14px;margin:0 16px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:13px;line-height:1.6;color:#333}
+.list{padding:0 16px}
+.list h3{font-size:14px;margin:16px 0 8px}
+.item{background:#fff;border-radius:14px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 5px rgba(0,0,0,.04)}
+.item b{font-size:13px}
+.item small{color:#888}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;z-index:20}
+.bnav{border:none;background:none;font-size:11px;color:#888;cursor:pointer;padding:8px 12px}
 .bnav.active{background:#ff5000;color:#fff;border-radius:100px;font-weight:700}
-/* SCHEMA ARBRE */
-.tree{padding:12px;background:#000;border-radius:12px;margin-top:10px;text-align:left}
-.tree ul{margin-left:18px;border-left:1px dashed #ff5000;padding-left:12px;list-style:none}
+.tree{padding:12px;background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.05);text-align:left}
+.tree ul{margin-left:16px;border-left:2px dashed #ffccaa;padding-left:12px;list-style:none}
 .tree li{position:relative;padding:6px 0}
-.tree li::before{content:"";position:absolute;left:-13px;top:16px;width:12px;height:1px;background:#ff5000}
-.node{background:#1e1e1e;border:1px solid #ff5000;border-radius:20px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center;font-size:12px}
-.badge{font-size:10px;padding:2px 6px;border-radius:100px;background:#ff5000}
-.lv1.node{border-color:#0f0}.lv2.node{border-color:#ffeb3b}.lv3.node{border-color:#00bfff}
+.tree li::before{content:"";position:absolute;left:-14px;top:17px;width:12px;height:2px;background:#ffccaa}
+.node{background:#fff1e6;border:1px solid #ffccaa;border-radius:999px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center;font-size:12px}
+.node b{color:#111}
+.badge{font-size:10px;padding:2px 7px;border-radius:999px;background:#ff5000;color:#fff;font-weight:900}
+.lv1 .node{border-color:#0f0;background:#e8f5e9}.lv2 .node{border-color:#ffeb3b;background:#fffde7}.lv3 .node{border-color:#00bfff;background:#e3f2fd}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:800;display:none;z-index:999;max-width:90%;text-align:center}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="top"><b>👥 PARRAINAGE</b><button class="bnav" onclick="location.href='index.html'">Retour</button></div>
+<div class="top"><div class="back" onclick="location.href='index.html'">‹</div><b>👥 PARRAINAGE</b><div style="width:38px"></div></div>
+
+<div class="top-profile">
+<div class="avatar-wrap" onclick="location.href='profil.html'"><div class="avatar" id="av">A</div><div class="cam">📷</div></div>
+<b id="nameTop" style="display:block;margin-top:6px;font-size:16px">Chargement...</b>
+<span id="phoneTop" style="font-size:12px;color:#777"></span>
+</div>
+
+<div class="loyalty">
+<div style="display:flex;justify-content:space-between"><b>⭐ Fidélité MAYNE</b><span id="levelBadge" style="font-size:11px;font-weight:900;color:#ff5000;background:#fff1e6;padding:5px 9px;border-radius:999px">NIVEAU 1</span></div>
+<div class="stars" id="stars"></div>
+<div class="progress"><i id="progressBar" style="width:0%"></i></div>
+<small id="loyaltyText">Calcul...</small>
+</div>
 
 <div class="card">
-<div style="font-size:12px;color:#000;font-weight:700">TON CODE PARRAIN UNIQUE</div>
+<div style="font-size:11px;color:#888;font-weight:800;letter-spacing:.5px">TON CODE PARRAIN UNIQUE</div>
 <div class="code" id="code-affiche">...</div>
+<div style="font-size:12px;color:#333">Gain total : <b id="gain" style="color:#0a8a2a">0 F</b></div>
+
+<!-- ✅ LIEN D'INSCRIPTION DIRECT -->
+<div style="text-align:left;margin-top:14px">
+<div style="font-size:12px;font-weight:900">🔗 TON LIEN D'INSCRIPTION DIRECT</div>
+<div class="link-box" id="linkBox">Chargement du lien...</div>
+<p style="font-size:11px;color:#888;margin-top:6px">Quand ton ami clique, ton code est déjà rempli. Il n'a qu'à s'inscrire.</p>
+</div>
+
 <button class="btn" onclick="copierCode()">📋 Copier le code</button>
-<div style="margin-top:10px;font-size:11px;color:#000">Gain: <b id="gain">0F</b> | N1: <b id="c1">0</b> | N2: <b id="c2">0</b> | N3: <b id="c3">0</b></div>
+<button class="btn btn-dark" onclick="copierLien()">🔗 Copier le lien d'inscription</button>
+<button class="btn btn-green" onclick="partagerWhatsApp()">💬 Partager sur WhatsApp</button>
+</div>
+
+<div class="stats">
+<div class="stat"><b id="c1" style="color:#0a8a2a">0</b><span>NIVEAU 1</span></div>
+<div class="stat"><b id="c2" style="color:#e6a800">0</b><span>NIVEAU 2</span></div>
+<div class="stat"><b id="c3" style="color:#0099ff">0</b><span>NIVEAU 3</span></div>
+<div class="stat"><b id="totalFilleuls" style="color:#ff5000">0</b><span>TOTAL</span></div>
+</div>
+
+<div class="how">
+<b>💰 Comment ça marche ?</b><br>
+• <b>N1 (direct) :</b> 500 F par filleul qui recharge<br>
+• <b>N2 :</b> 200 F quand ton filleul parraine<br>
+• <b>N3 :</b> 100 F au 3ème niveau<br>
+• Tes gains vont dans ta <b>Commission</b> automatiquement.
 </div>
 
 <div class="list">
-<h3 style="font-size:14px">📊 Schéma de mon réseau</h3>
+<h3>📊 Schéma de mon réseau</h3>
 <div class="tree" id="tree">Chargement...</div>
-<h3 style="font-size:14px;margin-top:16px">Mes filleuls directs (<span id="nb">0</span>)</h3>
+<h3>Mes filleuls directs (<span id="nb">0</span>)</h3>
 <div id="histo">Aucun filleul</div>
 </div>
 </div>
 
 <div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav active">PARRAINAGE👥</button><button class="bnav" onclick="location.href='transfert.html'">TRANSFERT💸</button></div>
+<div id="toast"></div>
 
 <script>
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 var db=firebase.database();
-var uid="";
+var uid="", inviteLink="";
+var currentUser=null, totalRecharge=0;
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2800); }
+function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR')+' F'; }
+
+// ===== LIEN D'INSCRIPTION DIRECT =====
+// Si ton site est sur GitHub Pages, mets ton vrai domaine ici :
+// Ex: https://mayneilliminet.github.io/mayne/
+function buildInviteLink(){
+  // Prend l'URL actuelle, enlève parrainage.html -> base du site
+  var base = window.location.href.split('parrainage.html')[0].split('?')[0].split('#')[0];
+  // Si tu testes en local, base = file:// -> on utilise le site officiel
+  if(base.indexOf('http')!==0 || base.indexOf('file:')===0){
+    base = 'https://mayneilliminet.github.io/mayne/';
+  }
+  // Page d'inscription : inscription.html?parrain=TON_NUMERO
+  // Si ta page d'inscription s'appelle index.html, change juste ici :
+  inviteLink = base + 'inscription.html?parrain=' + uid;
+  document.getElementById('linkBox').innerHTML = '<b>'+inviteLink+'</b>';
+  return inviteLink;
+}
+function copierCode(){
+  if(!uid) return;
+  navigator.clipboard.writeText(uid).then(()=>toast('✅ Code copié : '+uid));
+}
+function copierLien(){
+  if(!inviteLink) buildInviteLink();
+  navigator.clipboard.writeText(inviteLink).then(()=>toast('✅ Lien copié ! Envoie-le à tes amis'));
+}
+function partagerWhatsApp(){
+  if(!inviteLink) buildInviteLink();
+  var nom = currentUser ? ((currentUser.prenom||'')+' '+(currentUser.nom||'')).trim() : 'MAYNE';
+  var msg = "Salut 👋%0A%0AInscris-toi sur MAYNE avec mon lien, c'est gratuit et tu gagnes des bonus :%0A" + encodeURIComponent(inviteLink) + "%0A%0AMon code : " + uid + "%0A%0A— " + encodeURIComponent(nom) + " via MAYNE ILLIMINET 🧡";
+  window.open('https://wa.me/?text='+msg, '_blank');
+}
+
+function getLevel(t){
+  if(t>=70001) return {level:6,min:70001,bonus:5000,next:null};
+  if(t>=30001) return {level:5,min:30001,bonus:3500,next:70001};
+  if(t>=15001) return {level:4,min:15001,bonus:2500,next:30001};
+  if(t>=5001) return {level:3,min:5001,bonus:1500,next:15001};
+  if(t>=500) return {level:2,min:500,bonus:500,next:5001};
+  return {level:1,min:0,bonus:0,next:500};
+}
+function renderLoyalty(){
+  var L=getLevel(totalRecharge);
+  document.getElementById('levelBadge').textContent='NIVEAU '+L.level+' / 6';
+  var stars=document.getElementById('stars'); stars.innerHTML='';
+  for(var i=1;i<=6;i++){ var s=document.createElement('span'); s.textContent='★'; if(i<=L.level) s.className='on'; stars.appendChild(s); }
+  var pct=100; if(L.next) pct=Math.min(100,Math.round((totalRecharge-L.min)/(L.next-L.min)*100));
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.getElementById('loyaltyText').innerHTML = L.next ? 'Total rechargé : <b>'+fmt(totalRecharge)+'</b> — Plus que <b>'+fmt(L.next-totalRecharge)+'</b> pour Niveau '+(L.level+1) : 'Total rechargé : <b>'+fmt(totalRecharge)+'</b> — Niveau max 6 👑';
+}
+function showAvatar(photo){
+  var av=document.getElementById('av');
+  if(photo) av.innerHTML='<img src="'+photo+'">';
+  else av.textContent=((currentUser&&currentUser.nom||currentUser&&currentUser.prenom||'A')[0]||'A').toUpperCase();
+}
 
 function init(){
   var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||!u.phone){location.href='index.html';return;}
+  currentUser=u;
   uid=u.phone.replace(/\D/g,'');
   document.getElementById('code-affiche').innerText=uid;
+  document.getElementById('nameTop').textContent=((u.prenom||'')+' '+(u.nom||'')).trim()||'Mon Profil';
+  document.getElementById('phoneTop').textContent=u.phone||'';
+  showAvatar(u.photo||localStorage.getItem('mayne_avatar'));
+  buildInviteLink();
 
-  db.ref('clients/'+uid).on('value',s=>{
-    document.getElementById('gain').innerText=(s.val()?.gain_parrainage||0)+'F';
+  db.ref('clients/'+uid).on('value',function(s){
+    var v=s.val()||{};
+    document.getElementById('gain').innerText=fmt(v.gain_parrainage||v.commission||0);
+    var tot=Number(v.total_recharge||0);
+    if(tot===0) tot=Number(v.solde||0)+Number(v.commission||0);
+    totalRecharge=tot; renderLoyalty();
   });
 
-  db.ref('clients').on('value',s=>{
-    let all={};
-    s.forEach(ch=>{ all[ch.key] = {key:ch.key, nom:ch.val().nom||'Sans nom', parrain:(ch.val().parrain||'').replace(/\D/g,'')} });
-
-    // Construire arbre
-    let children = {};
-    Object.values(all).forEach(c=>{
-      if(!c.parrain) return;
-      if(!children[c.parrain]) children[c.parrain]=[];
-      children[c.parrain].push(c);
-    });
-
-    let direct = children[uid]||[];
+  db.ref('clients').on('value',function(s){
+    var all={};
+    s.forEach(function(ch){ all[ch.key]={key:ch.key, nom:((ch.val().prenom||'')+' '+(ch.val().nom||'')).trim()||'Sans nom', prenom:ch.val().prenom||'', parrain:(ch.val().parrain||'').replace(/\D/g,'')} });
+    var children={};
+    Object.values(all).forEach(function(c){ if(!c.parrain) return; if(!children[c.parrain]) children[c.parrain]=[]; children[c.parrain].push(c); });
+    var direct=children[uid]||[];
     document.getElementById('nb').innerText=direct.length;
-    let histo=document.getElementById('histo');
-    histo.innerHTML = direct.length? '' : 'Aucun filleul. Partage ton code!';
-    direct.forEach(d=>{ histo.innerHTML+=`<div class=item><div><b>${d.nom}</b><br><small>${d.key}</small></div><div style="color:#0f0">N1</div></div>`; });
-
-    // Compter niveaux
-    let n2=0,n3=0;
-    direct.forEach(d1=>{
-      let l2 = children[d1.key]||[];
-      n2+=l2.length;
-      l2.forEach(d2=>{
-        let l3 = children[d2.key]||[];
-        n3+=l3.length;
-      });
-    });
+    var histo=document.getElementById('histo');
+    histo.innerHTML = direct.length? '' : 'Aucun filleul. Partage ton lien !';
+    direct.forEach(function(d){ histo.innerHTML+='<div class="item"><div><b>'+d.nom+'</b><br><small>'+d.key+'</small></div><div style="color:#0a8a2a;font-weight:900">N1 • +500 F</div></div>'; });
+    var n2=0,n3=0;
+    direct.forEach(function(d1){ var l2=children[d1.key]||[]; n2+=l2.length; l2.forEach(function(d2){ var l3=children[d2.key]||[]; n3+=l3.length; }); });
     document.getElementById('c1').innerText=direct.length;
     document.getElementById('c2').innerText=n2;
     document.getElementById('c3').innerText=n3;
-
-    // RENDU SCHEMA
-    let treeDiv=document.getElementById('tree');
+    document.getElementById('totalFilleuls').innerText=direct.length+n2+n3;
+    var treeDiv=document.getElementById('tree');
     function renderNode(user, level){
-      let cls = level===1?'lv1':level===2?'lv2':'lv3';
-      let html = `<li class="${cls}"><span class="node"><b>${user.nom}</b> <small>${user.key}</small> <span class="badge">N${level}</span></span>`;
-      let childs = children[user.key]||[];
-      if(childs.length && level<3){
-        html+='<ul>';
-        childs.forEach(ch=>{ html+=renderNode(ch, level+1); });
-        html+='</ul>';
-      }
-      html+='</li>';
-      return html;
+      var cls = level===1?'lv1':level===2?'lv2':'lv3';
+      var html='<li class="'+cls+'"><span class="node"><b>'+user.nom+'</b> <small>'+user.key+'</small> <span class="badge">N'+level+'</span></span>';
+      var childs=children[user.key]||[];
+      if(childs.length && level<3){ html+='<ul>'; childs.forEach(function(ch){ html+=renderNode(ch, level+1); }); html+='</ul>'; }
+      html+='</li>'; return html;
     }
-
-    let html=`<ul><li><span class="node" style="background:#ff5000"><b>TOI</b> ${uid} <span class="badge">ROOT</span></span><ul>`;
-    direct.forEach(d=>{ html+=renderNode(d,1); });
+    var html='<ul><li><span class="node" style="background:#ff5000;color:#fff;border-color:#ff5000"><b>TOI</b> '+uid+' <span class="badge">ROOT</span></span><ul>';
+    direct.forEach(function(d){ html+=renderNode(d,1); });
     html+='</ul></li></ul>';
-    if(direct.length===0) html='<small style="color:#aaa">Pas encore de filleuls. Ton schéma apparaîtra ici.</small>';
+    if(direct.length===0) html='<small style="color:#888">Pas encore de filleuls. Ton schéma apparaîtra ici dès que quelqu\'un s\'inscrit avec ton lien.</small>';
     treeDiv.innerHTML=html;
   });
 }
-
-function copierCode(){navigator.clipboard.writeText(uid);alert('Code copié: '+uid);}
-firebase.auth().onAuthStateChanged(function(user){
-  if(user){ init(); } 
-  else { firebase.auth().signInAnonymously(); }
-});
+firebase.auth().onAuthStateChanged(function(user){ if(user){ init(); } else { firebase.auth().signInAnonymously(); } });
 </script>
 </body>
 </html>
