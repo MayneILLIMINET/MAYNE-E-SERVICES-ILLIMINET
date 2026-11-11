@@ -23,16 +23,15 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 .bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer;padding:8px 12px}
 .bnav.active{background:#ff5000;color:#fff;border-radius:100px;font-weight:700}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:15px}
-.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
-.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
-.btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#ddd;color:#000}.modal-btns{display:flex;gap:8px;margin-top:12px}
+.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:320px;width:100%;text-align:center}
+.modal-btn{flex:1;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:13px}
+.btn-yes{background:#2b8a3e;color:#fff}.btn-no{background:#555;color:#fff}.btn-retour{background:#fff;color:#111;width:100%;margin-top:8px}
+.modal-btns{display:flex;gap:8px;margin-top:12px}
 .prefix-box{display:flex;align-items:center;gap:0;margin:6px 0}
 .prefix{padding:13px 10px;background:#1e1e1e;color:#ffeb3b;font-weight:bold;border:1px solid #fff;border-right:none;border-radius:12px 0 0 12px;min-width:70px;text-align:center}
 .input-with-prefix{border-radius:0 12px 12px 0!important;flex:1}
 .toggle{display:flex;gap:6px;margin-bottom:12px}.toggle button{flex:1}
 .warning-box{background:#1e1e1e;border:2px dashed #ffeb3b;border-radius:12px;padding:12px;margin:10px 0;display:none;text-align:left}
-
-/* PREUVE STYLES */
 .preuve-zone{margin-top:8px;background:#111;border:1px dashed #0f0;border-radius:10px;padding:10px;display:none}
 .preuve-zone.show{display:block}
 .preuve-img-mini{width:100%;max-height:220px;object-fit:contain;border-radius:8px;border:1px solid #333;cursor:pointer}
@@ -41,13 +40,23 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 .viewer{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:10000;padding:10px;flex-direction:column}
 .viewer img{max-width:100%;max-height:85vh;border-radius:10px;border:2px solid #ff5000}
 .viewer .close{margin-top:12px;background:#fff;color:#000;padding:10px 20px;border-radius:20px;font-weight:900;border:none;cursor:pointer}
+.daily-box{background:#000;border:2px solid #ff5000;border-radius:14px;padding:12px;margin:12px 16px;font-size:13px;line-height:1.6}
+.daily-box b{color:#ffeb3b}
+.daily-row{display:flex;justify-content:space-between}
 </style>
 </head>
 <body>
 <div class="app">
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;"></div>
-<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">M</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#aaa"></span></div></div><button class="bnav" onclick="location.href='notifications.html'">NOTIF🔔</button></div>
+<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">M</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#aaa"></span></div></div><button class="bnav" id="btn-notif" onclick="location.href='notifications.html'">NOTIF🔔</button></div>
 <div class="card"><div style="font-size:12px;color:#aaa">Solde Principal</div><div class="montant" id="solde">0.00 XOF</div><div style="font-size:12px;color:#c00">BONUS: <b id="com">0 XOF</b></div></div>
+
+<div class="daily-box" id="daily-box">
+  <div style="text-align:center;font-weight:900;margin-bottom:4px">📊 <span id="daily-date">Aujourd'hui</span></div>
+  <div class="daily-row"><span>📤 Envoi total :</span><b id="daily-envoi">0F + (0F en cours)</b></div>
+  <div class="daily-row"><span>📥 Retrait total :</span><b id="daily-retrait">0F + (0F en cours)</b></div>
+  <div style="font-size:11px;color:#aaa;text-align:center;margin-top:4px" id="daily-hier">Hier : —</div>
+</div>
 
 <div class="card">
 <h3>Transfert /RETRAIT-INTERNE</h3>
@@ -87,15 +96,26 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <div id="transfert-status" style="margin-top:8px;font-size:12px;display:none;text-align:center"></div>
 </div>
 
-<div class="list"><h3>Mon historique Transfert <span style="font-size:10px;color:#0d6efd">📸 = Preuve dispo</span></h3><div id="histo">Aucun transfert</div></div>
+<div class="list" id="histo-block"><h3>Mon historique Transfert <span style="font-size:10px;color:#0d6efd">📸 = Preuve dispo</span></h3><div id="histo">Aucun transfert</div></div>
 </div>
 
 <div class="bottom"><button class="bnav" onclick="location.href='index.html'">🏠 ACCUEIL</button><button class="bnav" onclick="location.href='forfait.html'">FORFAIT📱</button><button class="bnav active">TRANSFERT💸</button><button class="bnav" onclick="location.href='echange.html'">ECHANGE🔄</button></div>
 
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="modal-btn btn-yes" style="margin-top:10px" onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="confirm-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui</button></div></div></div>
 
-<!-- VIEWER IMAGE PLEIN ECRAN -->
+<!-- MODAL 3 BOUTONS : PAS BESOIN = MESSAGERIE / OUI = WHATSAPP / RETOUR = HISTORIQUE -->
+<div id="custom-confirm" class="modal-overlay" onclick="if(event.target===this) doRetour()">
+  <div class="modal-box">
+    <div id="confirm-msg" style="font-size:15px;line-height:1.6"></div>
+    <div class="modal-btns">
+      <button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin<br><small style="font-weight:400;font-size:11px">→ Messagerie</small></button>
+      <button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr<br><small style="font-weight:400;font-size:11px">→ WhatsApp</small></button>
+    </div>
+    <button class="modal-btn btn-retour" onclick="doRetour()">↩ Retour - Voir mon statut dans l'historique</button>
+    <div style="font-size:11px;color:#aaa;margin-top:8px">Ou clique dans le vide pour revenir</div>
+  </div>
+</div>
+
 <div id="viewer" class="viewer" onclick="closeViewer()">
   <img id="viewerImg" src="">
   <div id="viewerInfo" style="color:#fff;font-size:12px;margin-top:8px;text-align:center"></div>
@@ -108,25 +128,81 @@ if(!firebase.apps.length)firebase.initializeApp(cfg);
 var db=firebase.database();
 var uid,userNom='Client',solde=0,_lock=false,confirmCallback=null,etapeEnvoi=1,etapeRetrait=1;
 var ADMIN_UID="0158612131";
+var ADMIN_NOM="AYIZAN";
+var WHATSAPP_ADMIN="2290159415617";
 var ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+var lastCommandeTexte='';
+var lastCommandeType='';
 
 function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
-function showConfirm(m,cb){confirmCallback=cb;document.getElementById('confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
+function showConfirm(m,cb){confirmCallback=cb;document.getElementById('confirm-msg').innerHTML=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
-function afficherSucces(id){const t=document.getElementById('global-notif');t.innerText='✅ commande envoyée avec succès!';t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText='✅ Envoyé';e.style.display='block';}}
-function proposerSupport(s,d,cb){let det='';for(const[k,v]of Object.entries(d)){det+=`${k}: ${v}\n`; }const txt=`🔔 SERVICE : ${s}\n👤 ${userNom}\n${det}`;showConfirm('Contacter le personnel sur WhatsApp?',y=>{if(y)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
+function doRetour(){
+  document.getElementById('custom-confirm').style.display='none';
+  confirmCallback=null;
+  afficherSucces('transfert-status');
+  var h=document.getElementById('histo-block');
+  if(h) h.scrollIntoView({behavior:'smooth'});
+}
+function afficherSucces(id){const t=document.getElementById('global-notif');t.innerText='✅ commande envoyée avec succès!';t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText='✅ Envoyé - Suis ton statut dans l\'historique ci-dessous';e.style.display='block';}}
 async function pushJS(destId,titre,msg){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId,titre,message:msg})});}catch(e){}}
 function updateIndicatif(){document.getElementById('prefix-affiche').innerText='+'+document.getElementById('transfert-pays').value;}
 function switchMode(m){document.getElementById('tab-envoi').style.background=m==='envoi'?'#ff5000':'#1e1e1e';document.getElementById('tab-retrait').style.background=m==='retrait'?'#ff5000':'#1e1e1e';document.getElementById('zone-envoi').style.display=m==='envoi'?'block':'none';document.getElementById('zone-retrait').style.display=m==='retrait'?'block':'none';}
-
-function openViewer(url, info){
-  document.getElementById('viewerImg').src=url;
-  document.getElementById('viewerInfo').innerText=info||'';
-  document.getElementById('viewer').style.display='flex';
-}
+function openViewer(url, info){document.getElementById('viewerImg').src=url;document.getElementById('viewerInfo').innerText=info||'';document.getElementById('viewer').style.display='flex';}
 function closeViewer(){document.getElementById('viewer').style.display='none';}
-
+function dayKeyFromTs(ts){ var d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayKey(){ return dayKeyFromTs(Date.now()); }
+function isToday(v){
+  if(v.createdAt) return dayKeyFromTs(v.createdAt)===todayKey();
+  if(v.date){
+    var m=String(v.date).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m){ var k=m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'); return k===todayKey(); }
+  }
+  return false;
+}
+function isEnCours(v){ return String(v.statut||'').toLowerCase().includes('cours'); }
+function isValide(v){ var s=String(v.statut||'').toLowerCase(); return s.includes('valid')||s.includes('trait')||s.includes('termin')||s.includes('fait'); }
+function checkDailyReset(totauxAujourdhui){
+  var lastDay=localStorage.getItem('mayne_daily_last_day');
+  var today=todayKey();
+  if(lastDay && lastDay!==today){
+    var hier=JSON.parse(localStorage.getItem('mayne_daily_'+lastDay)||'null');
+    if(hier){
+      localStorage.setItem('mayne_daily_hier', JSON.stringify({day:lastDay, envoi:hier.envoi, envoiCours:hier.envoiCours, retrait:hier.retrait, retraitCours:hier.retraitCours}));
+      db.ref('daily_totals/'+lastDay).set({day:lastDay, envoi:hier.envoi, envoi_en_cours:hier.envoiCours, retrait:hier.retrait, retrait_en_cours:hier.retraitCours, client_id:uid, client_nom:userNom, archive_le:Date.now()});
+    }
+  }
+  localStorage.setItem('mayne_daily_last_day', today);
+  localStorage.setItem('mayne_daily_'+today, JSON.stringify(totauxAujourdhui));
+  var hierData=JSON.parse(localStorage.getItem('mayne_daily_hier')||'null');
+  var hierEl=document.getElementById('daily-hier');
+  if(hierData && hierEl) hierEl.textContent='Hier ('+hierData.day+') : Envoi '+hierData.envoi+'F + ('+hierData.envoiCours+'F en cours) / Retrait '+hierData.retrait+'F + ('+hierData.retraitCours+'F en cours)';
+  var dateEl=document.getElementById('daily-date');
+  if(dateEl) dateEl.textContent='Aujourd\'hui - '+new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+}
+function updateDailyUI(envoi, envoiCours, retrait, retraitCours){
+  document.getElementById('daily-envoi').textContent=envoi+'F + ('+envoiCours+'F en cours)';
+  document.getElementById('daily-retrait').textContent=retrait+'F + ('+retraitCours+'F en cours)';
+  checkDailyReset({envoi:envoi, envoiCours:envoiCours, retrait:retrait, retraitCours:retraitCours});
+}
+function envoyerVersMessagerieAdmin(texte, choix){
+  var texteFinal = texte + '\n━━━━━━━━━━━━━━\n💬 Réponse personnel : '+choix;
+  var convId=[uid,ADMIN_UID].sort().join('_');
+  localStorage.setItem('mayne_pending_admin_msg', JSON.stringify({convId:convId, adminId:ADMIN_UID, adminNom:ADMIN_NOM, texte:texteFinal}));
+  location.href='messagerie.html?conv='+convId+'&to='+ADMIN_UID;
+}
+function proposerSupportMessagerie(){
+  showConfirm('Contacter le personnel ?<br><span style="font-size:13px;color:#aaa">Pas besoin = <b style="color:#fff">Messagerie</b><br>Oui bien sûr = <b style="color:#25D366">WhatsApp</b></span>', function(oui){
+    if(oui){
+      var txt = lastCommandeTexte + '\n━━━━━━━━━━━━━━\n💬 Réponse personnel : Oui bien sûr → WhatsApp';
+      window.open('https://wa.me/'+WHATSAPP_ADMIN+'?text='+encodeURIComponent(txt),'_blank');
+      afficherSucces('transfert-status');
+    }else{
+      envoyerVersMessagerieAdmin(lastCommandeTexte, 'Pas besoin → Messagerie');
+    }
+  });
+}
 async function init(){
   var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||!u.phone){location.href='index.html';return;}
@@ -134,46 +210,54 @@ async function init(){
   document.getElementById('uname').textContent=userNom;document.getElementById('uemail').textContent=u.phone;document.getElementById('av').textContent=(userNom[0]||'M').toUpperCase();
   updateIndicatif();
   db.ref('clients/'+uid).on('value',s=>{var d=s.val()||{};solde=+d.solde||0;document.getElementById('solde').textContent=solde.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';});
-  
+  if(uid===ADMIN_UID){
+    db.ref('commandes_transferts').orderByChild('createdAt').limitToLast(1).on('child_added', snap=>{
+      var v=snap.val()||{};
+      if(!v.createdAt) return;
+      if(Date.now() - v.createdAt > 60000) return;
+      var t=document.getElementById('global-notif');
+      t.innerText='🔔 NOUVELLE COMMANDE '+v.type+' '+v.montant+'F - '+v.client_nom;
+      t.style.display='block';
+      setTimeout(()=>{ t.style.display='none'; }, 20000);
+      document.title='🔔 NOUVELLE COMMANDE - MAYNE';
+    });
+    db.ref('commandes_transferts').on('value', s=>{
+      var n=0;
+      s.forEach(ch=>{ if(String(ch.val().statut||'').toLowerCase().includes('cours')) n++; });
+      var btn=document.getElementById('btn-notif');
+      if(btn) btn.innerText = n>0 ? 'NOTIF🔔 ('+n+')' : 'NOTIF🔔';
+    });
+  }
   db.ref('commandes_transferts').orderByChild('client_id').equalTo(uid).on('value',s=>{
     var c=document.getElementById('histo');
-    if(!s.exists()){c.innerHTML='Aucun transfert';return;}
+    var envoi=0,envoiCours=0,retrait=0,retraitCours=0;
+    if(!s.exists()){c.innerHTML='Aucun transfert';updateDailyUI(0,0,0,0);return;}
     var h='';
     s.forEach(ch=>{
       var v=ch.val();
-      var col='#ffbb00';if((v.statut||'').toLowerCase().includes('valid'))col='#28a745';if((v.statut||'').toLowerCase().includes('annul'))col='#dc3545';
+      if(isToday(v)){
+        var montant=Number(v.montant||0);
+        if((v.type||'').toLowerCase().includes('retrait')){
+          if(isEnCours(v)) retraitCours+=montant; else retrait+=montant;
+        }else{
+          if(isEnCours(v)) envoiCours+=montant; else envoi+=montant;
+        }
+      }
+      var col='#ffbb00';if(isValide(v))col='#28a745';if((v.statut||'').toLowerCase().includes('annul'))col='#dc3545';
       var preuveUrl = v.preuve_url || v.preuve_base64 || '';
       var hasPreuve = !!preuveUrl;
       var preuveHtml = '';
       if(hasPreuve){
-        preuveHtml = `
-          <div class="preuve-zone show">
-            <div style="font-size:10px;color:#0f0;font-weight:800;margin-bottom:4px">✅ PREUVE D'ENVOI DISPONIBLE ${v.preuve_date_fr?' - '+v.preuve_date_fr:''}</div>
-            <img src="${preuveUrl}" class="preuve-img-mini" onclick="openViewer('${preuveUrl}','Transfert ${v.montant}F - ${v.date}')" onerror="this.style.display='none'">
-            <button class="btn-voir-preuve" onclick="openViewer('${preuveUrl}','Transfert ${v.montant}F - ${v.date}')">📸 VOIR PREUVE EN GRAND</button>
-            <a href="${preuveUrl}" download="preuve_${ch.key}.jpg" target="_blank" style="display:block;text-align:center;font-size:9px;color:#0d6efd;margin-top:4px">⬇ Télécharger la preuve</a>
-          </div>
-        `;
+        preuveHtml = `<div class="preuve-zone show"><div style="font-size:10px;color:#0f0;font-weight:800;margin-bottom:4px">✅ PREUVE D'ENVOI DISPONIBLE ${v.preuve_date_fr?' - '+v.preuve_date_fr:''}</div><img src="${preuveUrl}" class="preuve-img-mini" onclick="openViewer('${preuveUrl}','Transfert ${v.montant}F - ${v.date}')" onerror="this.style.display='none'"><button class="btn-voir-preuve" onclick="openViewer('${preuveUrl}','Transfert ${v.montant}F - ${v.date}')">📸 VOIR PREUVE EN GRAND</button><a href="${preuveUrl}" download="preuve_${ch.key}.jpg" target="_blank" style="display:block;text-align:center;font-size:9px;color:#0d6efd;margin-top:4px">⬇ Télécharger la preuve</a></div>`;
       } else {
-        if((v.statut||'').toLowerCase().includes('valid')){
-          preuveHtml = `<div style="font-size:9px;color:#aaa;margin-top:6px">⏳ Preuve en cours d'envoi par l'admin...</div>`;
-        } else {
-          preuveHtml = `<div style="font-size:9px;color:#666;margin-top:6px">⌛ En attente de validation</div>`;
-        }
+        if(isValide(v)){ preuveHtml = `<div style="font-size:9px;color:#aaa;margin-top:6px">⏳ Preuve en cours d'envoi par l'admin...</div>`; } else { preuveHtml = `<div style="font-size:9px;color:#666;margin-top:6px">⌛ En attente de validation</div>`; }
       }
-
-      h=`<div class="item" style="border-left-color:${col}">
-        <div style="display:flex;justify-content:space-between;width:100%">
-          <div><b>${v.type||'Transfert'} - ${v.pays||v.numero_decaissement||''}</b> ${hasPreuve?'<span class="badge-preuve">📸 PREUVE</span>':''}<br><small>${v.numero_complet||v.numero_decaissement} - ${v.date}</small></div>
-          <div style="text-align:right"><b>${v.montant}F</b><br><span style="background:${col};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${v.statut}</span></div>
-        </div>
-        ${preuveHtml}
-      </div>`+h;
+      h=`<div class="item" style="border-left-color:${col}"><div style="display:flex;justify-content:space-between;width:100%"><div><b>${v.type||'Transfert'} - ${v.pays||v.numero_decaissement||''}</b> ${hasPreuve?'<span class="badge-preuve">📸 PREUVE</span>':''}<br><small>${v.numero_complet||v.numero_decaissement} - ${v.date}</small></div><div style="text-align:right"><b>${v.montant}F</b><br><span style="background:${col};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${v.statut}</span></div></div>${preuveHtml}</div>`+h;
     });
     c.innerHTML=h;
+    updateDailyUI(envoi,envoiCours,retrait,retraitCours);
   });
 }
-
 function handleEnvoi(){
   if(etapeEnvoi===1){
     var sel=document.getElementById('transfert-pays'); var pays=sel.options[sel.selectedIndex].getAttribute('data-pays');
@@ -190,16 +274,31 @@ async function executerEnvoi(){
   try{
     await db.ref('clients/'+uid).update({solde:solde-montant});
     let numeroComplet='+'+indicatif+numeroSans;
-    let full={type:'Envoi',client_id:uid,client_nom:userNom,pays:paysNom,pays_code:indicatif,reseau:reseau,numero_complet:numeroComplet,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
+    let full={type:'Envoi',client_id:uid,client_nom:userNom,pays:paysNom,pays_code:indicatif,reseau:reseau,numero_complet:numeroComplet,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
-    let msgEnvoi = `TRANSFERT ENVOI\nCLIENT: ${uid} (${userNom})\nNUM BENEF: ${numeroComplet}\nMONTANT: ${montant}F\nMOTIF: ${motif||'Facultatif'}\nWHATSAPP: ${wa||'Facultatif'}`;
-    pushJS(ADMIN_UID,"ENVOI "+montant+"F - "+uid,msgEnvoi);
-    proposerSupport('transfert',full,()=>afficherSucces('transfert-status'));
+    pushJS(ADMIN_UID, "ENVOI "+montant+"F - "+uid, "TRANSFERT ENVOI\nCLIENT: "+uid+" ("+userNom+")\nNUM BENEF: "+numeroComplet+"\nMONTANT: "+montant+"F\nMOTIF: "+(motif||'Facultatif'));
+    lastCommandeType='Envoi';
+    lastCommandeTexte = '🆕 NOUVELLE COMMANDE - TRANSFERT ENVOI\n'
+      + '━━━━━━━━━━━━━━\n'
+      + '👤 Client : '+userNom+'\n'
+      + '📞 N° client : '+uid+'\n'
+      + '🕐 Date : '+full.date+'\n'
+      + '━━━━━━━━━━━━━━\n'
+      + '🌍 Pays : '+paysNom+'\n'
+      + '📱 Réseau : '+reseau+'\n'
+      + '📞 N° bénéficiaire : '+numeroComplet+'\n'
+      + '💰 Montant : '+montant+'F\n'
+      + '📝 Motif : '+(motif||'Non précisé')+'\n'
+      + '💬 WhatsApp : '+(wa||'Non précisé')+'\n'
+      + '📌 Statut : en cours\n'
+      + '━━━━━━━━━━━━━━\n'
+      + 'Merci de traiter ma commande 🙏';
     document.getElementById('transfert-numero').value='';document.getElementById('transfert-montant').value='';document.getElementById('transfert-motif').value='';document.getElementById('transfert-wa').value='';
     document.getElementById('warning-envoi').style.display='none';document.getElementById('btn-envoi').innerText='Continuer';document.getElementById('btn-envoi').className='btn btn-envoi';etapeEnvoi=1;
-  }catch(e){showAlert(e.message);}finally{_lock=false;}
+    _lock=false;
+    proposerSupportMessagerie();
+  }catch(e){showAlert(e.message);_lock=false;}
 }
-
 function handleRetrait(){
   if(etapeRetrait===1){
     var num=document.getElementById('retrait-numero').value.trim(); var m=Number(document.getElementById('retrait-montant').value);
@@ -212,19 +311,31 @@ async function executerRetrait(){
   var num=document.getElementById('retrait-numero').value.trim(); var montant=Number(document.getElementById('retrait-montant').value); var motif=document.getElementById('retrait-motif').value.trim(); var wa=document.getElementById('retrait-wa').value.trim();
   if(_lock) return; _lock=true; document.getElementById('btn-retrait').innerText='Traitement...';
   try{
-    let full={type:'Retrait',client_id:uid,client_nom:userNom,numero_decaissement:num,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
+    let full={type:'Retrait',client_id:uid,client_nom:userNom,numero_decaissement:num,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
-    let msgRetrait = `TRANSFERT RETRAIT\nCLIENT: ${uid} (${userNom})\nNUM DECAISSEMENT: ${num}\nMONTANT: ${montant}F\nMOTIF: ${motif||'Facultatif'}\nWHATSAPP: ${wa||'Facultatif'}`;
-    pushJS(ADMIN_UID,"RETRAIT "+montant+"F - "+uid,msgRetrait);
-    proposerSupport('transfert_retrait',full,()=>afficherSucces('transfert-status'));
+    pushJS(ADMIN_UID, "RETRAIT "+montant+"F - "+uid, "TRANSFERT RETRAIT\nCLIENT: "+uid+" ("+userNom+")\nNUM DECAISSEMENT: "+num+"\nMONTANT: "+montant+"F\nMOTIF: "+(motif||'Facultatif'));
+    lastCommandeType='Retrait';
+    lastCommandeTexte = '🆕 NOUVELLE COMMANDE - TRANSFERT RETRAIT\n'
+      + '━━━━━━━━━━━━━━\n'
+      + '👤 Client : '+userNom+'\n'
+      + '📞 N° client : '+uid+'\n'
+      + '🕐 Date : '+full.date+'\n'
+      + '━━━━━━━━━━━━━━\n'
+      + '💸 Type : Retrait\n'
+      + '📞 N° décaissement : '+num+'\n'
+      + '💰 Montant : '+montant+'F\n'
+      + '📝 Motif : '+(motif||'Non précisé')+'\n'
+      + '💬 WhatsApp : '+(wa||'Non précisé')+'\n'
+      + '📌 Statut : en cours\n'
+      + '━━━━━━━━━━━━━━\n'
+      + 'Merci de traiter mon retrait 🙏';
     document.getElementById('retrait-numero').value='';document.getElementById('retrait-montant').value='';document.getElementById('retrait-motif').value='';document.getElementById('retrait-wa').value='';
     document.getElementById('warning-retrait').style.display='none';document.getElementById('btn-retrait').innerText='Continuer';document.getElementById('btn-retrait').className='btn btn-retrait';etapeRetrait=1;
-  }catch(e){showAlert(e.message);}finally{_lock=false;}
+    _lock=false;
+    proposerSupportMessagerie();
+  }catch(e){showAlert(e.message);_lock=false;}
 }
-firebase.auth().onAuthStateChanged(function(user){
-  if(user){ init(); } 
-  else { firebase.auth().signInAnonymously(); }
-});
+firebase.auth().onAuthStateChanged(function(user){ if(user){ init(); } else { firebase.auth().signInAnonymously(); } });
 </script>
 </body>
 </html>
