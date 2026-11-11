@@ -5,46 +5,91 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KYC - MAYNE</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#fdf6ec;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#fdf6ec;padding-bottom:20px}
-.head{display:flex;justify-content:space-between;align-items:center;padding:18px 16px;position:sticky;top:0;background:#fdf6ec;z-index:10}
-.head b{font-size:18px}
-.close{width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer}
-.illu{width:100%;height:200px;display:flex;align-items:center;justify-content:center;font-size:120px;background:radial-gradient(circle,#e8f5d8 0%, transparent 70%)}
-.step{padding:20px 16px}
-.step h1{font-size:26px;text-align:center;margin:10px 0}
-.step p{color:#888;text-align:center;font-size:14px;line-height:1.5}
-.input{width:100%;padding:14px;border:1px solid #ddd;border-radius:14px;margin-top:10px;font-size:15px;background:#fff}
-.label{font-size:12px;font-weight:700;margin-top:14px;display:block}
-.label span{color:red}
-.btn{width:100%;background:#0f3d2e;color:#fff;border:none;border-radius:100px;padding:16px;font-weight:800;font-size:16px;margin-top:22px;cursor:pointer}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f2f2f2;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#f6f6f6;padding-bottom:20px}
+.head{display:flex;justify-content:space-between;align-items:center;padding:16px;position:sticky;top:0;background:linear-gradient(135deg,#ff5000,#ff7a00);z-index:10;color:#fff;border-radius:0 0 20px 20px}
+.head b{font-size:16px}
+.back,.close{width:38px;height:38px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;font-weight:900}
+.top-profile{text-align:center;padding:14px 16px 0}
+.avatar-wrap{width:76px;height:76px;margin:0 auto;position:relative;cursor:pointer}
+.avatar{width:76px;height:76px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;color:#ff5000;font-weight:900;border:4px solid #fff;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.cam{position:absolute;bottom:0;right:0;width:26px;height:26px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-size:12px}
+.loyalty{background:#fff;margin:12px 16px 0;border-radius:16px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.loyalty b{font-size:13px}
+.stars{font-size:18px;letter-spacing:2px;margin:5px 0}
+.stars span{color:#ddd}
+.stars span.on{color:#ffb400}
+.progress{height:8px;background:#eee;border-radius:999px;overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#ff5000,#ffb400)}
+.loyalty small{font-size:11px;color:#777;display:block;margin-top:6px}
+.steps-bar{display:flex;gap:6px;padding:14px 16px 0}
+.step-dot{flex:1;height:6px;border-radius:999px;background:#e5e5e5}
+.step-dot.on{background:#ff5000}
+.step-dot-txt{display:flex;justify-content:space-between;padding:6px 16px 0;font-size:10px;font-weight:800;color:#999}
+.step-dot-txt span.on{color:#ff5000}
+.step{padding:16px}
+.step h1{font-size:24px;text-align:left}
+.step p{color:#666;font-size:13px;line-height:1.5;margin:8px 0}
+.illu{width:100%;height:140px;display:flex;align-items:center;justify-content:center;font-size:90px;background:radial-gradient(circle,#fff1e6 0%,transparent 70%);border-radius:16px}
+.input{width:100%;padding:13px 14px;border:1px solid #e5e5e5;border-radius:12px;margin-top:8px;font-size:14px;background:#fff;outline:none}
+.input:focus{border-color:#ff5000}
+.label{font-size:11px;font-weight:800;margin-top:13px;display:block;text-transform:uppercase;letter-spacing:.5px;color:#888}
+.label span{color:#ff5000}
+.btn{width:100%;background:#ff5000;color:#fff;border:none;border-radius:12px;padding:15px;font-weight:900;font-size:14px;margin-top:18px;cursor:pointer}
+.btn:disabled{opacity:.5}
+.btn-sec{width:100%;background:#fff;border:1px solid #ddd;border-radius:12px;padding:13px;font-weight:800;margin-top:8px;cursor:pointer}
 .hidden{display:none}
-.verified-badge{background:#d6f78c;color:#0f3d2e;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;display:inline-block;margin:10px auto}
-/* MODAL MASQUE URL */
+.verified-badge{background:#d6f78c;color:#0f3d2e;padding:8px 14px;border-radius:999px;font-weight:900;font-size:12px;display:inline-block;margin:10px auto}
+.warn{background:#fdecea;border:1px solid #ffc7c7;padding:11px;border-radius:12px;font-size:13px;color:#c0392b;font-weight:700;margin-top:12px}
+.info{background:#fff8e1;border:1px solid #ffe9a8;padding:11px;border-radius:12px;font-size:13px;margin-top:12px}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
-.modal-box{background:#fff;color:#000;padding:22px;border-radius:18px;max-width:320px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.modal-box{background:#fff;color:#000;padding:22px;border-radius:18px;max-width:340px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:800;display:none;z-index:9999;max-width:90%;text-align:center}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="head">
-<div style="width:40px;height:40px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="location.href='epargne.html'">‹</div>
+<div class="back" onclick="location.href='epargne.html'">‹</div>
 <b id="title">Vérifier mon compte</b>
 <div class="close" onclick="location.href='epargne.html'">✕</div>
 </div>
 
+<div class="top-profile">
+<div class="avatar-wrap" onclick="location.href='profil.html'">
+<div class="avatar" id="av">A</div><div class="cam">📷</div>
+</div>
+<b id="nameTop" style="display:block;margin-top:6px;font-size:16px">Chargement...</b>
+<span id="phoneTop" style="font-size:12px;color:#777"></span>
+</div>
+
+<div class="loyalty">
+<div style="display:flex;justify-content:space-between"><b>⭐ Fidélité MAYNE</b><span id="levelBadge" style="font-size:11px;font-weight:900;color:#ff5000;background:#fff1e6;padding:5px 9px;border-radius:999px">NIVEAU 1</span></div>
+<div class="stars" id="stars"></div>
+<div class="progress"><i id="progressBar" style="width:0%"></i></div>
+<small id="loyaltyText">Calcul...</small>
+</div>
+
+<div class="steps-bar"><div class="step-dot on" id="d1"></div><div class="step-dot" id="d2"></div><div class="step-dot" id="d3"></div></div>
+<div class="step-dot-txt"><span id="t1" class="on">1 • Infos</span><span id="t2">2 • Photo</span><span id="t3">3 • Envoyé</span></div>
+
 <div class="step" id="s1">
 <div class="illu">🪪</div>
 <h1>Vérification d'identité</h1>
-<p>Photo de pièce + N° CNI/NPI obligatoires avant retrait.</p>
-<button class="btn" onclick="go(2)">Continuer</button>
+<p>Photo de pièce + N° CNI / NPI obligatoires avant retrait. C'est pour protéger ton argent.</p>
+<div class="info">🔒 Tes infos restent privées. Seul l'admin MAYNE les voit.</div>
+<div class="warn" id="pendingWarn" style="display:none">⏳ Tu as déjà une demande en cours. Attends la validation (24h max).</div>
+<button class="btn" onclick="go(2)">Continuer →</button>
+<button class="btn-sec" onclick="location.href='epargne.html'">Plus tard</button>
 </div>
 
 <div class="step hidden" id="s2">
-<h1 style="text-align:left;font-size:24px">Tes informations</h1>
-<label class="label">Nom <span>*</span></label><input id="nom" class="input" placeholder="">
-<label class="label">Prénom <span>*</span></label><input id="prenom" class="input" placeholder="">
+<h1>Tes informations</h1>
+<p>Vérifie que ça correspond à ta pièce d'identité.</p>
+<label class="label">Nom <span>*</span></label><input id="nom" class="input" placeholder="Ayizan">
+<label class="label">Prénom <span>*</span></label><input id="prenom" class="input" placeholder="Marius">
 <label class="label">Type de pièce <span>*</span></label>
 <select id="piece_type" class="input">
 <option value="">-- Choisis --</option>
@@ -53,120 +98,184 @@ body{background:#fdf6ec;display:flex;justify-content:center}
 <option value="Passeport">Passeport</option>
 <option value="Carte séjour">Carte de séjour</option>
 </select>
-<label class="label">Numéro CNI/NPI <span>*</span></label><input id="numero_piece" class="input" placeholder="Ex: 1234567890">
+<label class="label">Numéro CNI / NPI <span>*</span></label><input id="numero_piece" class="input" placeholder="Ex: 1234567890">
 <label class="label">Date naissance <span>*</span></label><input id="dob" type="date" class="input">
 <label class="label">Genre <span>*</span></label><select id="genre" class="input"><option>Masculin</option><option>Féminin</option></select>
-<label class="label">Pays <span>*</span></label><select id="pays" class="input"><option>Benin</option><option>Togo</option><option>Nigeria</option><option>Côte d'Ivoire</option></select>
-<button class="btn" onclick="validerEtape2()">Suivant</button>
+<label class="label">Pays <span>*</span></label><select id="pays" class="input"><option>Bénin</option><option>Togo</option><option>Nigeria</option><option>Côte d'Ivoire</option><option>Ghana</option><option>Niger</option><option>Burkina Faso</option></select>
+<button class="btn" onclick="validerEtape2()">Suivant →</button>
+<button class="btn-sec" onclick="go(1)">← Retour</button>
 </div>
 
 <div class="step hidden" id="s3">
 <div class="illu">📸</div>
 <h1>Photo de ta pièce</h1>
-<p style="color:#c00;font-weight:bold">⚠️ SANS PHOTO = REJETE</p>
-<input type="file" id="file" accept="image/*" class="input" style="border:2px solid #c00">
-<div id="preview" style="margin-top:10px;display:none"><img id="prev-img" style="width:100%;border-radius:12px"></div>
-<button class="btn" id="btn-kyc" onclick="validerKYC()">Envoyer pour être traiter...</button>
-<p id="kyc-status" style="margin-top:10px;text-align:center;font-weight:bold;color:#c00"></p>
+<p>Prends ta pièce en photo, bien lisible, pas floue.</p>
+<div class="warn">⚠️ SANS PHOTO CLAIRE = REJETÉ</div>
+<input type="file" id="file" accept="image/*" class="input" style="border:2px solid #ff5000">
+<div id="preview" style="margin-top:10px;display:none"><img id="prev-img" style="width:100%;border-radius:12px"><button class="btn-sec" onclick="retakePhoto()">↻ Reprendre la photo</button></div>
+<button class="btn" id="btn-kyc" onclick="validerKYC()">Envoyer pour vérification ✅</button>
+<p id="kyc-status" style="margin-top:10px;text-align:center;font-weight:800;color:#c00"></p>
 </div>
 
-<div class="step hidden" id="s4" style="text-align:center;padding-top:40px">
+<div class="step hidden" id="s4" style="text-align:center;padding-top:30px">
 <div style="font-size:70px">✅</div>
-<h1 id="s4-title">Demande envoyée!</h1>
-<p id="s4-msg">Vérification en cours 24h.</p>
+<h1 id="s4-title">Demande envoyée !</h1>
+<p id="s4-msg">Vérification en cours, 24h max. Tu recevras une notification.</p>
 <div id="badge-verif" style="display:none"><span class="verified-badge">✅ Déjà vérifié</span><p style="margin-top:10px;color:#000">Ton compte est déjà vérifié.</p></div>
+<div id="badge-pending" style="display:none"><span class="verified-badge" style="background:#fff8e1;color:#f57f17">⏳ En attente de validation</span><p style="margin-top:10px">Ton dossier est chez l'admin.</p></div>
 <button class="btn" onclick="location.href='epargne.html'">Retour à l'épargne</button>
+<button class="btn-sec" onclick="location.href='compte.html'">Voir Mon Compte</button>
 </div>
 </div>
 
 <div id="custom-alert" class="modal-overlay" onclick="if(event.target===this)hideAlert()"><div class="modal-box"><div id="alert-msg" style="font-size:15px;line-height:1.4"></div><button class="btn" style="margin-top:16px" onclick="hideAlert()">OK</button></div></div>
+<div id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
-const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
+const cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 const db=firebase.database();
 const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
 
-let uid=JSON.parse(localStorage.getItem('mayne_current_user')||'null')?.phone;
-let currentUserNom=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.nom || uid;
-
+// ✅ CORRIGÉ : clé propre sans +229, espaces
+let rawUser=JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
+let uid=(rawUser.phone||'').replace(/[^0-9]/g,'');
+let currentUserNom=(rawUser.prenom||'')+' '+(rawUser.nom||'')||uid;
+let totalRecharge=0;
+function toast(m){ let t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2800); }
+function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR')+' F'; }
 function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
-function go(n){ document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden')); document.getElementById('s'+n).classList.remove('hidden'); }
+function go(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('s'+n).classList.remove('hidden');
+  ['d1','d2','d3'].forEach((id,i)=> document.getElementById(id).classList.toggle('on', i < n));
+  ['t1','t2','t3'].forEach((id,i)=> document.getElementById(id).classList.toggle('on', i < n));
+  document.getElementById('title').textContent = n===1?'Vérifier mon compte': n===2?'Tes informations': n===3?'Photo de ta pièce':'Demande envoyée';
+  window.scrollTo(0,0);
+}
+function retakePhoto(){ document.getElementById('file').value=''; window._kyc_b64=null; document.getElementById('preview').style.display='none'; }
 
 document.getElementById('file')?.addEventListener('change', e=>{
   const f=e.target.files[0]; if(!f) return;
+  if(f.size>4000000){ showAlert('❌ Photo trop lourde, choisis < 4 Mo'); e.target.value=''; return; }
   const r=new FileReader();
   r.onload=ev=>{ document.getElementById('prev-img').src=ev.target.result; document.getElementById('preview').style.display='block'; window._kyc_b64=ev.target.result; };
   r.readAsDataURL(f);
 });
 
 function validerEtape2(){
-  if(!nom.value||!prenom.value||!piece_type.value||!numero_piece.value||!dob.value){
-    showAlert('Remplis: Nom, Prénom, Type pièce, Numéro CNI/NPI, Date naissance'); return;
-  }
+  let nom=document.getElementById('nom').value.trim();
+  let prenom=document.getElementById('prenom').value.trim();
+  let type=document.getElementById('piece_type').value;
+  let num=document.getElementById('numero_piece').value.trim();
+  let dob=document.getElementById('dob').value;
+  if(!nom||!prenom||!type||!num||!dob){ showAlert('❌ Remplis : Nom, Prénom, Type pièce, Numéro CNI/NPI, Date naissance'); return; }
+  if(num.length<5){ showAlert('❌ Numéro de pièce trop court'); return; }
+  let age=(new Date()-new Date(dob))/(1000*60*60*24*365);
+  if(age<16){ showAlert('❌ Tu dois avoir au moins 16 ans'); return; }
   go(3);
 }
 
-window.addEventListener('DOMContentLoaded', ()=>{
-  if(!uid) return;
-  db.ref('clients/'+uid+'/kyc').once('value').then(snap=>{
-    if(!snap.exists()) return;
-    const k=snap.val();
+// ===== FIDELITE + PREFILL =====
+function getLevel(t){
+  if(t>=70001) return {level:6,min:70001,bonus:5000,next:null};
+  if(t>=30001) return {level:5,min:30001,bonus:3500,next:70001};
+  if(t>=15001) return {level:4,min:15001,bonus:2500,next:30001};
+  if(t>=5001) return {level:3,min:5001,bonus:1500,next:15001};
+  if(t>=500) return {level:2,min:500,bonus:500,next:5001};
+  return {level:1,min:0,bonus:0,next:500};
+}
+function renderLoyalty(){
+  let L=getLevel(totalRecharge);
+  document.getElementById('levelBadge').textContent='NIVEAU '+L.level+' / 6';
+  let stars=document.getElementById('stars'); stars.innerHTML='';
+  for(let i=1;i<=6;i++){ let s=document.createElement('span'); s.textContent='★'; if(i<=L.level) s.className='on'; stars.appendChild(s); }
+  let pct=100; if(L.next) pct=Math.min(100,Math.round((totalRecharge-L.min)/(L.next-L.min)*100));
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.getElementById('loyaltyText').innerHTML = L.next ? 'Total rechargé : <b>'+fmt(totalRecharge)+'</b> — Plus que <b>'+fmt(L.next-totalRecharge)+'</b> pour Niveau '+(L.level+1) : 'Total rechargé : <b>'+fmt(totalRecharge)+'</b> — Niveau max 6 👑';
+}
+function showAvatar(photo){
+  let av=document.getElementById('av');
+  if(photo) av.innerHTML='<img src="'+photo+'">';
+  else av.textContent=((rawUser.nom||rawUser.prenom||'A')[0]||'A').toUpperCase();
+}
+async function loadAll(){
+  document.getElementById('nameTop').textContent=((rawUser.prenom||'')+' '+(rawUser.nom||'')).trim()||'Mon Profil';
+  document.getElementById('phoneTop').textContent=rawUser.phone||'';
+  showAvatar(rawUser.photo||localStorage.getItem('mayne_avatar'));
+  if(!uid){ renderLoyalty(); return; }
+  try{
+    let snap=await db.ref('clients/'+uid).once('value');
+    let c=snap.val()||{};
+    // ✅ PRÉ-REMPLIT : plus besoin de tout retaper
+    document.getElementById('nom').value=c.nom||rawUser.nom||'';
+    document.getElementById('prenom').value=c.prenom||rawUser.prenom||'';
+    document.getElementById('piece_type').value=c.piece_type||'';
+    document.getElementById('numero_piece').value=c.cni||c.numero_piece||rawUser.cni||'';
+    document.getElementById('dob').value=c.dob||c.date_naissance||rawUser.dob||'';
+    document.getElementById('genre').value=c.genre||c.sexe||'Masculin';
+    document.getElementById('pays').value=c.pays||'Bénin';
+    currentUserNom=((c.prenom||rawUser.prenom||'')+' '+(c.nom||rawUser.nom||'')).trim()||uid;
+    // Fidélité
+    let tot=Number(c.total_recharge||0);
+    let sDep=await db.ref('commandes_depots').once('value');
+    sDep.forEach(ch=>{ let v=ch.val()||{}; let p=(v.client_id||v.phone||v.user||'').replace(/[^0-9]/g,''); let st=((v.statut||v.status||'').toLowerCase()); if(p===uid && (st.includes('valid')||st.includes('succes')||st.includes('payé')||st.includes('paye'))) tot+=Number(v.montant||v.total||0); });
+    if(tot===0) tot=Number(c.solde||0)+Number(c.commission||0);
+    totalRecharge=tot; renderLoyalty();
+    // Statut KYC
+    let k=c.kyc||{};
     if(k.statut==='verifie'||k.statut==='valide'||k.statut==='validé'){
-      document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden'));
-      document.getElementById('s4').classList.remove('hidden');
-      document.getElementById('s4-title').textContent='Déjà vérifié';
-      document.getElementById('s4-msg').style.display='none';
-      document.getElementById('badge-verif').style.display='block';
-      document.getElementById('title').textContent='Déjà vérifié';
+      go(4); document.getElementById('s4-title').textContent='Déjà vérifié'; document.getElementById('s4-msg').style.display='none'; document.getElementById('badge-verif').style.display='block'; document.getElementById('title').textContent='Déjà vérifié';
+    } else if(k.statut==='en_attente'){
+      document.getElementById('pendingWarn').style.display='block';
+      go(4); document.getElementById('s4-title').textContent='Demande déjà envoyée'; document.getElementById('s4-msg').textContent='On a déjà reçu ton dossier. Attends la validation.'; document.getElementById('badge-pending').style.display='block';
     }
-  });
-});
+  }catch(e){ renderLoyalty(); }
+}
 
 async function uploadToCloudinary(b64){
   const fd=new FormData(); fd.append('file',b64); fd.append('upload_preset','mayneaudio'); fd.append('folder','kyc');
   const res=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd});
   const j=await res.json();
-  if(!j.secure_url) throw new Error('Cloudinary échoué');
+  if(!j.secure_url) throw new Error('Cloudinary échoué, réessaie');
   return j.secure_url;
 }
 
 async function validerKYC(){
   const btn=document.getElementById('btn-kyc');
   const status=document.getElementById('kyc-status');
-  if(!window._kyc_b64){ status.textContent='❌ PHOTO OBLIGATOIRE'; return; }
-  btn.disabled=true; btn.textContent='⏳ Envoi à AYIZAN MARIUS...';
+  if(!uid){ status.textContent='❌ Connecte-toi d’abord'; return; }
+  if(!window._kyc_b64){ status.textContent='❌ PHOTO OBLIGATOIRE — Prends ta pièce en photo'; return; }
+  btn.disabled=true; btn.textContent='⏳ Envoi en cours...';
+  status.textContent='';
   try{
     const photoUrl=await uploadToCloudinary(window._kyc_b64);
-    const data={nom:nom.value, prenom:prenom.value, piece_type:piece_type.value, numero_piece:numero_piece.value, dob:dob.value, genre:genre.value, pays:pays.value, photo:photoUrl, statut:'en_attente', date:new Date().toLocaleString('fr-FR'), timestamp:Date.now()};
+    const data={nom:document.getElementById('nom').value.trim(), prenom:document.getElementById('prenom').value.trim(), piece_type:document.getElementById('piece_type').value, numero_piece:document.getElementById('numero_piece').value.trim(), dob:document.getElementById('dob').value, genre:document.getElementById('genre').value, pays:document.getElementById('pays').value, photo:photoUrl, statut:'en_attente', date:new Date().toLocaleString('fr-FR'), timestamp:Date.now()};
+    // ✅ Sauvegarde KYC + sync profil / info-compte
     await db.ref('clients/'+uid+'/kyc').set(data);
+    await db.ref('clients/'+uid).update({nom:data.nom, prenom:data.prenom, cni:data.numero_piece, piece:data.numero_piece, piece_type:data.piece_type, numero_piece:data.numero_piece, dob:data.dob, date_naissance:data.dob, genre:data.genre, sexe:data.genre, pays:data.pays, verifie:false, kyc_statut:'en_attente'});
+    await db.ref('users/'+uid).update({nom:data.nom, prenom:data.prenom, cni:data.numero_piece, piece_type:data.piece_type, dob:data.dob, genre:data.genre, pays:data.pays, verifie:false});
     await db.ref('kyc_demandes').push().set({...data, client_id:uid, client_nom:currentUserNom});
+    let merged=Object.assign({},rawUser,data,{cni:data.numero_piece}); localStorage.setItem('mayne_current_user',JSON.stringify(merged));
 
     const adminId="0158612131";
-    const myIdClean=uid.replace(/[^0-9]/g,'');
     const adminClean=adminId.replace(/[^0-9]/g,'');
-    const convId=[myIdClean,adminClean].sort().join('_');
-
-    await db.ref(`conversations/${convId}/messages`).push().set({
-      senderId: myIdClean, senderNom: currentUserNom,
-      texte: `🔐 NOUVEAU KYC\n👤 ${data.nom} ${data.prenom}\n🪪 ${data.piece_type} : ${data.numero_piece}\n📅 ${data.dob}\n📞 ${uid}`,
-      type: 'text', createdAt: Date.now()
-    });
-    await db.ref(`conversations/${convId}/messages`).push().set({
-      senderId: myIdClean, senderNom: currentUserNom,
-      type: 'image', url: photoUrl, createdAt: Date.now()+1
-    });
-
+    const convId=[uid,adminClean].sort().join('_');
+    await db.ref(`conversations/${convId}/messages`).push().set({senderId:uid, senderNom:currentUserNom, texte:`🔐 NOUVEAU KYC\n👤 ${data.nom} ${data.prenom}\n🪪 ${data.piece_type} : ${data.numero_piece}\n📅 ${data.dob}\n📞 ${rawUser.phone||uid}`, type:'text', createdAt:Date.now()});
+    await db.ref(`conversations/${convId}/messages`).push().set({senderId:uid, senderNom:currentUserNom, type:'image', url:photoUrl, createdAt:Date.now()+1});
     try{ fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId:adminClean,titre:'🔐 KYC - '+data.nom, message:`${data.piece_type} ${data.numero_piece}`})}); }catch(e){}
     go(4);
   }catch(e){
-    status.textContent='Erreur: '+e.message;
-    btn.disabled=false; btn.textContent='Envoyer à l\'admin 0158612131';
+    status.textContent='❌ Erreur : '+e.message;
+    btn.disabled=false; btn.textContent='Envoyer pour vérification ✅';
   }
 }
+window.addEventListener('DOMContentLoaded', loadAll);
+firebase.auth().onAuthStateChanged(function(u){ if(!u) firebase.auth().signInAnonymously(); else loadAll(); });
 </script>
 </body>
 </html>
