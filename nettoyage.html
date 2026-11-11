@@ -1,200 +1,265 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><style>
-@font-face {
-  font-family: "Optimistic";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Optimistic Mono";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
-}
-:where(html) {
-  font-family: "Optimistic", system-ui, sans-serif;
-}
-:where(code, pre, kbd, samp) {
-  font-family: "Optimistic Mono", ui-monospace, monospace;
-}
-</style>
+<head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NETTOYEUR FIREBASE - MAYNE</title>
+<title>Nettoyeur Firebase - MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
-body{background:#0a0a0a;color:#fff;font-family:system-ui;display:flex;justify-content:center;margin:0;padding:4px}
-.app{max-width:1000px;width:100%;min-height:100vh;background:#1e1e1e;border:6px solid #ff5000;border-radius:12px}
-.top{padding:12px;background:#000;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:3px solid #ff5000}
-.btn{padding:8px 14px;border-radius:20px;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;border:1px solid #fff}
-.btn-home{background:#fff;color:#000}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f2f2f2;display:flex;justify-content:center}
+.app{max-width:1000px;width:100%;min-height:100vh;background:#f6f6f6;padding-bottom:20px}
+.top{padding:16px;background:linear-gradient(135deg,#ff5000,#ff7a00);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-radius:0 0 20px 20px}
+.btn{padding:10px 14px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;text-decoration:none;border:none}
+.btn-home{background:#fff;color:#111}
 .btn-orange{background:#ff5000;color:#fff}
-.btn-green{background:#28a745;color:#fff}
-.btn-red{background:#dc3545;color:#fff}
-.section{padding:10px}
-.h2{color:#ffeb3b;font-size:12px;font-weight:900;margin:10px 0;border-left:4px solid #ff5000;padding-left:8px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 10px}
-.sbox{background:#000;border:1px solid #333;border-radius:8px;padding:10px;text-align:center}
-.sval{font-weight:900;font-size:16px}
-.slab{font-size:8px;color:#aaa}
-.wrap{background:#0f0f0f;border-radius:8px;overflow:auto;max-height:70vh;border:1px solid #333;margin:0 10px}
-table{width:100%;border-collapse:collapse;font-size:11px}
-th,td{border:1px solid #333;padding:6px;text-align:left}
-th{background:#ff5000;position:sticky;top:0;z-index:2;font-size:10px}
-tr:hover{background:#2a2a2a}
-.badge{padding:2px 7px;border-radius:10px;font-size:9px;font-weight:900}
-.ok{background:#28a745;color:#fff}.no{background:#dc3545;color:#fff}.wait{background:#ffeb3b;color:#000}
-.check{width:16px;height:16px}
+.btn-green{background:#0a8a2a;color:#fff}
+.btn-red{background:#c0392b;color:#fff}
+.btn-dark{background:#111;color:#fff}
+.section{padding:14px}
+.h2{font-size:13px;font-weight:900;margin:10px 0;color:#111;border-left:4px solid #ff5000;padding-left:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+.sbox{background:#fff;border-radius:16px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.sval{font-weight:900;font-size:22px}
+.slab{font-size:10px;color:#888;font-weight:800}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.search{flex:1;min-width:180px;padding:11px 14px;border:1px solid #ddd;border-radius:999px;outline:none;background:#fff}
+.check{width:16px;height:16px;accent-color:#ff5000}
+/* GROUPE UTILISATEUR */
+.user-card{background:#fff;border-radius:16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden}
+.user-head{padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px}
+.user-head:hover{background:#fff8f0}
+.user-info{display:flex;gap:12px;align-items:center;flex:1;min-width:0}
+.avatar{width:44px;height:44px;border-radius:50%;background:#fff1e6;color:#ff5000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0}
+.user-info b{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-info small{color:#888}
+.user-total{text-align:right;flex-shrink:0}
+.user-total b{font-size:14px;color:#0a8a2a}
+.arrow{font-size:18px;transition:.2s}
+.user-card.open .arrow{transform:rotate(180deg)}
+.user-detail{display:none;border-top:1px solid #eee;padding:10px}
+.user-card.open .user-detail{display:block}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border-bottom:1px solid #eee;padding:9px;text-align:left}
+th{background:#111;color:#fff;font-size:11px}
+.badge{padding:4px 9px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap}
+.ok{background:#e8f5e9;color:#2e7d32}.no{background:#fdecea;color:#c0392b}
+.info{background:#fff;border:1px solid #eee;padding:12px;border-radius:14px;font-size:12px;color:#555;line-height:1.6;margin-top:12px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:800;display:none;z-index:999;max-width:90%;text-align:center}
+/* ZONE PRINT POUR PDF FALLBACK */
+#printArea{display:none}
+@media print{
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{display:block!important;position:absolute;left:0;top:0;width:100%;padding:16px;font-family:system-ui}
+  #printArea h1{color:#ff5000}
+  #printArea table{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
+  #printArea th,#printArea td{border:1px solid #ddd;padding:7px;text-align:left}
+  #printArea th{background:#111;color:#fff}
+}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="top">
-  <div><b style="color:#ffeb3b">🧹 NETTOYEUR FIREBASE MAYNE</b><br><small id="adminPhone" style="color:#0f0;font-size:10px"></small><br><small style="color:#aaa;font-size:9px">Supprime les commandes déjà validées/annulées</small></div>
+  <div><b>🧹 Nettoyeur Firebase MAYNE</b><br><small id="adminPhone"></small><br><small style="font-size:11px">Commandes regroupées par utilisateur</small></div>
   <div style="display:flex;gap:6px;flex-wrap:wrap">
     <a href="admin.html" class="btn btn-home">← ADMIN</a>
-    <a href="index.html" class="btn btn-home" style="background:#333;color:#fff">🏠 ACCUEIL</a>
+    <a href="index.html" class="btn btn-home">🏠 ACCUEIL</a>
   </div>
 </div>
 
 <div class="section">
-  <div class="h2">1/ SCAN - Commandes déjà traitées (validé / annulé / rejeté)</div>
+  <div class="h2">1 / SCAN — Commandes déjà traitées</div>
   <div class="stats">
-    <div class="sbox"><div class="sval" id="totalValide" style="color:#28a745">0</div><div class="slab">VALIDÉES</div></div>
-    <div class="sbox"><div class="sval" id="totalAnnule" style="color:#dc3545">0</div><div class="slab">ANNULÉES/REJETÉES</div></div>
-    <div class="sbox"><div class="sval" id="totalAll" style="color:#fff">0</div><div class="slab">TOTAL À NETTOYER</div></div>
+    <div class="sbox"><div class="sval" id="totalValide" style="color:#0a8a2a">0</div><div class="slab">VALIDÉES</div></div>
+    <div class="sbox"><div class="sval" id="totalAnnule" style="color:#c0392b">0</div><div class="slab">ANNULÉES / REJETÉES</div></div>
+    <div class="sbox"><div class="sval" id="totalAll" style="color:#ff5000">0</div><div class="slab">COMMANDES</div></div>
+    <div class="sbox"><div class="sval" id="totalUsers" style="color:#111">0</div><div class="slab">UTILISATEURS</div></div>
   </div>
 
-  <div style="display:flex;gap:6px;margin:8px 10px;flex-wrap:wrap">
+  <div class="actions">
     <button class="btn btn-orange" onclick="scan()">🔍 SCANNER TOUT</button>
-    <button class="btn btn-green" onclick="exportCSV()">📥 EXPORTER CSV AVANT SUPPRESSION</button>
+    <button class="btn btn-green" onclick="exportPDF()">📄 EXPORTER PDF</button>
     <button class="btn btn-red" onclick="deleteSelected()">🗑️ SUPPRIMER SÉLECTION</button>
-    <button class="btn btn-red" style="background:#000;color:#f00;border:1px solid #f00" onclick="deleteAllValide()">⚠️ SUPPRIMER TOUT VALIDÉ/ANNULÉ</button>
+    <button class="btn btn-dark" onclick="deleteAllValide()">⚠️ TOUT SUPPRIMER</button>
   </div>
 
-  <div style="margin:8px 10px;display:flex;gap:6px;align-items:center">
-    <input type="checkbox" id="checkAll" onchange="toggleAll(this.checked)"><label for="checkAll" style="font-size:11px">Tout cocher</label>
-    <span style="font-size:10px;color:#aaa;margin-left:10px">Coche les commandes que tu veux supprimer manuellement</span>
+  <div style="display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap">
+    <input type="checkbox" id="checkAll" class="check" onchange="toggleAll(this.checked)"><label for="checkAll" style="font-size:12px;font-weight:700">Tout cocher</label>
+    <input id="search" class="search" placeholder="🔍 Rechercher un utilisateur, numéro, service..." oninput="filterUsers(this.value)">
+    <button class="btn btn-home" onclick="expandAll(true)">▼ Tout ouvrir</button>
+    <button class="btn btn-home" onclick="expandAll(false)">▲ Tout fermer</button>
   </div>
 
-  <div class="wrap">
-    <table>
-      <thead><tr><th>☑️</th><th>Service / Path</th><th>Client</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
-      <tbody id="tbody"><tr><td colspan="6" style="text-align:center;padding:20px">Clique sur SCANNER TOUT</td></tr></tbody>
-    </table>
-  </div>
+  <div id="usersList"><p style="text-align:center;padding:20px;color:#888">Clique sur SCANNER TOUT</p></div>
 
-  <div style="margin:12px 10px;background:#000;border:1px solid #333;padding:10px;border-radius:8px;font-size:10px;color:#aaa">
-    <b style="color:#ff5000">⚠️ Sécurité :</b><br>
-    1. Clique SCANNER TOUT pour voir tout ce qui est déjà validé/annulé<br>
-    2. Clique EXPORTER CSV pour sauvegarder avant de supprimer (très important)<br>
-    3. Coche seulement ce que tu veux supprimer, puis SUPPRIMER SÉLECTION<br>
-    4. Les commandes EN COURS ne sont JAMAIS affichées ici, seulement validé/annulé<br>
+  <div class="info">
+    <b style="color:#ff5000">💡 Comment ça marche :</b><br>
+    1. <b>SCANNER TOUT</b> → commandes groupées par utilisateur<br>
+    2. <b>Clique sur un utilisateur</b> → tu vois TOUTES ses commandes en détail<br>
+    3. <b>EXPORTER PDF</b> → sauvegarde complète avant suppression, groupée par utilisateur aussi<br>
+    4. Coche et supprime. Les commandes <b>EN COURS</b> ne s'affichent jamais.
   </div>
 </div>
 </div>
+<div id="toast"></div>
+<div id="printArea"></div>
 
 <script>
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
 const ADMIN_LIST=["0158612131","2290158612131","158612131"];
-function getPhone(){ try{ let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; p=JSON.parse(localStorage.getItem('mayne_'+'current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3200); }
+function getPhone(){ try{ return JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone||null; }catch(e){ return null; } }
 function isAdmin(p){ if(!p) return false; const c=p.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8))); }
 const curPhone=getPhone();
-if(!isAdmin(curPhone)){ document.body.innerHTML='<div style="padding:40px;text-align:center;color:#fff">⛔ Admin 0158612131 seulement<br>'+ (curPhone||'non')+'</div>'; throw 'not admin'; }
-document.getElementById('adminPhone').innerText='Admin: '+curPhone+' ✅';
-
+if(!isAdmin(curPhone)){ document.body.innerHTML='<div style="padding:40px;text-align:center;font-weight:900">⛔ Admin 0158612131 seulement<br>'+ (curPhone||'non connecté')+'</div>'; throw 'not admin'; }
+document.getElementById('adminPhone').innerText='Admin : '+curPhone+' ✅';
 const PATHS = ['commandes_depots','commandes_retraits','commandes_1xbet','commandes_forfaits','commandes_factures','commandes_transferts','commandes_echanges','epargne','commandes_p2p_p2m','commandes_marketplace'];
-let toClean=[];
+let toClean=[]; let grouped={};
 
 async function scan(){
-  const tb=document.getElementById('tbody'); tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px">Scan en cours...</td></tr>';
+  document.getElementById('usersList').innerHTML='<p style="text-align:center;padding:20px">Scan en cours...</p>';
   toClean=[]; let valide=0, annule=0;
   for(const path of PATHS){
     try{
       const snap=await db.ref(path).once('value');
       snap.forEach(ch=>{
-        const v=ch.val();
+        const v=ch.val()||{};
         const statut=((v.statut||v.status||'')+'').toLowerCase();
         const isValide = statut.includes('valid')||statut.includes('succes')||statut.includes('paye')||statut.includes('livre');
         const isAnnule = statut.includes('annul')||statut.includes('rejet')||statut.includes('echec');
         if(isValide||isAnnule){
-          toClean.push({id:ch.key, path, client:v.client_id||v.phone||'', montant:v.montant||v.total||0, statut, date:v.date||v.created_at||'', data:v});
+          toClean.push({id:ch.key, path, client:(v.client_id||v.phone||v.client_nom||'Inconnu').toString(), nom:((v.prenom||'')+' '+(v.nom||'')).trim()||v.client_nom||'Sans nom', montant:Number(v.montant||v.total||0), statut, date:v.date||v.created_at||'', detail:v.detail||v.service||v.operateur||v.forfait||v.type||'', data:v});
           if(isValide) valide++; else annule++;
         }
       });
     }catch(e){}
   }
+  // ===== REGROUPE PAR UTILISATEUR =====
+  grouped={};
+  toClean.forEach(it=>{
+    const key=it.client.replace(/\D/g,'')||it.client;
+    if(!grouped[key]) grouped[key]={key, nom:it.nom, client:it.client, list:[], total:0, valide:0, annule:0};
+    grouped[key].list.push(it);
+    grouped[key].total+=it.montant;
+    if(it.statut.includes('valid')||it.statut.includes('succes')||it.statut.includes('paye')) grouped[key].valide++; else grouped[key].annule++;
+  });
   document.getElementById('totalValide').innerText=valide;
   document.getElementById('totalAnnule').innerText=annule;
   document.getElementById('totalAll').innerText=toClean.length;
-  tb.innerHTML='';
-  if(toClean.length===0){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px">✅ Aucune commande validée/annulée à nettoyer. Tout est propre !</td></tr>'; return; }
-  toClean.sort((a,b)=> (b.date||'').toString().localeCompare((a.date||'').toString()));
-  toClean.forEach((item,idx)=>{
-    const tr=document.createElement('tr');
-    const badge = item.statut.includes('valid') ? 'ok' : 'no';
-    tr.innerHTML=`<td><input type="checkbox" class="check" data-idx="${idx}" checked></td><td><b style="color:#ffeb3b">${item.path}</b></td><td>${item.client}</td><td>${item.montant} F</td><td><span class="badge ${badge}">${item.statut}</span></td><td><small>${(item.date||'').toString().slice(0,16)}</small></td>`;
-    tb.appendChild(tr);
-  });
+  document.getElementById('totalUsers').innerText=Object.keys(grouped).length;
+  renderGrouped();
+  toast('✅ Scan terminé : '+toClean.length+' commandes, '+Object.keys(grouped).length+' utilisateurs');
 }
 
-function toggleAll(checked){
-  document.querySelectorAll('.check').forEach(c=> c.checked=checked);
-}
-
-function exportCSV(){
-  if(toClean.length===0){ alert('Scanne d abord'); return; }
-  let csv='path,id,client,montant,statut,date,json\n';
-  toClean.forEach(i=>{
-    const json = JSON.stringify(i.data).replace(/"/g,'""');
-    csv+=`"${i.path}","${i.id}","${i.client}","${i.montant}","${i.statut}","${i.date}","${json}"\n`;
+function renderGrouped(){
+  const wrap=document.getElementById('usersList');
+  const keys=Object.keys(grouped).sort((a,b)=> grouped[b].total-grouped[a].total);
+  if(!keys.length){ wrap.innerHTML='<p style="text-align:center;padding:20px">✅ Aucune commande à nettoyer.</p>'; return; }
+  wrap.innerHTML='';
+  keys.forEach(key=>{
+    const g=grouped[key];
+    const card=document.createElement('div'); card.className='user-card'; card.dataset.search=(g.nom+' '+g.client).toLowerCase();
+    let rows='';
+    g.list.sort((a,b)=> (b.date||'').toString().localeCompare((a.date||'').toString())).forEach((it,idx)=>{
+      const globalIdx=toClean.indexOf(it);
+      const badge=it.statut.includes('valid')?'ok':'no';
+      rows+='<tr><td><input type="checkbox" class="check" data-idx="'+globalIdx+'" checked onclick="event.stopPropagation()"></td><td><b style="color:#ff5000">'+it.path+'</b><br><small style="color:#999">'+it.detail+'</small></td><td><b>'+it.montant.toLocaleString('fr-FR')+' F</b></td><td><span class="badge '+badge+'">'+it.statut+'</span></td><td><small>'+(it.date||'').toString().slice(0,16)+'</small></td><td><small>'+it.id.slice(0,10)+'…</small></td><td><button class="btn btn-dark" style="padding:6px 10px;font-size:11px" onclick="event.stopPropagation();voirDetail(\''+key+'\','+g.list.indexOf(it)+')">👁️ Détail</button></td></tr>';
+    });
+    card.innerHTML='<div class="user-head" onclick="this.parentElement.classList.toggle(\'open\')"><div class="user-info"><div class="avatar">'+(g.nom[0]||'U').toUpperCase()+'</div><div><b>'+g.nom+'</b><small>'+g.client+' • '+g.list.length+' commandes • ✅ '+g.valide+' • ❌ '+g.annule+'</small></div></div><div class="user-total"><b>'+g.total.toLocaleString('fr-FR')+' F</b><br><small>Total</small></div><span class="arrow">▼</span></div><div class="user-detail"><table><thead><tr><th>☑️</th><th>Service</th><th>Montant</th><th>Statut</th><th>Date</th><th>ID</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    wrap.appendChild(card);
   });
-  const blob=new Blob([csv],{type:'text/csv'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='mayne_backup_commandes_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
-  alert('✅ CSV exporté : '+toClean.length+' lignes sauvegardées. Garde ce fichier !');
+}
+function voirDetail(userKey, idx){
+  const it=grouped[userKey].list[idx];
+  const d=it.data||{};
+  alert('📋 DÉTAIL COMMANDE\n\n👤 '+grouped[userKey].nom+' ('+it.client+')\n📦 Service : '+it.path+'\n💰 Montant : '+it.montant.toLocaleString('fr-FR')+' F\n📌 Statut : '+it.statut+'\n📅 Date : '+(it.date||'—')+'\n🆔 ID : '+it.id+'\n\n📝 Détail : '+(it.detail||'—')+'\n📞 Tél : '+(d.phone||d.client_id||'—')+'\n🏷️ Opérateur / Type : '+(d.operateur||d.type||d.service||'—'));
+}
+function expandAll(open){ document.querySelectorAll('.user-card').forEach(c=> c.classList.toggle('open', open)); }
+function filterUsers(q){ q=(q||'').toLowerCase(); document.querySelectorAll('.user-card').forEach(c=>{ c.style.display = !q || (c.dataset.search||'').includes(q) ? '' : 'none'; }); }
+function toggleAll(checked){ document.querySelectorAll('.check').forEach(c=> c.checked=checked); }
+
+// ===== EXPORT PDF — CORRIGÉ, AVEC FALLBACK =====
+function exportPDF(){
+  if(toClean.length===0){ toast('❌ Scanne d’abord'); return; }
+  try{
+    if(!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF non chargé');
+    exportPDFjsPDF();
+  }catch(e){
+    // Fallback : impression navigateur -> Enregistrer en PDF
+    exportPDFPrint();
+  }
+}
+function exportPDFjsPDF(){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+    const dateStr = new Date().toLocaleString('fr-FR');
+    const totalMontant = toClean.reduce((s,x)=>s+x.montant,0);
+    doc.setFillColor(255,80,0); doc.rect(0,0,297,22,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont('helvetica','bold');
+    doc.text('MAYNE ILLIMINET  -  SAUVEGARDE PAR UTILISATEUR', 10, 14);
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    doc.text('Export avant nettoyage  •  Admin : '+curPhone+'  •  '+dateStr, 10, 19);
+    doc.setTextColor(0,0,0); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text('Résumé : '+Object.keys(grouped).length+' utilisateurs  •  '+toClean.length+' commandes  •  Total : '+totalMontant.toLocaleString('fr-FR')+' F', 10, 30);
+    let y=38;
+    Object.keys(grouped).sort((a,b)=> grouped[b].total-grouped[a].total).forEach(key=>{
+      const g=grouped[key];
+      // Titre utilisateur
+      if(y>170){ doc.addPage(); y=15; }
+      doc.setFillColor(255,241,230); doc.rect(10,y,277,9,'F');
+      doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(0,0,0);
+      doc.text(g.nom+'  ('+g.client+')  -  '+g.list.length+' commandes  -  Total : '+g.total.toLocaleString('fr-FR')+' F', 12, y+6);
+      y+=11;
+      const rows=g.list.map((it,i)=>[i+1, it.path, it.detail||'', it.montant.toLocaleString('fr-FR')+' F', it.statut, (it.date||'').toString().slice(0,16), it.id]);
+      doc.autoTable({head:[['#','Service','Détail','Montant','Statut','Date','ID']], body:rows, startY:y, styles:{fontSize:8, cellPadding:2}, headStyles:{fillColor:[17,17,17], textColor:255}, columnStyles:{0:{cellWidth:10},1:{cellWidth:45},2:{cellWidth:45},3:{cellWidth:28},4:{cellWidth:30},5:{cellWidth:32},6:{cellWidth:47}}});
+      y=doc.lastAutoTable.finalY+6;
+    });
+    const pages=doc.getNumberOfPages();
+    for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFontSize(8); doc.setTextColor(130,130,130); doc.text('MAYNE E-Services ILLIMINET - Sauvegarde avant suppression - Page '+i+' / '+pages, 10, 200); }
+    doc.save('MAYNE_sauvegarde_par_utilisateur_'+new Date().toISOString().slice(0,10)+'.pdf');
+    toast('✅ PDF téléchargé : '+toClean.length+' commandes');
+  }catch(e){ exportPDFPrint(); }
+}
+function exportPDFPrint(){
+  // Fallback 100% fiable : construit une page imprimable propre
+  let html='<h1>🧹 MAYNE ILLIMINET — Sauvegarde par utilisateur</h1><p>Admin : '+curPhone+' • '+new Date().toLocaleString('fr-FR')+' • '+Object.keys(grouped).length+' utilisateurs • '+toClean.length+' commandes</p>';
+  Object.keys(grouped).sort((a,b)=> grouped[b].total-grouped[a].total).forEach(key=>{
+    const g=grouped[key];
+    html+='<h3 style="background:#fff1e6;padding:8px;margin-top:16px">'+g.nom+' ('+g.client+') — '+g.list.length+' commandes — Total : '+g.total.toLocaleString('fr-FR')+' F</h3>';
+    html+='<table><tr><th>Service</th><th>Détail</th><th>Montant</th><th>Statut</th><th>Date</th><th>ID</th></tr>';
+    g.list.forEach(it=>{ html+='<tr><td>'+it.path+'</td><td>'+(it.detail||'')+'</td><td>'+it.montant.toLocaleString('fr-FR')+' F</td><td>'+it.statut+'</td><td>'+(it.date||'')+'</td><td>'+it.id+'</td></tr>'; });
+    html+='</table>';
+  });
+  document.getElementById('printArea').innerHTML=html;
+  toast('📄 Choisis "Enregistrer en PDF" dans la fenêtre d’impression');
+  setTimeout(()=>window.print(), 300);
 }
 
 async function deleteSelected(){
   const checks=document.querySelectorAll('.check:checked');
-  if(checks.length===0){ alert('Coche au moins une commande'); return; }
-  if(!confirm('⚠️ SUPPRIMER '+checks.length+' commandes validées/annulées ?\nCette action est irréversible !\nAs-tu exporté en CSV ?')) return;
-  if(!confirm('Confirme 2e fois : supprimer définitivement '+checks.length+' commandes ?')) return;
+  if(checks.length===0){ toast('❌ Coche au moins une commande'); return; }
+  if(!confirm('⚠️ SUPPRIMER '+checks.length+' commandes ?\nAs-tu exporté en PDF ?')) return;
+  if(!confirm('Confirme 2e fois : supprimer définitivement ?')) return;
   let deleted=0;
-  for(const chk of checks){
-    const idx=Number(chk.dataset.idx);
-    const item=toClean[idx];
-    if(!item) continue;
-    try{
-      await db.ref(item.path+'/'+item.id).remove();
-      deleted++;
-    }catch(e){ console.log('Erreur suppression',item,e); }
-  }
-  alert('🗑️ '+deleted+' commandes supprimées');
-  scan();
+  for(const chk of checks){ const idx=Number(chk.dataset.idx); const item=toClean[idx]; if(!item) continue; try{ await db.ref(item.path+'/'+item.id).remove(); deleted++; }catch(e){} }
+  toast('🗑️ '+deleted+' supprimées'); scan();
 }
-
 async function deleteAllValide(){
-  if(toClean.length===0){ alert('Scanne d abord'); return; }
-  if(!confirm('⚠️⚠️⚠️ DANGER : SUPPRIMER TOUTES les '+toClean.length+' commandes validées/annulées de TOUT ton Firebase ?\nCeci va nettoyer tous les historiques !')) return;
-  if(!confirm('Dernière confirmation : Tu vas supprimer '+toClean.length+' commandes. Export CSV fait ? Tape OK pour continuer.')) return;
-  let deleted=0;
-  for(const item of toClean){
-    try{ await db.ref(item.path+'/'+item.id).remove(); deleted++; }catch(e){}
-  }
-  alert('✅ Nettoyage terminé : '+deleted+' commandes supprimées');
-  scan();
+  if(toClean.length===0){ toast('❌ Scanne d’abord'); return; }
+  if(!confirm('⚠️⚠️ DANGER : SUPPRIMER TOUTES les '+toClean.length+' commandes ?')) return;
+  if(!confirm('Dernière confirmation : Export PDF fait ?')) return;
+  let deleted=0; for(const item of toClean){ try{ await db.ref(item.path+'/'+item.id).remove(); deleted++; }catch(e){} }
+  toast('✅ Nettoyage terminé : '+deleted+' supprimées'); scan();
 }
+firebase.auth().onAuthStateChanged(function(user){ if(!user) firebase.auth().signInAnonymously(); });
 </script>
-<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();firebase.auth().onAuthStateChanged(function(user){
-  if(user){ init(); } 
-  else { firebase.auth().signInAnonymously(); }
-});</script></body>
+</body>
 </html>
