@@ -29,8 +29,9 @@ body{background:#f2f2f2;display:flex;justify-content:center}
 .loyalty small{font-size:11px;color:#777;display:block;margin-top:6px}
 .card{margin:12px 16px;background:#fff;border-radius:20px;padding:18px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.06)}
 .code{font-size:26px;font-weight:900;letter-spacing:2px;color:#ff5000;background:#fff1e6;padding:13px;border-radius:12px;border:2px dashed #ff5000;margin:12px 0;word-break:break-all}
-.link-box{background:#f6f6f6;border:1px solid #eee;border-radius:12px;padding:11px;text-align:left;font-size:12px;word-break:break-all;color:#333;margin-top:10px}
-.link-box b{color:#111}
+.link-box{background:#f6f6f6;border:1px solid #eee;border-radius:12px;padding:12px;text-align:left;font-size:13px;color:#333;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.link-box b{color:#111;word-break:break-all}
+.eye{border:none;background:#fff;border:1px solid #ddd;border-radius:999px;padding:7px 10px;cursor:pointer;font-size:12px;font-weight:800;flex-shrink:0}
 .btn{width:100%;border:none;border-radius:12px;padding:14px;font-weight:900;color:#fff;cursor:pointer;margin-top:8px;background:#ff5000;font-size:14px}
 .btn-green{background:#25D366}
 .btn-dark{background:#111}
@@ -80,11 +81,13 @@ body{background:#f2f2f2;display:flex;justify-content:center}
 <div class="code" id="code-affiche">...</div>
 <div style="font-size:12px;color:#333">Gain total : <b id="gain" style="color:#0a8a2a">0 F</b></div>
 
-<!-- ✅ LIEN D'INSCRIPTION DIRECT -->
 <div style="text-align:left;margin-top:14px">
-<div style="font-size:12px;font-weight:900">🔗 TON LIEN D'INSCRIPTION DIRECT</div>
-<div class="link-box" id="linkBox">Chargement du lien...</div>
-<p style="font-size:11px;color:#888;margin-top:6px">Quand ton ami clique, ton code est déjà rempli. Il n'a qu'à s'inscrire.</p>
+<div style="font-size:12px;font-weight:900">🔗 TON LIEN D'INSCRIPTION</div>
+<div class="link-box">
+<b id="linkMask">••••••••••••••••</b>
+<button class="eye" id="btnEye" onclick="toggleLien()">👁️ Voir</button>
+</div>
+<p style="font-size:11px;color:#888;margin-top:6px">Lien masqué pour ta sécurité. Il reste copiable en entier.</p>
 </div>
 
 <button class="btn" onclick="copierCode()">📋 Copier le code</button>
@@ -93,18 +96,18 @@ body{background:#f2f2f2;display:flex;justify-content:center}
 </div>
 
 <div class="stats">
-<div class="stat"><b id="c1" style="color:#0a8a2a">0</b><span>NIVEAU 1</span></div>
-<div class="stat"><b id="c2" style="color:#e6a800">0</b><span>NIVEAU 2</span></div>
-<div class="stat"><b id="c3" style="color:#0099ff">0</b><span>NIVEAU 3</span></div>
+<div class="stat"><b id="c1" style="color:#0a8a2a">0</b><span>NIVEAU 1 • 100 F</span></div>
+<div class="stat"><b id="c2" style="color:#e6a800">0</b><span>NIVEAU 2 • 50 F</span></div>
+<div class="stat"><b id="c3" style="color:#0099ff">0</b><span>NIVEAU 3 • 25 F</span></div>
 <div class="stat"><b id="totalFilleuls" style="color:#ff5000">0</b><span>TOTAL</span></div>
 </div>
 
 <div class="how">
 <b>💰 Comment ça marche ?</b><br>
-• <b>N1 (direct) :</b> 500 F par filleul qui recharge<br>
-• <b>N2 :</b> 200 F quand ton filleul parraine<br>
-• <b>N3 :</b> 100 F au 3ème niveau<br>
-• Tes gains vont dans ta <b>Commission</b> automatiquement.
+- <b>N1 (direct) :</b> 100 F par filleul qui recharge<br>
+- <b>N2 :</b> 50 F quand ton filleul parraine<br>
+- <b>N3 :</b> 25 F au 3ème niveau<br>
+- Tes gains vont dans ta <b>Commission</b> automatiquement.
 </div>
 
 <div class="list">
@@ -122,26 +125,42 @@ body{background:#f2f2f2;display:flex;justify-content:center}
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
 if(!firebase.apps.length)firebase.initializeApp(cfg);
 var db=firebase.database();
-var uid="", inviteLink="";
+var uid="", inviteLink="", lienVisible=false;
 var currentUser=null, totalRecharge=0;
+const GAIN_N1=100, GAIN_N2=50, GAIN_N3=25;
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2800); }
 function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR')+' F'; }
 
-// ===== LIEN D'INSCRIPTION DIRECT =====
-// Si ton site est sur GitHub Pages, mets ton vrai domaine ici :
-// Ex: https://mayneilliminet.github.io/mayne/
+// ===== LIEN MASQUÉ MAIS COPIABLE =====
 function buildInviteLink(){
-  // Prend l'URL actuelle, enlève parrainage.html -> base du site
   var base = window.location.href.split('parrainage.html')[0].split('?')[0].split('#')[0];
-  // Si tu testes en local, base = file:// -> on utilise le site officiel
   if(base.indexOf('http')!==0 || base.indexOf('file:')===0){
     base = 'https://mayneilliminet.github.io/mayne/';
   }
-  // Page d'inscription : inscription.html?parrain=TON_NUMERO
-  // Si ta page d'inscription s'appelle index.html, change juste ici :
   inviteLink = base + 'inscription.html?parrain=' + uid;
-  document.getElementById('linkBox').innerHTML = '<b>'+inviteLink+'</b>';
+  // Affichage masqué : on ne montre jamais le lien en dur
+  document.getElementById('linkMask').textContent = 'mayne.../inscription?parrain=••••••';
+  document.getElementById('btnEye').textContent = '👁️ Voir';
+  lienVisible = false;
   return inviteLink;
+}
+function toggleLien(){
+  if(!inviteLink) buildInviteLink();
+  if(!lienVisible){
+    // On montre 3 secondes puis on remasque
+    document.getElementById('linkMask').textContent = inviteLink;
+    document.getElementById('btnEye').textContent = '🙈 Masquer';
+    lienVisible = true;
+    setTimeout(function(){
+      document.getElementById('linkMask').textContent = 'mayne.../inscription?parrain=••••••';
+      document.getElementById('btnEye').textContent = '👁️ Voir';
+      lienVisible = false;
+    }, 5000);
+  } else {
+    document.getElementById('linkMask').textContent = 'mayne.../inscription?parrain=••••••';
+    document.getElementById('btnEye').textContent = '👁️ Voir';
+    lienVisible = false;
+  }
 }
 function copierCode(){
   if(!uid) return;
@@ -149,6 +168,7 @@ function copierCode(){
 }
 function copierLien(){
   if(!inviteLink) buildInviteLink();
+  // Copie le VRAI lien complet même s'il est masqué à l'écran
   navigator.clipboard.writeText(inviteLink).then(()=>toast('✅ Lien copié ! Envoie-le à tes amis'));
 }
 function partagerWhatsApp(){
@@ -157,7 +177,6 @@ function partagerWhatsApp(){
   var msg = "Salut 👋%0A%0AInscris-toi sur MAYNE avec mon lien, c'est gratuit et tu gagnes des bonus :%0A" + encodeURIComponent(inviteLink) + "%0A%0AMon code : " + uid + "%0A%0A— " + encodeURIComponent(nom) + " via MAYNE ILLIMINET 🧡";
   window.open('https://wa.me/?text='+msg, '_blank');
 }
-
 function getLevel(t){
   if(t>=70001) return {level:6,min:70001,bonus:5000,next:null};
   if(t>=30001) return {level:5,min:30001,bonus:3500,next:70001};
@@ -180,7 +199,6 @@ function showAvatar(photo){
   if(photo) av.innerHTML='<img src="'+photo+'">';
   else av.textContent=((currentUser&&currentUser.nom||currentUser&&currentUser.prenom||'A')[0]||'A').toUpperCase();
 }
-
 function init(){
   var u=JSON.parse(localStorage.getItem('mayne_current_user')||'null');
   if(!u||!u.phone){location.href='index.html';return;}
@@ -191,7 +209,6 @@ function init(){
   document.getElementById('phoneTop').textContent=u.phone||'';
   showAvatar(u.photo||localStorage.getItem('mayne_avatar'));
   buildInviteLink();
-
   db.ref('clients/'+uid).on('value',function(s){
     var v=s.val()||{};
     document.getElementById('gain').innerText=fmt(v.gain_parrainage||v.commission||0);
@@ -199,17 +216,16 @@ function init(){
     if(tot===0) tot=Number(v.solde||0)+Number(v.commission||0);
     totalRecharge=tot; renderLoyalty();
   });
-
   db.ref('clients').on('value',function(s){
     var all={};
-    s.forEach(function(ch){ all[ch.key]={key:ch.key, nom:((ch.val().prenom||'')+' '+(ch.val().nom||'')).trim()||'Sans nom', prenom:ch.val().prenom||'', parrain:(ch.val().parrain||'').replace(/\D/g,'')} });
+    s.forEach(function(ch){ all[ch.key]={key:ch.key, nom:((ch.val().prenom||'')+' '+(ch.val().nom||'')).trim()||'Sans nom', parrain:(ch.val().parrain||'').replace(/\D/g,'')} });
     var children={};
     Object.values(all).forEach(function(c){ if(!c.parrain) return; if(!children[c.parrain]) children[c.parrain]=[]; children[c.parrain].push(c); });
     var direct=children[uid]||[];
     document.getElementById('nb').innerText=direct.length;
     var histo=document.getElementById('histo');
     histo.innerHTML = direct.length? '' : 'Aucun filleul. Partage ton lien !';
-    direct.forEach(function(d){ histo.innerHTML+='<div class="item"><div><b>'+d.nom+'</b><br><small>'+d.key+'</small></div><div style="color:#0a8a2a;font-weight:900">N1 • +500 F</div></div>'; });
+    direct.forEach(function(d){ histo.innerHTML+='<div class="item"><div><b>'+d.nom+'</b><br><small>'+d.key+'</small></div><div style="color:#0a8a2a;font-weight:900">N1 • +'+GAIN_N1+' F</div></div>'; });
     var n2=0,n3=0;
     direct.forEach(function(d1){ var l2=children[d1.key]||[]; n2+=l2.length; l2.forEach(function(d2){ var l3=children[d2.key]||[]; n3+=l3.length; }); });
     document.getElementById('c1').innerText=direct.length;
