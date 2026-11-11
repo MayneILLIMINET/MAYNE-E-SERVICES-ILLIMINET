@@ -631,7 +631,30 @@ function lancerAppel(cid){ const otherId=cid.split('_').find(id=>id!==currentUse
 function onInputChange(inp,cid){ jeTape(cid); const hasText=inp.value.trim().length>0; const mic=document.getElementById('btn-rec'); const send=document.getElementById('btn-send'); if(isRecording) return; if(mic) mic.style.display=hasText?'none':'flex'; if(send) send.style.display=hasText?'flex':'none'; }
 function envoyerDirect(cid){ const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return; const otherId = cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,replyTo:replyTo||null,createdAt:Date.now()}); pushJS(otherId, '💬 '+document.getElementById('user-name').innerText, t.substring(0,90)); i.value=''; clearReply(); onInputChange(i,cid); }
 function jeTape(cid){database.ref(`conversations/${cid}/typing/${currentUserId}`).set(true);clearTimeout(window.typTO);window.typTO=setTimeout(()=>{database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);},1500);}
-function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const c=v.val()||{};const nom=c.nom||currentUserId;document.getElementById('user-name').innerText=nom;const photo=getUserPhoto(c);window.myPhoto=photo||'';const av=document.getElementById('my-avatar'); if(av) av.innerHTML=photo? '<img src="'+getThumb(photo,200)+'">' : nom.substring(0,1).toUpperCase();});if(currentTab==='discussions') chargerMessagerie(); else loadStatus();}
+function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const c=v.val()||{};const nom=c.nom||currentUserId;document.getElementById('user-name').innerText=nom;const photo=getUserPhoto(c);window.myPhoto=photo||'';const av=document.getElementById('my-avatar'); if(av) av.innerHTML=photo? '<img src="'+getThumb(photo,200)+'">' : nom.substring(0,1).toUpperCase();});if(currentTab==='discussions') chargerMessagerie(); else loadStatus();
+// --- COMMANDE VENANT DE TRANSFERT.HTML ---
+let pending=null;
+try{ pending=JSON.parse(localStorage.getItem('mayne_pending_admin_msg')||'null'); }catch(e){}
+let params=new URLSearchParams(location.search);
+if(pending || params.get('conv')){
+  let convId=pending?.convId || params.get('conv');
+  let adminNom=pending?.adminNom || 'AYIZAN';
+  setTimeout(()=>{
+    ouvrirConversation(convId, adminNom);
+    if(pending && pending.texte){
+      localStorage.removeItem('mayne_pending_admin_msg');
+      database.ref('conversations/'+convId+'/messages').push({
+        senderId: currentUserId,
+        senderNom: document.getElementById('user-name').innerText,
+        type:'text', texte: pending.texte, vu:false, createdAt: Date.now()
+      });
+      pushJS(pending.adminId, '🆕 Commande Transfert - '+document.getElementById('user-name').innerText, pending.texte.substring(0,90));
+    }
+    history.replaceState({},'', 'messagerie.html');
+  }, 600);
+}
+
+}
 firebase.auth().onAuthStateChanged(function(user){ if(user){ init(); } else { firebase.auth().signInAnonymously(); } });
 </script>
 </body>
