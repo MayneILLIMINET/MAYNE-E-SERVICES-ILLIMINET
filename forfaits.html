@@ -23,23 +23,34 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 .bnav{border:none;background:none;font-size:11px;color:#fff;cursor:pointer;padding:8px 12px}
 .bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;font-weight:700}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:15px}
-.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:300px;width:100%;text-align:center}
-.modal-btn{flex:1;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
+.modal-box{background:#1e1e1e;color:#fff;padding:20px;border-radius:10px;max-width:320px;width:100%;text-align:center}
+.modal-btn{flex:1;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:13px}
 .btn-yes{background:#2b8a3e;color:#fff}
-.btn-no{background:#ddd;color:#000}
+.btn-no{background:#555;color:#fff}
+.btn-retour{background:#fff;color:#111;width:100%;margin-top:8px}
 .modal-btns{display:flex;gap:8px;margin-top:12px}
+.daily-box{background:#000;border:2px solid #ff5000;border-radius:14px;padding:12px;margin:12px 16px;font-size:13px;line-height:1.6}
+.daily-box b{color:#ffeb3b}
+.daily-row{display:flex;justify-content:space-between}
 </style>
 </head>
 <body>
 <div class="app">
 <div id="global-notif" style="display:none;position:fixed;top:15px;left:50%;transform:translateX(-50%);z-index:99999;background:#008000;color:#fff;padding:12px 18px;font-weight:bold;text-align:center;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.4);"></div>
 
-<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">M</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#aaa"></span></div></div><button class="bnav" onclick="location.href='notifications.html'">NOTIF🔔</button></div>
+<div class="top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="av">M</div><div><b id="uname">Chargement...</b><br><span id="uemail" style="font-size:11px;color:#aaa"></span></div></div><button class="bnav" id="btn-notif" onclick="location.href='notifications.html'">NOTIF🔔</button></div>
 
 <div class="card">
 <div style="font-size:12px;color:#a8c0b6">Solde Principal</div>
 <div class="montant" id="solde">0.00 XOF</div>
 <div style="font-size:12px;color:#aaa">BONUS: <b id="com">0 XOF</b></div>
+</div>
+
+<!-- CALCUL JOURNALIER FORFAIT -->
+<div class="daily-box" id="daily-box">
+  <div style="text-align:center;font-weight:900;margin-bottom:4px">📊 <span id="daily-date">Aujourd'hui</span></div>
+  <div class="daily-row"><span>📱 Forfait total :</span><b id="daily-forfait">0F + (0F en cours)</b></div>
+  <div style="font-size:11px;color:#aaa;text-align:center;margin-top:4px" id="daily-hier">Hier : —</div>
 </div>
 
 <div class="card">
@@ -68,7 +79,7 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <div id="forfait-status" style="margin-top:8px;font-size:12px;display:none;text-align:center"></div>
 </div>
 
-<div class="list">
+<div class="list" id="histo-block">
 <h3>Mon historique Forfait</h3>
 <div id="histo">Aucun achat</div>
 </div>
@@ -82,7 +93,19 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 </div>
 
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="modal-btn btn-yes" style="margin-top:10px" onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="confirm-msg"></div><div class="modal-btns"><button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin</button><button class="btn-yes modal-btn" onclick="doConfirm(true)">Oui bien sûr</button></div></div></div>
+
+<!-- MODAL 3 BOUTONS -->
+<div id="custom-confirm" class="modal-overlay" onclick="if(event.target===this) doRetour()">
+  <div class="modal-box">
+    <div id="confirm-msg" style="font-size:15px;line-height:1.6"></div>
+    <div class="modal-btns">
+      <button class="modal-btn btn-no" onclick="doConfirm(false)">Pas besoin<br><small style="font-weight:400;font-size:11px">→ Messagerie</small></button>
+      <button class="modal-btn btn-yes" onclick="doConfirm(true)">Oui bien sûr<br><small style="font-weight:400;font-size:11px">→ WhatsApp</small></button>
+    </div>
+    <button class="modal-btn btn-retour" onclick="doRetour()">↩ Retour - Voir mon statut dans l'historique</button>
+    <div style="font-size:11px;color:#aaa;margin-top:8px">Ou clique dans le vide pour revenir</div>
+  </div>
+</div>
 
 <script>
 var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
@@ -90,22 +113,91 @@ if(!firebase.apps.length)firebase.initializeApp(cfg);
 var db=firebase.database();
 var uid,userNom='Client',solde=0,_lock=false,confirmCallback=null;
 var ADMIN_UID="0158612131";
+var ADMIN_NOM="AYIZAN";
+var WHATSAPP_ADMIN="2290159415617";
 var WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';
 var ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+var lastCommandeTexte='';
+var lastCommandeData=null;
 
 function showAlert(m){document.getElementById('alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
-function showConfirm(m,cb){confirmCallback=cb;document.getElementById('confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
+function showConfirm(m,cb){confirmCallback=cb;document.getElementById('confirm-msg').innerHTML=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y);}
+function doRetour(){
+  document.getElementById('custom-confirm').style.display='none';
+  confirmCallback=null;
+  afficherSucces('forfait-status');
+  var h=document.getElementById('histo-block');
+  if(h) h.scrollIntoView({behavior:'smooth'});
+}
 function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:uid||'',client_nom:userNom,telephone_compte:uid})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
-function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m;e.style.display='block';e.style.color='#006400';}}
-function proposerSupport(s,d,cb){let details='';for(const[k,v]of Object.entries(d)){details+=`${k}: ${v}\n`;}const txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${userNom} (${uid})\n💬 DÉTAILS:\n${details}`;showConfirm('Voulez-vous contacter le personnel sur WhatsApp pour un traitement rapide?',function(yes){if(yes)window.open('https://wa.me/2290159415617?text='+encodeURIComponent(txt),'_blank');if(cb)cb();});}
+function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m+' - Suis ton statut dans l\'historique ci-dessous';e.style.display='block';e.style.color='#006400';}}
+
+/* === NOUVEAU : PAS BESOIN = MESSAGERIE / OUI = WHATSAPP / RETOUR = HISTORIQUE === */
+function proposerSupport(s,d,cb){
+  var txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${userNom} (${uid})\n💬 DÉTAILS:\n`;
+  for(const[k,v]of Object.entries(d)){ txt+=`${k}: ${v}\n`; }
+  lastCommandeTexte=txt;
+  lastCommandeData=d;
+  showConfirm('Contacter le personnel ?<br><span style="font-size:13px;color:#aaa">Pas besoin = <b style="color:#fff">Messagerie</b><br>Oui bien sûr = <b style="color:#25D366">WhatsApp</b></span>', function(yes){
+    if(yes){
+      // OUI BIEN SÛR -> WhatsApp
+      var txtWA = txt + '\n💬 Réponse personnel : Oui bien sûr → WhatsApp';
+      window.open('https://wa.me/'+WHATSAPP_ADMIN+'?text='+encodeURIComponent(txtWA),'_blank');
+      if(cb)cb();
+    }else{
+      // PAS BESOIN -> Messagerie AYIZAN
+      var convId=[uid,ADMIN_UID].sort().join('_');
+      var texteMessagerie = lastCommandeTexte + '\n━━━━━━━━━━━━━━\n💬 Réponse personnel : Pas besoin → Messagerie';
+      localStorage.setItem('mayne_pending_admin_msg', JSON.stringify({convId:convId, adminId:ADMIN_UID, adminNom:ADMIN_NOM, texte:texteMessagerie}));
+      location.href='messagerie.html?conv='+convId+'&to='+ADMIN_UID;
+    }
+  });
+}
+
 async function pushJS(destId,titre,fullData){
   if(!destId)return;
   try{
     let msg = fullData? `📱 ${fullData.operateur} - ${fullData.type}\n📅 ${fullData.date}\n👤 ${fullData.client_id} (${fullData.client_nom})\n🔢 Num benef: ${fullData.numero_beneficiaire}\n💰 ${fullData.montant}F\n📞 WA: ${fullData.whatsapp_client}\n📌 ${fullData.statut}` : titre;
     await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})});
   }catch(e){}
+}
+
+/* === CALCUL JOURNALIER FORFAIT + RESET 24H === */
+function dayKeyFromTs(ts){ var d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayKey(){ return dayKeyFromTs(Date.now()); }
+function isToday(v){
+  if(v.createdAt) return dayKeyFromTs(v.createdAt)===todayKey();
+  if(v.date){
+    var m=String(v.date).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m){ var k=m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'); return k===todayKey(); }
+  }
+  return false;
+}
+function isEnCours(v){ return String(v.statut||'').toLowerCase().includes('cours'); }
+function isValide(v){ var s=String(v.statut||'').toLowerCase(); return s.includes('valid')||s.includes('trait')||s.includes('termin')||s.includes('fait'); }
+function checkDailyReset(total, enCours){
+  var lastDay=localStorage.getItem('mayne_daily_forfait_last_day');
+  var today=todayKey();
+  if(lastDay && lastDay!==today){
+    var hier=JSON.parse(localStorage.getItem('mayne_daily_forfait_'+lastDay)||'null');
+    if(hier){
+      localStorage.setItem('mayne_daily_forfait_hier', JSON.stringify({day:lastDay, total:hier.total, enCours:hier.enCours}));
+      db.ref('daily_totals_forfait/'+lastDay).set({day:lastDay, total:hier.total, en_cours:hier.enCours, client_id:uid, client_nom:userNom, archive_le:Date.now()});
+    }
+  }
+  localStorage.setItem('mayne_daily_forfait_last_day', today);
+  localStorage.setItem('mayne_daily_forfait_'+today, JSON.stringify({total:total, enCours:enCours}));
+  var hierData=JSON.parse(localStorage.getItem('mayne_daily_forfait_hier')||'null');
+  var hierEl=document.getElementById('daily-hier');
+  if(hierData && hierEl) hierEl.textContent='Hier ('+hierData.day+') : Forfait '+hierData.total+'F + ('+hierData.enCours+'F en cours)';
+  var dateEl=document.getElementById('daily-date');
+  if(dateEl) dateEl.textContent='Aujourd\'hui - '+new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+}
+function updateDailyUI(total, enCours){
+  document.getElementById('daily-forfait').textContent=total+'F + ('+enCours+'F en cours)';
+  checkDailyReset(total, enCours);
 }
 
 async function init(){
@@ -116,10 +208,39 @@ async function init(){
   document.getElementById('uemail').textContent=u.phone;
   document.getElementById('av').textContent=(userNom[0]||'M').toUpperCase();
   db.ref('clients/'+uid).on('value',function(s){var d=s.val()||{};solde=+d.solde||0;document.getElementById('solde').textContent=solde.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';});
+  // Badge admin : nombre de forfaits en cours
+  if(uid===ADMIN_UID){
+    db.ref('commandes_forfaits').on('value', s=>{
+      var n=0;
+      s.forEach(ch=>{ if(String(ch.val().statut||'').toLowerCase().includes('cours')) n++; });
+      var btn=document.getElementById('btn-notif');
+      if(btn) btn.innerText = n>0 ? 'NOTIF🔔 ('+n+')' : 'NOTIF🔔';
+    });
+    db.ref('commandes_forfaits').orderByChild('createdAt').limitToLast(1).on('child_added', snap=>{
+      var v=snap.val()||{};
+      if(!v.createdAt) return;
+      if(Date.now() - v.createdAt > 60000) return;
+      var t=document.getElementById('global-notif');
+      t.innerText='🔔 NOUVEAU FORFAIT '+v.montant+'F - '+v.client_nom;
+      t.style.display='block';
+      setTimeout(()=>{ t.style.display='none'; }, 20000);
+      document.title='🔔 NOUVEAU FORFAIT - MAYNE';
+    });
+  }
   db.ref('commandes_forfaits').orderByChild('client_id').equalTo(uid).on('value',function(s){
     var c=document.getElementById('histo');
-    if(!s.exists()){c.innerHTML='Aucun achat';return;}
-    var h='';s.forEach(function(ch){var v=ch.val();var col='#ffbb00';if((v.statut||'').toLowerCase().includes('valid'))col='#28a745';if((v.statut||'').toLowerCase().includes('annul'))col='#dc3545';h='<div class=item><div><b>'+v.operateur+' - '+v.motif+'</b><br><small>'+v.numero_beneficiaire+' - '+v.date+'</small></div><div style="text-align:right"><b>'+v.montant+'F</b><br><span style="background:'+col+';color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">'+v.statut+'</span></div></div>'+h;});c.innerHTML=h;
+    if(!s.exists()){c.innerHTML='Aucun achat';updateDailyUI(0,0);return;}
+    var h='';var total=0,enCours=0;
+    s.forEach(function(ch){var v=ch.val();
+      if(isToday(v)){
+        var montant=Number(v.montant||0);
+        if(isEnCours(v)) enCours+=montant; else if(!String(v.statut||'').toLowerCase().includes('annul')) total+=montant;
+      }
+      var col='#ffbb00';if(isValide(v))col='#28a745';if((v.statut||'').toLowerCase().includes('annul'))col='#dc3545';
+      h='<div class=item><div><b>'+v.operateur+' - '+v.motif+'</b><br><small>'+v.numero_beneficiaire+' - '+v.date+'</small></div><div style="text-align:right"><b>'+v.montant+'F</b><br><span style="background:'+col+';color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">'+v.statut+'</span></div></div>'+h;
+    });
+    c.innerHTML=h;
+    updateDailyUI(total,enCours);
   });
 }
 
@@ -135,12 +256,12 @@ async function executerForfait(){
   if(_lock)return;_lock=true;document.getElementById('btnValider').innerText='Traitement...';document.getElementById('btnValider').disabled=true;
   try{
     await db.ref('clients/'+uid).update({solde:solde-montant});
-    let fullData={client_id:uid,client_nom:userNom,operateur:reseau,type:motif,motif:motif,numero_beneficiaire:numero,numero:numero,montant:montant,whatsapp_client:wa||'',date:new Date().toLocaleString('fr-FR'),statut:'en cours'};
+    let fullData={client_id:uid,client_nom:userNom,operateur:reseau,type:motif,motif:motif,numero_beneficiaire:numero,numero:numero,montant:montant,whatsapp_client:wa||'',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_forfaits').push().set(fullData);
     pushJS(ADMIN_UID,"NOUVEAU FORFAIT "+montant+"F",fullData);
-    // envoyerAlerte('forfait_credit',fullData); // DÉSACTIVÉ pour n'avoir qu'1 seule notif (celle avec montant + nom)
     db.ref('notifications/'+uid).push({titre:"Forfait en cours",message:`${reseau} ${motif} ${montant}F vers ${numero}`,date:fullData.date});
     db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Forfait",message:`${montant}F ${reseau} ${motif} Client:${uid} (${userNom})`,date:fullData.date});
+    // On met déjà le message en messagerie pour que "Pas besoin" arrive direct dedans
     var convId=[uid,ADMIN_UID].sort().join('_');
     await db.ref('conversations/'+convId+'/messages').push().set({senderId:uid,senderNom:userNom,type:'text',texte:`📱 FORFAIT\nReseau:${reseau}\nMotif:${motif}\nNumero:${numero}\nMontant:${montant}\nClient:${userNom} (${uid})\nWA:${wa||'non fourni'}`,createdAt:Date.now()});
     proposerSupport('forfait_credit',fullData,()=>afficherSucces('forfait-status'));
