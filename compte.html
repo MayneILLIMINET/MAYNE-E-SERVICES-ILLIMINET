@@ -13,43 +13,91 @@ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 </script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#fff;display:flex;justify-content:center}
-.app{max-width:430px;width:100%;min-height:100vh;background:#500;padding-bottom:90px}
-.top{text-align:center;color:#fff;padding:20px 16px 10px}
-.avatar-wrap{width:90px;height:90px;margin:0 auto;position:relative}
-.avatar{width:90px;height:90px;border-radius:50%;background:#aaa;display:flex;align-items:center;justify-content:center;font-size:40px;color:#666;font-weight:800}
-.star{position:absolute;bottom:0;right:0;width:28px;height:28px;background:#aaa;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fdf6ec}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#f2f2f2;display:flex;justify-content:center}
+.app{max-width:430px;width:100%;min-height:100vh;background:#f6f6f6;padding-bottom:95px}
+.top{background:linear-gradient(135deg,#ff5000,#ff7a00);color:#fff;padding:22px 16px 18px;border-radius:0 0 24px 24px;text-align:center;position:relative}
+.top h2{font-size:15px;font-weight:900;letter-spacing:.5px}
+.avatar-wrap{width:96px;height:96px;margin:14px auto 0;position:relative;cursor:pointer}
+.avatar{width:96px;height:96px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;color:#ff5000;font-weight:900;border:4px solid #fff;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-wrap:active{transform:scale(.96)}
+.cam{position:absolute;bottom:2px;right:2px;width:30px;height:30px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fff;font-size:14px}
+.change-photo{font-size:11px;background:rgba(0,0,0,.35);display:inline-block;padding:5px 10px;border-radius:999px;margin-top:8px;font-weight:700}
+.loyalty{background:#fff;color:#111;margin:12px 16px 0;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.loyalty-top{display:flex;justify-content:space-between;align-items:center}
+.loyalty-top b{font-size:13px}
+.loyalty-top span{font-size:11px;font-weight:900;color:#ff5000;background:#fff1e6;padding:5px 9px;border-radius:999px}
+.stars{display:flex;gap:4px;font-size:22px;margin:8px 0 4px}
+.stars span{color:#ddd}
+.stars span.on{color:#ffb400;text-shadow:0 1px 4px rgba(255,180,0,.5)}
+.progress{height:8px;background:#eee;border-radius:999px;overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#ff5000,#ffb400);border-radius:999px;transition:.4s}
+.loyalty small{font-size:11px;color:#777;display:block;margin-top:7px;line-height:1.4}
+.loyalty small b{color:#111}
+.balances{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 16px 0}
+.bal{background:#fff;border-radius:14px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.bal b{display:block;font-size:13px}
+.bal span{font-size:9px;color:#888;font-weight:800;letter-spacing:.4px}
 .list{padding:10px 16px}
-.item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #fff;cursor:pointer}
-.icon{width:42px;height:42px;background:#fcb;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
-.item b{display:block;color:#fff;font-size:14px}
-.item span{font-size:11px;color:#999}
-.arrow{margin-left:auto;color:#bbb}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #eee}
+.sec{font-size:10px;font-weight:900;letter-spacing:1px;color:#999;margin:14px 4px 6px}
+.item{display:flex;align-items:center;gap:12px;padding:13px 14px;background:#fff;border-radius:14px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 5px rgba(0,0,0,.04)}
+.item:active{transform:scale(.98)}
+.icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.item b{display:block;color:#111;font-size:13px}
+.item span{font-size:11px;color:#888}
+.arrow{margin-left:auto;color:#bbb;font-size:18px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#000;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #222;z-index:20}
 .bnav{border:none;background:none;font-size:11px;color:#888;cursor:pointer}
 .bnav.active{background:#0f3d2e;color:#d6f78c;border-radius:100px;padding:8px 16px;font-weight:700}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:99}
+#mBox{background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:18px;max-height:85vh;overflow:auto}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:800;z-index:999;display:none}
+.opt{padding:13px;border:1px solid #eee;border-radius:12px;margin-bottom:8px;cursor:pointer;font-weight:800;font-size:13px;display:flex;justify-content:space-between}
+.opt.active{border-color:#ff5000;background:#fff1e6;color:#ff5000}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="top">
-<h2>Mon Compte</h2>
-<div class="avatar-wrap" style="margin-top:16px"><div class="avatar" id="av">A</div><div class="star">★</div></div>
-<b id="name" style="display:block;margin-top:10px;font-size:18px">Chargement...</b>
-<span id="email" style="color:#999;font-size:13px"></span>
+<h2>MON COMPTE</h2>
+<div class="avatar-wrap" onclick="document.getElementById('fileAvatar').click()">
+<div class="avatar" id="av">A</div>
+<div class="cam">📷</div>
+</div>
+<div class="change-photo" onclick="document.getElementById('fileAvatar').click()">📷 Changer ma photo</div>
+<input type="file" id="fileAvatar" accept="image/*" hidden onchange="changeAvatar(this)">
+<b id="name" style="display:block;margin-top:10px;font-size:19px">Chargement...</b>
+<span id="email" style="color:#ffe8d6;font-size:13px"></span><br>
+<span id="phoneShow" style="font-size:12px;font-weight:800"></span>
+</div>
+
+<div class="loyalty">
+<div class="loyalty-top"><b>⭐ Fidélité MAYNE</b><span id="levelBadge">NIVEAU 1</span></div>
+<div class="stars" id="stars">⭐⭐⭐⭐⭐⭐</div>
+<div class="progress"><i id="progressBar" style="width:0%"></i></div>
+<small id="loyaltyText">Calcul de tes recharges...</small>
+<small>🎁 Bonus fidélité : <b id="bonusText">0 F</b> — Il s'ajoute à ta commission quand tu montes de niveau.</small>
+</div>
+
+<div class="balances">
+<div class="bal"><b id="bSolde" style="color:#0a8a2a">0 F</b><span>SOLDE</span></div>
+<div class="bal"><b id="bCom" style="color:#ff5000">0 F</b><span>COMMISSION</span></div>
+<div class="bal"><b id="bEp" style="color:#c2189a">0 F</b><span>ÉPARGNE</span></div>
 </div>
 
 <div class="list">
-<div class="item" onclick="location.href='info-compte.html'"><div class="icon">👤</div><div><b>Information sur le compte</b><span>Information sur votre profil</span></div><div class="arrow">›</div></div>
-<div class="item" onclick="location.href='pin-setup.html'"><div class="icon">🔢</div><div><b>Verrouillage par PIN</b><span id="pinStatus">Chargement...</span></div><div class="arrow">›</div></div>
-<div class="item" onclick="location.href='securite.html'"><div class="icon">🔒</div><div><b>Connexion et sécurité</b><span>Protégez votre compte</span></div><div class="arrow">›</div></div>
-<div class="item"><div class="icon">🌐</div><div><b>Langue</b><span>Changez la langue de votre appli</span></div><div class="arrow">›</div></div>
-<div class="item" onclick="location.href='parrainage.html'"><div class="icon">🪙</div><div><b>Compte de parrainage</b><span>Suivez vos gains de parrainage</span></div><div class="arrow">›</div></div>
-<div class="item"><div class="icon">🎧</div><div><b>Aide & assistance</b><span>Vous avez besoin d'aide?</span></div><div class="arrow">›</div></div>
-<div class="item"><div class="icon">⭐</div><div><b>Noter MAYNE</b><span>Partagez votre avis</span></div><div class="arrow">›</div></div>
-<div class="item"><div class="icon">ℹ️</div><div><b>À propos</b><span>Accéder au site web de MAYNE</span></div><div class="arrow">›</div></div>
-<div class="item" style="color:#c0392b"><div class="icon" style="background:#fde2e2">⛔</div><div><b>Désactiver le compte</b><span>Supprimer définitivement</span></div><div class="arrow">›</div></div>
+<div class="sec">COMPTE</div>
+<div class="item" onclick="location.href='info-compte.html'"><div class="icon" style="background:#e8f0ff">👤</div><div><b>Information sur le compte</b><span>Nom, numéro, email, profil</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="location.href='pin-setup.html'"><div class="icon" style="background:#fff0d6">🔢</div><div><b>Verrouillage par PIN</b><span id="pinStatus">Chargement...</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="location.href='securite.html'"><div class="icon" style="background:#e6f7e6">🔒</div><div><b>Connexion et sécurité</b><span>Protégez votre compte</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="openLang()"><div class="icon" style="background:#f0e6ff">🌐</div><div><b>Langue</b><span id="langShow">Français • Changez la langue</span></div><div class="arrow">›</div></div>
+<div class="sec">GAINS & AIDE</div>
+<div class="item" onclick="location.href='parrainage.html'"><div class="icon" style="background:#fff8d6">🪙</div><div><b>Compte de parrainage</b><span id="parrainShow">Suivez vos gains de parrainage</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="openAide()"><div class="icon" style="background:#dff3ff">🎧</div><div><b>Aide & assistance</b><span>WhatsApp MAYNE • Réponse rapide</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="openNoter()"><div class="icon" style="background:#ffeef5">⭐</div><div><b>Noter MAYNE</b><span>Dis-nous ce que tu penses</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="openAbout()"><div class="icon" style="background:#eee">ℹ️</div><div><b>À propos</b><span>MAYNE E-Services • Version 3.2</span></div><div class="arrow">›</div></div>
+<div class="item" onclick="openDelete()" style="border:1px solid #ffd6d6"><div class="icon" style="background:#fde2e2">⛔</div><div><b style="color:#c0392b">Désactiver le compte</b><span>Supprimer définitivement</span></div><div class="arrow">›</div></div>
 </div>
 </div>
 
@@ -60,44 +108,136 @@ body{background:#fff;display:flex;justify-content:center}
 <button class="bnav active">MES INFOS👤</button>
 </div>
 
+<div id="modal" onclick="if(event.target==this) closeModal()"><div id="mBox"></div></div>
+<div id="toast"></div>
+
 <script>
-function displayUser(u){
-  if(!u) return;
-  document.getElementById('name').textContent = ((u.prenom||'')+' '+(u.nom||'')).trim() || u.nom || 'Nom et prenom';
-  document.getElementById('email').textContent = u.email || u.phone || '';
-  document.getElementById('av').textContent = ((u.nom||u.prenom||'A')[0]||'A').toUpperCase();
-  document.getElementById('pinStatus').textContent = localStorage.getItem('mayne_pin_enabled')==='true'? 'Active • Code 4 chiffres' : 'Desactive';
+let currentUser=null, totalRecharge=0;
+function toast(m){ let t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
+function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR')+' F'; }
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+
+// ===== AVATAR COMME MESSAGERIE.HTML =====
+function showAvatar(photo){
+  let av=document.getElementById('av');
+  if(photo){ av.innerHTML='<img src="'+photo+'">'; }
+  else { let u=currentUser||{}; av.textContent=((u.nom||u.prenom||'A')[0]||'A').toUpperCase(); }
+}
+function changeAvatar(input){
+  let f=input.files[0]; if(!f) return;
+  if(f.size>1500000){ toast('❌ Photo trop lourde, choisis < 1.5 Mo'); return; }
+  let r=new FileReader();
+  r.onload=function(e){
+    let photo=e.target.result;
+    showAvatar(photo);
+    try{ localStorage.setItem('mayne_avatar', photo); }catch(err){}
+    let u=JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
+    u.photo=photo; localStorage.setItem('mayne_current_user', JSON.stringify(u));
+    if(u.phone){
+      let key=u.phone.replace(/[^0-9]/g,'');
+      database.ref('clients/'+key).update({photo:photo}).then(()=>toast('✅ Photo de profil changée'));
+    } else toast('✅ Photo changée');
+  };
+  r.readAsDataURL(f);
 }
 
-// Fonction chargee info compte auto
+// ===== FIDELITE 6 NIVEAUX =====
+// N1: 0-499 | N2: 500-5000 | N3: 5001-15000 | N4: 15001-30000 | N5: 30001-70000 (tu as dit 35000-70000) | N6: 70001-200000+ (tu as dit 80000-200000)
+function getLevel(total){
+  if(total>=70001) return {level:6, min:70001, max:200000, bonus:5000, next:null};
+  if(total>=30001) return {level:5, min:30001, max:70000, bonus:3500, next:70001};
+  if(total>=15001) return {level:4, min:15001, max:30000, bonus:2500, next:30001};
+  if(total>=5001)  return {level:3, min:5001,  max:15000, bonus:1500, next:15001};
+  if(total>=500)   return {level:2, min:500,   max:5000,  bonus:500,  next:5001};
+  return {level:1, min:0, max:499, bonus:0, next:500};
+}
+function renderLoyalty(){
+  let L=getLevel(totalRecharge);
+  document.getElementById('levelBadge').textContent='NIVEAU '+L.level+' / 6';
+  document.getElementById('bonusText').textContent=fmt(L.bonus);
+  let stars=document.getElementById('stars');
+  stars.innerHTML='';
+  for(let i=1;i<=6;i++){ let s=document.createElement('span'); s.textContent='★'; if(i<=L.level) s.className='on'; stars.appendChild(s); }
+  let pct=100;
+  if(L.next){ pct=Math.min(100, Math.round((totalRecharge - L.min) / (L.next - L.min) * 100)); }
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.getElementById('loyaltyText').innerHTML = L.next
+    ? 'Total rechargé : <b>'+fmt(totalRecharge)+'</b> — Plus que <b>'+fmt(L.next-totalRecharge)+'</b> pour passer au <b>Niveau '+(L.level+1)+'</b> 🎯'
+    : 'Total rechargé : <b>'+fmt(totalRecharge)+'</b> — Tu es au <b>max, Niveau 6 👑</b> Bravo !';
+}
+
+function displayUser(u){
+  if(!u) return; currentUser=u;
+  document.getElementById('name').textContent = ((u.prenom||'')+' '+(u.nom||'')).trim() || 'Nom et prenom';
+  document.getElementById('email').textContent = u.email || '';
+  document.getElementById('phoneShow').textContent = u.phone || '';
+  document.getElementById('pinStatus').textContent = localStorage.getItem('mayne_pin_enabled')==='true'? 'Active • Code 4 chiffres' : 'Désactivé • Activer';
+  document.getElementById('bSolde').textContent=fmt(u.solde||0);
+  document.getElementById('bCom').textContent=fmt(u.commission||0);
+  document.getElementById('bEp').textContent=fmt(u.recompense||0);
+  document.getElementById('langShow').textContent = (localStorage.getItem('mayne_lang')||'fr')==='fr' ? 'Français • Changez la langue' : 'English • Change language';
+  showAvatar(u.photo || localStorage.getItem('mayne_avatar'));
+}
+
 async function chargerInfosCompte(){
   var u = JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(!u ||!u.phone){
-    displayUser(u);
-    return;
-  }
+  if(!u ||!u.phone){ displayUser(u); renderLoyalty(); return; }
   var phoneKey = u.phone.replace(/[^0-9]/g,'');
-  displayUser(u); // affiche vite le cache
-
+  displayUser(u);
   try{
     var snapClient = await database.ref('clients/'+phoneKey).once('value');
     var dataClient = snapClient.val()||{};
     var snapUser = await database.ref('users/'+phoneKey).once('value');
     var dataUser = snapUser.val()||{};
-
     var merged = Object.assign({}, u, dataClient, dataUser);
+    if(!merged.photo) merged.photo = localStorage.getItem('mayne_avatar')||'';
     localStorage.setItem('mayne_current_user', JSON.stringify(merged));
     displayUser(merged);
-  }catch(e){
-    console.log('Erreur chargement compte', e);
-  }
+    // Total recharge = dépôts validés + total déjà enregistré
+    let tot = Number(dataClient.total_recharge||dataClient.totalRecharge||dataClient.cumul_recharge||0);
+    try{
+      let sDep = await database.ref('commandes_depots').once('value');
+      sDep.forEach(ch=>{ let v=ch.val()||{}; let p=(v.client_id||v.phone||v.user||'').replace(/[^0-9]/g,''); let st=((v.statut||v.status||'').toLowerCase()); if(p===phoneKey && (st.includes('valid')||st.includes('succes')||st.includes('payé')||st.includes('paye'))){ tot+=Number(v.montant||v.total||0); } });
+    }catch(e){}
+    // Si tot = 0, on prend solde+commission comme secours pour ne pas rester à 0
+    if(tot===0 && (merged.solde||merged.commission)) tot = Number(merged.solde||0)+Number(merged.commission||0);
+    totalRecharge = tot;
+    renderLoyalty();
+  }catch(e){ console.log(e); renderLoyalty(); }
+}
+
+// ===== PARAMETRES FONCTIONNELS =====
+function openLang(){
+  let cur=localStorage.getItem('mayne_lang')||'fr';
+  document.getElementById('mBox').innerHTML='<h3 style="margin-bottom:12px">🌐 Langue</h3><div class="opt '+(cur==='fr'?'active':'')+'" onclick="setLang(\'fr\')">🇫🇷 Français <span>'+(cur==='fr'?'✅':'')+'</span></div><div class="opt '+(cur==='en'?'active':'')+'" onclick="setLang(\'en\')">🇬🇧 English <span>'+(cur==='en'?'✅':'')+'</span></div><button onclick="closeModal()" style="width:100%;padding:12px;border:none;background:#111;color:#fff;border-radius:10px;font-weight:900;margin-top:8px">Fermer</button>';
+  document.getElementById('modal').style.display='flex';
+}
+function setLang(l){ localStorage.setItem('mayne_lang',l); displayUser(currentUser); toast(l==='fr'?'✅ Langue : Français':'✅ Language: English'); closeModal(); }
+function openAide(){
+  document.getElementById('mBox').innerHTML='<h3>🎧 Aide & assistance</h3><p style="font-size:13px;color:#555;margin:10px 0">Un problème ? Écris-nous sur WhatsApp, on répond vite.</p><a href="https://wa.me/2290158612131?text=Bonjour%20MAYNE%2C%20j%27ai%20besoin%20d%27aide" style="display:block;text-align:center;background:#25D366;color:#fff;padding:14px;border-radius:12px;font-weight:900;text-decoration:none">💬 Ouvrir WhatsApp MAYNE</a><button onclick="closeModal()" style="width:100%;padding:12px;border:none;background:#111;color:#fff;border-radius:10px;font-weight:900;margin-top:8px">Fermer</button>';
+  document.getElementById('modal').style.display='flex';
+}
+function openNoter(){
+  document.getElementById('mBox').innerHTML='<h3>⭐ Noter MAYNE</h3><p style="font-size:13px;color:#555;margin:10px 0">Tu aimes MAYNE ? Note-nous !</p><div style="font-size:32px;text-align:center;letter-spacing:6px" id="starsRate">☆☆☆☆☆</div><button onclick="toast(\'❤️ Merci pour ta note !\');closeModal()" style="width:100%;padding:12px;border:none;background:#ff5000;color:#fff;border-radius:10px;font-weight:900;margin-top:12px">Envoyer ma note</button>';
+  document.getElementById('modal').style.display='flex';
+  document.getElementById('starsRate').onclick=function(e){ let n=Math.ceil((e.offsetX/ (this.offsetWidth))*5); this.textContent='★'.repeat(n)+'☆'.repeat(5-n); };
+}
+function openAbout(){
+  document.getElementById('mBox').innerHTML='<h3>ℹ️ À propos</h3><p style="font-size:13px;color:#333;line-height:1.6;margin:10px 0"><b>MAYNE E-Services ILLIMINET</b><br>Version 3.2 • Cotonou, Bénin<br>Dépôts, Retraits, Forfaits, Transferts, 1XBET, Factures, Épargne.<br><br>© 2026 MAYNE ILLIMINET</p><a href="https://github.com/MayneILLIMINET" style="display:block;text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px;font-weight:900;text-decoration:none">🌐 Voir le site MAYNE</a><button onclick="closeModal()" style="width:100%;padding:12px;border:none;background:#eee;border-radius:10px;font-weight:900;margin-top:8px">Fermer</button>';
+  document.getElementById('modal').style.display='flex';
+}
+function openDelete(){
+  document.getElementById('mBox').innerHTML='<h3 style="color:#c0392b">⛔ Désactiver le compte ?</h3><p style="font-size:13px;color:#555;margin:10px 0">Cette action est définitive. Ton solde et tes données seront supprimés. Tu es sûr ?</p><button onclick="doDelete()" style="width:100%;padding:13px;border:none;background:#c0392b;color:#fff;border-radius:10px;font-weight:900">Oui, supprimer définitivement</button><button onclick="closeModal()" style="width:100%;padding:12px;border:none;background:#eee;border-radius:10px;font-weight:900;margin-top:8px">Annuler</button>';
+  document.getElementById('modal').style.display='flex';
+}
+async function doDelete(){
+  let u=JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
+  if(u.phone){ let k=u.phone.replace(/[^0-9]/g,''); try{ await database.ref('clients/'+k).remove(); }catch(e){} }
+  localStorage.clear(); toast('Compte désactivé'); setTimeout(()=>location.href='index.html',800);
 }
 
 window.onload = chargerInfosCompte;
-firebase.auth().onAuthStateChanged(function(user){
-  if(user){ init(); } 
-  else { firebase.auth().signInAnonymously(); }
-});
+firebase.auth().onAuthStateChanged(function(user){ if(!user){ firebase.auth().signInAnonymously(); } });
 </script>
 </body>
 </html>
