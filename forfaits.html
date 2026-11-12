@@ -46,7 +46,6 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <div style="font-size:12px;color:#aaa">BONUS: <b id="com">0 XOF</b></div>
 </div>
 
-<!-- CALCUL JOURNALIER FORFAIT -->
 <div class="daily-box" id="daily-box">
   <div style="text-align:center;font-weight:900;margin-bottom:4px">📊 <span id="daily-date">Aujourd'hui</span></div>
   <div class="daily-row"><span>📱 Forfait total :</span><b id="daily-forfait">0F + (0F en cours)</b></div>
@@ -61,7 +60,6 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <option value="MOOV">MOOV</option>
 <option value="CELTIS">CELTIS</option>
 </select>
-
 <label style="font-size:12px;margin-top:8px;display:block">Motif</label>
 <select id="forfait-motif" class="select">
 <option value="CREDIT SIMPLE">CRÉDIT SIMPLE</option>
@@ -70,11 +68,9 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 <option value="APPEL ET INTERNET">APPEL ET INTERNET</option>
 <option value="ILLIMITE">ILLIMITÉ</option>
 </select>
-
 <input id="forfait-numero" class="input" placeholder="Numéro bénéficiaire">
 <input id="forfait-montant" type="number" class="input" placeholder="Montant">
 <input id="forfait-wa" class="input" placeholder="Numéro WhatsApp (facultatif)">
-
 <button class="btn" id="btnValider" onclick="executerForfait()">Acheter maintenant</button>
 <div id="forfait-status" style="margin-top:8px;font-size:12px;display:none;text-align:center"></div>
 </div>
@@ -94,13 +90,12 @@ body{background:#f5000;color:#fff;display:flex;justify-content:center}
 
 <div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="alert-msg"></div><button class="modal-btn btn-yes" style="margin-top:10px" onclick="hideAlert()">OK</button></div></div>
 
-<!-- MODAL 3 BOUTONS -->
 <div id="custom-confirm" class="modal-overlay" onclick="if(event.target===this) doRetour()">
   <div class="modal-box">
     <div id="confirm-msg" style="font-size:15px;line-height:1.6"></div>
     <div class="modal-btns">
       <button class="modal-btn btn-no" onclick="doConfirm(false)">☎️MESSAGERIE<br><small style="font-weight:400;font-size:11px">→ Dans Actifer</small></button>
-      <button class="modal-btn btn-yes" onclick="doConfirm(true)">☎️WHATSAPP<br><small style="font-weight:400;font-size:11px">→  Sur WhatsApp</small></button>
+      <button class="modal-btn btn-yes" onclick="doConfirm(true)">☎️WHATSAPP<br><small style="font-weight:400;font-size:11px">→ Sur WhatsApp</small></button>
     </div>
     <button class="modal-btn btn-retour" onclick="doRetour()">🔙 Retour - Voir mon statut dans l'historique</button>
     <div style="font-size:11px;color:#aaa;margin-top:8px">Ou clique dans le vide pour revenir</div>
@@ -131,10 +126,15 @@ function doRetour(){
   var h=document.getElementById('histo-block');
   if(h) h.scrollIntoView({behavior:'smooth'});
 }
-function envoyerAlerte(service,data){try{const p={service:service,id:Date.now(),data:Object.assign({},data,{client_id:uid||'',client_nom:userNom,telephone_compte:uid})};fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});}catch(e){}}
+function envoyerAlerte(service,data){
+  try{
+    var p={service:service,id:Date.now(),data:Object.assign({},data,{client_nom:userNom,client_id:uid})};
+    fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+  }catch(e){}
+}
 function afficherSucces(id){const m='commande envoyée avec succès!';const t=document.getElementById('global-notif');t.innerText='✅ '+m;t.style.display='block';setTimeout(()=>t.style.display='none',20000);const e=document.getElementById(id);if(e){e.innerText=m+' - Suis ton statut dans l\'historique ci-dessous';e.style.display='block';e.style.color='#006400';}}
 
-/* === NOUVEAU : PAS BESOIN = MESSAGERIE / OUI = WHATSAPP / RETOUR = HISTORIQUE === */
+/* === SUPPORT : PAS BESOIN = MESSAGERIE / OUI = WHATSAPP / RETOUR = HISTORIQUE === */
 function proposerSupport(s,d,cb){
   var txt=`🔔 URGENT🧭\n🔈 SERVICE : ${s}\n👤 CLIENT : ${userNom} (${uid})\n💬 DÉTAILS:\n`;
   for(const[k,v]of Object.entries(d)){ txt+=`${k}: ${v}\n`; }
@@ -142,12 +142,10 @@ function proposerSupport(s,d,cb){
   lastCommandeData=d;
   showConfirm('Contacter le personnel ?<br><span style="font-size:13px;color:#aaa">Pas besoin = <b style="color:#fff">Messagerie</b><br>Oui bien sûr = <b style="color:#25D366">WhatsApp</b></span>', function(yes){
     if(yes){
-      // OUI BIEN SÛR -> WhatsApp
       var txtWA = txt + '\n💬 Réponse personnel : Oui bien sûr → WhatsApp';
       window.open('https://wa.me/'+WHATSAPP_ADMIN+'?text='+encodeURIComponent(txtWA),'_blank');
       if(cb)cb();
     }else{
-      // PAS BESOIN -> Messagerie AYIZAN
       var convId=[uid,ADMIN_UID].sort().join('_');
       var texteMessagerie = lastCommandeTexte + '\n━━━━━━━━━━━━━━\n💬 Réponse personnel : Pas besoin → Messagerie';
       localStorage.setItem('mayne_pending_admin_msg', JSON.stringify({convId:convId, adminId:ADMIN_UID, adminNom:ADMIN_NOM, texte:texteMessagerie}));
@@ -162,6 +160,22 @@ async function pushJS(destId,titre,fullData){
     let msg = fullData? `📱 ${fullData.operateur} - ${fullData.type}\n📅 ${fullData.date}\n👤 ${fullData.client_id} (${fullData.client_nom})\n🔢 Num benef: ${fullData.numero_beneficiaire}\n💰 ${fullData.montant}F\n📞 WA: ${fullData.whatsapp_client}\n📌 ${fullData.statut}` : titre;
     await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:destId,titre:titre,message:msg})});
   }catch(e){}
+}
+
+/* === NOTIF ADMIN COMPLÈTE - CLOCHE + ONESIGNAL === */
+async function notifierAdminCommande(fullData, convId){
+  var titreNotif = userNom + " vous a envoyé une nouvelle commande !";
+  var texteNotif = "📱 FORFAIT " + fullData.montant + "F - " + fullData.operateur + " " + fullData.motif + " vers " + fullData.numero_beneficiaire + " - Clique pour répondre";
+  try{
+    // 1. Cloche dans l'app
+    await db.ref('notifications/'+ADMIN_UID).push({titre:titreNotif, message:texteNotif, date:fullData.date, createdAt:Date.now(), type:'commande_forfait', from_id:uid, from_nom:userNom, convId:convId, lu:false});
+  }catch(e){}
+  try{
+    // 2. Notif téléphone même si app fermée
+    await pushJS(ADMIN_UID, titreNotif, fullData);
+    await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:ADMIN_UID, titre:titreNotif, message:texteNotif})});
+  }catch(e){}
+  try{ envoyerAlerte('forfait_credit', fullData); }catch(e){}
 }
 
 /* === CALCUL JOURNALIER FORFAIT + RESET 24H === */
@@ -208,7 +222,6 @@ async function init(){
   document.getElementById('uemail').textContent=u.phone;
   document.getElementById('av').textContent=(userNom[0]||'M').toUpperCase();
   db.ref('clients/'+uid).on('value',function(s){var d=s.val()||{};solde=+d.solde||0;document.getElementById('solde').textContent=solde.toFixed(2)+' XOF';document.getElementById('com').textContent=(+d.commission||0).toFixed(2)+' XOF';});
-  // Badge admin : nombre de forfaits en cours
   if(uid===ADMIN_UID){
     db.ref('commandes_forfaits').on('value', s=>{
       var n=0;
@@ -258,12 +271,13 @@ async function executerForfait(){
     await db.ref('clients/'+uid).update({solde:solde-montant});
     let fullData={client_id:uid,client_nom:userNom,operateur:reseau,type:motif,motif:motif,numero_beneficiaire:numero,numero:numero,montant:montant,whatsapp_client:wa||'',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_forfaits').push().set(fullData);
-    pushJS(ADMIN_UID,"NOUVEAU FORFAIT "+montant+"F",fullData);
     db.ref('notifications/'+uid).push({titre:"Forfait en cours",message:`${reseau} ${motif} ${montant}F vers ${numero}`,date:fullData.date});
     db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Forfait",message:`${montant}F ${reseau} ${motif} Client:${uid} (${userNom})`,date:fullData.date});
-    // On met déjà le message en messagerie pour que "Pas besoin" arrive direct dedans
+    // Message en messagerie
     var convId=[uid,ADMIN_UID].sort().join('_');
     await db.ref('conversations/'+convId+'/messages').push().set({senderId:uid,senderNom:userNom,type:'text',texte:`📱 FORFAIT\nReseau:${reseau}\nMotif:${motif}\nNumero:${numero}\nMontant:${montant}\nClient:${userNom} (${uid})\nWA:${wa||'non fourni'}`,createdAt:Date.now()});
+    // === NOTIF ADMIN QUI MANQUAIT AVANT ===
+    await notifierAdminCommande(fullData, convId);
     proposerSupport('forfait_credit',fullData,()=>afficherSucces('forfait-status'));
     document.getElementById('forfait-numero').value='';document.getElementById('forfait-montant').value='';document.getElementById('forfait-wa').value='';
   }catch(e){showAlert('Erreur: '+e.message);}
