@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OneSignal - Envoi Manuel MAYNE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+*{box-sizing:border-box;font-family:system-ui}body{margin:0;background:#111;color:#fff;display:flex;justify-content:center}
+.app{max-width:480px;width:100%;min-height:100vh;padding:14px;padding-bottom:30px}
+h2{color:#ffeb3b;margin:6px 0 2px}small{color:#aaa}
+.card{background:#1e1e1e;border:1px solid #333;border-radius:14px;padding:14px;margin:12px 0}
+label{font-size:12px;font-weight:800;display:block;margin:10px 0 4px}
+input,textarea,select{width:100%;background:#000;color:#fff;border:1px solid #444;border-radius:10px;padding:12px;font-size:14px;outline:none}
+textarea{min-height:90px;resize:vertical}
+.btn{width:100%;border:none;border-radius:999px;padding:14px;font-weight:900;cursor:pointer;font-size:14px;margin-top:10px}
+.btn-orange{background:#ff5000;color:#fff}
+.btn-green{background:#28a745;color:#fff}
+.btn-grey{background:#333;color:#fff}
+.btn-small{padding:8px 12px;font-size:12px;border-radius:999px;border:none;cursor:pointer;font-weight:900}
+.user{display:flex;justify-content:space-between;align-items:center;background:#000;border:1px solid #333;border-radius:12px;padding:10px;margin-bottom:8px}
+.user b{font-size:14px}.user span{font-size:11px;color:#aaa;display:block}
+.user .ok{color:#0f0;font-size:11px;font-weight:900}.user .no{color:#f55;font-size:11px;font-weight:900}
+.check{width:22px;height:22px;accent-color:#ff5000}
+.badge{background:#ff5000;color:#fff;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900}
+.log{background:#000;border:1px solid #333;border-radius:10px;padding:10px;font-size:12px;max-height:180px;overflow:auto;white-space:pre-wrap}
+.templates{display:flex;gap:6px;flex-wrap:wrap}
+.tpl{background:#222;border:1px solid #444;color:#fff;border-radius:999px;padding:7px 10px;font-size:11px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+<h2>📣 OneSignal - Envoi Manuel</h2>
+<small>MAYNE • Envoie une notif à tes abonnés</small>
+
+<div class="card">
+<b id="count">Chargement des abonnés...</b>
+<div style="font-size:12px;color:#aaa;margin-top:4px">Seuls ceux qui ont ouvert l'app 1 fois et accepté les notifs apparaissent avec <span style="color:#0f0">● OK</span></div>
+<input id="search" placeholder="🔍 Rechercher nom ou numéro..." oninput="filtrer()" style="margin-top:10px">
+<div style="display:flex;gap:6px;margin-top:8px">
+<button class="btn-small" style="background:#ff5000;color:#fff" onclick="toutCocher(true)">Tout cocher</button>
+<button class="btn-small" style="background:#333;color:#fff" onclick="toutCocher(false)">Tout décocher</button>
+<button class="btn-small" style="background:#111;color:#ffeb3b;border:1px solid #ffeb3b" onclick="charger()">🔄 Actualiser</button>
+</div>
+<div id="liste" style="margin-top:10px;max-height:320px;overflow:auto"></div>
+</div>
+
+<div class="card">
+<label>📌 Modèles rapides (clique pour remplir) :</label>
+<div class="templates">
+<button class="tpl" onclick="remplir('🎉 NOUVEAU BONUS !','Salut ! Ton BONUS a augmenté. Ouvre MAYNE pour voir et retirer.')">🎉 Bonus</button>
+<button class="tpl" onclick="remplir('📱 FORFAIT PROMO','Promo Forfait aujourd\\'hui ! Recharge vite avant la fin. Ouvre MAYNE → Forfait.')">📱 Promo Forfait</button>
+<button class="tpl" onclick="remplir('💸 TRANSFERT RAPIDE','Besoin d\\'envoyer de l\\'argent ? Transfert en 1 min sur MAYNE.')">💸 Transfert</button>
+<button class="tpl" onclick="remplir('⚠️ MAINTENANCE','MAYNE sera en maintenance 10 min. Merci de patienter.')">⚠️ Maintenance</button>
+<button class="tpl" onclick="remplir('🎰 1XBET','Recharge 1XBET en 1 min sur MAYNE, sans file d\\'attente.')">🎰 1XBET</button>
+</div>
+
+<label>Titre de la notification :</label>
+<input id="titre" placeholder="Ex: 🎉 NOUVEAU BONUS !">
+<label>Message :</label>
+<textarea id="msg" placeholder="Ex: Salut ! Ton BONUS a augmenté. Ouvre MAYNE pour voir..."></textarea>
+
+<button class="btn btn-orange" onclick="envoyerSelection()">📤 ENVOYER AUX COCHÉS (<span id="nbSel">0</span>)</button>
+<button class="btn btn-green" onclick="envoyerTous()">📣 ENVOYER À TOUS LES ABONNÉS</button>
+<button class="btn btn-grey" onclick="envoyerTest()">🧪 M'ENVOYER UN TEST (à moi)</button>
+<button class="btn btn-grey" onclick="location.href='index.html'">🏠 Retour Accueil</button>
+</div>
+
+<div class="card">
+<b>📋 Journal d'envoi</b>
+<div id="log" class="log">En attente...</div>
+</div>
+</div>
+
+<script>
+var cfg={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};
+if(!firebase.apps.length)firebase.initializeApp(cfg);
+var db=firebase.database();
+var ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';
+var users=[]; var selection=new Set();
+
+function log(t){ var el=document.getElementById('log'); el.textContent = new Date().toLocaleTimeString('fr-FR')+' - '+t+'\n'+el.textContent; }
+function remplir(t,m){ document.getElementById('titre').value=t; document.getElementById('msg').value=m; }
+
+async function charger(){
+  document.getElementById('count').innerText='Chargement...';
+  var snap=await db.ref('clients').once('value');
+  users=[];
+  snap.forEach(function(ch){
+    var v=ch.val()||{};
+    users.push({phone:ch.key, nom:v.nom||ch.key, pid:v.onesignal_id||v.playerId||v.player_id||'', solde:v.solde||0});
+  });
+  // Tri : ceux avec PID d'abord
+  users.sort(function(a,b){ return (b.pid?1:0)-(a.pid?1:0); });
+  document.getElementById('count').innerHTML = '👥 '+users.length+' clients • <span style="color:#0f0">'+users.filter(u=>u.pid).length+' abonnés OneSignal</span>';
+  filtrer();
+  log(users.filter(u=>u.pid).length+' abonnés prêts à recevoir');
+}
+
+function filtrer(){
+  var q=(document.getElementById('search').value||'').toLowerCase();
+  var html='';
+  users.forEach(function(u){
+    if(q && !(u.nom.toLowerCase().includes(q) || u.phone.includes(q))) return;
+    var checked = selection.has(u.phone) ? 'checked' : '';
+    var ok = u.pid ? '<span class="ok">● OK - peut recevoir</span>' : '<span class="no">○ Pas de Player ID</span>';
+    html += '<div class="user"><label style="display:flex;gap:10px;align-items:center;margin:0"><input type="checkbox" class="check" '+checked+' onchange="toggleSel(\''+u.phone+'\',this.checked)" '+(u.pid?'':'disabled')+'><span><b>'+u.nom+'</b><span>'+u.phone+' • Solde: '+u.solde+'F</span>'+ok+'</span></label><button class="btn-small" style="background:#28a745;color:#fff" onclick="envoyerUn(\''+u.phone+'\')">Envoyer ➤</button></div>';
+  });
+  document.getElementById('liste').innerHTML = html || '<div style="text-align:center;color:#aaa;padding:20px">Aucun abonné trouvé</div>';
+  majNb();
+}
+function toggleSel(phone, on){ if(on) selection.add(phone); else selection.delete(phone); majNb(); }
+function toutCocher(on){
+  selection.clear();
+  if(on) users.forEach(u=>{ if(u.pid) selection.add(u.phone); });
+  filtrer();
+}
+function majNb(){ document.getElementById('nbSel').innerText = selection.size; }
+
+async function envoyerUn(phone){
+  var titre=document.getElementById('titre').value.trim();
+  var msg=document.getElementById('msg').value.trim();
+  if(!titre || !msg) return alert('Remplis Titre + Message d’abord');
+  var u=users.find(x=>x.phone===phone);
+  if(!u || !u.pid) return alert('Ce client n’a pas de Player ID');
+  log('Envoi à '+u.nom+' ('+phone+')...');
+  try{
+    await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:phone, titre:titre, message:msg})});
+    log('✅ Envoyé à '+u.nom);
+    alert('✅ Envoyé à '+u.nom);
+  }catch(e){ log('❌ Erreur '+e.message); alert('Erreur: '+e.message); }
+}
+
+async function envoyerSelection(){
+  var titre=document.getElementById('titre').value.trim();
+  var msg=document.getElementById('msg').value.trim();
+  if(!titre || !msg) return alert('Remplis Titre + Message');
+  if(selection.size===0) return alert('Coche au moins 1 abonné');
+  if(!confirm('Envoyer à '+selection.size+' abonné(s) ?\n\n'+titre+'\n'+msg)) return;
+  var i=0;
+  for(var phone of selection){
+    i++;
+    log('['+i+'/'+selection.size+'] Envoi à '+phone+'...');
+    try{ await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:phone, titre:titre, message:msg})}); log('✅ '+phone); }
+    catch(e){ log('❌ '+phone+' : '+e.message); }
+    await new Promise(r=>setTimeout(r,600)); // pause pour ne pas bloquer le Script
+  }
+  alert('✅ Fini ! Envoyé à '+selection.size+' abonné(s)');
+}
+
+async function envoyerTous(){
+  var titre=document.getElementById('titre').value.trim();
+  var msg=document.getElementById('msg').value.trim();
+  if(!titre || !msg) return alert('Remplis Titre + Message');
+  var tous=users.filter(u=>u.pid);
+  if(!tous.length) return alert('Aucun abonné avec Player ID');
+  if(!confirm('⚠️ ENVOYER À TOUS les '+tous.length+' abonnés ?\n\n'+titre+'\n'+msg)) return;
+  selection.clear(); tous.forEach(u=>selection.add(u.phone));
+  await envoyerSelection();
+}
+
+async function envoyerTest(){
+  var moi=JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
+  var phone=moi.phone;
+  if(!phone) return alert('Connecte-toi d’abord sur index.html');
+  var titre=document.getElementById('titre').value.trim()||'🧪 Test OneSignal';
+  var msg=document.getElementById('msg').value.trim()||'Si tu reçois ça, OneSignal marche !';
+  log('Test à moi-même ('+phone+')...');
+  try{
+    await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({destId:phone, titre:titre, message:msg})});
+    log('✅ Test envoyé à '+phone+' - Vérifie ton téléphone dans 5 sec');
+    alert('✅ Test envoyé ! Vérifie ton téléphone.');
+  }catch(e){ log('❌ '+e.message); }
+}
+
+firebase.auth().onAuthStateChanged(function(user){
+  if(user){ charger(); } else { firebase.auth().signInAnonymously(); }
+});
+</script>
+</body>
+</html>
