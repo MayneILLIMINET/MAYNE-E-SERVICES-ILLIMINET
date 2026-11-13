@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ACTIFER MINAGE - Simulateur</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#0e0e0e;color:#fff;font-family:system-ui}
+.app{max-width:520px;margin:0 auto;background:#151515;min-height:100vh;padding:14px}
+.top{text-align:center;padding:14px;background:#000;border-radius:16px;border-bottom:3px solid #ff5000}
+.top b{font-size:28px;color:#ff5000;letter-spacing:2px}
+.top span{display:block;font-size:11px;color:#ffeb3b;font-weight:800;margin-top:2px}
+.top small{color:#888}
+.badge{display:inline-block;background:#ffeb3b;color:#000;font-size:10px;font-weight:900;padding:4px 10px;border-radius:999px;margin-top:6px}
+.card{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:16px;padding:14px;margin-top:12px}
+.card h3{margin:0 0 6px;color:#ffeb3b;font-size:13px}
+.big{font-size:32px;font-weight:900;color:#0f0}
+.big small{font-size:13px;color:#aaa}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #2a2a2a;font-size:13px}
+.row b{color:#ffeb3b}
+.plan{display:flex;justify-content:space-between;align-items:center;background:#000;border:1px solid #333;border-radius:12px;padding:12px;margin-top:8px;cursor:pointer}
+.plan.active{border-color:#ff5000;background:#2a1500}
+.plan b{font-size:15px}
+.plan span{font-size:11px;color:#aaa;display:block}
+.plan .gain{color:#0f0;font-weight:900;font-size:14px;text-align:right}
+.plan .gain small{display:block;color:#888;font-weight:400;font-size:10px}
+.btn{width:100%;border:none;padding:14px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;margin-top:10px}
+.btn-orange{background:#ff5000;color:#fff}
+.btn-green{background:#28a745;color:#fff}
+.btn-dark{background:#333;color:#fff;border:1px solid #555}
+.input{width:100%;background:#000;color:#fff;border:1px solid #333;border-radius:12px;padding:12px;font-size:14px;outline:none;margin-top:8px}
+.progress{height:10px;background:#000;border-radius:99px;overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;background:#ff5000;width:0%}
+.mini{font-size:11px;color:#888;line-height:1.5}
+.center{text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><b>ACTIFER</b><span>⚡ MINAGE - SIMULATEUR DÉMO</span><small>Argent virtuel • Aucun dépôt réel • Pour démonstration</small><br><span class="badge">🟢 MINAGE EN DIRECT</span></div>
+
+<div class="card">
+<h3>💰 MON SOLDE VIRTUEL</h3>
+<div class="big"><span id="solde">0</span> <small>F virtuel</small></div>
+<div class="row"><span>Plan actif</span><b id="planActif">Aucun</b></div>
+<div class="row"><span>Gain / jour</span><b id="gainJour">0 F / jour</b></div>
+<div class="row"><span>Gain / seconde</span><b id="gainSec">0.0000 F</b></div>
+<div class="row"><span>Miné depuis le début</span><b id="totalMine">0 F</b></div>
+<div class="progress"><i id="bar"></i></div>
+<div class="mini" id="timer">En attente d'un plan...</div>
+<button class="btn btn-green" onclick="reclamer()">💸 RÉCLAMER LES GAINS MINÉS</button>
+<button class="btn btn-dark" onclick="resetAll()">🔄 Réinitialiser la démo</button>
+</div>
+
+<div class="card">
+<h3>📦 CHOISIS TON PLAN DE MINAGE</h3>
+<div class="mini">Clique sur un plan, puis sur ACTIVER. Le minage démarre progressivement, seconde par seconde.</div>
+<div id="plans"></div>
+<button class="btn btn-orange" onclick="activerPlan()">⚡ ACTIVER LE PLAN SÉLECTIONNÉ</button>
+</div>
+
+<div class="card">
+<h3>📊 TES PLANS ACTIFER</h3>
+<div class="mini">Rendement affiché pour la démo. Ce n'est pas une promesse de gain réel.</div>
+<div class="row"><span>Investissement virtuel</span><b>Gain / jour</b></div>
+<div class="row"><span>5 000 F</span><b>25 F / jour</b></div>
+<div class="row"><span>10 000 F</span><b>50 F / jour</b></div>
+<div class="row"><span>20 000 F</span><b>100 F / jour</b></div>
+<div class="row"><span>30 000 F</span><b>140 F / jour</b></div>
+<div class="row"><span>50 000 F</span><b>200 F / jour</b></div>
+<div class="row"><span>70 000 F</span><b>260 F / jour</b></div>
+<div class="row"><span>100 000 F</span><b>350 F / jour</b></div>
+</div>
+
+<div class="card center">
+<h3>📲 TU VEUX LA VRAIE VERSION PRO ?</h3>
+<div class="mini">Pour passer en vrai minage légal, il faut : preuve de minage réel, contrat, société enregistrée, et retrait vérifié.<br>Écris-moi, je t'aide à le faire proprement.</div>
+<a href="https://wa.me/2290159415617?text=Bonjour%20ACTIFER%2C%20je%20veux%20infos%20sur%20le%20minage" style="display:block;background:#25D366;color:#fff;text-decoration:none;padding:14px;border-radius:12px;font-weight:900;margin-top:10px">💬 WhatsApp : 01 59 41 56 17</a>
+</div>
+</div>
+
+<script>
+const PLANS=[
+{invest:5000,gain:25},{invest:10000,gain:50},{invest:20000,gain:100},
+{invest:30000,gain:140},{invest:50000,gain:200},{invest:70000,gain:260},{invest:100000,gain:350}
+];
+let selected=0;
+let state=JSON.parse(localStorage.getItem('actifer_mine_demo')||'null')||{solde:0,totalMine:0,plan:null,last:Date.now(),minedUnclaimed:0};
+function save(){ localStorage.setItem('actifer_mine_demo',JSON.stringify(state)); }
+function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
+function renderPlans(){
+  document.getElementById('plans').innerHTML=PLANS.map((p,i)=>`
+  <div class="plan ${i===selected?'active':''}" onclick="selected=${i};renderPlans()">
+    <div><b>${fmt(p.invest)} F</b><span>Plan ${i+1} • Minage progressif</span></div>
+    <div class="gain">+${p.gain} F / jour<small>${(p.gain/p.invest*100).toFixed(2)}% / jour • ${(p.gain/p.invest*365*100).toFixed(0)}% / an</small></div>
+  </div>`).join('');
+}
+function tick(){
+  if(state.plan!=null){
+    let now=Date.now();
+    let sec=(now-state.last)/1000;
+    let perSec=PLANS[state.plan].gain/86400;
+    let add=perSec*sec;
+    state.minedUnclaimed+=add;
+    state.last=now;
+    save();
+  }
+  let plan=state.plan!=null?PLANS[state.plan]:null;
+  document.getElementById('solde').innerText=fmt(state.solde+state.minedUnclaimed);
+  document.getElementById('planActif').innerText=plan?fmt(plan.invest)+' F':'Aucun';
+  document.getElementById('gainJour').innerText=plan?plan.gain+' F / jour':'0 F / jour';
+  document.getElementById('gainSec').innerText=plan?(plan.gain/86400).toFixed(4)+' F':'0.0000 F';
+  document.getElementById('totalMine').innerText=fmt(state.totalMine+state.minedUnclaimed)+' F';
+  document.getElementById('timer').innerText=plan?('Minage en cours... +'+fmt(state.minedUnclaimed)+' F non réclamés • '+plan.gain+' F par jour'):'En attente d\'un plan...';
+  document.getElementById('bar').style.width=plan?Math.min(100,(state.minedUnclaimed/plan.gain*100))+'%':'0%';
+}
+function activerPlan(){
+  if(state.plan!=null && !confirm('Tu as déjà un plan actif. Changer de plan ? Le minage non réclamé sera conservé.')) return;
+  state.plan=selected; state.last=Date.now(); save(); tick();
+  alert('✅ Plan '+fmt(PLANS[selected].invest)+' F activé !\nGain : '+PLANS[selected].gain+' F / jour, en direct.');
+}
+function reclamer(){
+  if(state.minedUnclaimed<=0.01) return alert('Rien à réclamer pour le moment, laisse miner quelques secondes.');
+  state.solde+=state.minedUnclaimed; state.totalMine+=state.minedUnclaimed; state.minedUnclaimed=0; save(); tick();
+  alert('✅ Gains réclamés et ajoutés à ton solde virtuel !');
+}
+function resetAll(){ if(confirm('Réinitialiser toute la démo ?')){ localStorage.removeItem('actifer_mine_demo'); location.reload(); } }
+renderPlans(); tick(); setInterval(tick,1000);
+</script>
+</body>
+</html>
