@@ -7,30 +7,31 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box}
-body{background:#0e0e0e;color:#fff;font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0}
+body{background:#0e0e0e;color:#fff;font-family:system-ui;margin:0}
 .app{max-width:1000px;width:100%;margin:0 auto;background:#151515;min-height:100vh}
 .top{padding:12px;background:#000;display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;z-index:20;border-bottom:3px solid #ff5000}
 .top-title{font-size:14px;font-weight:900;color:#ffeb3b}
 .top-sub{font-size:10px;color:#0f0}
-.top-actions{display:flex;gap:6px}
+.top-actions{display:flex;gap:6px;flex-wrap:wrap}
 .btn{padding:9px 14px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;text-decoration:none;border:none}
 .btn-home{background:#fff;color:#000}
 .btn-orange{background:#ff5000;color:#fff}
+.btn-green{background:#28a745;color:#fff}
 .btn:disabled{opacity:.5}
-.tabs{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:12px 10px 6px;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 10px 6px;scrollbar-width:none}
 .tab{background:#222;color:#fff;border:1px solid #333;padding:9px 14px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .tab.active{background:#ff5000;border-color:#fff}
 .tab i{font-style:normal;background:#000;color:#ffeb3b;padding:1px 7px;border-radius:999px;margin-left:4px;font-size:11px}
 .tab i.has{background:#ff5000;color:#fff}
 .section{padding:0 10px 20px}
-.h2{color:#ffeb3b;font-size:12px;font-weight:900;margin:10px 0 8px;border-left:4px solid #ff5000;padding-left:8px;line-height:1.4}
+.h2{color:#ffeb3b;font-size:12px;font-weight:900;margin:10px 0 8px;border-left:4px solid #ff5000;padding-left:8px}
 .input{width:100%;background:#000;color:#fff;padding:12px 14px;border:1px solid #333;border-radius:12px;font-size:13px;outline:none}
 .input:focus{border-color:#ff5000}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.stats.five{grid-template-columns:repeat(5,1fr)}
 .stat{background:#000;border-radius:12px;padding:10px 6px;text-align:center}
-.stat b{display:block;font-size:15px}
-.stat span{font-size:8px;color:#999;font-weight:800;letter-spacing:.5px}
+.stat b{display:block;font-size:14px}
+.stat span{font-size:8px;color:#999;font-weight:800}
 .cmd-buttons{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .cmd-btn{background:#222;color:#fff;border:1px solid #333;padding:9px 12px;border-radius:999px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
 .cmd-btn.active{background:#ff5000;border-color:#fff}
@@ -40,56 +41,53 @@ body{background:#0e0e0e;color:#fff;font-family:system-ui,-apple-system,sans-seri
 .card{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:14px;padding:12px}
 .card.en-cours{border-left:4px solid #ffeb3b}
 .card.validating{opacity:.6}
+.card.clickable{cursor:pointer}
+.card.clickable:active{transform:scale(.99)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .user-name{font-size:15px;font-weight:900;line-height:1.1}
 .user-name small{display:block;font-size:11px;color:#aaa;font-weight:400;margin-top:2px;word-break:break-all}
 .user-phone{font-size:13px;font-weight:900;color:#ffeb3b}
 .badge{font-size:10px;font-weight:900;padding:5px 9px;border-radius:999px;white-space:nowrap}
 .badge.ok{background:#28a745;color:#fff}
-.badge.no{background:#dc3545;color:#fff}
 .badge.wait{background:#ffeb3b;color:#000}
 .card-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0;padding:10px;background:#111;border-radius:10px}
 .card-grid.two{grid-template-columns:1fr 1fr}
-.kv{font-size:12px;min-width:0}
-.kv b{display:block;font-size:8px;color:#ffeb3b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-.kv span{color:#fff;word-break:break-word}
+.kv{font-size:12px}.kv b{display:block;font-size:8px;color:#ffeb3b;text-transform:uppercase;margin-bottom:2px}.kv span{color:#fff;word-break:break-word}
 .edit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0}
-.edit-field label{display:block;font-size:8px;color:#999;font-weight:800;letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase}
+.edit-field label{display:block;font-size:8px;color:#999;font-weight:800;margin-bottom:4px;text-transform:uppercase}
 .edit-field input{width:100%;background:#000;color:#fff;border:1px solid #333;border-radius:10px;padding:11px 8px;font-size:13px;font-weight:800;outline:none}
-.edit-field input:focus{border-color:#ff5000}
-.edit-field input.green{color:#0f0}
-.edit-field input.yellow{color:#ffeb3b}
-.edit-field input.pink{color:#f0f}
+.edit-field input.green{color:#0f0}.edit-field input.yellow{color:#ffeb3b}.edit-field input.pink{color:#f0f}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .actions.three{grid-template-columns:1fr 1fr 1fr}
 .btn-action{border:none;padding:11px 6px;border-radius:10px;font-weight:900;font-size:12px;cursor:pointer}
-.btn-action:active{transform:scale(.97)}
-.btn-action:disabled{opacity:.5}
-.btn-val{background:#28a745;color:#fff}
-.btn-ann{background:#dc3545;color:#fff}
-.btn-save{background:#0d6efd;color:#fff}
-.btn-view{background:#333;color:#fff;border:1px solid #555}
+.btn-val{background:#28a745;color:#fff}.btn-ann{background:#dc3545;color:#fff}.btn-view{background:#333;color:#fff;border:1px solid #555}
 .btn-full{width:100%;background:#ff5000;color:#fff;border:none;padding:12px;border-radius:10px;font-weight:900;font-size:13px;cursor:pointer;margin-top:6px}
+.btn-del{width:100%;background:#dc3545;color:#fff;border:none;padding:12px;border-radius:10px;font-weight:900;font-size:13px;cursor:pointer;margin-top:6px}
 .empty{text-align:center;padding:30px;color:#888;font-size:13px}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:flex-end;justify-content:center;z-index:99}
 #mBox{background:#1e1e1e;border-radius:18px 18px 0 0;width:100%;max-width:600px;padding:16px;max-height:92vh;overflow:auto}
-.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
-#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(80px);background:#111;border:2px solid #28a745;color:#fff;padding:12px 16px;border-radius:12px;font-size:12px;font-weight:800;z-index:999;opacity:0;transition:.3s;max-width:92%;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #333;font-size:12px;gap:8px;align-items:center}
+.row b{max-width:60%;word-break:break-all;text-align:right}
+.btn-row-del{background:#dc3545;color:#fff;border:none;border-radius:8px;padding:7px 10px;font-weight:900;cursor:pointer;font-size:11px;flex-shrink:0}
+.btn-row-edit{background:#333;color:#fff;border:1px solid #555;border-radius:8px;padding:7px 10px;font-weight:900;cursor:pointer;font-size:11px;flex-shrink:0}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(80px);background:#111;border:2px solid #28a745;color:#fff;padding:12px 16px;border-radius:12px;font-size:12px;font-weight:800;z-index:999;opacity:0;transition:.3s;max-width:92%;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{border-color:#dc3545}
-@media(max-width:480px){.edit-grid{grid-template-columns:1fr 1fr 1fr}.edit-field input{font-size:12px;padding:10px 6px}}
+.daily-nav{display:flex;gap:6px;align-items:center;margin:10px 0}
+.daily-nav button{flex:1}
+.hist-day{display:flex;justify-content:space-between;align-items:center;background:#000;border:1px solid #333;border-radius:10px;padding:10px;cursor:pointer}
+.hist-day.active{border-color:#ff5000;background:#2a1500}
+.hist-day b{color:#0f0}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="top">
-<div>
-<div class="top-title">🔧 ADMIN FINAL MAYNE</div>
-<div class="top-sub" id="adminPhone">Connexion...</div>
-</div>
+<div><div class="top-title">🔧 ADMIN FINAL MAYNE</div><div class="top-sub" id="adminPhone">Connexion...</div></div>
 <div class="top-actions">
+<a href="onesignal.html" class="btn btn-green">📣 ONESIGNAL</a>
 <a href="statut.html" class="btn btn-home">STATUT 🧭</a>
-<button class="btn btn-orange" id="btnReload" onclick="loadAllCounts();loadDaily();">🔄 RELOAD</button>
+<button class="btn btn-orange" id="btnReload" onclick="loadAllCounts();loadDaily();loadDailyHistory();">🔄 RELOAD</button>
 </div>
 </div>
 <div class="tabs">
@@ -98,7 +96,7 @@ body{background:#0e0e0e;color:#fff;font-family:system-ui,-apple-system,sans-seri
 <button class="tab" id="tab-daily" onclick="switchMain('daily')">📊 JOURNALIER <i id="bubble-daily">0</i></button>
 </div>
 <div id="sec-users" class="section">
-<div class="h2">1 / TOUS LES USERS — Nom, Prénom, Solde, Commission, Épargne, Numéro, Email</div>
+<div class="h2">1 / TOUS LES USERS — Clique sur un user pour voir toutes ses infos</div>
 <input id="searchUser" class="input" placeholder="🔍 Rechercher nom, prénom, numéro, email..." oninput="filterUsers()">
 <div class="stats">
 <div class="stat"><b id="uCount">0</b><span>USERS</span></div>
@@ -109,34 +107,39 @@ body{background:#0e0e0e;color:#fff;font-family:system-ui,-apple-system,sans-seri
 <div class="list" id="listUsers"><div class="empty">Chargement...</div></div>
 </div>
 <div id="sec-cmd" class="section" style="display:none">
-<div class="h2">2 / COMMANDES EN COURS — Tes vrais services Firebase</div>
+<div class="h2">2 / COMMANDES EN COURS</div>
 <div class="cmd-buttons" id="cmdButtons"></div>
 <input id="searchCmd" class="input" placeholder="🔍 Rechercher client, montant..." oninput="filterCmd()">
 <div class="list" id="listCmd" style="margin-top:10px"><div class="empty">Clique sur un service ci-dessus</div></div>
 </div>
 <div id="sec-daily" class="section" style="display:none">
-<div class="h2">3 / CALCUL JOURNALIER — Aujourd'hui <span id="dailyDate"></span> — Forfaits + Transferts par user</div>
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">
-<input type="date" id="dailyPicker" class="input" style="width:auto;flex:1" onchange="loadDaily(this.value)">
-<button class="btn btn-orange" onclick="loadDaily();document.getElementById('dailyPicker').value=todayKey();">📅 AUJOURD'HUI</button>
+<div class="h2">3 / CALCUL JOURNALIER PRO — <span id="dailyDate"></span></div>
+<div class="daily-nav">
+<button class="btn btn-home" onclick="changeDay(-1)">◀ JOUR PRÉCÉDENT</button>
+<input type="date" id="dailyPicker" class="input" style="flex:1.2;text-align:center" onchange="loadDaily(this.value)">
+<button class="btn btn-home" onclick="changeDay(1)">JOUR SUIVANT ▶</button>
 </div>
-<div class="stats">
-<div class="stat"><b id="dTotal" style="color:#0f0">0 F</b><span>CA TOTAL JOUR</span></div>
-<div class="stat"><b id="dForfait" style="color:#ffeb3b">0 F</b><span>FORFAITS JOUR</span></div>
-<div class="stat"><b id="dTransfert" style="color:#0d6efd">0 F</b><span>TRANSFERTS JOUR</span></div>
+<div style="display:flex;gap:6px">
+<button class="btn btn-orange" style="flex:1" onclick="loadDaily();document.getElementById('dailyPicker').value=todayKey();">📅 AUJOURD'HUI</button>
+<button class="btn btn-home" style="flex:1" onclick="loadDaily(addDays(todayKey(),-1))">📅 HIER</button>
+<button class="btn btn-home" style="flex:1" onclick="loadDaily(addDays(todayKey(),-7))">📅 IL Y A 7 JOURS</button>
+</div>
+<div class="stats five">
+<div class="stat"><b id="dTotal" style="color:#0f0">0 F</b><span>CA TOTAL</span></div>
+<div class="stat"><b id="dForfait" style="color:#ffeb3b">0 F</b><span>FORFAITS</span></div>
+<div class="stat"><b id="dEnvoi" style="color:#0d6efd">0 F</b><span>TRANSFERT ENVOI</span></div>
+<div class="stat"><b id="dRetrait" style="color:#f0f">0 F</b><span>TRANSFERT RETRAIT</span></div>
 <div class="stat"><b id="dUsers">0</b><span>USERS ACTIFS</span></div>
 </div>
 <input id="searchDaily" class="input" placeholder="🔍 Rechercher user journalier..." oninput="renderDaily()">
 <div class="list" id="listDaily" style="margin-top:10px"><div class="empty">Chargement journalier...</div></div>
+<div class="h2">📅 HISTORIQUE DES JOURS — Clique sur un jour pour voir le détail</div>
+<div class="list" id="listDailyHistory"><div class="empty">Chargement historique...</div></div>
 </div>
 </div>
 <div id="modal" onclick="if(event.target==this) closeModal()">
-<div id="mBox">
-<h3 id="mTitle" style="color:#ff5000;margin:0 0 8px 0">Détail</h3>
-<div id="mContent"></div>
-<div id="mActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"></div>
-<button class="btn" style="width:100%;margin-top:8px;background:#333;color:#fff;padding:12px;border-radius:10px;border:none;font-weight:900" onclick="closeModal()">Fermer</button>
-</div>
+<div id="mBox"><h3 id="mTitle" style="color:#ff5000;margin:0 0 8px 0">Détail</h3><div id="mContent"></div><div id="mActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"></div>
+<button class="btn" style="width:100%;margin-top:8px;background:#333;color:#fff;padding:12px;border-radius:10px;border:none;font-weight:900" onclick="closeModal()">Fermer</button></div>
 </div>
 <div id="toast"></div>
 <script>
@@ -144,11 +147,7 @@ const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomai
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
 let toastTimer=null;
-function showToast(msg,isErr){
-const t=document.getElementById('toast');
-t.innerText=msg; t.className=isErr?'show err':'show';
-clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ t.className=''; },2800);
-}
+function showToast(msg,isErr){const t=document.getElementById('toast');t.innerText=msg;t.className=isErr?'show err':'show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},2800);}
 const ADMIN_LIST=["0158612131","2290158612131","158612131"];
 function getPhone(){ try{ let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
 function isAdmin(p){ if(!p) return false; const c=p.replace(/\D/g,''); return ADMIN_LIST.some(a=> c.endsWith(a.replace(/\D/g,'').slice(-8))); }
@@ -168,6 +167,9 @@ const SERVICES = [
 let allUsers=[], allCmd=[], currentService=null, processing=new Set();
 let dailyData=[], dailyDateKey=todayKey();
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDays(key,n){ var d=new Date(key+'T12:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function changeDay(n){ loadDaily(addDays(dailyDateKey,n)); }
+function fmtDateFR(key){ return key.split('-').reverse().join('/'); }
 function switchMain(tab){
 document.getElementById('sec-users').style.display = tab==='users' ? 'block' : 'none';
 document.getElementById('sec-cmd').style.display = tab==='cmd' ? 'block' : 'none';
@@ -176,9 +178,11 @@ document.getElementById('tab-users').classList.toggle('active', tab==='users');
 document.getElementById('tab-cmd').classList.toggle('active', tab==='cmd');
 document.getElementById('tab-daily').classList.toggle('active', tab==='daily');
 if(tab==='cmd') loadAllCounts();
-if(tab==='daily') loadDaily();
+if(tab==='daily'){ loadDaily(); loadDailyHistory(); }
 }
 function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR')+' F'; }
+function esc(s){ return String(s==null?'':s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+// ===== TON CODE DE BASE POUR USERS - INTACT =====
 function loadUsers(){
 db.ref('clients').on('value', snap=>{
 allUsers=[]; let totS=0,totC=0,totE=0;
@@ -194,13 +198,21 @@ document.getElementById('uEp').innerText=fmt(totE);
 renderUsers(allUsers);
 });
 }
+// ===== CARTE USER PROPRE - 1 CLIC = DÉTAIL COMPLET =====
 function renderUsers(list){
 const el=document.getElementById('listUsers'); el.innerHTML='';
 if(list.length===0){ el.innerHTML='<div class="empty">Aucun user</div>'; return; }
 list.slice(0,500).forEach(u=>{
 const div=document.createElement('div');
-div.className='card';
-div.innerHTML=`<div class="card-top"><div><div class="user-name">${u.nom||'-'} ${u.prenom||''}<small>${u.email||'Pas d\'email'}</small></div><div class="user-phone" style="margin-top:4px">${u.phone}</div></div><span class="badge ok">USER</span></div><div class="edit-grid"><div class="edit-field"><label>💰 Solde</label><input id="solde-${u.key}" type="number" value="${u.solde}" class="green"></div><div class="edit-field"><label>⭐ Commission</label><input id="com-${u.key}" type="number" value="${u.commission}" class="yellow"></div><div class="edit-field"><label>🐷 Épargne</label><input id="ep-${u.key}" type="number" value="${u.recompense}" class="pink"></div></div><button class="btn-full" id="save-${u.key}" onclick="saveUser('${u.key}',this)">💾 SAUVEGARDER</button>`;
+div.className='card clickable';
+div.onclick=function(e){ if(e.target.closest('button')||e.target.closest('input')) return; openUserDetail(u.key); };
+div.innerHTML=`<div class="card-top"><div><div class="user-name">${u.nom||'-'} ${u.prenom||''}<small>${u.email||'Pas d\'email'}</small></div><div class="user-phone" style="margin-top:4px">${u.phone}</div></div><span class="badge ok">USER</span></div>
+<div class="edit-grid"><div class="edit-field"><label>💰 Solde</label><input id="solde-${u.key}" type="number" value="${u.solde}" class="green" onclick="event.stopPropagation()"></div><div class="edit-field"><label>⭐ Commission</label><input id="com-${u.key}" type="number" value="${u.commission}" class="yellow" onclick="event.stopPropagation()"></div><div class="edit-field"><label>🐷 Épargne</label><input id="ep-${u.key}" type="number" value="${u.recompense}" class="pink" onclick="event.stopPropagation()"></div></div>
+<div style="display:flex;gap:6px;margin-top:6px">
+<button class="btn-full" style="margin-top:0" onclick="event.stopPropagation();saveUser('${u.key}',this)">💾 SAUVEGARDER SOLDE</button>
+<button class="btn-full" style="margin-top:0;background:#333;border:1px solid #555" onclick="event.stopPropagation();openUserDetail('${u.key}')">👁️ VOIR / GÉRER TOUTES LES INFOS</button>
+</div>
+<div style="font-size:10px;color:#888;text-align:center;margin-top:6px">👆 Clique sur la carte pour voir toutes les infos Firebase de ce user</div>`;
 el.appendChild(div);
 });
 }
@@ -211,8 +223,115 @@ const s=Number(document.getElementById('solde-'+phone).value);
 const c=Number(document.getElementById('com-'+phone).value);
 const e=Number(document.getElementById('ep-'+phone).value);
 try{ await db.ref('clients/'+phone).update({solde:s, commission:c, recompense:e}); showToast('✅ '+phone+' sauvegardé'); }catch(err){ showToast('❌ '+err.message,true); }
-if(btn){ btn.disabled=false; btn.innerText='💾 SAUVEGARDER'; }
+if(btn){ btn.disabled=false; btn.innerText='💾 SAUVEGARDER SOLDE'; }
 }
+// ===== DÉTAIL PRO : TOUTES LES INFOS FIREBASE DU USER =====
+function openUserDetail(phone){
+  var u=allUsers.find(x=>x.key===phone||x.phone===phone);
+  if(!u) return;
+  var data=u.data||{};
+  // On affiche TOUT ce qui existe dans Firebase pour ce user, pas juste nom/email
+  // On met les champs principaux en haut, le reste en dessous
+  var order=['nom','prenom','phone','email','solde','commission','recompense','password','motdepasse','adresse','ville','pays','date_naissance','naissance','sexe','photo','avatar','created_at','date','inscription'];
+  var keys=Object.keys(data);
+  var sorted=[...order.filter(k=>keys.includes(k)), ...keys.filter(k=>!order.includes(k))];
+  // Si le phone n'est pas dans data, on l'ajoute
+  if(!sorted.includes('phone')) sorted.unshift('phone');
+
+  document.getElementById('mTitle').innerText='👤 '+(u.nom||'')+' '+(u.prenom||'')+' — '+phone;
+  var html='<div style="font-size:11px;color:#aaa;margin-bottom:10px">Toutes les infos stockées dans Firebase pour ce user.<br>🗑️ = efface juste cette info • ✏️ = modifie juste cette info</div>';
+  html+='<div class="row" style="background:#111;border-radius:8px;padding:10px"><span>📱 Numéro (clé Firebase)</span><b style="color:#ffeb3b">'+phone+'</b></div>';
+  sorted.forEach(function(k){
+    if(k==='phone') return; // déjà affiché en haut
+    var val=data[k];
+    var display = (typeof val==='object') ? JSON.stringify(val).slice(0,200) : String(val==null?'—':val);
+    var isMoney = (k==='solde'||k==='commission'||k==='recompense');
+    html+='<div class="row"><span>'+k+'</span><b style="color:'+(isMoney?'#0f0':'#fff')+'">'+esc(display).slice(0,120)+'</b><div style="display:flex;gap:4px"><button class="btn-row-edit" onclick="editField(\''+phone+'\',\''+k+'\',\''+esc(display).slice(0,100)+'\')">✏️</button><button class="btn-row-del" onclick="deleteField(\''+phone+'\',\''+k+'\')">🗑️</button></div></div>';
+  });
+  // Champs qui n'existent pas encore mais qu'on peut ajouter
+  html+='<div style="font-size:11px;color:#aaa;margin-top:12px">Champs absents dans Firebase pour ce user : '+order.filter(k=>!keys.includes(k)&&k!=='phone').join(', ')+' — clique sur ✏️ pour en ajouter un.</div>';
+  document.getElementById('mContent').innerHTML=html;
+  document.getElementById('mActions').innerHTML=
+    '<button class="btn-action btn-val" onclick="closeModal();openUserEditAll(\''+phone+'\')">✏️ MODIFIER TOUT</button>'+
+    '<button class="btn-action btn-ann" onclick="closeModal();deleteUser(\''+phone+'\',\''+esc(u.nom||'')+'\')">🗑️ SUPPRIMER CE USER</button>';
+  document.getElementById('modal').style.display='flex';
+}
+// Modifie UN champ précis depuis le détail
+async function editField(phone, field, oldVal){
+  var nv=prompt('Modifier "'+field+'" pour '+phone+' :', oldVal||'');
+  if(nv===null) return;
+  try{
+    var v=nv;
+    // Si c'est un chiffre, on le stocke en nombre
+    if(field==='solde'||field==='commission'||field==='recompense') v=Number(nv)||0;
+    var upd={}; upd[field]=v;
+    await db.ref('clients/'+phone).update(upd);
+    showToast('✅ '+field+' modifié');
+    // On rouvre le détail à jour
+    setTimeout(function(){ openUserDetail(phone); },300);
+  }catch(e){ showToast('❌ '+e.message,true); }
+}
+// Modifie tout d'un coup (nom, prénom, email...)
+function openUserEditAll(phone){
+  var u=allUsers.find(x=>x.key===phone);
+  if(!u) return;
+  document.getElementById('mTitle').innerText='✏️ Modifier tout — '+phone;
+  document.getElementById('mContent').innerHTML=
+    '<div class="edit-field"><label>Nom</label><input id="edit-nom" value="'+esc(u.nom)+'" class="input"></div>'+
+    '<div class="edit-field" style="margin-top:8px"><label>Prénom</label><input id="edit-prenom" value="'+esc(u.prenom)+'" class="input"></div>'+
+    '<div class="edit-field" style="margin-top:8px"><label>Email</label><input id="edit-email" value="'+esc(u.email)+'" class="input"></div>'+
+    '<div class="edit-field" style="margin-top:8px"><label>Solde</label><input id="edit-solde" type="number" value="'+u.solde+'" class="input"></div>'+
+    '<div class="edit-field" style="margin-top:8px"><label>Commission</label><input id="edit-commission" type="number" value="'+u.commission+'" class="input"></div>'+
+    '<div class="edit-field" style="margin-top:8px"><label>Épargne</label><input id="edit-recompense" type="number" value="'+u.recompense+'" class="input"></div>';
+  document.getElementById('mActions').innerHTML='<button class="btn-action btn-val" onclick="saveUserEditAll(\''+phone+'\')">💾 SAUVEGARDER</button><button class="btn-action btn-view" onclick="closeModal();openUserDetail(\''+phone+'\')">← RETOUR</button>';
+  document.getElementById('modal').style.display='flex';
+}
+async function saveUserEditAll(phone){
+  try{
+    await db.ref('clients/'+phone).update({
+      nom:document.getElementById('edit-nom').value.trim(),
+      prenom:document.getElementById('edit-prenom').value.trim(),
+      email:document.getElementById('edit-email').value.trim(),
+      solde:Number(document.getElementById('edit-solde').value||0),
+      commission:Number(document.getElementById('edit-commission').value||0),
+      recompense:Number(document.getElementById('edit-recompense').value||0)
+    });
+    showToast('✅ Modifs sauvegardées');
+    closeModal();
+  }catch(e){ showToast('❌ '+e.message,true); }
+}
+// Efface UN seul champ dans Firebase (vraiment supprimé, pas mis à vide)
+async function deleteField(phone, field){
+  if(!confirm('Effacer juste "'+field+'" pour '+phone+' ?\nLes autres infos restent intactes.')) return;
+  try{
+    await db.ref('clients/'+phone+'/'+field).remove();
+    showToast('✅ "'+field+'" effacé pour '+phone);
+    setTimeout(function(){ openUserDetail(phone); },300);
+  }catch(e){ showToast('❌ '+e.message,true); }
+}
+async function deleteUser(phone,nom){
+  if(phone===curPhone) return showToast('⛔ Tu ne peux pas supprimer ton propre compte admin',true);
+  var tape=prompt('⚠️ SUPPRESSION DÉFINITIVE\n\nUser : '+(nom||'')+' ('+phone+')\n\nCela efface : Compte, Solde, Commandes, Conversations, Notifications\n\nPour confirmer, tape SUPPRIMER :');
+  if(tape!=='SUPPRIMER') return showToast('Annulé',true);
+  if(!confirm('Dernière confirmation : VRAIMENT supprimer '+phone+' ?')) return;
+  showToast('⏳ Suppression de '+phone+'...');
+  try{
+    var updates={};
+    updates['clients/'+phone]=null;
+    updates['notifications/'+phone]=null;
+    var allPaths=['commandes_depots','commandes_retraits','commandes_1xbet','commandes_forfaits','commandes_factures','commandes_transferts','commandes_echanges','epargne','statuts'];
+    for(var p of allPaths){
+      var snap=await db.ref(p).once('value');
+      snap.forEach(function(ch){var v=ch.val()||{};if(v.client_id===phone||v.phone===phone||v.user===phone||v.client===phone||ch.key===phone) updates[p+'/'+ch.key]=null;});
+    }
+    var convSnap=await db.ref('conversations').once('value');
+    convSnap.forEach(function(ch){if(ch.key.indexOf(phone)!==-1) updates['conversations/'+ch.key]=null;});
+    await db.ref().update(updates);
+    showToast('✅ '+phone+' supprimé avec toutes ses données');
+    closeModal();
+  }catch(e){ showToast('❌ '+e.message,true); }
+}
+// ===== TON CODE DE BASE POUR COMMANDES =====
 async function loadAllCounts(){
 const btn=document.getElementById('btnReload'); if(btn){ btn.disabled=true; btn.innerText='⏳...'; }
 const container=document.getElementById('cmdButtons'); container.innerHTML='Scan...';
@@ -291,7 +410,7 @@ if(phone){ db.ref('notifications/'+phone).push({titre:newStatut==='validé'?'✅
 showToast((newStatut==='validé'?'✅ Validé • ':'❌ Annulé • ')+ (item?item.label+' '+fmt(item.montant):''));
 }catch(e){ showToast('❌ '+e.message,true); }
 processing.delete(k);
-loadAllCounts(); loadDaily();
+loadAllCounts(); loadDaily(); loadDailyHistory();
 }
 function openDetailCmd(path,id){
 const item=allCmd.find(x=>x.path===path && x.id===id); if(!item) return;
@@ -303,7 +422,7 @@ document.getElementById('mActions').innerHTML=`<button class="btn-action btn-val
 document.getElementById('modal').style.display='flex';
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
-// ===== JOURNALIER : FORFAITS + TRANSFERTS =====
+// ===== JOURNALIER PRO - ENVOI vs RETRAIT SÉPARÉS =====
 function parseDayKey(raw){
 if(!raw) return '';
 let s=String(raw).trim();
@@ -318,13 +437,22 @@ function getUserName(phone){
 let u=allUsers.find(x=>x.phone===phone||x.key===phone);
 return u ? ((u.nom||'')+' '+(u.prenom||'')).trim() : '';
 }
+function getTransfertSens(v){
+  var txt = ((v.type||'')+' '+(v.sens||'')+' '+(v.operation||'')+' '+(v.direction||'')+' '+(v.categorie||'')+' '+(v.service||'')+' '+(v.motif||'')+' '+(v.libelle||'')).toLowerCase();
+  if(v.isRetrait===true || v.estRetrait===true) return 'retrait';
+  if(v.isEnvoi===true || v.estEnvoi===true) return 'envoi';
+  if(txt.includes('retrait') || txt.includes('withdraw') || txt.includes('reception') || txt.includes('réception') || txt.includes('recevoir') || txt.includes('cashout') || txt.includes('cash_out') || txt.includes('sortie')) return 'retrait';
+  if(txt.includes('envoi') || txt.includes('envoie') || txt.includes('send') || txt.includes('transfert') || txt.includes('dépot') || txt.includes('depot') || txt.includes('entree') || txt.includes('entrée')) return 'envoi';
+  if(v.montant_retrait || v.montantRetrait || v.retrait) return 'retrait';
+  return 'envoi';
+}
 async function loadDaily(dateStr){
 if(dateStr) dailyDateKey=dateStr; else dailyDateKey=todayKey();
-document.getElementById('dailyDate').innerText='• '+dailyDateKey.split('-').reverse().join('/');
+document.getElementById('dailyDate').innerText='• '+fmtDateFR(dailyDateKey)+(dailyDateKey===todayKey()?' (Aujourd\'hui)':dailyDateKey===addDays(todayKey(),-1)?' (Hier)':'');
 document.getElementById('dailyPicker').value=dailyDateKey;
 document.getElementById('listDaily').innerHTML='<div class="empty">Calcul journalier...</div>';
 let map={};
-let totF=0, totT=0, totAll=0;
+let totF=0, totEnvoi=0, totRetrait=0, totAll=0;
 for(const svc of [{key:'forfaits',path:'commandes_forfaits'},{key:'transferts',path:'commandes_transferts'}]){
 try{
 const snap=await db.ref(svc.path).once('value');
@@ -337,10 +465,14 @@ const montant=Number(v.montant||v.total||v.prix||v.amount||0);
 const statut=((v.statut||v.status||'en cours')+'').toLowerCase();
 const isValide=statut.includes('valid')||statut.includes('succes')||statut.includes('payé')||statut.includes('paye');
 const isAnnule=statut.includes('annul')||statut.includes('rejet')||statut.includes('echec');
-if(!map[phone]) map[phone]={phone, nom:getUserName(phone), f_count:0,f_total:0,f_valide:0,f_encours:0, t_count:0,t_total:0,t_valide:0,t_encours:0, total:0};
+if(!map[phone]) map[phone]={phone, nom:getUserName(phone), f_count:0,f_total:0,f_valide:0,f_encours:0, envoi_count:0,envoi_total:0,envoi_valide:0,envoi_encours:0, retrait_count:0,retrait_total:0,retrait_valide:0,retrait_encours:0, total:0};
 let r=map[phone];
 if(svc.key==='forfaits'){ r.f_count++; r.f_total+=montant; if(isValide) r.f_valide++; else if(!isAnnule) r.f_encours++; totF+=montant; }
-else { r.t_count++; r.t_total+=montant; if(isValide) r.t_valide++; else if(!isAnnule) r.t_encours++; totT+=montant; }
+else {
+  var sens=getTransfertSens(v);
+  if(sens==='retrait'){ r.retrait_count++; r.retrait_total+=montant; if(isValide) r.retrait_valide++; else if(!isAnnule) r.retrait_encours++; totRetrait+=montant; }
+  else { r.envoi_count++; r.envoi_total+=montant; if(isValide) r.envoi_valide++; else if(!isAnnule) r.envoi_encours++; totEnvoi+=montant; }
+}
 r.total+=montant; totAll+=montant;
 });
 }catch(e){}
@@ -348,7 +480,8 @@ r.total+=montant; totAll+=montant;
 dailyData=Object.values(map).sort((a,b)=>b.total-a.total);
 document.getElementById('dTotal').innerText=fmt(totAll);
 document.getElementById('dForfait').innerText=fmt(totF);
-document.getElementById('dTransfert').innerText=fmt(totT);
+document.getElementById('dEnvoi').innerText=fmt(totEnvoi);
+document.getElementById('dRetrait').innerText=fmt(totRetrait);
 document.getElementById('dUsers').innerText=dailyData.length;
 document.getElementById('bubble-daily').innerText=dailyData.length;
 document.getElementById('bubble-daily').className=dailyData.length>0?'has':'';
@@ -358,18 +491,35 @@ function renderDaily(){
 const q=(document.getElementById('searchDaily')?.value||'').toLowerCase();
 const el=document.getElementById('listDaily');
 let list=dailyData.filter(r=> (r.nom||'').toLowerCase().includes(q)||r.phone.includes(q));
-if(list.length===0){ el.innerHTML='<div class="empty">Aucun forfait / transfert ce jour-là<br><small>Le calcul prend la date de la commande (date / created_at)</small></div>'; return; }
+if(list.length===0){ el.innerHTML='<div class="empty">Aucun forfait / transfert ce jour-là</div>'; return; }
 el.innerHTML='';
 list.forEach((r,idx)=>{
 const div=document.createElement('div'); div.className='card';
 div.innerHTML=`<div class="card-top"><div><div class="user-name">${r.nom||'User'}<small>${r.phone}</small></div><div style="font-size:16px;font-weight:900;color:#0f0;margin-top:4px">Total jour : ${fmt(r.total)}</div></div><span class="badge ok">#${idx+1}</span></div>
-<div class="card-grid two"><div class="kv"><b>📦 FORFAITS</b><span>${r.f_count} cmd • ${fmt(r.f_total)}</span></div><div class="kv"><b>💸 TRANSFERTS</b><span>${r.t_count} cmd • ${fmt(r.t_total)}</span></div></div>
-<div style="display:flex;gap:6px;font-size:11px;color:#aaa;margin-top:2px"><span>✅ Forfait validé: ${r.f_valide}</span><span>⏳ En cours: ${r.f_encours}</span><span>•</span><span>✅ Transfert validé: ${r.t_valide}</span><span>⏳ En cours: ${r.t_encours}</span></div>
-<div style="font-size:11px;color:#ffeb3b;margin-top:8px">Calcul du ${dailyDateKey.split('-').reverse().join('/')} — Forfaits + Transferts</div>`;
+<div class="card-grid two"><div class="kv"><b>📦 FORFAITS</b><span>${r.f_count} cmd • ${fmt(r.f_total)}<br><small style="color:#aaa">✅ ${r.f_valide} validé • ⏳ ${r.f_encours} en cours</small></span></div><div class="kv"><b>📤 ENVOI</b><span>${r.envoi_count} cmd • ${fmt(r.envoi_total)}<br><small style="color:#aaa">✅ ${r.envoi_valide} validé • ⏳ ${r.envoi_encours} en cours</small></span></div></div>
+<div class="card-grid two" style="margin-top:6px"><div class="kv"><b>📥 RETRAIT</b><span>${r.retrait_count} cmd • ${fmt(r.retrait_total)}<br><small style="color:#aaa">✅ ${r.retrait_valide} validé • ⏳ ${r.retrait_encours} en cours</small></span></div><div class="kv"><b>💰 TOTAL JOUR</b><span>${fmt(r.total)}</span></div></div>
+<div style="font-size:11px;color:#ffeb3b;margin-top:8px">Calcul du ${fmtDateFR(dailyDateKey)} — Forfait + Envoi + Retrait séparés</div>`;
 el.appendChild(div);
 });
 }
-firebase.auth().onAuthStateChanged(function(user){ if(user){ loadUsers(); loadAllCounts(); loadDaily(); } else { firebase.auth().signInAnonymously(); } });
+async function loadDailyHistory(){
+  var el=document.getElementById('listDailyHistory'); el.innerHTML='<div class="empty">Calcul historique...</div>';
+  var hist={};
+  for(const svc of [{key:'forfaits',path:'commandes_forfaits'},{key:'transferts',path:'commandes_transferts'}]){
+    try{ var snap=await db.ref(svc.path).once('value'); snap.forEach(ch=>{ var v=ch.val()||{}; var day=parseDayKey(v.date||v.created_at||v.createdAt||v.timestamp); if(!day) return; if(!hist[day]) hist[day]={day,total:0,forfait:0,envoi:0,retrait:0,count:0}; var m=Number(v.montant||v.total||0); hist[day].total+=m; hist[day].count++; if(svc.key==='forfaits') hist[day].forfait+=m; else { if(getTransfertSens(v)==='retrait') hist[day].retrait+=m; else hist[day].envoi+=m; } }); }catch(e){}
+  }
+  var arr=Object.values(hist).sort((a,b)=>b.day.localeCompare(a.day));
+  if(!arr.length){ el.innerHTML='<div class="empty">Aucun historique</div>'; return; }
+  el.innerHTML='';
+  arr.slice(0,60).forEach(h=>{
+    var label=h.day===todayKey()?"Aujourd'hui":h.day===addDays(todayKey(),-1)?"Hier":fmtDateFR(h.day);
+    var div=document.createElement('div'); div.className='hist-day'+(h.day===dailyDateKey?' active':'');
+    div.onclick=()=>{ loadDaily(h.day); document.getElementById('listDaily').scrollIntoView({behavior:'smooth'}); };
+    div.innerHTML=`<div><b style="color:#fff">${label} • ${fmtDateFR(h.day)}</b><div style="font-size:11px;color:#aaa">${h.count} cmd • Forfait ${fmt(h.forfait)} • Envoi ${fmt(h.envoi)} • Retrait ${fmt(h.retrait)}</div></div><b>${fmt(h.total)}</b>`;
+    el.appendChild(div);
+  });
+}
+firebase.auth().onAuthStateChanged(function(user){ if(user){ loadUsers(); loadAllCounts(); loadDaily(); loadDailyHistory(); } else { firebase.auth().signInAnonymously(); } });
 </script>
 </body>
 </html>
