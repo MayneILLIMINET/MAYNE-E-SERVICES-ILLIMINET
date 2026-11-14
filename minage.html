@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ACTIFER • Minage</title>
+<title>ACTIFER • Minage Premium</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -41,6 +41,38 @@ a{color:inherit;text-decoration:none}
 .badge{display:inline-block;font-size:10px;font-weight:900;padding:4px 10px;border-radius:999px}
 .badge-ok{background:#28a745;color:#fff}
 .badge-err{background:#dc3545;color:#fff}
+.badge-gold{background:#ffeb3b;color:#000}
+/* ===== HERO PRO ===== */
+.hero{background:linear-gradient(135deg,#ff5000,#ff8c00 55%,#ffb300);border-radius:18px;padding:16px;margin:0 12px 12px;color:#fff;position:relative;overflow:hidden}
+.hero::after{content:"⛏️";position:absolute;right:10px;top:0;font-size:90px;opacity:.15}
+.hero .kicker{font-size:10px;font-weight:900;letter-spacing:2px;background:#000;color:#ffeb3b;display:inline-block;padding:5px 10px;border-radius:999px}
+.hero h1{font-size:22px;line-height:1.2;margin:10px 0 6px}
+.hero h1 span{color:#ffeb3b}
+.hero p{font-size:12px;line-height:1.6;margin:0;opacity:.95}
+.hero-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.hero-stat{background:rgba(0,0,0,.35);border-radius:12px;padding:10px;text-align:center;backdrop-filter:blur(4px)}
+.hero-stat b{display:block;font-size:16px}
+.hero-stat span{font-size:10px;opacity:.9}
+.hero-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.hero-btns a,.hero-btns button{padding:13px;border-radius:12px;font-weight:900;font-size:13px;text-align:center;border:none;cursor:pointer}
+.btn-white{background:#fff;color:#E65100}
+.btn-black{background:#000;color:#fff;border:1px solid #fff!important}
+/* ===== GUIDE ===== */
+.guide-step{display:flex;gap:10px;background:#000;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:8px;align-items:flex-start}
+.guide-step .num{width:32px;height:32px;min-width:32px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px}
+.guide-step b{font-size:13px;display:block}
+.guide-step span{font-size:11px;color:#aaa;line-height:1.5;display:block;margin-top:2px}
+.guide-step span i{color:#fff;font-style:normal;font-weight:800}
+.sim-box{background:#000;border:2px dashed var(--yellow);border-radius:14px;padding:12px;margin-top:10px}
+.sim-box select,.sim-box input{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#1a1a1a;color:#fff;font-weight:800;margin:6px 0;text-align:center}
+.sim-result{background:#0d2a14;border:1px solid #28a745;border-radius:10px;padding:12px;text-align:center;font-weight:900;color:#7dff9a;font-size:16px;margin-top:6px}
+.faq{border:1px solid var(--line);border-radius:12px;margin-top:8px;overflow:hidden}
+.faq summary{background:#000;padding:12px;font-size:12px;font-weight:900;cursor:pointer;list-style:none}
+.faq p{padding:0 12px 12px;font-size:11px;color:#aaa;line-height:1.6;margin:0}
+.trust{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.trust div{background:#000;border:1px solid #333;border-radius:12px;padding:10px;text-align:center}
+.trust b{display:block;font-size:12px}
+.trust span{font-size:10px;color:#888}
 .mining-box{background:linear-gradient(180deg,#2a1500,#000);border:1px solid var(--orange);border-radius:16px;padding:14px;text-align:center}
 .mining-box .pts{font-size:36px;font-weight:900;color:var(--green)}
 .mining-box .pts small{font-size:13px;color:#aaa}
@@ -79,12 +111,13 @@ a{color:inherit;text-decoration:none}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:#000;border-top:1px solid #333;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;padding:8px;z-index:30}
 .bottom a{text-align:center;font-size:11px;font-weight:800;padding:8px 2px;border-radius:12px}
 .bottom a.active{background:#2a1500;color:var(--orange)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:flex-end;justify-content:center;z-index:9998}
+.modal-box{background:#1a1a1a;color:#fff;padding:16px;border-radius:18px 18px 0 0;width:100%;max-width:560px;max-height:92vh;overflow:auto}
 </style>
 </head>
 <body>
 <div class="app">
 
-<!-- ================= 1. HEADER ================= -->
 <div class="header">
   <div class="header-top">
     <div class="logo">ACTIFER<small>MINAGE • PREMIUM</small></div>
@@ -97,17 +130,87 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
-<!-- ================= 2. MENU ================= -->
 <div class="nav">
-  <button class="active" data-sec="sec-compte" onclick="showSec('sec-compte',this)">💰 Compte</button>
+  <button class="active" data-sec="sec-accueil" onclick="showSec('sec-accueil',this)">🏠 Accueil</button>
+  <button data-sec="sec-compte" onclick="showSec('sec-compte',this)">💰 Compte</button>
   <button data-sec="sec-minage" onclick="showSec('sec-minage',this)">⛏️ Minage</button>
   <button data-sec="sec-plans" onclick="showSec('sec-plans',this)">📦 Plans</button>
   <button data-sec="sec-mesplans" onclick="showSec('sec-mesplans',this)">🧾 Mes plans</button>
   <button data-sec="sec-historique" onclick="showSec('sec-historique',this)">📜 Historique</button>
 </div>
 
-<!-- ================= 3. COMPTE ================= -->
-<div id="sec-compte">
+<!-- ================= ACCUEIL PRO + GUIDE ================= -->
+<div id="sec-accueil">
+  <div class="hero">
+    <span class="kicker">✨ NOUVEAU • MINAGE PREMIUM ACTIFER</span>
+    <h1>Fais travailler ton argent.<br><span>Même quand tu dors.</span></h1>
+    <p>Tu achètes un plan une fois, il mine des points <b>chaque seconde pendant 30 jours</b>. Tu réclames, l'admin convertit <b>1 pt = 1 F</b>, tu retires. Simple, transparent, sans stress.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><b>1 pt = 1 F</b><span>CONVERSION</span></div>
+      <div class="hero-stat"><b>30 jours</b><span>DURÉE PLAN</span></div>
+      <div class="hero-stat"><b>+350 pts/j</b><span>PLAN MAX</span></div>
+    </div>
+    <div class="hero-btns">
+      <a href="#" class="btn-white" onclick="showSec('sec-plans',document.querySelector('[data-sec=sec-plans]'));return false;">🛒 VOIR LES PLANS</a>
+      <button class="btn-black" onclick="openGuide()">🎓 GUIDE 1 MIN</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🎓 COMMENT ÇA MARCHE ? — GUIDE EN 4 ÉTAPES</h3>
+    <p class="sub">Même si tu n'as jamais miné, suis ça et c'est bon.</p>
+    <div class="guide-step"><div class="num">1</div><div><b>💰 RECHARGE TON SOLDE</b><span>Va dans <i>depot.html</i>, fais ton dépôt. L'admin valide et ton solde monte. Sans solde, pas d'achat de plan.</span></div></div>
+    <div class="guide-step"><div class="num">2</div><div><b>📦 ACHÈTE UN PLAN</b><span>Choisis un plan de <i>5 000 F à 100 000 F</i>. Le prix est débité de ton solde. Tu peux cumuler plusieurs plans à la fois.</span></div></div>
+    <div class="guide-step"><div class="num">3</div><div><b>⛏️ LAISSE MINER 30 JOURS</b><span>Ton plan mine <i>chaque seconde</i>. Ex : plan 10 000 F = <i>50 pts / jour</i>. Tu n'as rien à faire, juste laisser tourner.</span></div></div>
+    <div class="guide-step"><div class="num">4</div><div><b>💸 RÉCLAME → CONVERTIS → RETIRE</b><span>Clique sur <i>RÉCLAMER</i>, l'admin convertit <i>1 pt = 1 F</i> dans ton solde, puis tu retires dans <i>retrait.html</i>.</span></div></div>
+    <div class="btn-grid">
+      <a href="depot.html" class="btn-depot">💰 RECHARGER</a>
+      <a href="retrait.html" class="btn-retrait">💸 RETIRER</a>
+    </div>
+    <button class="btn btn-orange" onclick="openGuide()">🎓 OUVRIR LE GUIDE COMPLET</button>
+  </div>
+
+  <div class="card">
+    <h3>🧮 SIMULATEUR — COMBIEN TU GAGNES ?</h3>
+    <p class="sub">Choisis un plan, vois ton gain par jour et sur 30 jours.</p>
+    <div class="sim-box">
+      <select id="sim-plan" onchange="calcSim()">
+        <option value="5000|25">Plan 5 000 F → 25 pts / jour</option>
+        <option value="10000|50" selected>Plan 10 000 F → 50 pts / jour</option>
+        <option value="20000|100">Plan 20 000 F → 100 pts / jour</option>
+        <option value="30000|140">Plan 30 000 F → 140 pts / jour</option>
+        <option value="50000|200">Plan 50 000 F → 200 pts / jour</option>
+        <option value="70000|260">Plan 70 000 F → 260 pts / jour</option>
+        <option value="100000|350">Plan 100 000 F → 350 pts / jour</option>
+      </select>
+      <div class="sim-result" id="sim-result">Tu gagnes : 50 pts / jour = 50 F / jour • Total 30 jours : 1 500 F</div>
+      <div class="mini" style="text-align:center;margin-top:6px" id="sim-detail">Plan 10 000 F × 30 jours = 1 500 pts = 1 500 F après conversion (1 pt = 1 F)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🛡️ POURQUOI C'EST FIABLE ?</h3>
+    <div class="trust">
+      <div><b>✅ Solde réel</b><span>Ton solde est dans ton compte, pas caché</span></div>
+      <div><b>⏱️ Minage visible</b><span>Tu vois tes points monter en direct</span></div>
+      <div><b>📜 Historique</b><span>Chaque achat est enregistré</span></div>
+      <div><b>💬 Admin joignable</b><span>Dans messagerie.html, pas sur WhatsApp</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>❓ QUESTIONS FRÉQUENTES</h3>
+    <details class="faq"><summary>⏳ Combien de temps dure un plan ?</summary><p>30 jours exactement. Après 30 jours, il s'arrête seul. Tu peux racheter un nouveau plan ou en cumuler plusieurs.</p></details>
+    <details class="faq"><summary>💰 Quand je reçois mes gains ?</summary><p>Tes points montent chaque seconde. Tu cliques sur RÉCLAMER quand tu veux, l'admin convertit 1 pt = 1 F dans ton solde.</p></details>
+    <details class="faq"><summary>📦 Je peux acheter plusieurs plans ?</summary><p>Oui, c'est cumulable. Ex : 2 plans de 10 000 F = 100 pts / jour. Tes gains s'additionnent.</p></details>
+    <details class="faq"><summary>💸 Comment retirer ?</summary><p>Après conversion, ton solde augmente. Va dans retrait.html, fais ta demande, l'admin valide.</p></details>
+    <details class="faq"><summary>❌ Si je n'ai pas assez de solde ?</summary><p>Va dans depot.html pour recharger. Le bouton ACHETER reste bloqué tant que ton solde est insuffisant.</p></details>
+    <a href="messagerie.html" class="btn-msg">💬 UNE AUTRE QUESTION ? ÉCRIS À L'ADMIN</a>
+  </div>
+</div>
+
+<!-- ================= COMPTE ================= -->
+<div id="sec-compte" style="display:none">
   <div class="card">
     <h3>💰 MON SOLDE PRINCIPAL</h3>
     <p class="sub">C'est ce solde qui sert à acheter les plans. Si pas de solde, pas d'achat.</p>
@@ -123,26 +226,10 @@ a{color:inherit;text-decoration:none}
       <a href="retrait.html" class="btn-retrait">💸 RETIRER</a>
     </div>
     <a href="messagerie.html" class="btn-msg">💬 MESSAGERIE VERS L'ADMIN</a>
-    <div class="mini" style="margin-top:8px;text-align:center">Recharge = dépôt vérifié par l'admin dans depot.html • Retrait = demande dans retrait.html</div>
-  </div>
-
-  <div class="card">
-    <h3>ℹ️ COMMENT ÇA MARCHE ?</h3>
-    <p class="sub">
-      1️⃣ Recharge ton solde dans <b style="color:#fff">depot.html</b><br>
-      2️⃣ Achète un plan avec ton solde<br>
-      3️⃣ Le plan mine des points chaque seconde pendant <b style="color:#fff">30 jours</b><br>
-      4️⃣ Réclame tes points<br>
-      5️⃣ L'admin convertit : <b style="color:#fff">1 pt = 1 F</b><br>
-      6️⃣ Retire ton solde dans <b style="color:#fff">retrait.html</b>
-    </p>
-    <div class="row"><span>Durée d'un plan</span><b>30 jours</b></div>
-    <div class="row"><span>Plans cumulables ?</span><b class="green">Oui, plusieurs à la fois</b></div>
-    <div class="row"><span>Conversion</span><b>Admin uniquement • 1 pt = 1 F</b></div>
   </div>
 </div>
 
-<!-- ================= 4. MINAGE ================= -->
+<!-- ================= MINAGE ================= -->
 <div id="sec-minage" style="display:none">
   <div class="card">
     <h3>⛏️ MINAGE EN COURS</h3>
@@ -164,12 +251,11 @@ a{color:inherit;text-decoration:none}
   </div>
   <div class="card">
     <h3>📦 MES PLANS ACTIFS</h3>
-    <p class="sub">Chaque plan a sa propre date de fin. Après 30 jours, il s'arrête seul.</p>
     <div id="mesPlansMinage"></div>
   </div>
 </div>
 
-<!-- ================= 5. PLANS ================= -->
+<!-- ================= PLANS ================= -->
 <div id="sec-plans" style="display:none">
   <div class="card">
     <h3>📦 PLANS = PRODUITS À ACHETER</h3>
@@ -194,20 +280,18 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
-<!-- ================= 6. MES PLANS ================= -->
+<!-- ================= MES PLANS ================= -->
 <div id="sec-mesplans" style="display:none">
   <div class="card">
     <h3>🧾 MES PLANS ACHETÉS</h3>
-    <p class="sub">Historique complet de tes achats de plans.</p>
     <div id="mesPlansList"></div>
   </div>
 </div>
 
-<!-- ================= 7. HISTORIQUE ================= -->
+<!-- ================= HISTORIQUE ================= -->
 <div id="sec-historique" style="display:none">
   <div class="card">
     <h3>📜 HISTORIQUE DES ACHATS</h3>
-    <p class="sub">Toutes tes commandes minage, comme dans ton admin.</p>
     <div id="mesAchats"></div>
   </div>
   <div class="card">
@@ -223,7 +307,6 @@ a{color:inherit;text-decoration:none}
 
 </div>
 
-<!-- ================= 8. BOTTOM NAV ================= -->
 <div class="bottom">
   <a href="index.html">🏠<br>Accueil</a>
   <a href="minage.html" class="active">⛏️<br>Minage</a>
@@ -232,39 +315,55 @@ a{color:inherit;text-decoration:none}
   <a href="messagerie.html">💬<br>Admin</a>
 </div>
 
+<!-- GUIDE MODAL -->
+<div id="guide-modal" class="modal-overlay"><div class="modal-box">
+  <div style="text-align:center"><div style="font-size:30px">🎓</div><div style="font-weight:900;color:#ffeb3b;font-size:16px">GUIDE MINAGE — 1 MIN</div><div style="font-size:11px;color:#aaa">Lis ça une fois, tu comprends tout</div></div>
+  <div class="guide-step"><div class="num">1</div><div><b>💰 RECHARGE</b><span>Va dans <i>depot.html</i>. Fais ton dépôt, l'admin valide, ton solde monte.</span></div></div>
+  <div class="guide-step"><div class="num">2</div><div><b>📦 ACHÈTE UN PLAN</b><span>De 5 000 F à 100 000 F. Le prix est débité de ton solde. Plusieurs plans = plus de points.</span></div></div>
+  <div class="guide-step"><div class="num">3</div><div><b>⛏️ LAISSE MINER</b><span>30 jours, chaque seconde. Ex : plan 10 000 F = 50 pts / jour. Tu n'as rien à faire.</span></div></div>
+  <div class="guide-step"><div class="num">4</div><div><b>💸 RÉCLAME + RETIRE</b><span>Réclame tes points, l'admin convertit <i>1 pt = 1 F</i>, puis retire dans <i>retrait.html</i>.</span></div></div>
+  <div style="background:#0d2a14;border:1px solid #28a745;border-radius:12px;padding:12px;margin-top:10px;font-size:12px;line-height:1.6"><b style="color:#7dff9a">💡 EXEMPLE CONCRET</b><br>Tu achètes le plan 10 000 F → tu gagnes 50 pts / jour → après 30 jours = 1 500 pts → convertis = 1 500 F dans ton solde → tu retires.</div>
+  <div style="background:#2a1500;border:1px solid #ff5000;border-radius:12px;padding:12px;margin-top:8px;font-size:12px;line-height:1.6"><b style="color:#ffeb3b">⚠️ À RETENIR</b><br>• Ne partage jamais ton PIN<br>• Un achat ne s'annule pas<br>• Questions ? <i>messagerie.html</i> uniquement</div>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" style="background:#333;color:#fff;margin:0" onclick="closeGuide()">Fermer</button><button class="btn btn-green" style="margin:0" onclick="closeGuide(true)">✅ J'AI COMPRIS</button></div>
+</div></div>
+
 <script>
-// ===== CONFIG - MÊME BASE QUE index.html / admin.html =====
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
 function getPhone(){ try{ let p=JSON.parse(localStorage.getItem('mayne_current_user')||'{}')?.phone; if(p) return p; }catch(e){} return null; }
 const curPhone=getPhone();
 if(!curPhone){ document.body.innerHTML='<div style="padding:40px;text-align:center">⛔ Connecte-toi d\'abord dans index.html<br><a href="index.html" style="color:#ff5000">Retour</a></div>'; throw 'no user'; }
-
-// ===== RÉGLAGES =====
 const DUREE_JOURS = 30;
 const DUREE_MS = DUREE_JOURS * 24 * 3600 * 1000;
-const TAUX_CONVERSION = 1; // 1 pt = 1 F - même taux que dans admin.html
+const TAUX_CONVERSION = 1;
 const PLANS=[
 {invest:5000,gain:25},{invest:10000,gain:50},{invest:20000,gain:100},
 {invest:30000,gain:140},{invest:50000,gain:200},{invest:70000,gain:260},{invest:100000,gain:350}
 ];
-
 let selected=0;
 let userData={solde:0,commission:0,recompense:0,minage_points:0,minage_converti_total:0,minage_plans:[],minage_last:Date.now(),minage_unclaimed:0};
 let userRef=db.ref('clients/'+curPhone);
 function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR'); }
 function showAlert(id,msg,ok){ let el=document.getElementById(id); el.style.display='block'; el.className='alert '+(ok?'ok':'err'); el.innerText=msg; setTimeout(()=>el.style.display='none',4000); }
 function showSec(id,btn){
-  ['sec-compte','sec-minage','sec-plans','sec-mesplans','sec-historique'].forEach(s=>document.getElementById(s).style.display=(s===id?'block':'none'));
+  ['sec-accueil','sec-compte','sec-minage','sec-plans','sec-mesplans','sec-historique'].forEach(s=>document.getElementById(s).style.display=(s===id?'block':'none'));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function openGuide(){ document.getElementById('guide-modal').style.display='flex'; }
+function closeGuide(compris){ document.getElementById('guide-modal').style.display='none'; if(compris) localStorage.setItem('mayne_minage_guide_vu','1'); }
+function calcSim(){
+  let v=document.getElementById('sim-plan').value.split('|');
+  let invest=parseInt(v[0]), gain=parseInt(v[1]);
+  document.getElementById('sim-result').innerText=`Tu gagnes : ${gain} pts / jour = ${fmt(gain)} F / jour • Total 30 jours : ${fmt(gain*30)} F`;
+  document.getElementById('sim-detail').innerText=`Plan ${fmt(invest)} F × 30 jours = ${fmt(gain*30)} pts = ${fmt(gain*30)} F après conversion (1 pt = 1 F)`;
 }
 function joursRestants(p){ return Math.max(0, Math.ceil((p.end - Date.now())/86400000)); }
 function plansActifs(){ return (userData.minage_plans||[]).filter(p=>Date.now() < p.end); }
 function gainTotalJour(){ return plansActifs().reduce((s,p)=>s+PLANS[p.plan_index].gain,0); }
 function pctPlan(p){ let total=p.end-p.start; let fait=Date.now()-p.start; return Math.min(100,Math.max(0,Math.round(fait/total*100))); }
-
 function renderPlans(){
   document.getElementById('plans').innerHTML=PLANS.map((p,i)=>{
     let canBuy=userData.solde>=p.invest;
@@ -362,7 +461,8 @@ async function reclamer(){
   alert('✅ '+fmt(a)+' pts réclamés !\n1 pt = 1 F. Demande la conversion à l\'admin dans messagerie.html ou attends sa conversion.');
 }
 firebase.auth().onAuthStateChanged(function(u){ if(!u) firebase.auth().signInAnonymously(); });
-renderPlans(); tick(); setInterval(tick,1000);
+renderPlans(); calcSim(); tick(); setInterval(tick,1000);
+setTimeout(()=>{ if(!localStorage.getItem('mayne_minage_guide_vu')) openGuide(); },1200);
 </script>
 </body>
 </html>
