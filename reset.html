@@ -33,7 +33,6 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
 .alert{padding:11px;border-radius:12px;font-size:12px;font-weight:800;margin-top:10px;display:none}
 .alert.err{background:#3a0d0d;border:1px solid #dc3545;color:#ffb3b3}
 .alert.ok{background:#0d2a14;border:1px solid #28a745;color:#b3ffc2}
-.alert.info{background:#111;border:1px solid #555;color:#ddd}
 .step{display:flex;gap:6px;margin:12px}
 .step div{flex:1;text-align:center;font-size:10px;font-weight:900;padding:8px;border-radius:999px;background:#222;border:1px solid #333;color:#888}
 .step div.active{background:var(--orange);color:#fff;border-color:#fff}
@@ -74,16 +73,15 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
   </div>
 </div>
 
-<!-- ============ ÉTAPE 2 : VÉRIFICATION ============ -->
+<!-- ============ ÉTAPE 2 : VÉRIFICATION JUSTE NOM ============ -->
 <div id="sec2" style="display:none">
   <div class="card">
     <h3>🛡️ VÉRIFIE QUE C'EST BIEN TOI</h3>
-    <p class="sub">Pour éviter que quelqu'un d'autre change ton PIN, tape ton nom et prénom <b style="color:#fff">exactement comme à l'inscription</b>.</p>
+    <p class="sub">Pour éviter que quelqu'un d'autre change ton PIN, tape ton nom <b style="color:#fff">exactement comme à l'inscription</b>.</p>
     <div class="row"><span>Numéro vérifié</span><b id="phoneAffiche" style="color:#ffeb3b">-</b></div>
-    <label>Ton nom</label>
+    <label>Ton nom de famille</label>
     <input id="verifNom" class="input" placeholder="Ex : DOSSOU" autocomplete="family-name">
-    <label>Ton prénom</label>
-    <input id="verifPrenom" class="input" placeholder="Ex : Jean" autocomplete="given-name">
+    <div class="mini" style="text-align:left;margin-top:6px">⚠️ Tape juste ton nom. On ne demande pas le prénom.</div>
     <div id="alert2" class="alert err"></div>
     <button class="btn btn-orange" id="btnStep2" onclick="verifierIdentite()">VÉRIFIER MON IDENTITÉ →</button>
     <button class="btn btn-dark" onclick="retourStep1()">← Changer de numéro</button>
@@ -109,7 +107,7 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
     </div>
     <div id="alert3" class="alert err"></div>
     <button class="btn btn-green" id="btnSave" onclick="sauvegarderPin()">✅ ENREGISTRER MON NOUVEAU PIN</button>
-    <div class="mini">Après enregistrement, tu seras redirigé vers la connexion avec ton nouveau PIN.</div>
+    <div class="mini">Après enregistrement, tu pourras te connecter avec ton nouveau PIN.</div>
   </div>
 </div>
 
@@ -178,19 +176,17 @@ async function verifierPhone(){
   finally{ btn.disabled=false; btn.innerText='CONTINUER →'; }
 }
 
-// ===== ÉTAPE 2 : VÉRIFIER NOM + PRÉNOM =====
+// ===== ÉTAPE 2 : VÉRIFIER JUSTE LE NOM =====
 async function verifierIdentite(){
   let nom=document.getElementById('verifNom').value;
-  let prenom=document.getElementById('verifPrenom').value;
-  if(!nom || !prenom) return showAlert('alert2','❌ Entre ton nom ET ton prénom.');
+  if(!nom) return showAlert('alert2','❌ Entre ton nom.');
   let btn=document.getElementById('btnStep2'); btn.disabled=true; btn.innerText='⏳ Vérification...';
   try{
-    // Relecture fraîche pour éviter les données modifiées
     let snap=await db.ref('clients/'+currentPhone).once('value');
     let v=snap.val()||{};
-    // Comparaison insensible aux majuscules / espaces
-    if(norm(v.nom)!==norm(nom) || norm(v.prenom)!==norm(prenom)){
-      showAlert('alert2','❌ Nom ou prénom incorrect. Vérifie exactement comme à ton inscription.\nSi tu as oublié, écris à l\'admin dans messagerie.html');
+    // On vérifie JUSTE le nom - pas le prénom
+    if(norm(v.nom)!==norm(nom)){
+      showAlert('alert2','❌ Nom incorrect. Vérifie exactement comme à ton inscription.\nSi tu as oublié, écris à l\'admin dans messagerie.html');
       return;
     }
     currentData=v;
@@ -213,14 +209,12 @@ async function sauvegarderPin(){
 
   let btn=document.getElementById('btnSave'); btn.disabled=true; btn.innerText='⏳ Enregistrement...';
   try{
-    // On met à jour les 2 champs que ton index.html peut utiliser : password + motdepasse
     await db.ref('clients/'+currentPhone).update({
       password: p1,
       motdepasse: p1,
       pin: p1,
       pin_updated_at: new Date().toISOString()
     });
-    // Trace pour l'admin
     await db.ref('demandes_reinitialisation').push({
       phone: currentPhone,
       nom: currentData.nom||'',
@@ -230,7 +224,6 @@ async function sauvegarderPin(){
       date: new Date().toLocaleString('fr-FR'),
       created_at: new Date().toISOString()
     });
-    // On pré-remplit la connexion : le user n'a plus qu'à taper son PIN
     try{
       let cur = JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
       cur.phone = currentPhone;
@@ -245,7 +238,6 @@ async function sauvegarderPin(){
 }
 
 firebase.auth().onAuthStateChanged(function(u){ if(!u) firebase.auth().signInAnonymously(); });
-// Entrée clavier = continuer
 document.getElementById('phone').addEventListener('keydown',e=>{ if(e.key==='Enter') verifierPhone(); });
 document.getElementById('newPin2').addEventListener('keydown',e=>{ if(e.key==='Enter') sauvegarderPin(); });
 </script>
