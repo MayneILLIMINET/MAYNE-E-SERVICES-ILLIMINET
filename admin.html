@@ -205,7 +205,36 @@ if(list.length===0){ el.innerHTML='<div class="empty">Aucun user</div>'; return;
 list.slice(0,500).forEach(u=>{
 const div=document.createElement('div');
 div.className='card clickable';
-div.onclick=function(e){ if(e.target.closest('button')||e.target.closest('input')) return; openUserDetail(u.key); };
+div.onclick=function(e){ if(e.target.closest('button')||e.target.closest('input')) return; openUserDetail(u.key);
+// ===== A : ADMIN CONVERTIT POINTS -> SOLDE =====
+// À mettre dans ton admin.html, dans openUserDetail() :
+// <button onclick="convertirPoints('PHONE', POINTS)">💱 CONVERTIR POINTS EN SOLDE</button>
+
+async function convertirPoints(phone, pointsDispo){
+  // 1 point = 1 F par défaut. Change ici si tu veux : 1 point = 0.5 F, etc.
+  const TAUX_CONVERSION = 1; // 1 pt = 1 F
+
+  let montant = prompt(`Convertir combien de points pour ${phone} ?\n\nPoints dispo : ${pointsDispo} pts\nTaux : 1 pt = ${TAUX_CONVERSION} F\n\nTape le nombre de points à convertir (ou "tout") :`, pointsDispo);
+  if(montant===null) return;
+  let pts = (montant.toLowerCase()==='tout') ? pointsDispo : Number(montant);
+  if(!pts || pts<=0 || pts>pointsDispo) return alert('Nombre invalide.');
+
+  let soldeAjoute = pts * TAUX_CONVERSION;
+  if(!confirm(`Convertir ${pts} pts → ${soldeAjoute} F de solde pour ${phone} ?`)) return;
+
+  try{
+    // Transaction = on ne peut pas convertir plus que ce qu'il a
+    await db.ref('clients/'+phone).transaction(function(u){
+      if(!u) return;
+      if((u.minage_points||0) < pts) return; // annule
+      u.minage_points = (u.minage_points||0) - pts;
+      u.solde = (u.solde||0) + soldeAjoute;
+      u.minage_converti_total = (u.minage_converti_total||0) + pts;
+      return u;
+    });
+    alert(`✅ ${pts} pts convertis → +${soldeAjoute} F de solde pour ${phone}`);
+  }catch(e){ alert('❌ '+e.message); }
+} };
 div.innerHTML=`<div class="card-top"><div><div class="user-name">${u.nom||'-'} ${u.prenom||''}<small>${u.email||'Pas d\'email'}</small></div><div class="user-phone" style="margin-top:4px">${u.phone}</div></div><span class="badge ok">USER</span></div>
 <div class="edit-grid"><div class="edit-field"><label>💰 Solde</label><input id="solde-${u.key}" type="number" value="${u.solde}" class="green" onclick="event.stopPropagation()"></div><div class="edit-field"><label>⭐ Commission</label><input id="com-${u.key}" type="number" value="${u.commission}" class="yellow" onclick="event.stopPropagation()"></div><div class="edit-field"><label>🐷 Épargne</label><input id="ep-${u.key}" type="number" value="${u.recompense}" class="pink" onclick="event.stopPropagation()"></div></div>
 <div style="display:flex;gap:6px;margin-top:6px">
