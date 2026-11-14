@@ -162,7 +162,8 @@ const SERVICES = [
 {key:'forfaits', label:'FORFAIT', path:'commandes_forfaits'},
 {key:'factures', label:'Facture', path:'commandes_factures'},
 {key:'transferts', label:'Transfert', path:'commandes_transferts'},
-{key:'echanges', label:'Echanges', path:'commandes_echanges'}
+{key:'echanges', label:'Echanges', path:'commandes_echanges'},
+{key:'minage', label:'⛏️ MINAGE', path:'commandes_minage'}
 ];
 let allUsers=[], allCmd=[], currentService=null, processing=new Set();
 let dailyData=[], dailyDateKey=todayKey();
@@ -182,7 +183,31 @@ if(tab==='daily'){ loadDaily(); loadDailyHistory(); }
 }
 function fmt(n){ return Math.round(n||0).toLocaleString('fr-FR')+' F'; }
 function esc(s){ return String(s==null?'':s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
-// ===== TON CODE DE BASE POUR USERS - INTACT =====
+
+// ===== A : ADMIN CONVERTIT POINTS -> SOLDE (GLOBAL, PAS DANS renderUsers) =====
+const TAUX_CONVERSION = 1; // 1 pt = 1 F. Mets 0.5 si tu veux 1 pt = 0.5 F
+async function convertirPoints(phone, pointsDispo){
+  let montant = prompt(`Convertir combien de points pour ${phone} ?\n\nPoints dispo : ${pointsDispo} pts\nTaux : 1 pt = ${TAUX_CONVERSION} F\n\nTape le nombre (ou "tout") :`, pointsDispo);
+  if(montant===null) return;
+  let pts = (String(montant).toLowerCase()==='tout') ? pointsDispo : Number(montant);
+  if(!pts || pts<=0 || pts>pointsDispo) return alert('Nombre invalide.');
+  let soldeAjoute = Math.floor(pts * TAUX_CONVERSION);
+  if(!confirm(`Convertir ${pts} pts → +${soldeAjoute} F de solde pour ${phone} ?`)) return;
+  try{
+    let res = await db.ref('clients/'+phone).transaction(function(u){
+      if(!u) return;
+      if((u.minage_points||0) < pts) return;
+      u.minage_points = (u.minage_points||0) - pts;
+      u.solde = (u.solde||0) + soldeAjoute;
+      u.minage_converti_total = (u.minage_converti_total||0) + pts;
+      return u;
+    });
+    if(!res.committed) return alert('❌ Pas assez de points au moment de la conversion.');
+    showToast(`✅ ${pts} pts → +${soldeAjoute} F pour ${phone}`);
+    setTimeout(()=>openUserDetail(phone), 400);
+  }catch(e){ showToast('❌ '+e.message, true); }
+}
+
 function loadUsers(){
 db.ref('clients').on('value', snap=>{
 allUsers=[]; let totS=0,totC=0,totE=0;
@@ -198,43 +223,13 @@ document.getElementById('uEp').innerText=fmt(totE);
 renderUsers(allUsers);
 });
 }
-// ===== CARTE USER PROPRE - 1 CLIC = DÉTAIL COMPLET =====
 function renderUsers(list){
 const el=document.getElementById('listUsers'); el.innerHTML='';
 if(list.length===0){ el.innerHTML='<div class="empty">Aucun user</div>'; return; }
 list.slice(0,500).forEach(u=>{
 const div=document.createElement('div');
 div.className='card clickable';
-div.onclick=function(e){ if(e.target.closest('button')||e.target.closest('input')) return; openUserDetail(u.key);
-// ===== A : ADMIN CONVERTIT POINTS -> SOLDE =====
-// À mettre dans ton admin.html, dans openUserDetail() :
-// <button onclick="convertirPoints('PHONE', POINTS)">💱 CONVERTIR POINTS EN SOLDE</button>
-
-async function convertirPoints(phone, pointsDispo){
-  // 1 point = 1 F par défaut. Change ici si tu veux : 1 point = 0.5 F, etc.
-  const TAUX_CONVERSION = 1; // 1 pt = 1 F
-
-  let montant = prompt(`Convertir combien de points pour ${phone} ?\n\nPoints dispo : ${pointsDispo} pts\nTaux : 1 pt = ${TAUX_CONVERSION} F\n\nTape le nombre de points à convertir (ou "tout") :`, pointsDispo);
-  if(montant===null) return;
-  let pts = (montant.toLowerCase()==='tout') ? pointsDispo : Number(montant);
-  if(!pts || pts<=0 || pts>pointsDispo) return alert('Nombre invalide.');
-
-  let soldeAjoute = pts * TAUX_CONVERSION;
-  if(!confirm(`Convertir ${pts} pts → ${soldeAjoute} F de solde pour ${phone} ?`)) return;
-
-  try{
-    // Transaction = on ne peut pas convertir plus que ce qu'il a
-    await db.ref('clients/'+phone).transaction(function(u){
-      if(!u) return;
-      if((u.minage_points||0) < pts) return; // annule
-      u.minage_points = (u.minage_points||0) - pts;
-      u.solde = (u.solde||0) + soldeAjoute;
-      u.minage_converti_total = (u.minage_converti_total||0) + pts;
-      return u;
-    });
-    alert(`✅ ${pts} pts convertis → +${soldeAjoute} F de solde pour ${phone}`);
-  }catch(e){ alert('❌ '+e.message); }
-} };
+div.onclick=function(e){ if(e.target.closest('button')||e.target.closest('input')) return; openUserDetail(u.key); };
 div.innerHTML=`<div class="card-top"><div><div class="user-name">${u.nom||'-'} ${u.prenom||''}<small>${u.email||'Pas d\'email'}</small></div><div class="user-phone" style="margin-top:4px">${u.phone}</div></div><span class="badge ok">USER</span></div>
 <div class="edit-grid"><div class="edit-field"><label>💰 Solde</label><input id="solde-${u.key}" type="number" value="${u.solde}" class="green" onclick="event.stopPropagation()"></div><div class="edit-field"><label>⭐ Commission</label><input id="com-${u.key}" type="number" value="${u.commission}" class="yellow" onclick="event.stopPropagation()"></div><div class="edit-field"><label>🐷 Épargne</label><input id="ep-${u.key}" type="number" value="${u.recompense}" class="pink" onclick="event.stopPropagation()"></div></div>
 <div style="display:flex;gap:6px;margin-top:6px">
@@ -254,30 +249,52 @@ const e=Number(document.getElementById('ep-'+phone).value);
 try{ await db.ref('clients/'+phone).update({solde:s, commission:c, recompense:e}); showToast('✅ '+phone+' sauvegardé'); }catch(err){ showToast('❌ '+err.message,true); }
 if(btn){ btn.disabled=false; btn.innerText='💾 SAUVEGARDER SOLDE'; }
 }
-// ===== DÉTAIL PRO : TOUTES LES INFOS FIREBASE DU USER =====
 function openUserDetail(phone){
   var u=allUsers.find(x=>x.key===phone||x.phone===phone);
   if(!u) return;
   var data=u.data||{};
-  // On affiche TOUT ce qui existe dans Firebase pour ce user, pas juste nom/email
-  // On met les champs principaux en haut, le reste en dessous
   var order=['nom','prenom','phone','email','solde','commission','recompense','password','motdepasse','adresse','ville','pays','date_naissance','naissance','sexe','photo','avatar','created_at','date','inscription'];
   var keys=Object.keys(data);
   var sorted=[...order.filter(k=>keys.includes(k)), ...keys.filter(k=>!order.includes(k))];
-  // Si le phone n'est pas dans data, on l'ajoute
   if(!sorted.includes('phone')) sorted.unshift('phone');
-
   document.getElementById('mTitle').innerText='👤 '+(u.nom||'')+' '+(u.prenom||'')+' — '+phone;
   var html='<div style="font-size:11px;color:#aaa;margin-bottom:10px">Toutes les infos stockées dans Firebase pour ce user.<br>🗑️ = efface juste cette info • ✏️ = modifie juste cette info</div>';
   html+='<div class="row" style="background:#111;border-radius:8px;padding:10px"><span>📱 Numéro (clé Firebase)</span><b style="color:#ffeb3b">'+phone+'</b></div>';
   sorted.forEach(function(k){
-    if(k==='phone') return; // déjà affiché en haut
+    if(k==='phone') return;
     var val=data[k];
     var display = (typeof val==='object') ? JSON.stringify(val).slice(0,200) : String(val==null?'—':val);
     var isMoney = (k==='solde'||k==='commission'||k==='recompense');
     html+='<div class="row"><span>'+k+'</span><b style="color:'+(isMoney?'#0f0':'#fff')+'">'+esc(display).slice(0,120)+'</b><div style="display:flex;gap:4px"><button class="btn-row-edit" onclick="editField(\''+phone+'\',\''+k+'\',\''+esc(display).slice(0,100)+'\')">✏️</button><button class="btn-row-del" onclick="deleteField(\''+phone+'\',\''+k+'\')">🗑️</button></div></div>';
   });
-  // Champs qui n'existent pas encore mais qu'on peut ajouter
+  // ===== BLOC MINAGE DANS LE DÉTAIL USER =====
+  let mp = data.minage_points||0;
+  let mPlans = data.minage_plans||[];
+  let mConverti = data.minage_converti_total||0;
+  let mUnclaimed = data.minage_unclaimed||0;
+  let PRIX=[5000,10000,20000,30000,50000,70000,100000];
+  let GAINS=[25,50,100,140,200,260,350];
+  let minageHtml = `<div style="background:#2a1500;border:1px solid #ff5000;border-radius:12px;padding:12px;margin-top:12px">
+  <h3 style="color:#ffeb3b;margin:0 0 8px">⛏️ MINAGE ACTIFER</h3>
+  <div class="row"><span>Points dispo à convertir</span><b style="color:#0f0">${mp} pts</b></div>
+  <div class="row"><span>Points non réclamés</span><b>${Math.floor(mUnclaimed)} pts</b></div>
+  <div class="row"><span>Déjà convertis</span><b>${mConverti} pts</b></div>
+  <div class="row"><span>Plans achetés</span><b>${mPlans.length}</b></div>`;
+  if(mPlans.length){
+    mPlans.forEach((p,i)=>{
+      let gain = GAINS[p.plan_index] || 0;
+      let prix = PRIX[p.plan_index] || 0;
+      let fini = Date.now() >= p.end;
+      minageHtml += `<div style="font-size:12px;padding:6px 0;border-bottom:1px solid #333">Plan ${i+1} : ${prix} F • +${gain} pts/jour • ${fini?'❌ TERMINÉ':'⏳ Fin : '+new Date(p.end).toLocaleDateString('fr-FR')}</div>`;
+    });
+  } else {
+    minageHtml += `<div style="font-size:12px;color:#aaa;padding:6px 0">Aucun plan acheté.</div>`;
+  }
+  minageHtml += `</div>`;
+  html += minageHtml;
+  if(mp > 0){
+    html += `<button class="btn-full" style="background:#28a745" onclick="convertirPoints('${phone}', ${mp})">💱 CONVERTIR ${mp} PTS → SOLDE (ADMIN)</button>`;
+  }
   html+='<div style="font-size:11px;color:#aaa;margin-top:12px">Champs absents dans Firebase pour ce user : '+order.filter(k=>!keys.includes(k)&&k!=='phone').join(', ')+' — clique sur ✏️ pour en ajouter un.</div>';
   document.getElementById('mContent').innerHTML=html;
   document.getElementById('mActions').innerHTML=
@@ -285,22 +302,18 @@ function openUserDetail(phone){
     '<button class="btn-action btn-ann" onclick="closeModal();deleteUser(\''+phone+'\',\''+esc(u.nom||'')+'\')">🗑️ SUPPRIMER CE USER</button>';
   document.getElementById('modal').style.display='flex';
 }
-// Modifie UN champ précis depuis le détail
 async function editField(phone, field, oldVal){
   var nv=prompt('Modifier "'+field+'" pour '+phone+' :', oldVal||'');
   if(nv===null) return;
   try{
     var v=nv;
-    // Si c'est un chiffre, on le stocke en nombre
     if(field==='solde'||field==='commission'||field==='recompense') v=Number(nv)||0;
     var upd={}; upd[field]=v;
     await db.ref('clients/'+phone).update(upd);
     showToast('✅ '+field+' modifié');
-    // On rouvre le détail à jour
     setTimeout(function(){ openUserDetail(phone); },300);
   }catch(e){ showToast('❌ '+e.message,true); }
 }
-// Modifie tout d'un coup (nom, prénom, email...)
 function openUserEditAll(phone){
   var u=allUsers.find(x=>x.key===phone);
   if(!u) return;
@@ -329,7 +342,6 @@ async function saveUserEditAll(phone){
     closeModal();
   }catch(e){ showToast('❌ '+e.message,true); }
 }
-// Efface UN seul champ dans Firebase (vraiment supprimé, pas mis à vide)
 async function deleteField(phone, field){
   if(!confirm('Effacer juste "'+field+'" pour '+phone+' ?\nLes autres infos restent intactes.')) return;
   try{
@@ -348,7 +360,7 @@ async function deleteUser(phone,nom){
     var updates={};
     updates['clients/'+phone]=null;
     updates['notifications/'+phone]=null;
-    var allPaths=['commandes_depots','commandes_retraits','commandes_1xbet','commandes_forfaits','commandes_factures','commandes_transferts','commandes_echanges','epargne','statuts'];
+    var allPaths=['commandes_depots','commandes_retraits','commandes_1xbet','commandes_forfaits','commandes_factures','commandes_transferts','commandes_echanges','commandes_minage','epargne','statuts'];
     for(var p of allPaths){
       var snap=await db.ref(p).once('value');
       snap.forEach(function(ch){var v=ch.val()||{};if(v.client_id===phone||v.phone===phone||v.user===phone||v.client===phone||ch.key===phone) updates[p+'/'+ch.key]=null;});
@@ -360,7 +372,6 @@ async function deleteUser(phone,nom){
     closeModal();
   }catch(e){ showToast('❌ '+e.message,true); }
 }
-// ===== TON CODE DE BASE POUR COMMANDES =====
 async function loadAllCounts(){
 const btn=document.getElementById('btnReload'); if(btn){ btn.disabled=true; btn.innerText='⏳...'; }
 const container=document.getElementById('cmdButtons'); container.innerHTML='Scan...';
@@ -451,7 +462,6 @@ document.getElementById('mActions').innerHTML=`<button class="btn-action btn-val
 document.getElementById('modal').style.display='flex';
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
-// ===== JOURNALIER PRO - ENVOI vs RETRAIT SÉPARÉS =====
 function parseDayKey(raw){
 if(!raw) return '';
 let s=String(raw).trim();
