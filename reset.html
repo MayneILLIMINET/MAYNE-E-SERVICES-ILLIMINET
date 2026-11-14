@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Réinitialiser mon mot de passe • MAYNE</title>
+<title>Réinitialiser mon PIN • MAYNE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
-:root{--orange:#ff5000;--yellow:#ffeb3b;--green:#0f0;--bg:#0e0e0e;--card:#1a1a1a;--line:#2a2a2a}
+:root{--orange:#ff5000;--yellow:#ffeb3b;--bg:#0e0e0e;--card:#1a1a1a;--line:#2a2a2a}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
 a{color:inherit;text-decoration:none}
@@ -24,6 +24,7 @@ a{color:inherit;text-decoration:none}
 label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;text-transform:uppercase}
 .input{width:100%;background:#000;color:#fff;border:1px solid #333;border-radius:12px;padding:14px;font-size:15px;outline:none}
 .input:focus{border-color:var(--orange)}
+.input.center{text-align:center;letter-spacing:6px;font-weight:900;font-size:22px}
 .btn{width:100%;border:none;padding:15px;border-radius:14px;font-weight:900;font-size:14px;cursor:pointer;margin-top:14px}
 .btn-orange{background:var(--orange);color:#fff}
 .btn-green{background:#28a745;color:#fff}
@@ -31,7 +32,6 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .alert{padding:11px;border-radius:12px;font-size:12px;font-weight:800;margin-top:10px;display:none}
 .alert.err{background:#3a0d0d;border:1px solid #dc3545;color:#ffb3b3}
-.alert.ok{background:#0d2a14;border:1px solid #28a745;color:#b3ffc2}
 .step{display:flex;gap:6px;margin:12px}
 .step div{flex:1;text-align:center;font-size:10px;font-weight:900;padding:8px;border-radius:999px;background:#222;border:1px solid #333;color:#888}
 .step div.active{background:var(--orange);color:#fff;border-color:#fff}
@@ -48,61 +48,59 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
 
 <div class="header">
   <div class="header-top">
-    <div class="logo">MAYNE<small>RÉINITIALISER MOT DE PASSE</small></div>
+    <div class="logo">MAYNE<small>RÉINITIALISER MON PIN</small></div>
     <a href="index.html" class="back">← Connexion</a>
   </div>
 </div>
 
 <div class="step">
   <div id="step1" class="active">1 • NUMÉRO</div>
-  <div id="step2">2 • NOUVEAU MOT DE PASSE</div>
+  <div id="step2">2 • NOUVEAU PIN</div>
 </div>
 
-<!-- ============ ÉTAPE 1 : NUMÉRO SEULEMENT ============ -->
+<!-- ÉTAPE 1 : NUMÉRO SEULEMENT -->
 <div id="sec1">
   <div class="card">
-    <h3>🔒 TU AS OUBLIÉ TON MOT DE PASSE ?</h3>
-    <p class="sub">Entre juste ton numéro de téléphone avec lequel tu t'es inscrit. On vérifie que le compte existe, et tu choisis ton nouveau mot de passe.</p>
+    <h3>🔒 TU AS OUBLIÉ TON PIN ?</h3>
+    <p class="sub">Entre juste ton numéro de téléphone avec lequel tu t'es inscrit. On vérifie que le compte existe, et tu choisis ton nouveau PIN à 6 chiffres.</p>
     <label>Ton numéro de téléphone</label>
-    <input id="phone" class="input" type="tel" placeholder="Ex : 0159415617" inputmode="numeric" autocomplete="tel">
+    <input id="phone" class="input" type="tel" placeholder="Ex : 0153794158" inputmode="numeric" autocomplete="tel">
     <div id="alert1" class="alert err"></div>
     <button class="btn btn-orange" id="btnStep1" onclick="verifierPhone()">CONTINUER →</button>
     <div class="mini">Tu n'as plus accès à ce numéro ?<br>Écris à l'admin dans <a href="messagerie.html" style="color:#ff5000;font-weight:900">messagerie.html</a></div>
   </div>
 </div>
 
-<!-- ============ ÉTAPE 2 : NOUVEAU MOT DE PASSE ============ -->
+<!-- ÉTAPE 2 : NOUVEAU PIN 6 CHIFFRES -->
 <div id="sec2" style="display:none">
   <div class="card">
-    <h3>🔑 CHOISIS TON NOUVEAU MOT DE PASSE</h3>
-    <p class="sub">Choisis un mot de passe que tu vas retenir. Ne le partage avec personne.</p>
+    <h3>🔑 CHOISIS TON NOUVEAU PIN</h3>
+    <p class="sub">Ton PIN c'est <b style="color:#fff">6 chiffres</b>, comme à l'inscription. Il sera enregistré dans le même champ <b style="color:#fff">pin</b> que ton index.html utilise.</p>
     <div class="row"><span>Compte</span><b id="nomAffiche">-</b></div>
     <div class="row"><span>Numéro vérifié</span><b id="phoneAffiche2" style="color:#ffeb3b">-</b></div>
-    <label>Nouveau mot de passe (min 6 caractères)</label>
+    <label>Nouveau PIN (6 chiffres)</label>
     <div class="field">
-      <input id="newPass" class="input" type="password" placeholder="Ex : Mayne2026" autocomplete="new-password">
-      <button class="eye" type="button" onclick="togglePass('newPass',this)">👁️</button>
+      <input id="newPin" class="input center" type="password" placeholder="••••••" inputmode="numeric" maxlength="6">
+      <button class="eye" type="button" onclick="togglePin('newPin',this)">👁️</button>
     </div>
-    <label>Confirme ton nouveau mot de passe</label>
+    <label>Confirme ton nouveau PIN</label>
     <div class="field">
-      <input id="newPass2" class="input" type="password" placeholder="Retape le même mot de passe" autocomplete="new-password">
-      <button class="eye" type="button" onclick="togglePass('newPass2',this)">👁️</button>
+      <input id="newPin2" class="input center" type="password" placeholder="••••••" inputmode="numeric" maxlength="6">
+      <button class="eye" type="button" onclick="togglePin('newPin2',this)">👁️</button>
     </div>
     <div id="alert2" class="alert err"></div>
-    <button class="btn btn-green" id="btnSave" onclick="sauvegarderPass()">✅ ENREGISTRER MON NOUVEAU MOT DE PASSE</button>
+    <button class="btn btn-green" id="btnSave" onclick="sauvegarderPin()">✅ ENREGISTRER MON NOUVEAU PIN</button>
     <button class="btn btn-dark" onclick="retourStep1()">← Changer de numéro</button>
-    <div class="mini">Après enregistrement, tu pourras te connecter avec ton nouveau mot de passe.</div>
   </div>
 </div>
 
-<!-- ============ SUCCÈS ============ -->
+<!-- SUCCÈS -->
 <div id="secOk" style="display:none">
   <div class="card" style="text-align:center">
     <div style="font-size:48px">✅</div>
-    <h3 style="font-size:16px">MOT DE PASSE MIS À JOUR !</h3>
-    <p class="sub">Ton nouveau mot de passe est enregistré. Tu peux maintenant te connecter avec.</p>
+    <h3 style="font-size:16px">PIN MIS À JOUR !</h3>
+    <p class="sub">Ton nouveau PIN est enregistré dans le champ <b>pin</b>. Tu peux maintenant te connecter avec.</p>
     <button class="btn btn-green" onclick="location.href='index.html'">🔓 ALLER À LA CONNEXION</button>
-    <a href="messagerie.html" style="display:block;margin-top:10px;font-size:12px;color:#888">Un problème ? Écris à l'admin dans messagerie.html</a>
   </div>
 </div>
 
@@ -127,7 +125,7 @@ function setStep(n){
     el.className = (i+1<n) ? 'done' : (i+1===n ? 'active' : '');
   });
 }
-function togglePass(id,btn){
+function togglePin(id,btn){
   let el=document.getElementById(id);
   let show = el.type==='password';
   el.type = show ? 'text' : 'password';
@@ -139,10 +137,16 @@ function retourStep1(){
   setStep(1);
 }
 
-// ===== ÉTAPE 1 : VÉRIFIER QUE LE NUMÉRO EXISTE - SEULE VÉRIFICATION =====
+// ===== MD5 - MÊME HASH QUE TON index.html =====
+// Ton index.html hash le PIN en MD5 avant de le comparer à clients/<phone>/pin
+// Ex : pin "123456" -> "e10adc3949ba59abbe56e057f20f883e" (32 car.)
+// On doit donc hasher aussi ici, sinon la connexion ne marchera jamais.
+function md5(string){function RotateLeft(lValue,iShiftBits){return(lValue<<iShiftBits)|(lValue>>>(32-iShiftBits));}function AddUnsigned(lX,lY){var lX4,lY4,lX8,lY8,lResult;lX8=(lX&0x80000000);lY8=(lY&0x80000000);lResult=(lX&0x3FFFFFFF)+(lY&0x3FFFFFFF);if(lX8&lY8){return(lResult^0x80000000^lX8^lY8);}if(lX8|lY8){if(lResult&0x40000000){return(lResult^0xC0000000^lX8^lY8);}else{return(lResult^0x40000000^lX8^lY8);}}else{return(lResult^lX8^lY8);}}function F(x,y,z){return(x&y)|((~x)&z);}function G(x,y,z){return(x&z)|(y&(~z));}function H(x,y,z){return(x^y^z);}function I(x,y,z){return(y^(x|(~z)));}function FF(a,b,c,d,x,s,ac){a=AddUnsigned(a,AddUnsigned(AddUnsigned(F(b,c,d),x),ac));return AddUnsigned(RotateLeft(a,s),b);}function GG(a,b,c,d,x,s,ac){a=AddUnsigned(a,AddUnsigned(AddUnsigned(G(b,c,d),x),ac));return AddUnsigned(RotateLeft(a,s),b);}function HH(a,b,c,d,x,s,ac){a=AddUnsigned(a,AddUnsigned(AddUnsigned(H(b,c,d),x),ac));return AddUnsigned(RotateLeft(a,s),b);}function II(a,b,c,d,x,s,ac){a=AddUnsigned(a,AddUnsigned(AddUnsigned(I(b,c,d),x),ac));return AddUnsigned(RotateLeft(a,s),b);}function ConvertToWordArray(string){var lWordCount;var lMessageLength=string.length;var lNumberOfWords_temp1=lMessageLength+8;var lNumberOfWords_temp2=(lNumberOfWords_temp1-(lNumberOfWords_temp1%64))/64;var lNumberOfWords=(lNumberOfWords_temp2+1)*16;var lWordArray=Array(lNumberOfWords-1);var lBytePosition=0;var lByteCount=0;while(lByteCount<lMessageLength){lWordCount=(lByteCount-(lByteCount%4))/4;lBytePosition=(lByteCount%4)*8;lWordArray[lWordCount]=(lWordArray[lWordCount]|(string.charCodeAt(lByteCount)<<lBytePosition));lByteCount++;}lWordCount=(lByteCount-(lByteCount%4))/4;lBytePosition=(lByteCount%4)*8;lWordArray[lWordCount]=lWordArray[lWordCount]|(0x80<<lBytePosition);lWordArray[lNumberOfWords-2]=lMessageLength<<3;lWordArray[lNumberOfWords-1]=lMessageLength>>>29;return lWordArray;}function WordToHex(lValue){var WordToHexValue="",WordToHexValue_temp="",lByte,lCount;for(lCount=0;lCount<=3;lCount++){lByte=(lValue>>>(lCount*8))&255;WordToHexValue_temp="0"+lByte.toString(16);WordToHexValue=WordToHexValue+WordToHexValue_temp.substr(WordToHexValue_temp.length-2,2);}return WordToHexValue;}function Utf8Encode(string){string=string.replace(/\r\n/g,"\n");var utftext="";for(var n=0;n<string.length;n++){var c=string.charCodeAt(n);if(c<128){utftext+=String.fromCharCode(c);}else if((c>127)&&(c<2048)){utftext+=String.fromCharCode((c>>6)|192);utftext+=String.fromCharCode((c&63)|128);}else{utftext+=String.fromCharCode((c>>12)|224);utftext+=String.fromCharCode(((c>>6)&63)|128);utftext+=String.fromCharCode((c&63)|128);}}return utftext;}var x=Array();var k,AA,BB,CC,DD,a,b,c,d;var S11=7,S12=12,S13=17,S14=22;var S21=5,S22=9,S23=14,S24=20;var S31=4,S32=11,S33=16,S34=23;var S41=6,S42=10,S43=15,S44=21;string=Utf8Encode(string);x=ConvertToWordArray(string);a=0x67452301;b=0xEFCDAB89;c=0x98BADCFE;d=0x10325476;for(k=0;k<x.length;k+=16){AA=a;BB=b;CC=c;DD=d;a=FF(a,b,c,d,x[k+0],S11,0xD76AA478);d=FF(d,a,b,c,x[k+1],S12,0xE8C7B756);c=FF(c,d,a,b,x[k+2],S13,0x242070DB);b=FF(b,c,d,a,x[k+3],S14,0xC1BDCEEE);a=FF(a,b,c,d,x[k+4],S11,0xF57C0FAF);d=FF(d,a,b,c,x[k+5],S12,0x4787C62A);c=FF(c,d,a,b,x[k+6],S13,0xA8304613);b=FF(b,c,d,a,x[k+7],S14,0xFD469501);a=FF(a,b,c,d,x[k+8],S11,0x698098D8);d=FF(d,a,b,c,x[k+9],S12,0x8B44F7AF);c=FF(c,d,a,b,x[k+10],S13,0xFFFF5BB1);b=FF(b,c,d,a,x[k+11],S14,0x895CD7BE);a=FF(a,b,c,d,x[k+12],S11,0x6B901122);d=FF(d,a,b,c,x[k+13],S12,0xFD987193);c=FF(c,d,a,b,x[k+14],S13,0xA679438E);b=FF(b,c,d,a,x[k+15],S14,0x49B40821);a=GG(a,b,c,d,x[k+1],S21,0xF61E2562);d=GG(d,a,b,c,x[k+6],S22,0xC040B340);c=GG(c,d,a,b,x[k+11],S23,0x265E5A51);b=GG(b,c,d,a,x[k+0],S24,0xE9B6C7AA);a=GG(a,b,c,d,x[k+5],S21,0xD62F105D);d=GG(d,a,b,c,x[k+10],S22,0x2441453);c=GG(c,d,a,b,x[k+15],S23,0xD8A1E681);b=GG(b,c,d,a,x[k+4],S24,0xE7D3FBC8);a=GG(a,b,c,d,x[k+9],S21,0x21E1CDE6);d=GG(d,a,b,c,x[k+14],S22,0xC33707D6);c=GG(c,d,a,b,x[k+3],S23,0xF4D50D87);b=GG(b,c,d,a,x[k+8],S24,0x455A14ED);a=GG(a,b,c,d,x[k+13],S21,0xA9E3E905);d=GG(d,a,b,c,x[k+2],S22,0xFCEFA3F8);c=GG(c,d,a,b,x[k+7],S23,0x676F02D9);b=GG(b,c,d,a,x[k+12],S24,0x8D2A4C8A);a=HH(a,b,c,d,x[k+5],S31,0xFFFA3942);d=HH(d,a,b,c,x[k+8],S32,0x8771F681);c=HH(c,d,a,b,x[k+11],S33,0x6D9D6122);b=HH(b,c,d,a,x[k+14],S34,0xFDE5380C);a=HH(a,b,c,d,x[k+1],S31,0xA4BEEA44);d=HH(d,a,b,c,x[k+4],S32,0x4BDECFA9);c=HH(c,d,a,b,x[k+7],S33,0xF6BB4B60);b=HH(b,c,d,a,x[k+10],S34,0xBEBFBC70);a=HH(a,b,c,d,x[k+13],S31,0x289B7EC6);d=HH(d,a,b,c,x[k+0],S32,0xEAA127FA);c=HH(c,d,a,b,x[k+3],S33,0xD4EF3085);b=HH(b,c,d,a,x[k+6],S34,0x4881D05);a=HH(a,b,c,d,x[k+9],S31,0xD9D4D039);d=HH(d,a,b,c,x[k+12],S32,0xE6DB99E5);c=HH(c,d,a,b,x[k+15],S33,0x1FA27CF8);b=HH(b,c,d,a,x[k+2],S34,0xC4AC5665);a=II(a,b,c,d,x[k+0],S41,0xF4292244);d=II(d,a,b,c,x[k+7],S42,0x432AFF97);c=II(c,d,a,b,x[k+14],S43,0xAB9423A7);b=II(b,c,d,a,x[k+5],S44,0xFC93A039);a=II(a,b,c,d,x[k+12],S41,0x655B59C3);d=II(d,a,b,c,x[k+3],S42,0x8F0CCC92);c=II(c,d,a,b,x[k+10],S43,0xFFEFF47D);b=II(b,c,d,a,x[k+1],S44,0x85845DD1);a=II(a,b,c,d,x[k+8],S41,0x6FA87E4F);d=II(d,a,b,c,x[k+15],S42,0xFE2CE6E0);c=II(c,d,a,b,x[k+6],S43,0xA3014314);b=II(b,c,d,a,x[k+13],S44,0x4E0811A1);a=II(a,b,c,d,x[k+4],S41,0xF7537E82);d=II(d,a,b,c,x[k+11],S42,0xBD3AF235);c=II(c,d,a,b,x[k+2],S43,0x2AD7D2BB);b=II(b,c,d,a,x[k+9],S44,0xEB86D391);a=AddUnsigned(a,AA);b=AddUnsigned(b,BB);c=AddUnsigned(c,CC);d=AddUnsigned(d,DD);}var temp=WordToHex(a)+WordToHex(b)+WordToHex(c)+WordToHex(d);return temp.toLowerCase();}
+
+// ===== ÉTAPE 1 : VÉRIFIER QUE LE NUMÉRO EXISTE =====
 async function verifierPhone(){
   let phone=document.getElementById('phone').value.trim().replace(/\s/g,'');
-  if(!phone || phone.length<8) return showAlert('alert1','❌ Entre un numéro valide. Ex : 0159415617');
+  if(!phone || phone.length<8) return showAlert('alert1','❌ Entre un numéro valide. Ex : 0153794158');
   let btn=document.getElementById('btnStep1'); btn.disabled=true; btn.innerText='⏳ Vérification...';
   try{
     let snap=await db.ref('clients/'+phone).once('value');
@@ -160,49 +164,41 @@ async function verifierPhone(){
   finally{ btn.disabled=false; btn.innerText='CONTINUER →'; }
 }
 
-// ===== ÉTAPE 2 : SAUVEGARDER LE NOUVEAU MOT DE PASSE =====
-async function sauvegarderPass(){
-  let p1=document.getElementById('newPass').value.trim();
-  let p2=document.getElementById('newPass2').value.trim();
-  if(!p1 || p1.length<6) return showAlert('alert2','❌ Ton mot de passe doit faire au moins 6 caractères. Ex : Mayne2026');
-  if(p1!==p2) return showAlert('alert2','❌ Les 2 mots de passe ne correspondent pas. Retape-les.');
-  if(!confirm('Enregistrer ce nouveau mot de passe pour '+currentPhone+' ?\nTu pourras te connecter avec juste après.')) return;
+// ===== ÉTAPE 2 : SAUVEGARDER LE NOUVEAU PIN - DANS LE BON CHAMP pin =====
+async function sauvegarderPin(){
+  let p1=document.getElementById('newPin').value.trim();
+  let p2=document.getElementById('newPin2').value.trim();
+  if(!/^\d{6}$/.test(p1)) return showAlert('alert2','❌ Ton PIN doit être exactement 6 chiffres. Ex : 123456');
+  if(p1!==p2) return showAlert('alert2','❌ Les 2 PIN ne correspondent pas. Retape-les.');
+  if(!confirm('Enregistrer ce nouveau PIN pour '+currentPhone+' ?\nTu pourras te connecter avec juste après.')) return;
 
   let btn=document.getElementById('btnSave'); btn.disabled=true; btn.innerText='⏳ Enregistrement...';
   try{
-    // On met à jour tous les champs mot de passe que ton index.html peut utiliser
+    // ✅ ON NE TOUCHE QU'AU CHAMP pin, ET ON LE HASH EN MD5 COMME index.html
+    let pinHashe = md5(p1);
     await db.ref('clients/'+currentPhone).update({
-      password: p1,
-      motdepasse: p1,
-      mot_de_passe: p1,
-      password_updated_at: new Date().toISOString()
+      pin: pinHashe
     });
-    // Trace pour l'admin
+    // Trace pour toi admin
     await db.ref('demandes_reinitialisation').push({
       phone: currentPhone,
       nom: currentData.nom||'',
-      prenom: currentData.prenom||'',
-      type: 'reinitialisation_mot_de_passe',
+      type: 'reinitialisation_pin',
       statut: 'fait',
       date: new Date().toLocaleString('fr-FR'),
       created_at: new Date().toISOString()
     });
-    try{
-      let cur = JSON.parse(localStorage.getItem('mayne_current_user')||'{}');
-      cur.phone = currentPhone;
-      localStorage.setItem('mayne_current_user', JSON.stringify(cur));
-    }catch(e){}
     document.getElementById('sec2').style.display='none';
     document.getElementById('secOk').style.display='block';
     setStep(2);
     document.getElementById('step2').className='done';
   }catch(e){ showAlert('alert2','❌ '+e.message); }
-  finally{ btn.disabled=false; btn.innerText='✅ ENREGISTRER MON NOUVEAU MOT DE PASSE'; }
+  finally{ btn.disabled=false; btn.innerText='✅ ENREGISTRER MON NOUVEAU PIN'; }
 }
 
 firebase.auth().onAuthStateChanged(function(u){ if(!u) firebase.auth().signInAnonymously(); });
 document.getElementById('phone').addEventListener('keydown',e=>{ if(e.key==='Enter') verifierPhone(); });
-document.getElementById('newPass2').addEventListener('keydown',e=>{ if(e.key==='Enter') sauvegarderPass(); });
+document.getElementById('newPin2').addEventListener('keydown',e=>{ if(e.key==='Enter') sauvegarderPin(); });
 </script>
 </body>
 </html>
