@@ -55,16 +55,15 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
 </div>
 
 <div class="step">
-  <div id="step1" class="active">1 • TÉLÉPHONE</div>
-  <div id="step2">2 • VÉRIFICATION</div>
-  <div id="step3">3 • NOUVEAU PIN</div>
+  <div id="step1" class="active">1 • NUMÉRO</div>
+  <div id="step2">2 • NOUVEAU PIN</div>
 </div>
 
-<!-- ============ ÉTAPE 1 : TÉLÉPHONE ============ -->
+<!-- ============ ÉTAPE 1 : NUMÉRO SEULEMENT ============ -->
 <div id="sec1">
   <div class="card">
     <h3>📱 TU AS OUBLIÉ TON PIN ?</h3>
-    <p class="sub">Pas de panique. Entre le numéro avec lequel tu t'es inscrit. On va vérifier que c'est bien ton compte.</p>
+    <p class="sub">Entre juste ton numéro de téléphone avec lequel tu t'es inscrit. On vérifie que le compte existe, et tu choisis ton nouveau PIN.</p>
     <label>Ton numéro de téléphone</label>
     <input id="phone" class="input" type="tel" placeholder="Ex : 0159415617" inputmode="numeric" autocomplete="tel">
     <div id="alert1" class="alert err"></div>
@@ -73,28 +72,13 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
   </div>
 </div>
 
-<!-- ============ ÉTAPE 2 : VÉRIFICATION JUSTE NOM ============ -->
+<!-- ============ ÉTAPE 2 : NOUVEAU PIN ============ -->
 <div id="sec2" style="display:none">
   <div class="card">
-    <h3>🛡️ VÉRIFIE QUE C'EST BIEN TOI</h3>
-    <p class="sub">Pour éviter que quelqu'un d'autre change ton PIN, tape ton nom <b style="color:#fff">exactement comme à l'inscription</b>.</p>
-    <div class="row"><span>Numéro vérifié</span><b id="phoneAffiche" style="color:#ffeb3b">-</b></div>
-    <label>Ton nom de famille</label>
-    <input id="verifNom" class="input" placeholder="Ex : DOSSOU" autocomplete="family-name">
-    <div class="mini" style="text-align:left;margin-top:6px">⚠️ Tape juste ton nom. On ne demande pas le prénom.</div>
-    <div id="alert2" class="alert err"></div>
-    <button class="btn btn-orange" id="btnStep2" onclick="verifierIdentite()">VÉRIFIER MON IDENTITÉ →</button>
-    <button class="btn btn-dark" onclick="retourStep1()">← Changer de numéro</button>
-  </div>
-</div>
-
-<!-- ============ ÉTAPE 3 : NOUVEAU PIN ============ -->
-<div id="sec3" style="display:none">
-  <div class="card">
     <h3>🔑 CHOISIS TON NOUVEAU PIN</h3>
-    <p class="sub">Choisis un PIN que tu vas retenir. Ne le partage avec personne, même pas l'admin.</p>
+    <p class="sub">Choisis un PIN que tu vas retenir. Ne le partage avec personne.</p>
     <div class="row"><span>Compte</span><b id="nomAffiche">-</b></div>
-    <div class="row"><span>Numéro</span><b id="phoneAffiche2">-</b></div>
+    <div class="row"><span>Numéro vérifié</span><b id="phoneAffiche2" style="color:#ffeb3b">-</b></div>
     <label>Nouveau PIN (4 à 6 chiffres)</label>
     <div class="field">
       <input id="newPin" class="input center" type="password" placeholder="••••" inputmode="numeric" maxlength="6">
@@ -107,6 +91,7 @@ label{display:block;font-size:11px;font-weight:800;color:#aaa;margin:12px 0 5px;
     </div>
     <div id="alert3" class="alert err"></div>
     <button class="btn btn-green" id="btnSave" onclick="sauvegarderPin()">✅ ENREGISTRER MON NOUVEAU PIN</button>
+    <button class="btn btn-dark" onclick="retourStep1()">← Changer de numéro</button>
     <div class="mini">Après enregistrement, tu pourras te connecter avec ton nouveau PIN.</div>
   </div>
 </div>
@@ -138,12 +123,11 @@ function showAlert(id,msg,ok){
   setTimeout(()=>el.style.display='none',4000);
 }
 function setStep(n){
-  ['step1','step2','step3'].forEach((s,i)=>{
+  ['step1','step2'].forEach((s,i)=>{
     let el=document.getElementById(s);
     el.className = (i+1<n) ? 'done' : (i+1===n ? 'active' : '');
   });
 }
-function norm(s){ return (s||'').toString().trim().toLowerCase().replace(/\s+/g,' '); }
 function togglePin(id,btn){
   let el=document.getElementById(id);
   let show = el.type==='password';
@@ -156,7 +140,7 @@ function retourStep1(){
   setStep(1);
 }
 
-// ===== ÉTAPE 1 : VÉRIFIER QUE LE NUMÉRO EXISTE =====
+// ===== ÉTAPE 1 : VÉRIFIER QUE LE NUMÉRO EXISTE - SEULE VÉRIFICATION =====
 async function verifierPhone(){
   let phone=document.getElementById('phone').value.trim().replace(/\s/g,'');
   if(!phone || phone.length<8) return showAlert('alert1','❌ Entre un numéro valide. Ex : 0159415617');
@@ -168,7 +152,8 @@ async function verifierPhone(){
       return;
     }
     currentPhone=phone; currentData=snap.val()||{};
-    document.getElementById('phoneAffiche').innerText=phone;
+    document.getElementById('nomAffiche').innerText=(currentData.nom||'')+' '+(currentData.prenom||'');
+    document.getElementById('phoneAffiche2').innerText=phone;
     document.getElementById('sec1').style.display='none';
     document.getElementById('sec2').style.display='block';
     setStep(2);
@@ -176,30 +161,7 @@ async function verifierPhone(){
   finally{ btn.disabled=false; btn.innerText='CONTINUER →'; }
 }
 
-// ===== ÉTAPE 2 : VÉRIFIER JUSTE LE NOM =====
-async function verifierIdentite(){
-  let nom=document.getElementById('verifNom').value;
-  if(!nom) return showAlert('alert2','❌ Entre ton nom.');
-  let btn=document.getElementById('btnStep2'); btn.disabled=true; btn.innerText='⏳ Vérification...';
-  try{
-    let snap=await db.ref('clients/'+currentPhone).once('value');
-    let v=snap.val()||{};
-    // On vérifie JUSTE le nom - pas le prénom
-    if(norm(v.nom)!==norm(nom)){
-      showAlert('alert2','❌ Nom incorrect. Vérifie exactement comme à ton inscription.\nSi tu as oublié, écris à l\'admin dans messagerie.html');
-      return;
-    }
-    currentData=v;
-    document.getElementById('nomAffiche').innerText=(v.nom||'')+' '+(v.prenom||'');
-    document.getElementById('phoneAffiche2').innerText=currentPhone;
-    document.getElementById('sec2').style.display='none';
-    document.getElementById('sec3').style.display='block';
-    setStep(3);
-  }catch(e){ showAlert('alert2','❌ '+e.message); }
-  finally{ btn.disabled=false; btn.innerText='VÉRIFIER MON IDENTITÉ →'; }
-}
-
-// ===== ÉTAPE 3 : SAUVEGARDER LE NOUVEAU PIN =====
+// ===== ÉTAPE 2 : SAUVEGARDER LE NOUVEAU PIN =====
 async function sauvegarderPin(){
   let p1=document.getElementById('newPin').value.trim();
   let p2=document.getElementById('newPin2').value.trim();
@@ -229,10 +191,10 @@ async function sauvegarderPin(){
       cur.phone = currentPhone;
       localStorage.setItem('mayne_current_user', JSON.stringify(cur));
     }catch(e){}
-    document.getElementById('sec3').style.display='none';
+    document.getElementById('sec2').style.display='none';
     document.getElementById('secOk').style.display='block';
-    setStep(3);
-    document.getElementById('step3').className='done';
+    setStep(2);
+    document.getElementById('step2').className='done';
   }catch(e){ showAlert('alert3','❌ '+e.message); }
   finally{ btn.disabled=false; btn.innerText='✅ ENREGISTRER MON NOUVEAU PIN'; }
 }
