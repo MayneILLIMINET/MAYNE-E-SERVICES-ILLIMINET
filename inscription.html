@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Inscription - MAYNE-ILLIMINET E-SERVICES</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>if(localStorage.getItem('mayne_pin_enabled')==='true' && !sessionStorage.getItem('mayne_unlocked')){location.href='lock.html';}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred=window.OneSignalDeferred||[];
+OneSignalDeferred.push(async function(OneSignal){
+  await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
+});
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script>
+let db,database;
+const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+database=firebase.database();db=database;
+firebase.auth().onAuthStateChanged(function(user){ if(!user){ firebase.auth().signInAnonymously().catch(e=>console.log(e)); } });
+</script>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#0f0f0f;--card:#1a1a1a;--card2:#111;--text:#fff;--muted:#aaa;--border:#2a2a2a;--input-bg:#000;--nav:#000;--accent:#ffeb3b}
+body.light-mode{--bg:#f2f2f2;--card:#fff;--card2:#f8f8f8;--text:#111;--muted:#555;--border:#ddd;--input-bg:#fff;--nav:#fff;--accent:#E65100}
+body{margin:0;padding:0;font-family:system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app-container{width:100%;max-width:480px;margin:0 auto;background:var(--bg);min-height:100vh;padding:12px 12px 90px;position:relative;color:var(--text)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:4px 0 10px;position:sticky;top:0;background:var(--bg);z-index:20}
+.logo{font-weight:900;font-size:15px;color:var(--accent)}
+.logo span{color:var(--text)}
+.logo small{display:block;font-size:9px;color:var(--muted);font-weight:400}
+.top-icons{display:flex;gap:6px}
+.icon-btn{background:var(--card);border:1px solid var(--border);width:38px;height:38px;border-radius:999px;font-size:16px;cursor:pointer;position:relative;color:var(--text)}
+.guide-banner{background:linear-gradient(135deg,#ff5000,#ff8c00);border-radius:14px;padding:12px;text-align:left;margin-bottom:12px;color:#fff}
+.guide-banner b{font-size:14px}
+.guide-banner p{font-size:12px;line-height:1.5;margin:6px 0 8px}
+.input-group{text-align:left;margin-bottom:10px}
+.input-label{display:block;font-size:12px;font-weight:800;margin-bottom:4px}
+.input-field{width:100%;padding:12px;border-radius:10px;border:1px solid #ff5000;background:#ff5000;color:#fff;text-align:center;font-size:14px;font-weight:800;outline:none}
+.btn-submit{width:100%;background:#ff5000;color:#fff;border:none;padding:13px;font-size:14px;font-weight:900;cursor:pointer;border-radius:12px;margin-top:6px}
+.btn-link{background:none;border:none;color:var(--text);text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;width:100%;text-align:center;display:block}
+.info-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:12px;text-align:left}
+.info-card h4{margin:0 0 8px;color:var(--accent);font-size:13px}
+.info-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dotted var(--border);font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-row span:last-child{font-weight:900;color:#0f0;white-space:nowrap}
+body.light-mode .info-row span:last-child{color:#1B8A2A}
+.bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:var(--nav);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:100}
+.nav-item{background:none;border:none;color:var(--muted);cursor:pointer;text-align:center;font-size:9px;font-weight:800;padding:4px 2px}
+.nav-item.active{color:#ff5000}
+.nav-item .ico{font-size:20px;display:block}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:flex-end;justify-content:center;z-index:9998}
+.modal-box{background:var(--card);color:var(--text);padding:16px;border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:92vh;overflow:auto}
+.modal-msg{font-size:14px;margin-bottom:14px;text-align:center}
+.modal-btn{flex:1;padding:12px;border:none;border-radius:10px;font-weight:900;cursor:pointer}
+.btn-yes{background:#28a745;color:#fff}
+</style>
+</head>
+<body>
+<div class="app-container">
+<div class="topbar">
+<div class="logo">MAYNE <span>ILLIMINET</span><small>E-SERVICES • Cotonou, Bénin</small></div>
+<div class="top-icons">
+<button class="icon-btn" onclick="toggleTheme()" id="theme-toggle">🌙</button>
+<button class="icon-btn" onclick="location.href='index.html'">🏠</button>
+</div>
+</div>
+
+<div class="guide-banner">
+<b>🎉 Crée ton compte — Gagne 100 F par ami</b>
+<p>Inscris-toi en 30 secondes, vérifie ton email, et commence à gagner ton BONUS sur chaque service.</p>
+</div>
+
+<h3 style="text-align:center;margin:0 0 12px">BIENVENUE SUR ACTIFER</h3>
+
+<div class="input-group"><label class="input-label">Nom et Prénom :</label><input type="text" id="reg-name" class="input-field" placeholder="Ex: PAD MAT"></div>
+<div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="reg-id" class="input-field"></div>
+<div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field" placeholder="Ex: jean@gmail.com"></div>
+<div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
+<div class="input-group" style="border:2px dashed #ff5000;border-radius:10px;padding:8px;background:rgba(255,80,0,.12)"><label class="input-label" style="color:var(--accent)">Code Parrain (facultatif) — Gagne 100 F :</label><input type="text" id="reg-parrain" class="input-field" placeholder="Ex: 0158612131"></div>
+<button type="button" class="btn-submit" onclick="executerInscription()">Valider</button>
+<button type="button" class="btn-link" onclick="location.href='connexion.html'">Déjà inscrit? Connexion</button>
+
+<div id="verify-interface" style="display:none;margin-top:16px">
+<h3 style="color:var(--accent);text-align:center">VÉRIFIE TON EMAIL</h3>
+<div style="font-size:13px;margin-bottom:10px;text-align:center">Code envoyé à <b id="verify-email-affiche"></b></div>
+<div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres"></div>
+<button type="button" class="btn-submit" onclick="verifierCodeEmail()">Vérifier</button>
+<button type="button" class="btn-link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button>
+</div>
+
+<div class="info-card">
+<h4>🎁 CE QUE TOI TU GAGNES</h4>
+<div class="info-row"><span>📱 Forfait — pour toi ou tes proches</span><span>1,2%</span></div>
+<div class="info-row"><span>📤 Transfert Envoi</span><span>0,12%</span></div>
+<div class="info-row"><span>💸 Transfert Retrait — 1/3 du barème</span><span>1/3</span></div>
+<div class="info-row"><span>🎰 1XBET</span><span>0,2%</span></div>
+<div class="info-row"><span>🎉 Parrainage — 1 ami inscrit</span><span>+ 100 F</span></div>
+</div>
+</div>
+
+<div class="bottom-nav">
+<button class="nav-item" onclick="location.href='index.html'"><span class="ico">🏠</span>Accueil</button>
+<button class="nav-item" onclick="location.href='live.html'"><span class="ico">⚽</span>Score Live</button>
+<button class="nav-item" onclick="location.href='messagerie.html'"><span class="ico">💬</span>Messagerie</button>
+<button class="nav-item" onclick="location.href='compte.html'"><span class="ico">👤</span>Profil</button>
+<button class="nav-item active" onclick="location.href='inscription.html'"><span class="ico">📝</span>Inscription</button>
+</div>
+
+<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
+
+<script>
+const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
+let tempPhone='',tempEmail='';
+function applyTheme(){ const saved=localStorage.getItem('mayne_theme')||'dark'; const isLight=saved==='light'; document.body.classList.toggle('light-mode',isLight); const btn=document.getElementById('theme-toggle'); if(btn) btn.innerText=isLight?'☀️':'🌙'; }
+function toggleTheme(){ const isLight=document.body.classList.contains('light-mode'); const next=isLight?'dark':'light'; localStorage.setItem('mayne_theme',next); applyTheme(); }
+function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
+function hideAlert(){document.getElementById('custom-alert').style.display='none';}
+function executerInscription(){
+  const n=document.getElementById('reg-name').value.trim(),i=document.getElementById('reg-id').value.trim(),e=document.getElementById('reg-email').value.trim().toLowerCase(),p=document.getElementById('reg-pin').value.trim();
+  if(!n||!i||!e||!p)return showAlert('Remplis tout');
+  const phone=i.replace(/\D/g,''),emailKey=e.replace(/\./g,','),pinHache=CryptoJS.MD5(p).toString();
+  let parrain=new URLSearchParams(window.location.search).get('ref'); parrain=parrain?parrain.replace(/\D/g,''):''; if(parrain===phone)parrain='';
+  const regParrainInput=document.getElementById('reg-parrain').value.trim().replace(/\D/g,''); if(regParrainInput)parrain=regParrainInput;
+  database.ref('clients/'+phone).once('value').then(s=>{if(s.exists())return showAlert('Numéro déjà utilisé');
+    database.ref('emails_index/'+emailKey).once('value').then(se=>{if(se.exists())return showAlert('Email déjà utilisé');
+      database.ref('clients/'+phone).set({nom:n,email:e,pin:pinHache,solde:0,commission:0,recompense:0,email_verified:false,parrain:parrain||'',date_inscription:new Date().toLocaleString('fr-FR')}).then(()=>{
+        database.ref('emails_index/'+emailKey).set(phone).then(()=>{
+          if(parrain){database.ref('clients/'+parrain).once('value').then(sp=>{if(sp.exists()){let pg=sp.val();database.ref('clients/'+parrain).update({gain_parrainage:(pg.gain_parrainage||0)+100,commission:(pg.commission||0)+100});database.ref('notifications/'+parrain).push({titre:"🎉 Nouveau filleul!",message:`${n} (${phone}) s'est inscrit`,date:new Date().toLocaleString('fr-FR')});}});}
+          tempPhone=phone;tempEmail=e;document.getElementById('verify-email-affiche').innerText=e;envoyerCodeEmail(e);
+        });
+      });
+    });
+  });
+}
+function envoyerCodeEmail(email,isResend=false){const mail=email||tempEmail;fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('sent')){document.getElementById('verify-interface').style.display='block';showAlert(isResend?'Code renvoyé!':'Code envoyé à '+mail);}});}
+function verifierCodeEmail(){const code=document.getElementById('verify-code').value.trim();if(!code)return;fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{if(t.includes('ok')){database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{showAlert('Email vérifié! Maintenant connecte-toi');setTimeout(()=>location.href='connexion.html',1000);});}else showAlert('Code incorrect');});}
+document.addEventListener('DOMContentLoaded',()=>{ applyTheme(); });
+</script>
+</body>
+</html>
