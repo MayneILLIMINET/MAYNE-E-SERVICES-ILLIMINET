@@ -63,10 +63,6 @@ body{background:#0e0e0e;color:#fff;font-family:Inter,system-ui,-apple-system,san
 .actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
 .btn{border:none;padding:9px 6px;border-radius:9px;font-weight:900;font-size:11px;cursor:pointer} .btn:disabled{opacity:.5}
 .btn-view{background:#333;color:#fff;border:1px solid #555} .btn-val{background:#28a745;color:#fff} .btn-ann{background:#dc3545;color:#fff} .btn-preuve{background:#0d6efd;color:#fff}
-.j-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #262626;font-size:12px}
-.j-row:last-child{border-bottom:none}
-.j-label{color:#aaa}
-.j-val{font-weight:900;text-align:right}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:flex-end;justify-content:center;z-index:99}
 #mBox{background:#1e1e1e;border-radius:18px 18px 0 0;width:100%;max-width:600px;padding:16px;max-height:92vh;overflow:auto}
 .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #333;font-size:12px;gap:8px}
@@ -103,7 +99,6 @@ body{background:#0e0e0e;color:#fff;font-family:Inter,system-ui,-apple-system,san
 <div class="stat"><b id="stRejete" style="color:#dc3545">0</b><span>ANNULÉS</span></div>
 <div class="stat"><b id="stTotal">0</b><span>TOTAL</span></div>
 </div>
-<details class="bareme" id="journalierBox" open><summary>📅 JOURNALIER — ENVOI / DÉCAISSEMENT / FORFAIT séparés • <span id="journalierDate"></span> ▼</summary><div class="bareme-body"><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap"><button class="btn" style="background:#ff5000;padding:8px" onclick="afficherJournalier('today')">📅 Aujourd'hui</button><button class="btn" style="background:#333;padding:8px" onclick="afficherJournalier('all')">📜 Tous les jours</button><button class="btn" style="background:#00BCD4;padding:8px" onclick="afficherJournalier('envoi')">🔵 ENVOI seul</button><button class="btn" style="background:#FF8A00;padding:8px" onclick="afficherJournalier('decaissement')">🟠 DÉCAISSEMENT seul</button><button class="btn" style="background:#8BC34A;padding:8px" onclick="afficherJournalier('forfait')">📱 FORFAIT seul</button></div><div id="journalierList">Chargement...</div></div></details>
 <div class="select-all-bar"><label><input type="checkbox" id="checkAll" class="chk-all" onchange="toggleSelectAll(this.checked)"> ☑️ Tout cocher <small id="selectAllLabel">— 0 en cours</small></label><span id="selectedLabel" style="font-size:11px;color:#ffeb3b;font-weight:900"></span></div>
 <div id="bulkBar" class="bulk-bar"><b id="bulkCount">0 sélectionné(s)</b><button class="bulk-btn" id="btnBulkVal" style="background:#28a745;color:#fff" onclick="bulkValidate()">✅ TOUT VALIDER</button><button class="bulk-btn" id="btnBulkAnn" style="background:#dc3545;color:#fff" onclick="bulkCancel()">❌ TOUT ANNULER</button><button class="bulk-btn" style="background:#000;color:#fff" onclick="clearSelection()">✖ Effacer</button></div>
 <div class="tabs" id="tabs"></div>
@@ -129,7 +124,7 @@ let userPhone=getPhone();
 if(!isAdmin(userPhone)){document.body.innerHTML='<div style="padding:30px;text-align:center">⛔ Admin seulement<br><small>Phone:'+(userPhone||'non trouvé')+'<br>Connecte-toi d\'abord sur index.html</small></div>';throw 'not admin';}
 const SERVICES=[{key:'all',label:'TOUS',path:null},{key:'p2p',label:'P2P/P2M',path:'commandes_p2p_p2m'},{key:'transfert',label:'TRANSFERT',path:'commandes_transferts'},{key:'market',label:'MARKET',path:'commandes_marketplace'},{key:'1xbet',label:'1XBET',path:'commandes_1xbet'},{key:'factures',label:'FACTURES',path:'commandes_factures'},{key:'forfaits',label:'FORFAITS',path:'commandes_forfaits'},{key:'epargne',label:'EPARGNE',path:'commandes_epargne'},{key:'depot',label:'DEPOTS',path:'commandes_depots'},{key:'retrait',label:'RETRAITS',path:'commandes_retraits'},{key:'kyc',label:'KYC',path:'kyc_demandes'}];
 let allData=[],currentTab='all',currentItem=null,counts={},selected=new Set(),currentList=[],processing=new Set(),clientsCache={};
-let traitesCharges=false, timerTraites=null, journalierMode='today';
+let traitesCharges=false, timerTraites=null;
 function getPriority(s){const t=(s||'').toLowerCase();if(t.includes('en cours')||t.includes('attente')||t.includes('pending'))return 0;return 1;}
 function getTime(it){const t=it.data.updated_at||it.data.updatedAt||it.date||'';const ms=Date.parse(t);return isNaN(ms)?0:ms;}
 function initTabs(){const c=document.getElementById('tabs');c.innerHTML='';SERVICES.forEach(s=>{const b=document.createElement('button');b.className='tab'+(s.key===currentTab?' active':'');b.id='tab-'+s.key;b.innerHTML=s.label+' <i id="count-'+s.key+'">0</i>';b.onclick=()=>switchTab(s.key);c.appendChild(b);});}
@@ -155,50 +150,9 @@ function getClientPhone(it){return it.client_id||it.phone||'';}
 function getBeneficiaire(it){const d=it.data||{};const isRet=isRetrait(it);const numeroComplet=d.numero_complet||d.numeroComplet||d.numero_complet_beneficiaire||d.numeroCompletBeneficiaire||d.num_complet||d.numeroCompletDestinataire;if(numeroComplet&&String(numeroComplet).trim()!=='')return String(numeroComplet).trim();if(it.service==='forfaits'||it.path==='commandes_forfaits'){const f=[d.numero_a_recharger,d.numeroARecharger,d.numero_recharge,d.numero_forfait,d.beneficiaire,d.numero,d.telephone];for(let v of f){if(v&&String(v).trim())return String(v).trim();}}if(isRet){const r=[d.numero_decaissement,d.numeroDecaissement,d.num_decaissement,d.numero_retrait,d.numeroRetrait,d.num_retrait,d.numero,d.telephone];for(let v of r){if(v&&String(v).trim())return String(v).trim();}}const e=[d.numero_beneficiaire,d.numeroBeneficiaire,d.beneficiaire,d.numero_destinataire,d.destinataire,d.numero_receveur,d.telephone_beneficiaire];for(let v of e){if(v&&String(v).trim())return String(v).trim();}return d.numero||d.telephone||'';}
 function getBenefLabel(it){if(it.service==='forfaits'||it.path==='commandes_forfaits')return 'N° À RECHARGER';if(isRetrait(it))return 'N° DÉCAISSEMENT';return 'N° BÉNÉFICIAIRE';}
 function getServiceLabel(it){const d=it.data||{};return d.service||d.categorie||it.serviceLabel||it.service||'';}
-function getJournalierService(it){
-  if(it.service==='forfaits'||it.path==='commandes_forfaits') return 'FORFAIT';
-  if(it.service==='transfert'||it.path==='commandes_transferts'){return isRetrait(it) ? 'TRANSFERT - DÉCAISSEMENT' : 'TRANSFERT - ENVOI';}
-  if(it.service==='retrait'||it.path==='commandes_retraits') return 'TRANSFERT - DÉCAISSEMENT';
-  if(it.service==='depot'||it.path==='commandes_depots') return 'TRANSFERT - ENVOI';
-  if(it.service==='1xbet') return isRetrait(it) ? '1XBET - RETRAIT' : '1XBET - DEPOT';
-  return (getServiceLabel(it)||'').toUpperCase();
-}
 function getMotifLabel(it){const d=it.data||{};if(it.service==='forfaits'||it.path==='commandes_forfaits'){let nomForfait=d.nom_forfait||d.forfait||d.nomForfait||d.offre||d.pack||d.plan||d.produit||d.designation||d.libelle||d.nom_offre||d.forfait_nom||d.titre||'';let type=d.type||d.motif||d.categorie||d.operation||'';if(nomForfait&&type&&!nomForfait.toLowerCase().includes(type.toLowerCase()))return type+' • '+nomForfait;if(nomForfait)return nomForfait;if(type)return type;return 'Forfait';}if(it.service==='transfert'||it.path==='commandes_transferts'){return isRetrait(it)?'Décaissement':'Envoi';}let t=d.motif||d.type||d.operation||d.sens||'';if(!t&&it.path==='commandes_retraits')t='Décaissement';if(!t&&it.path==='commandes_depots')t='Dépôt';if(!t&&it.path==='commandes_1xbet')t='1XBET';return t?String(t).charAt(0).toUpperCase()+String(t).slice(1):'—';}
 function calcCommissions(){let fT=0,fC=0,fCom=0,tT=0,tC=0,tCom=0,tRC=0,tEC=0,xT=0,xC=0,xCom=0,xDC=0,xRC=0;allData.forEach(it=>{if(!it.statut.includes('valid'))return;if(it.service==='forfaits'){fT+=it.montant||0;fC++;fCom+=getCommissionForfait(it.montant);}if(it.service==='transfert'||it.service==='retrait'||it.service==='depot'){if(isRetrait(it)){tT+=it.montant||0;tC++;let c=getCommissionRetrait(it.montant);tCom+=c;tRC+=c;}else if(isEnvoi(it)||it.service==='depot'){tT+=it.montant||0;tC++;let c=getCommissionEnvoi(it.montant,getReseau(it));tCom+=c;tEC+=c;}}if(it.service==='1xbet'){let com=getCommissionForItem(it);xT+=it.montant||0;xC++;xCom+=com;if(isRetrait(it))xRC+=com;else xDC+=com;}});return{fT,fC,comForfait:fCom,tT,tC,comTransfert:tCom,tRC,tEC,xT,xC,comXbet:xCom,xDC,xRC,total:fCom+tCom+xCom};}
 function updateDashboard(){const c=calcCommissions();document.getElementById('dashComForfait').innerText=fmt(c.comForfait);document.getElementById('dashDetailForfait').innerText=fmt(c.fT)+' • '+c.fC+' cmds';document.getElementById('dashComTransfert').innerText=fmt(c.comTransfert);document.getElementById('dashDetailTransfert').innerText='Retrait '+fmt(c.tRC)+' + Envoi '+fmt(c.tEC);document.getElementById('dashComXbet').innerText=fmt(c.comXbet);document.getElementById('dashDetailXbet').innerText='Depot '+fmt(c.xDC)+' + Retrait '+fmt(c.xRC);document.getElementById('dashComTotal').innerText=fmt(c.total);document.getElementById('dashDetailTotal').innerText='Forfaits '+fmt(c.comForfait)+' + Transfert '+fmt(c.comTransfert)+' + 1XBET '+fmt(c.comXbet);}
-function getDateKey(dateStr){if(!dateStr)return '';if(dateStr.includes('/')){const [j,m,a]=dateStr.split(' ')[0].split('/');return `${a}-${m}-${j}`;}if(dateStr.includes('T'))return dateStr.slice(0,10);return dateStr.slice(0,10);}
-function getTodayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function afficherJournalier(mode){journalierMode=mode;renderJournalier();}
-// ✅ JOURNALIER SANS CASES NOIRES, sans gros blocs ENVOI/DÉCAISSEMENT/FORFAIT
-function renderJournalier(){
-  const box=document.getElementById('journalierList');if(!box)return;
-  const today=getTodayKey();document.getElementById('journalierDate').innerText=today.split('-').reverse().join('/');
-  const groupes={};
-  allData.forEach(it=>{
-    if(!it.statut.includes('valid'))return;
-    const dateKey=getDateKey(it.data.updated_at_fr||it.data.date||it.date||it.data.updated_at||'');
-    const isToday=(dateKey===today);
-    const svcJ=getJournalierService(it);
-    if(journalierMode==='envoi' && svcJ!=='TRANSFERT - ENVOI') return;
-    if(journalierMode==='decaissement' && svcJ!=='TRANSFERT - DÉCAISSEMENT') return;
-    if(journalierMode==='forfait' && svcJ!=='FORFAIT') return;
-    if(journalierMode==='today' && !isToday) return;
-    const nom=getClientName(it);const cle=nom+'|'+svcJ;
-    if(!groupes[cle])groupes[cle]={nom:nom,phone:getClientPhone(it),service:svcJ,totalJour:0,countJour:0,comJour:0,dernier:0,dernierMontant:0,dernierDate:'',dernierType:'',dernierBenef:''};
-    const g=groupes[cle];
-    if(isToday){g.totalJour+=(it.montant||0);g.countJour++;g.comJour+=getCommissionForItem(it);}
-    const t=it._time||0;
-    if(!g.dernier||t>g.dernier){g.dernier=t;g.dernierMontant=it.montant||0;g.dernierDate=it.data.updated_at_fr||it.data.date||it.date||'';g.dernierType=getMotifLabel(it);g.dernierBenef=getBeneficiaire(it);}
-  });
-  const arr=Object.values(groupes).sort((a,b)=>b.totalJour-a.totalJour);
-  if(arr.length===0){box.innerHTML='<div style="color:#888;text-align:center;padding:10px">Aucun validé pour ce filtre.</div>';return;}
-  box.innerHTML=arr.map(g=>{
-    const dernierStr=g.dernierDate?String(g.dernierDate).slice(0,16):'—';
-    let badgeColor='#ffeb3b'; if(g.service.includes('ENVOI')) badgeColor='#00E5FF'; if(g.service.includes('DÉCAISSEMENT')) badgeColor='#FF9F00'; if(g.service==='FORFAIT') badgeColor='#8BC34A';
-    return `<div style="border:1px solid #262626;border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:13px">${g.nom}</b><span style="font-size:10px;color:${badgeColor};font-weight:900">${g.service}</span></div><div style="font-size:11px;color:#888">📞 ${g.phone}</div><div style="margin-top:8px"><div class="j-row"><span class="j-label">Aujourd'hui</span><span class="j-val" style="color:#0f0">${g.totalJour.toLocaleString('fr-FR')} F • ${g.countJour} cmd(s)</span></div><div class="j-row"><span class="j-label">Commission jour</span><span class="j-val" style="color:#FFD700">${g.comJour.toLocaleString('fr-FR')} F</span></div><div class="j-row"><span class="j-label">Dernier validé</span><span class="j-val">${dernierStr} • ${g.dernierType} • ${g.dernierMontant.toLocaleString('fr-FR')} F</span></div>${g.dernierBenef?`<div class="j-row"><span class="j-label">N°</span><span class="j-val" style="color:#4da3ff">${g.dernierBenef}</span></div>`:''}</div></div>`;
-  }).join('');
-}
-// ===== CHARGEMENT INITIAL : EN COURS d'abord, traités après 5 sec =====
 async function loadAll(){
   const btn=document.getElementById('btnRefresh');if(btn)btn.innerText='⏳';
   allData=[];counts={};SERVICES.forEach(s=>counts[s.key]=0);traitesCharges=false;loadClientsCache();
@@ -209,7 +163,7 @@ async function loadAll(){
   allData.sort((a,b)=>b._time-a._time);
   document.getElementById('totalCount').innerText=allData.length+' en cours';
   document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR')+' • EN COURS • Traités dans 5 sec...';
-  updateStats(allData);updateDashboard();render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));renderJournalier();
+  updateStats(allData);updateDashboard();render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
   if(btn)btn.innerText='🔄 En cours';
   clearTimeout(timerTraites);timerTraites=setTimeout(()=>{loadTraites();},5000);
   showToast('⚡ En cours chargés. Les validés / annulés arrivent dans 5 sec.');
@@ -226,10 +180,9 @@ async function loadTraites(){
   SERVICES.forEach(s=>{const el=document.getElementById('count-'+s.key);if(el)el.innerText=s.key==='all'?allData.length:(counts[s.key]||0);});
   document.getElementById('totalCount').innerText=allData.length+' cmds';
   document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR')+' • Tout chargé';
-  updateStats(allData);updateDashboard();render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));renderJournalier();
+  updateStats(allData);updateDashboard();render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab));
   showToast('✅ Toutes les commandes traitées chargées.');
 }
-// ✅ REFRESH : QUE LES EN COURS. Si pas de nouvel EN COURS, on ne touche à rien.
 async function refreshEnCoursOnly(){
   const btn=document.getElementById('btnRefresh');if(btn)btn.innerText='⏳ En cours...';
   const avant=new Set(allData.filter(x=>getPriority(x.statut)===0).map(x=>x.path+'|'+x.id+'|'+x.statut));
@@ -238,19 +191,10 @@ async function refreshEnCoursOnly(){
     snap.forEach(ch=>{const v=ch.val();const statut=(v.statut||v.status||'en cours').toLowerCase();if(!(statut.includes('en cours')||statut.includes('attente')||statut.includes('pending')))return;const k=s.path+'|'+ch.key+'|'+statut;if(avant.has(k))return;const it={id:ch.key,path:s.path,service:s.key,serviceLabel:s.label,client_id:v.client_id||v.phone||'',phone:v.phone||'',montant:parseFloat(v.montant||v.total||v.prix||0),statut:statut,date:v.date||v.created_at||'',data:v};it._time=getTime(it);nouveaux.push(it);});
   }));
   await Promise.all(pr);
-  // Retire les EN COURS qui ne le sont plus (validés / annulés entre-temps) sans recharger les traités
   let aRetirer=[];
   for(let old of allData.filter(x=>getPriority(x.statut)===0)){
-    let trouve=false;
-    for(let n of nouveaux){ if(n.path===old.path&&n.id===old.id){trouve=true;break;} }
-    // On vérifie en base si cet ancien EN COURS a changé : si oui, on l'enlève de la liste EN COURS
-    if(!trouve){
-      // On ne le supprime que si on l'a revu dans nouveaux avec un autre statut -> ici il n'est plus EN COURS, donc il est passé traité
-      // On le garde en mémoire mais on ne l'affiche plus en EN COURS : on le retire de allData EN COURS uniquement
-      // Pour éviter un faux retrait, on ne retire que ceux qui ne sont plus dans la liste EN COURS fraîche ET qui étaient là avant
-      // => on les retire, le journalier se mettra à jour au prochain loadTraites manuel
-      aRetirer.push(old);
-    }
+    let trouve=nouveaux.some(n=>n.path===old.path&&n.id===old.id);
+    if(!trouve) aRetirer.push(old);
   }
   if(nouveaux.length===0 && aRetirer.length===0){
     document.getElementById('lastUpdate').innerText='MAJ: '+new Date().toLocaleTimeString('fr-FR')+' • Aucun nouvel EN COURS';
@@ -258,7 +202,6 @@ async function refreshEnCoursOnly(){
     if(btn)btn.innerText='🔄 En cours';
     return;
   }
-  // On enlève les anciens EN COURS qui ont changé, on ajoute les nouveaux
   if(aRetirer.length>0){ allData=allData.filter(x=>!aRetirer.includes(x)); }
   nouveaux.forEach(it=>{ allData.push(it); });
   allData.sort((a,b)=>{const pa=getPriority(a.statut),pb=getPriority(b.statut);if(pa!==pb)return pa-pb;return b._time-a._time;});
@@ -346,11 +289,9 @@ async function quickAction(path,id,newStatut,btnEl){
       }else{showToast('❌ Annulé');}
     }catch(e){it.statut=old;showToast('❌ Erreur : '+e.message,true);}
     processing.delete(k);
-    // Après validation / annulation, on ne recharge pas tout : juste on retire la carte de EN COURS
     allData=allData.filter(x=>!(x.path===path&&x.id===id&&getPriority(x.statut)===0&&newStatut!=='en cours'));
-    // On remet l'item traité dans allData pour le journalier, mais sans le ré-afficher en EN COURS
     it.statut=newStatut; allData.push(it);
-    render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab)); renderJournalier(); updateStats(allData); updateDashboard();
+    render(currentTab==='all'?allData:allData.filter(d=>d.service===currentTab)); updateStats(allData); updateDashboard();
   }else{processing.delete(k);}
 }
 function validerCurrent(){if(!currentItem)return;const it=currentItem;closeModal();quickAction(it.path,it.id,'validé',document.getElementById('btnValiderCurrent'));}
