@@ -3,294 +3,315 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Minage - MAYNE ILLIMINET</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Minage — MAYNE</title>
 <script>if(localStorage.getItem('mayne_pin_enabled')==='true' && !sessionStorage.getItem('mayne_unlocked')){location.href='lock.html';}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-window.OneSignalDeferred=window.OneSignalDeferred||[];
-OneSignalDeferred.push(async function(OneSignal){
-  await OneSignal.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});
-});
-</script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
-let db,database;
+let database;
 const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-database=firebase.database();db=database;
-firebase.auth().onAuthStateChanged(function(user){ if(!user){ firebase.auth().signInAnonymously().catch(e=>console.log(e)); } });
+database=firebase.database();
+firebase.auth().onAuthStateChanged(u=>{ if(!u) firebase.auth().signInAnonymously().catch(()=>{}); });
 </script>
 <style>
 *{box-sizing:border-box}
-:root{--bg:#0f0f0f;--card:#1a1a1a;--card2:#111;--text:#fff;--muted:#aaa;--border:#2a2a2a;--input-bg:#000;--nav:#000;--accent:#ffeb3b}
-body.light-mode{--bg:#f2f2f2;--card:#fff;--card2:#f8f8f8;--text:#111;--muted:#555;--border:#ddd;--input-bg:#fff;--nav:#fff;--accent:#E65100}
-body{margin:0;padding:0;font-family:system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.app-container{width:100%;max-width:480px;margin:0 auto;background:var(--bg);min-height:100vh;padding:12px 12px 90px;position:relative;color:var(--text)}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:4px 0 10px;position:sticky;top:0;background:var(--bg);z-index:20}
-.logo{font-weight:900;font-size:15px;color:var(--accent)} .logo span{color:var(--text)} .logo small{display:block;font-size:9px;color:var(--muted);font-weight:400}
-.top-icons{display:flex;gap:6px}
-.icon-btn{background:var(--card);border:1px solid var(--border);width:38px;height:38px;border-radius:999px;font-size:16px;cursor:pointer;color:var(--text)}
-.guide-banner{background:linear-gradient(135deg,#ff5000,#ff8c00);border-radius:14px;padding:12px;margin-bottom:12px;color:#fff}
-.guide-banner b{font-size:14px} .guide-banner p{font-size:12px;line-height:1.5;margin:6px 0 8px}
-.input-group{text-align:left;margin-bottom:10px} .input-label{display:block;font-size:12px;font-weight:800;margin-bottom:4px}
-.input-field{width:100%;padding:12px;border-radius:10px;border:1px solid #ff5000;background:#ff5000;color:#fff;text-align:center;font-size:14px;font-weight:800;outline:none}
-.btn-submit{width:100%;background:#ff5000;color:#fff;border:none;padding:13px;font-size:14px;font-weight:900;cursor:pointer;border-radius:12px;margin-top:6px}
-.btn-link{background:none;border:none;color:var(--text);text-decoration:underline;cursor:pointer;font-size:12px;margin-top:10px;width:100%;text-align:center;display:block}
-.btn-maj{background:#000;color:#fff;border:1px solid #fff;padding:8px 10px;font-size:11px;font-weight:900;border-radius:999px;cursor:pointer}
-.info-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:12px}
-.info-card h4{margin:0 0 8px;color:var(--accent);font-size:13px}
-.info-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dotted var(--border);font-size:12px}
-.info-row:last-child{border-bottom:none} .info-row span:last-child{font-weight:900;color:#0f0;white-space:nowrap}
-body.light-mode .info-row span:last-child{color:#1B8A2A}
-.plan-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden}
-.plan-card.populaire{border-color:#ff5000;box-shadow:0 0 0 1px #ff5000}
-.plan-card.hell{border-color:#8B0000;box-shadow:0 0 0 1px #8B0000;background:linear-gradient(180deg,#1a0000,#111)}
-.plan-card.legende{border-color:#FFD700;box-shadow:0 0 0 1px #FFD700}
-.plan-top{display:flex;justify-content:space-between;align-items:flex-start}
-.plan-name{font-size:16px;font-weight:900} .plan-name small{display:block;font-size:11px;color:var(--muted);font-weight:400}
-.plan-price{font-size:22px;font-weight:900;color:var(--accent);text-align:right} .plan-price small{display:block;font-size:10px;color:var(--muted);font-weight:400}
-.plan-gains{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:12px 0}
-.plan-gains div{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center}
-.plan-gains span{display:block;font-size:9px;color:var(--muted);font-weight:800} .plan-gains b{display:block;font-size:13px;margin-top:2px}
-.plan-formule{background:rgba(255,80,0,.12);border:1px dashed #ff5000;border-radius:10px;padding:8px;text-align:center;font-size:11px;margin-bottom:8px}
-.plan-formule b{color:var(--accent);font-size:13px}
-.live-per-sec{font-size:10px;color:#0f0;text-align:center;margin-top:4px;font-family:monospace}
-.btn-buy{width:100%;background:#ff5000;color:#fff;border:none;padding:13px;font-size:14px;font-weight:900;border-radius:12px;cursor:pointer}
-.btn-buy:disabled{background:#333;color:#888;cursor:not-allowed}
-.btn-buy.vip{background:linear-gradient(135deg,#FFD700,#ff8c00);color:#000}
-.btn-buy.hell{background:linear-gradient(135deg,#8B0000,#ff0000);color:#fff}
-.active-card{background:linear-gradient(180deg,#1a1a1a,#111);border:1px solid #ff5000;border-radius:18px;padding:16px;text-align:center}
-.mine-coin{font-size:52px;animation:float 2.2s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.mine-coin.mining{animation:spinMine .8s linear infinite}
-@keyframes spinMine{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-/* ===== LIVE INTEREST BOX ===== */
-.live-box{background:#000;border:1px solid #0f0;border-radius:14px;padding:12px;margin-top:12px;position:relative;overflow:hidden}
-.live-box::before{content:'● LIVE';position:absolute;top:6px;right:10px;color:#0f0;font-size:9px;font-weight:900;animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.live-box small{color:#aaa;font-size:10px;font-weight:800;letter-spacing:1px}
-.live-amount{font-size:26px;font-weight:900;color:#0f0;font-family:monospace;letter-spacing:-0.5px;margin:4px 0}
-.live-amount span{font-size:14px;color:#ffeb3b}
-.live-detail{display:flex;justify-content:space-between;font-size:10px;color:#aaa;font-family:monospace;margin-top:6px}
-.live-detail b{color:#fff}
-.progress-wrap{margin:16px 0 6px;text-align:left}
-.progress-top{display:flex;justify-content:space-between;font-size:11px;font-weight:900;color:var(--muted);margin-bottom:6px}
-.progress-top b{color:var(--accent)}
-.progress-track{height:20px;background:#000;border:1px solid #333;border-radius:999px;overflow:hidden;position:relative}
-body.light-mode .progress-track{background:#eee}
-.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff5000,#ffeb3b,#ff8c00);background-size:200% 100%;animation:shine 1.2s linear infinite;border-radius:999px;transition:width .6s ease;position:relative}
-@keyframes shine{0%{background-position:0% 0}100%{background-position:200% 0}}
-.progress-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:sweep 1.4s linear infinite}
-@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-.progress-steps{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:6px;font-weight:800}
-.progress-steps span.active{color:#ff5000}
-.mine-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0}
-.mine-stat{background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center}
-.mine-stat span{display:block;font-size:9px;color:var(--muted);font-weight:800} .mine-stat b{display:block;font-size:15px;margin-top:3px}
-.btn-claim{width:100%;background:#28a745;color:#fff;border:none;padding:16px;font-size:16px;font-weight:900;border-radius:14px;cursor:pointer;margin-top:8px;display:none;animation:pulseGreen 1s infinite}
-@keyframes pulseGreen{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-.btn-claim-live{width:100%;background:linear-gradient(135deg,#28a745,#00c853);color:#fff;border:none;padding:14px;font-size:13px;font-weight:900;border-radius:12px;cursor:pointer;margin-top:8px}
-.btn-renew{width:100%;background:linear-gradient(135deg,#FFD700,#ff8c00);color:#000;border:none;padding:14px;font-size:14px;font-weight:900;border-radius:12px;cursor:pointer;margin-top:8px}
-.tabs-auth{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.tabs-auth button{padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-weight:900;cursor:pointer}
-.tabs-auth button.active{background:#ff5000;border-color:#ff5000;color:#fff}
-.expire-badge{display:inline-block;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:900;margin-top:8px}
-.expire-ok{background:#1a3a1a;color:#0f0} .expire-soon{background:#3a2a00;color:#ffeb3b} .expire-dead{background:#3a0000;color:#ff5555}
-.bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:var(--nav);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:100}
-.nav-item{background:none;border:none;color:var(--muted);cursor:pointer;text-align:center;font-size:9px;font-weight:800;padding:4px 2px}
-.nav-item.active{color:#ff5000} .nav-item .ico{font-size:20px;display:block}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:flex-end;justify-content:center;z-index:9998}
-.modal-box{background:var(--card);color:var(--text);padding:16px;border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:92vh;overflow:auto}
-.modal-msg{font-size:14px;margin-bottom:14px;text-align:center}
-.modal-btn{flex:1;padding:12px;border:none;border-radius:10px;font-weight:900;cursor:pointer}
-.btn-yes{background:#28a745;color:#fff} .btn-no{background:#333;color:#fff}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Arial,sans-serif;background:#080808;color:#fff;min-height:100vh}
+.app{max-width:480px;margin:0 auto;padding:0 16px 110px}
+/* ===== MENU PRO HAUT ===== */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(8,8,8,.92);backdrop-filter:blur(12px);padding:12px 0 10px;border-bottom:1px solid #1A1A1A;margin:0 -16px;padding-left:16px;padding-right:16px}
+.top-row{display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;font-size:19px;letter-spacing:-.5px}
+.logo span{color:#FF5A00}
+.logo small{display:block;font-size:9px;color:#888;font-weight:400;letter-spacing:1px}
+.top-actions{display:flex;gap:8px;align-items:center}
+.pill-balance{background:#1A1A1A;border:1px solid #262626;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:900}
+.pill-balance b{color:#2CE88A}
+.icon-btn{width:38px;height:38px;border-radius:999px;background:#1A1A1A;border:1px solid #262626;color:#fff;font-size:16px;cursor:pointer}
+/* MENU PRO ONGLETS */
+.menu-pro{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+.menu-pro::-webkit-scrollbar{display:none}
+.menu-pro button{white-space:nowrap;border:none;padding:9px 14px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer;background:#141414;color:#888}
+.menu-pro button.active{background:#fff;color:#000}
+/* INTRO PRO */
+.intro{background:linear-gradient(135deg,#FF5A00 0%,#FF8A00 45%,#FFD700 100%);border-radius:24px;padding:20px;color:#000;position:relative;overflow:hidden;margin:16px 0}
+.intro::after{content:'⛏️';position:absolute;right:12px;top:-10px;font-size:90px;opacity:.18}
+.intro h1{font-size:24px;line-height:1.1;margin:0;letter-spacing:-.5px}
+.intro p{font-size:13px;line-height:1.45;margin:8px 0 14px;opacity:.85;font-weight:600}
+.intro-stats{display:flex;gap:8px}
+.intro-stats div{background:rgba(0,0,0,.18);border-radius:12px;padding:10px 12px;flex:1;text-align:center}
+.intro-stats b{display:block;font-size:16px}
+.intro-stats span{font-size:10px;font-weight:800;opacity:.75}
+.steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.steps div{background:#141414;border:1px solid #1F1F1F;border-radius:16px;padding:12px;text-align:center}
+.steps div span{font-size:22px}
+.steps div b{display:block;font-size:12px;margin-top:6px}
+.steps div small{font-size:10px;color:#888}
+h2{font-size:17px;margin:20px 0 4px}
+.sub{color:#888;font-size:12px;margin:0 0 12px}
+/* HERO TOTAL LIVE */
+.hero{background:linear-gradient(180deg,#1B1B1B,#0F0F0F);border:1px solid #262626;border-radius:24px;padding:20px;text-align:center}
+.hero-top{display:flex;justify-content:space-between;align-items:center}
+.pill{font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;background:#FF5A00;color:#fff}
+.pill.green{background:#0F2A1A;color:#2CE88A}
+.live-label{font-size:11px;color:#888;letter-spacing:1.5px;margin-top:16px}
+.live{font-size:36px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1;margin:6px 0}
+.live small{font-size:15px;color:#FFD700}
+.live-sec{font-size:12px;color:#2CE88A;font-family:monospace}
+.bar{height:8px;background:#262626;border-radius:999px;overflow:hidden;margin:16px 0 8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#FF5A00,#FFD700);border-radius:999px}
+.bar-row{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.stat{background:#141414;border:1px solid #262626;border-radius:14px;padding:12px 8px}
+.stat span{font-size:10px;color:#888;display:block}
+.stat b{font-size:14px}
+/* MES PLANS ACTIFS */
+.my-plan{background:#141414;border:1px solid #262626;border-radius:20px;padding:16px;margin-bottom:10px}
+.my-plan-top{display:flex;justify-content:space-between;align-items:center}
+.my-plan-top b{font-size:14px}
+.my-plan-live{font-size:22px;font-weight:900;color:#2CE88A;font-variant-numeric:tabular-nums;margin:8px 0 2px}
+.my-plan-live small{font-size:12px;color:#FFD700}
+.my-plan-bar{height:6px;background:#262626;border-radius:999px;overflow:hidden;margin:10px 0 6px}
+.my-plan-bar i{display:block;height:100%;background:#2CE88A;border-radius:999px}
+.my-plan-row{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.btn-mini{border:none;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:900;cursor:pointer}
+.btn-mini.green{background:#00C853;color:#fff}
+.btn-mini.gold{background:#FFD700;color:#000}
+.btn-mini.grey{background:#262626;color:#888}
+/* PLANS A ACHETER */
+.plan{background:#141414;border:1px solid #262626;border-radius:20px;padding:16px;margin-bottom:10px}
+.plan-top{display:flex;justify-content:space-between;align-items:center}
+.plan-top b{font-size:15px}
+.plan-top span{font-size:15px;font-weight:900;color:#FFD700}
+.plan-mid{display:flex;justify-content:space-between;align-items:flex-end;margin:12px 0 4px}
+.plan-mid .big{font-size:22px;font-weight:900}
+.plan-mid .big small{font-size:12px;color:#888;font-weight:400}
+.plan-mid .right{font-size:11px;color:#888;text-align:right}
+.plan-mid .right b{color:#2CE88A;font-size:12px;display:block}
+.formula{font-size:11px;color:#888;text-align:center;padding:8px;background:#0F0F0F;border-radius:10px;margin-top:10px}
+.btn{width:100%;padding:15px;border:none;border-radius:14px;background:#FF5A00;color:#fff;font-weight:900;font-size:15px;cursor:pointer}
+.btn:disabled{background:#222;color:#666}
+.btn-green{width:100%;padding:15px;border:none;border-radius:14px;background:#00C853;color:#fff;font-weight:900;font-size:15px;cursor:pointer;margin-top:14px}
+.btn-gold{width:100%;padding:13px;border:none;border-radius:14px;background:#FFD700;color:#000;font-weight:900;font-size:13px;cursor:pointer;margin-top:10px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#1A1A1A;border-radius:999px;padding:4px;margin-bottom:16px}
+.tabs button{border:none;background:none;color:#888;padding:10px;border-radius:999px;font-weight:800;cursor:pointer}
+.tabs button.active{background:#fff;color:#000}
+.field{margin-bottom:12px}
+.field label{font-size:12px;color:#888;display:block;margin-bottom:6px}
+.inp{width:100%;padding:14px 16px;border-radius:14px;border:1px solid #262626;background:#141414;color:#fff;font-size:15px;font-weight:700;outline:none}
+.inp:focus{border-color:#FF5A00}
+.link{width:100%;background:none;border:none;color:#888;font-size:12px;margin-top:12px;cursor:pointer;text-decoration:underline}
+/* MENU BAS PRO */
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:rgba(10,10,10,.96);backdrop-filter:blur(12px);border-top:1px solid #1A1A1A;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 4px calc(10px + env(safe-area-inset-bottom));z-index:30}
+.nav button{background:none;border:none;color:#888;font-size:10px;font-weight:700;cursor:pointer;position:relative}
+.nav button.active{color:#FF5A00}
+.nav button.active::before{content:'';position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:28px;height:3px;background:#FF5A00;border-radius:999px}
+.nav span{font-size:20px;display:block}
+.nav .center{margin-top:-26px}
+.nav .center span{width:52px;height:52px;background:#FF5A00;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;box-shadow:0 8px 20px rgba(255,90,0,.5);border:3px solid #080808}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:flex-end;justify-content:center;z-index:99}
+.box{background:#1A1A1A;padding:20px;border-radius:20px 20px 0 0;width:100%;max-width:480px;text-align:center}
+.box p{font-size:14px;line-height:1.5}
+.box button{flex:1;padding:12px;border:none;border-radius:12px;font-weight:900;cursor:pointer}
+.yes{background:#00C853;color:#fff} .no{background:#333;color:#fff}
+.expired{background:#2A0A0A;border:1px solid #FF3B30;border-radius:16px;padding:14px;text-align:center;margin-bottom:12px}
+.expired b{color:#FF3B30}
+.empty{border:1px dashed #333;border-radius:20px;padding:20px;text-align:center;color:#888;font-size:12px}
 </style>
 </head>
 <body>
-<div class="app-container">
+<div class="app">
+
+<!-- ===== MENU PRO HAUT ===== -->
 <div class="topbar">
-<div class="logo">MAYNE <span>ILLIMINET</span><small>E-SERVICES • Cotonou, Bénin</small></div>
-<div class="top-icons">
-<button class="icon-btn" onclick="toggleTheme()" id="theme-toggle">🌙</button>
+<div class="top-row">
+<div class="logo">MAYNE <span>ILLIMINET</span><small>MINAGE • COTONOU</small></div>
+<div class="top-actions">
+<div class="pill-balance">💰 <b id="solde-top-bar">0 F</b></div>
 <button class="icon-btn" onclick="location.href='index.html'">🏠</button>
 </div>
 </div>
+<div class="menu-pro" id="menu-pro">
+<button class="active" data-tab="apercu" onclick="switchTab('apercu',this)">📊 Aperçu</button>
+<button data-tab="mesplans" onclick="switchTab('mesplans',this)">⛏️ Mes Plans <span id="count-plans"></span></button>
+<button data-tab="plans" onclick="switchTab('plans',this)">🛒 Acheter</button>
+<button data-tab="historique" onclick="switchTab('historique',this)">📜 Historique</button>
+<button data-tab="profil" onclick="location.href='compte.html'">👤 Profil</button>
+</div>
+</div>
 
+<!-- AUTH -->
 <div id="auth-zone" style="display:none">
-<div class="guide-banner"><b>⛏️ Minage avec Plan — Gagne chaque jour</b><p>Connecte-toi ou crée ton compte ici. Après inscription, tu restes ici. <b>On ne t'envoie pas sur l'accueil.</b></p></div>
-<div class="tabs-auth"><button id="tab-login-btn" class="active" onclick="showAuth('login')">🔑 Connexion</button><button id="tab-reg-btn" onclick="showAuth('register')">📝 Inscription</button></div>
+<div class="intro"><h1>Mine.<br>Gagne chaque seconde.</h1><p>Achète un plan, regarde ton intérêt monter en LIVE, réclame quand tu veux. Plusieurs plans à la fois.</p><div class="intro-stats"><div><b>8</b><span>PLANS</span></div><div><b>30 j</b><span>DURÉE</span></div><div><b>LIVE</b><span>EN TEMPS RÉEL</span></div></div></div>
+<div class="tabs"><button id="tab-login-btn" class="active" onclick="showAuth('login')">Connexion</button><button id="tab-reg-btn" onclick="showAuth('register')">Inscription</button></div>
 <div id="login-interface">
-<h3 style="margin:0 0 6px;color:var(--accent);text-align:center">BIENVENUE SUR ACTIFER</h3>
-<div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="login-id" class="input-field"></div>
-<div class="input-group"><label class="input-label">Mot de passe :</label><input type="password" id="login-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
-<button class="btn-submit" onclick="executerConnexion()">Se connecter</button>
-<button class="btn-link" onclick="showAuth('register')">Pas encore de compte ? Créer un compte</button>
+<div class="field"><label>Numéro</label><input id="login-id" class="inp" inputmode="numeric"></div>
+<div class="field"><label>Mot de passe</label><input id="login-pin" type="password" class="inp" maxlength="6" placeholder="••••••"></div>
+<button class="btn" onclick="executerConnexion()">Se connecter</button>
+<button class="link" onclick="showAuth('register')">Pas de compte ? Créer un compte</button>
 </div>
 <div id="register-interface" style="display:none">
-<h3 style="text-align:center">CRÉER TON COMPTE</h3>
-<div class="input-group"><label class="input-label">Nom et Prénom :</label><input type="text" id="reg-name" class="input-field" placeholder="Ex: PAD MAT"></div>
-<div class="input-group"><label class="input-label">Numéro :</label><input type="text" id="reg-id" class="input-field"></div>
-<div class="input-group"><label class="input-label">Email :</label><input type="email" id="reg-email" class="input-field" placeholder="Ex: jean@gmail.com"></div>
-<div class="input-group"><label class="input-label">Mot de passe (6 chiffres) :</label><input type="password" id="reg-pin" class="input-field" placeholder="••••••" maxlength="6"></div>
-<div class="input-group" style="border:2px dashed #ff5000;border-radius:10px;padding:8px;background:rgba(255,80,0,.12)"><label class="input-label" style="color:var(--accent)">Code Parrain (facultatif) — Gagne 100 F :</label><input type="text" id="reg-parrain" class="input-field" placeholder="Ex: 0158612131"></div>
-<button class="btn-submit" onclick="executerInscription()">Valider mon inscription</button>
-<button class="btn-link" onclick="showAuth('login')">Déjà inscrit ? Connexion</button>
+<div class="field"><label>Nom et prénom</label><input id="reg-name" class="inp"></div>
+<div class="field"><label>Numéro</label><input id="reg-id" class="inp"></div>
+<div class="field"><label>Email</label><input id="reg-email" type="email" class="inp"></div>
+<div class="field"><label>Mot de passe (6 chiffres)</label><input id="reg-pin" type="password" class="inp" maxlength="6"></div>
+<div class="field"><label>Code parrain (optionnel)</label><input id="reg-parrain" class="inp"></div>
+<button class="btn" onclick="executerInscription()">Créer mon compte</button>
+<button class="link" onclick="showAuth('login')">Déjà inscrit ? Connexion</button>
 </div>
 <div id="verify-interface" style="display:none">
-<h3 style="color:var(--accent);text-align:center">VÉRIFIE TON EMAIL</h3>
-<div style="font-size:13px;margin-bottom:10px;text-align:center">Code envoyé à <b id="verify-email-affiche"></b><br><small style="color:var(--muted)">Reste ici, ne quitte pas la page minage.</small></div>
-<div class="input-group"><input type="text" id="verify-code" class="input-field" placeholder="Code à 6 chiffres"></div>
-<button class="btn-submit" onclick="verifierCodeEmail()">Vérifier</button>
-<button class="btn-link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button>
+<h2 style="text-align:center">Vérifie ton email</h2><p class="sub" style="text-align:center">Code envoyé à <b id="verify-email-affiche"></b></p>
+<div class="field"><input id="verify-code" class="inp" placeholder="Code à 6 chiffres" style="text-align:center"></div>
+<button class="btn" onclick="verifierCodeEmail()">Vérifier</button>
+<button class="link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button>
 </div>
 </div>
 
+<!-- MINAGE -->
 <div id="mine-zone" style="display:none">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-<div><b id="user-name">CHARGEMENT...</b><br><small id="user-phone" style="color:var(--muted)"></small></div>
-<button class="btn-maj" onclick="executerDeconnexion()">DÉCONNEXION</button>
+<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0">
+<div><b id="user-name">—</b><br><small id="user-phone" style="color:#888"></small></div>
+<button onclick="executerDeconnexion()" style="background:none;border:1px solid #333;color:#888;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:800;cursor:pointer">Déconnexion</button>
 </div>
 
-<div id="active-plan-zone" style="display:none">
-<div class="active-card">
-<div class="mine-coin" id="mine-coin">⛏️</div>
-<div style="font-size:16px;font-weight:900;margin-top:6px" id="active-plan-name">PLAN —</div>
-<div class="expire-badge expire-ok" id="expire-badge">—</div>
-
-<!-- ===== INTERET EN LIVE ===== -->
-<div class="live-box">
-<small>💰 INTÉRÊT GAGNÉ EN LIVE</small>
-<div class="live-amount"><span id="live-interest">0.0000000</span> <span>F</span></div>
-<div class="live-detail"><span>Par seconde : <b id="live-per-sec">0.0000000 F</b></span><span>Par minute : <b id="live-per-min">0.0000000 F</b></span></div>
-<div class="live-detail"><span>Depuis : <b id="live-since">—</b></span><span>Prochain claim : <b id="live-next">—</b></span></div>
+<!-- ONGLET APERÇU -->
+<div id="tab-apercu">
+<!-- INTRODUCTION PRO (seulement si aucun plan) -->
+<div id="intro-pro">
+<div class="intro"><h1>Mine.<br>Gagne chaque seconde.</h1><p>Achète un plan, regarde ton intérêt monter en LIVE. Tu peux cumuler plusieurs plans en même temps.</p><div class="intro-stats"><div><b>8</b><span>PLANS</span></div><div><b>30 j</b><span>DURÉE</span></div><div><b>LIVE</b><span>EN TEMPS RÉEL</span></div></div></div>
+<div class="steps"><div><span>🛒</span><b>1. Achète</b><small>Avec ton solde</small></div><div><span>👀</span><b>2. Regarde</b><small>LIVE qui monte</small></div><div><span>💰</span><b>3. Réclame</b><small>Vers ton Bonus</small></div></div>
 </div>
 
-<div style="font-size:11px;color:var(--muted);margin-top:8px" id="active-formule">—</div>
-<div class="progress-wrap">
-<div class="progress-top"><span>PROGRESSION <b id="mine-pct">0%</b></span><span id="mine-timer">—</span></div>
-<div class="progress-track"><div class="progress-fill" id="mine-bar"></div></div>
-<div class="progress-steps"><span id="step-0" class="active">▶ DÉBUT</span><span id="step-25">25%</span><span id="step-50">50%</span><span id="step-75">75%</span><span id="step-100">🏁 EXPIRATION</span></div>
+<!-- TOTAL LIVE MULTI-PLANS -->
+<div class="hero" id="hero-total" style="display:none">
+<div class="hero-top"><span class="pill" id="total-plans-label">0 PLAN ACTIF</span><span class="pill green" id="total-status">● LIVE</span></div>
+<div class="live-label">TOTAL INTÉRÊT EN LIVE — TOUS TES PLANS</div>
+<div class="live"><span id="live-total">0.0000000</span> <small>F</small></div>
+<div class="live-sec">+ <span id="live-total-per-sec">0.0000000</span> F / sec • <span id="live-total-per-day">0</span> F / jour</div>
+<div class="bar"><i id="mine-bar-total" style="width:0%"></i></div>
+<div class="bar-row"><span id="mine-pct-total">0%</span><span id="mine-timer-total">—</span></div>
+<div class="stats">
+<div class="stat"><span>Solde</span><b id="user-balance">0 F</b></div>
+<div class="stat"><span>Bonus</span><b id="user-commission" style="color:#FFD700">0 F</b></div>
+<div class="stat"><span>Total reçu</span><b id="mine-total" style="color:#2CE88A">0 F</b></div>
 </div>
-<div class="mine-stats">
-<div class="mine-stat"><span>SOLDE</span><b id="user-balance">0 F</b></div>
-<div class="mine-stat"><span>BONUS</span><b id="user-commission" style="color:var(--accent)">0 F</b></div>
-<div class="mine-stat"><span>TOTAL REÇU</span><b id="mine-total" style="color:#0f0">0 F</b></div>
-</div>
-<button id="btn-claim" class="btn-claim" onclick="reclamerGain()">🎉 RÉCLAMER MON INTÉRÊT DU JOUR</button>
-<button id="btn-claim-live" class="btn-claim-live" onclick="reclamerGainLive()">⚡ RÉCLAMER MAINTENANT MON LIVE (<span id="live-claim-amount">0.0000000</span> F)</button>
-<button id="btn-renew" class="btn-renew" style="display:none" onclick="renouvelerPlan()">🔁 RENOUVELER MON PLAN — 30 JOURS DE PLUS</button>
-<div style="font-size:11px;color:var(--muted);margin-top:10px" id="mine-info">—</div>
-<div style="font-size:11px;color:var(--muted);margin-top:6px">Acheté le <b id="plan-start">—</b> • Expire le <b id="plan-end" style="color:#ff5555">—</b> • <b style="color:#ffeb3b">Renouvelable</b></div>
-</div>
-<div class="info-card"><h4>📜 HISTORIQUE</h4><div id="mine-history"></div></div>
-<button class="btn-submit" style="background:#333;margin-top:10px" onclick="showPlans(true)">➕ Voir tous les plans</button>
+<button class="btn-green" onclick="reclamerToutLive()">Réclamer tout — <span id="live-total-claim">0.0000000</span> F</button>
+<div class="meta" style="font-size:11px;color:#888;margin-top:10px">Tu peux acheter plusieurs plans en même temps. Chacun mine séparément.</div>
 </div>
 
-<div id="plans-zone">
-<div class="guide-banner"><b>⛏️ CHOISIS TON PLAN DE MINAGE</b><p>Formule : <b>(Prix + Gain total) ÷ 30 = Intérêt journalier</b><br>Tu vois ton intérêt monter en LIVE, même 0.0000001 F. Ton intérêt va dans ton <b>BONUS</b>. Tous les plans sont <b>renouvelables</b>.</p></div>
-<div id="expired-banner" style="display:none;background:#3a0000;border:1px solid #ff5555;border-radius:12px;padding:12px;text-align:center;margin-bottom:12px"><b style="color:#ff5555">⏰ TON PLAN A EXPIRÉ</b><br><span style="font-size:12px" id="expired-text"></span><br><button class="btn-renew" id="expired-renew-btn" onclick="renouvelerPlan()">🔁 RENOUVELER LE MÊME PLAN</button></div>
+<div id="mes-plans-apercu"></div>
+</div>
+
+<!-- ONGLET MES PLANS -->
+<div id="tab-mesplans" style="display:none">
+<h2>Mes plans actifs</h2><p class="sub">Chaque plan mine en même temps. Réclame chacun ou tout d'un coup.</p>
+<div id="mes-plans-list"></div>
+<div id="expired-banner" class="expired" style="display:none"><b>⏰ Plan expiré</b><br><span id="expired-text" style="font-size:12px;color:#ccc"></span><br><button class="btn-gold" style="margin-top:10px" onclick="renouvelerDernier()">🔁 Renouveler le dernier plan</button></div>
+</div>
+
+<!-- ONGLET ACHETER -->
+<div id="tab-plans" style="display:none">
+<h2>Acheter un plan</h2><p class="sub">Tu peux cumuler plusieurs plans. Ex : Débutant + Normal = 2 LIVE en même temps.</p>
 <div id="plans-list"></div>
-<div class="info-card">
-<h4>💡 COMMENT ÇA MARCHE ?</h4>
-<div class="info-row"><span>1️⃣ Recharge ton SOLDE</span><span>📥</span></div>
-<div class="info-row"><span>2️⃣ Achète un plan</span><span>🛒</span></div>
-<div class="info-row"><span>3️⃣ Regarde ton intérêt monter en LIVE</span><span>👀</span></div>
-<div class="info-row"><span>4️⃣ Réclame quand tu veux</span><span>💰</span></div>
-<div class="info-row"><span>5️⃣ À l'expiration, renouvelle 🔁</span><span>🔁</span></div>
+<p style="font-size:11px;color:#666;text-align:center">Formule : (Prix + Gain) ÷ 30 = Intérêt / jour</p>
 </div>
+
+<!-- ONGLET HISTORIQUE -->
+<div id="tab-historique" style="display:none">
+<h2>Historique</h2><p class="sub">Achats, renouvellements et gains LIVE.</p>
+<div id="mine-history"></div>
 </div>
+
 </div>
 </div>
 
-<div class="bottom-nav">
-<button class="nav-item" onclick="location.href='index.html'"><span class="ico">🏠</span>Accueil</button>
-<button class="nav-item" onclick="location.href='live.html'"><span class="ico">⚽</span>Score Live</button>
-<button class="nav-item active" onclick="location.href='minage.html'"><span class="ico">⛏️</span>Minage</button>
-<button class="nav-item" onclick="location.href='compte.html'"><span class="ico">👤</span>Profil</button>
-<button class="nav-item" onclick="location.href='messagerie.html'"><span class="ico">💬</span>Messagerie</button>
+<!-- MENU BAS PRO -->
+<div class="nav">
+<button onclick="location.href='index.html'"><span>🏠</span>Accueil</button>
+<button onclick="location.href='live.html'"><span>⚽</span>Live</button>
+<button class="active center"><span>⛏️</span></button>
+<button onclick="location.href='compte.html'"><span>👤</span>Profil</button>
+<button onclick="location.href='messagerie.html'"><span>💬</span>Messagerie</button>
 </div>
-<div id="custom-alert" class="modal-overlay"><div class="modal-box"><div id="custom-alert-msg" class="modal-msg"></div><button class="modal-btn btn-yes" onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="modal-overlay"><div class="modal-box"><div id="custom-confirm-msg" class="modal-msg"></div><div style="display:flex;gap:8px"><button class="modal-btn btn-no" onclick="doConfirm(false)">Annuler</button><button class="modal-btn btn-yes" onclick="doConfirm(true)">✅ Oui, acheter</button></div></div></div>
+
+<div id="custom-alert" class="overlay"><div class="box"><p id="custom-alert-msg"></p><button class="yes" style="width:100%" onclick="hideAlert()">OK</button></div></div>
+<div id="custom-confirm" class="overlay"><div class="box"><p id="custom-confirm-msg"></p><div style="display:flex;gap:8px"><button class="no" onclick="doConfirm(false)">Annuler</button><button class="yes" onclick="doConfirm(true)">Oui, acheter</button></div></div></div>
 
 <script>
 const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
 const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,d=null)=>{try{const v=localStorage.getItem('mayne_'+k);return v?JSON.parse(v):d;}catch{return d;}}};
-
-// FORMULE : (Prix + Gain total) ÷ 30 = Intérêt journalier
 const PLANS=[
-  {id:'debutant', nom:'DÉBUTANT', prix:5000, gainTotal:750, dureeJours:30, populaire:false, css:'', btn:''},
-  {id:'amateur', nom:'AMATEUR', prix:10000, gainTotal:1200, dureeJours:30, populaire:false, css:'', btn:''},
-  {id:'normal', nom:'NORMAL', prix:20000, gainTotal:3000, dureeJours:30, populaire:true, css:'', btn:''},
-  {id:'haut', nom:'HAUT NIVEAU', prix:50000, gainTotal:6000, dureeJours:30, populaire:false, css:'', btn:''},
-  {id:'pro', nom:'PROFESSIONNEL', prix:100000, gainTotal:15000, dureeJours:30, populaire:false, css:'', btn:''},
-  {id:'superstar', nom:'SUPERSTAR', prix:200000, gainTotal:21000, dureeJours:30, populaire:false, css:'', btn:'vip'},
-  {id:'legende', nom:'LÉGENDE', prix:300000, gainTotal:45000, dureeJours:30, populaire:false, css:'legende', btn:'vip'},
-  {id:'hell', nom:'HELL', prix:500000, gainTotal:75000, dureeJours:30, populaire:false, css:'hell', btn:'hell'},
+  {id:'debutant', nom:'Débutant', prix:5000, gainTotal:750},
+  {id:'amateur', nom:'Amateur', prix:10000, gainTotal:1200},
+  {id:'normal', nom:'Normal', prix:20000, gainTotal:3000, pop:true},
+  {id:'haut', nom:'Haut Niveau', prix:50000, gainTotal:6000},
+  {id:'pro', nom:'Professionnel', prix:100000, gainTotal:15000},
+  {id:'superstar', nom:'Superstar', prix:200000, gainTotal:21000},
+  {id:'legende', nom:'Légende', prix:300000, gainTotal:45000},
+  {id:'hell', nom:'Hell', prix:500000, gainTotal:75000},
 ];
-PLANS.forEach(p=>{
-  p.gainJour = (p.prix + p.gainTotal) / 30;
-  p.totalRetour = p.prix + p.gainTotal;
-  p.perSec = p.gainJour / 86400; // par seconde
-  p.perMin = p.gainJour / 1440; // par minute
-});
-function fmt(n){ return n.toLocaleString('fr-FR',{minimumFractionDigits: n%1===0?0:2, maximumFractionDigits:2}); }
-function fmtLive(n){ return n.toFixed(7); } // 0.0000001
-
-let tempPhone='',tempEmail='',currentUserId=null,currentUserData=null,confirmCallback=null,mineTimer=null,liveTimer=null,lastExpiredPlan=null,currentLiveInterest=0;
-function applyTheme(){ const saved=localStorage.getItem('mayne_theme')||'dark'; const isLight=saved==='light'; document.body.classList.toggle('light-mode',isLight); const btn=document.getElementById('theme-toggle'); if(btn) btn.innerText=isLight?'☀️':'🌙'; }
-function toggleTheme(){ const isLight=document.body.classList.contains('light-mode'); const next=isLight?'dark':'light'; localStorage.setItem('mayne_theme',next); applyTheme(); }
+PLANS.forEach(p=>{ p.gainJour=(p.prix+p.gainTotal)/30; p.totalRetour=p.prix+p.gainTotal; p.perSec=p.gainJour/86400; });
+function fmt(n){ return n.toLocaleString('fr-FR',{minimumFractionDigits:n%1===0?0:2,maximumFractionDigits:2}); }
+function fmtLive(n){ return n.toFixed(7); }
+let tempPhone='',tempEmail='',currentUserId=null,currentUserData=null,confirmCallback=null,liveTimer=null,lastExpiredPlan=null,myPlans=[],currentTotalLive=0;
 function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
 function hideAlert(){document.getElementById('custom-alert').style.display='none';}
 function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
 function doConfirm(y){document.getElementById('custom-confirm').style.display='none'; if(confirmCallback) confirmCallback(y);}
-function showAuth(which){
-  document.getElementById('login-interface').style.display=which==='login'?'block':'none';
-  document.getElementById('register-interface').style.display=which==='register'?'block':'none';
+function showAuth(w){
+  document.getElementById('login-interface').style.display=w==='login'?'block':'none';
+  document.getElementById('register-interface').style.display=w==='register'?'block':'none';
   document.getElementById('verify-interface').style.display='none';
-  document.getElementById('tab-login-btn').classList.toggle('active',which==='login');
-  document.getElementById('tab-reg-btn').classList.toggle('active',which==='register');
+  document.getElementById('tab-login-btn').classList.toggle('active',w==='login');
+  document.getElementById('tab-reg-btn').classList.toggle('active',w==='register');
 }
 function showZone(logged){
   document.getElementById('auth-zone').style.display=logged?'none':'block';
   document.getElementById('mine-zone').style.display=logged?'block':'none';
   if(!logged) showAuth('login');
 }
+function switchTab(tab,btn){
+  ['apercu','mesplans','plans','historique'].forEach(t=>{ document.getElementById('tab-'+t).style.display = t===tab?'block':'none'; });
+  document.querySelectorAll('#menu-pro button').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(tab==='mesplans') renderMyPlans();
+  if(tab==='plans') renderPlans();
+  if(tab==='historique') chargerHistorique(currentUserId);
+}
 function executerConnexion(){
   const i=document.getElementById('login-id').value.trim(),p=document.getElementById('login-pin').value.trim();
   if(!i||!p) return showAlert('Remplis numéro + mot de passe');
-  const pinHache=CryptoJS.MD5(p).toString();
+  const h=CryptoJS.MD5(p).toString();
   database.ref('clients/'+i).once('value').then(s=>{
     if(!s.exists()) return showAlert('Numéro ou mot de passe incorrect');
-    const dbPin=String(s.val().pin); if(dbPin!==pinHache&&dbPin!==p) return showAlert('Numéro ou mot de passe incorrect');
-    const data=s.val();
-    if(data.email_verified===false){
-      tempPhone=i; tempEmail=data.email; document.getElementById('verify-email-affiche').innerText=data.email;
+    const dbPin=String(s.val().pin); if(dbPin!==h&&dbPin!==p) return showAlert('Numéro ou mot de passe incorrect');
+    const d=s.val();
+    if(d.email_verified===false){
+      tempPhone=i; tempEmail=d.email; document.getElementById('verify-email-affiche').innerText=d.email;
       document.getElementById('login-interface').style.display='none'; document.getElementById('register-interface').style.display='none'; document.getElementById('verify-interface').style.display='block';
-      envoyerCodeEmail(data.email); return showAlert('Vérifie ton email — tu restes sur Minage');
+      envoyerCodeEmail(d.email); return showAlert('Vérifie ton email — tu restes sur Minage');
     }
-    currentUserId=i; TinyDB.put('current_user',{phone:i}); TinyDB.put('current_user_last',Date.now()); localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
-    if(dbPin===p) database.ref('clients/'+i).update({pin:pinHache});
-    showZone(true); chargerMinage(i); showAlert('✅ Connecté !');
+    currentUserId=i; TinyDB.put('current_user',{phone:i}); localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
+    if(dbPin===p) database.ref('clients/'+i).update({pin:h});
+    showZone(true); chargerMinage(i);
   });
 }
 function executerInscription(){
   const n=document.getElementById('reg-name').value.trim(),i=document.getElementById('reg-id').value.trim(),e=document.getElementById('reg-email').value.trim().toLowerCase(),p=document.getElementById('reg-pin').value.trim();
   if(!n||!i||!e||!p) return showAlert('Remplis tout');
-  const phone=i.replace(/\D/g,''),emailKey=e.replace(/\./g,','),pinHache=CryptoJS.MD5(p).toString();
-  let parrain=new URLSearchParams(window.location.search).get('ref'); parrain=parrain?parrain.replace(/\D/g,''):''; if(parrain===phone) parrain='';
-  const regParrainInput=document.getElementById('reg-parrain').value.trim().replace(/\D/g,''); if(regParrainInput) parrain=regParrainInput;
+  const phone=i.replace(/\D/g,''),emailKey=e.replace(/\./g,','),h=CryptoJS.MD5(p).toString();
+  let parrain=new URLSearchParams(location.search).get('ref'); parrain=parrain?parrain.replace(/\D/g,''):''; if(parrain===phone) parrain='';
+  const rp=document.getElementById('reg-parrain').value.trim().replace(/\D/g,''); if(rp) parrain=rp;
   database.ref('clients/'+phone).once('value').then(s=>{
     if(s.exists()) return showAlert('Numéro déjà utilisé');
     database.ref('emails_index/'+emailKey).once('value').then(se=>{
       if(se.exists()) return showAlert('Email déjà utilisé');
-      database.ref('clients/'+phone).set({nom:n,email:e,pin:pinHache,solde:0,commission:0,recompense:0,email_verified:false,parrain:parrain||'',date_inscription:new Date().toLocaleString('fr-FR'),mine_total:0}).then(()=>{
+      database.ref('clients/'+phone).set({nom:n,email:e,pin:h,solde:0,commission:0,recompense:0,email_verified:false,parrain:parrain||'',date_inscription:new Date().toLocaleString('fr-FR'),mine_total:0}).then(()=>{
         database.ref('emails_index/'+emailKey).set(phone).then(()=>{
-          if(parrain){ database.ref('clients/'+parrain).once('value').then(sp=>{ if(sp.exists()){ let pg=sp.val(); database.ref('clients/'+parrain).update({gain_parrainage:(pg.gain_parrainage||0)+100,commission:(pg.commission||0)+100}); database.ref('notifications/'+parrain).push({titre:"🎉 Nouveau filleul!",message:`${n} (${phone}) s'est inscrit via Minage`,date:new Date().toLocaleString('fr-FR')}); } }); }
+          if(parrain){ database.ref('clients/'+parrain).once('value').then(sp=>{ if(sp.exists()){ let pg=sp.val(); database.ref('clients/'+parrain).update({gain_parrainage:(pg.gain_parrainage||0)+100,commission:(pg.commission||0)+100}); } }); }
           tempPhone=phone; tempEmail=e; document.getElementById('verify-email-affiche').innerText=e;
           document.getElementById('login-interface').style.display='none'; document.getElementById('register-interface').style.display='none'; document.getElementById('verify-interface').style.display='block';
           envoyerCodeEmail(e); showAlert('Compte créé ! Vérifie ton email — tu restes sur Minage');
@@ -305,219 +326,217 @@ function verifierCodeEmail(){
   fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{
     if(t.includes('ok')){
       database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{
-        showAlert('✅ Email vérifié ! Connecte-toi pour acheter ton plan — tu restes ici');
+        showAlert('✅ Email vérifié ! Connecte-toi.');
         document.getElementById('verify-interface').style.display='none'; document.getElementById('login-id').value=tempPhone; showAuth('login');
       });
     } else showAlert('Code incorrect');
   });
 }
-function executerDeconnexion(){ TinyDB.put('current_user',null); localStorage.removeItem('mayne_current_user'); currentUserId=null; clearInterval(mineTimer); clearInterval(liveTimer); showZone(false); }
+function executerDeconnexion(){ TinyDB.put('current_user',null); localStorage.removeItem('mayne_current_user'); currentUserId=null; clearInterval(liveTimer); showZone(false); }
 
+function getMyPlans(data){
+  let arr=[];
+  // Nouveau format multi-plans
+  if(data.minage_plans){
+    Object.entries(data.minage_plans).forEach(([key,pl])=>{ arr.push({...pl,key}); });
+  }
+  // Ancien format 1 plan -> on le convertit en multi
+  if(data.minage_plan && data.minage_plan.actif){
+    arr.push({...data.minage_plan, key:'legacy'});
+  }
+  return arr.filter(p=>p.actif);
+}
 function renderPlans(){
-  const box=document.getElementById('plans-list');
-  const solde = currentUserData ? (currentUserData.solde||0) : 0;
-  box.innerHTML = `<div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px">Ton SOLDE : <b style="color:#0f0">${solde.toLocaleString('fr-FR')} F</b> — <a href="depot.html" style="color:var(--accent)">Recharger →</a></div>` + PLANS.map(p=>{
-    const peut = solde >= p.prix;
-    const label = p.id==='normal' ? '⭐ LE PLUS CHOISI' : p.id==='hell' ? '🔥 HELL' : p.id==='legende' ? '👑 LÉGENDE' : '';
-    return `<div class="plan-card ${p.populaire?'populaire':''} ${p.css}">
-      <div class="plan-top"><div class="plan-name">${p.nom} ${label?`<span style="font-size:9px;background:#ff5000;color:#fff;padding:2px 6px;border-radius:999px;margin-left:4px">${label}</span>`:''}<small>30 jours • Renouvelable 🔁</small></div><div class="plan-price">${p.prix.toLocaleString('fr-FR')} F<small>à payer une fois</small></div></div>
-      <div class="plan-formule">(${p.prix.toLocaleString('fr-FR')} + ${p.gainTotal.toLocaleString('fr-FR')}) ÷ 30 = <b>${fmt(p.gainJour)} F / jour</b></div>
-      <div class="plan-gains">
-        <div><span>INTÉRÊT / JOUR</span><b style="color:#0f0">+${fmt(p.gainJour)} F</b></div>
-        <div><span>TOTAL REÇU 30 J</span><b>${p.totalRetour.toLocaleString('fr-FR')} F</b></div>
-        <div><span>PROFIT</span><b style="color:var(--accent)">+${p.gainTotal.toLocaleString('fr-FR')} F</b></div>
-      </div>
-      <div class="live-per-sec">⚡ En LIVE : + ${fmtLive(p.perSec)} F / sec • + ${fmtLive(p.perMin)} F / min</div>
-      <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px">Tu vois ton intérêt monter en LIVE. Réclame quand tu veux.</div>
-      <button class="btn-buy ${p.btn}" ${peut?'':'disabled'} onclick="acheterPlan('${p.id}')">${peut?'🛒 ACHETER — '+p.prix.toLocaleString('fr-FR')+' F':'❌ SOLDE INSUFFISANT — '+p.prix.toLocaleString('fr-FR')+' F'}</button>
+  const solde=currentUserData?(currentUserData.solde||0):0;
+  document.getElementById('plans-list').innerHTML=PLANS.map(p=>{
+    const peut=solde>=p.prix;
+    return `<div class="plan">
+      <div class="plan-top"><b>${p.nom} ${p.pop?'<span style="font-size:9px;background:#FF5A00;color:#fff;padding:3px 7px;border-radius:999px;margin-left:6px">POPULAIRE</span>':''}</b><span>${p.prix.toLocaleString('fr-FR')} F</span></div>
+      <div class="plan-mid"><div class="big">${fmt(p.gainJour)} <small>F / jour</small></div><div class="right"><b>+ ${fmtLive(p.perSec)} F / sec</b>Total ${p.totalRetour.toLocaleString('fr-FR')} F</div></div>
+      <div class="formula">(${p.prix.toLocaleString('fr-FR')} + ${p.gainTotal.toLocaleString('fr-FR')}) ÷ 30</div>
+      <button class="btn" style="margin-top:12px;padding:12px;font-size:13px;${peut?'':'opacity:.4'}" ${peut?'':'disabled'} onclick="acheterPlan('${p.id}')">${peut?'Acheter ce plan — Cumule avec les autres':'Solde insuffisant'}</button>
     </div>`;
   }).join('');
 }
-
-function acheterPlan(planId, isRenew=false){
-  const plan = PLANS.find(p=>p.id===planId); if(!plan || !currentUserId) return;
-  const solde = currentUserData ? (currentUserData.solde||0) : 0;
-  if(solde < plan.prix) return showAlert('Solde insuffisant. Recharge d’abord ton compte.');
-  if(!isRenew && currentUserData.minage_plan && currentUserData.minage_plan.actif && currentUserData.minage_plan.end > Date.now()){
-    return showAlert('Tu as déjà un plan actif. Attends son expiration ou renouvelle après expiration.');
-  }
-  showConfirm(`${isRenew?'🔁 RENOUVELER':'Acheter'} le plan ${plan.nom} pour ${plan.prix.toLocaleString('fr-FR')} F ?\n\nFormule : (${plan.prix} + ${plan.gainTotal}) ÷ 30 = ${fmt(plan.gainJour)} F / jour\nEn LIVE : + ${fmtLive(plan.perSec)} F / sec\nTotal reçu en 30 jours : ${plan.totalRetour.toLocaleString('fr-FR')} F\n\nLe montant sera retiré de ton SOLDE.`, (ok)=>{
+// ===== MULTI-PLANS : ACHAT =====
+function acheterPlan(planId,isRenew=false,renewKey=null){
+  const plan=PLANS.find(p=>p.id===planId); if(!plan||!currentUserId) return;
+  const solde=currentUserData?(currentUserData.solde||0):0;
+  if(solde<plan.prix) return showAlert('Solde insuffisant. Recharge d’abord.');
+  // PLUS DE BLOCAGE : on peut cumuler plusieurs plans
+  showConfirm(`${isRenew?'Renouveler':'Acheter'} ${plan.nom} — ${plan.prix.toLocaleString('fr-FR')} F ?\n${fmt(plan.gainJour)} F / jour • ${fmtLive(plan.perSec)} F / sec • Total ${plan.totalRetour.toLocaleString('fr-FR')} F\n\nTu peux cumuler plusieurs plans.`,ok=>{
     if(!ok) return;
-    const start = Date.now();
-    const end = start + 30*24*60*60*1000;
-    database.ref('clients/'+currentUserId).update({
-      solde: solde - plan.prix,
-      minage_plan: {planId:plan.id, nom:plan.nom, prix:plan.prix, gainTotal:plan.gainTotal, gainJour:plan.gainJour, totalRetour:plan.totalRetour, dureeJours:30, start:start, end:end, lastClaim:start, lastClaimLive:start, totalGagne:0, actif:true, renouvellements:(currentUserData.minage_plan?.renouvellements||0)+(isRenew?1:0), date_achat:new Date().toLocaleString('fr-FR')}
-    }).then(()=>{
+    const start=Date.now(), end=start+30*24*60*60*1000;
+    const newPlan={planId:plan.id,nom:plan.nom,prix:plan.prix,gainTotal:plan.gainTotal,gainJour:plan.gainJour,totalRetour:plan.totalRetour,dureeJours:30,start:start,end:end,lastClaim:start,lastClaimLive:start,totalGagne:0,actif:true,date_achat:new Date().toLocaleString('fr-FR')};
+    const updates={};
+    updates['solde']=solde-plan.prix;
+    // Si renouvellement d'un plan expiré, on remplace l'ancien
+    if(renewKey) updates['minage_plans/'+renewKey]=newPlan;
+    else {
+      const key='plan_'+Date.now();
+      updates['minage_plans/'+key]=newPlan;
+    }
+    // On nettoie l'ancien format
+    updates['minage_plan']=null;
+    database.ref('clients/'+currentUserId).update(updates).then(()=>{
       database.ref('minage_history/'+currentUserId).push({type:isRenew?'renouvellement':'achat',plan:plan.nom,prix:plan.prix,date:new Date().toLocaleString('fr-FR'),gain:0});
-      showAlert(`✅ Plan ${plan.nom} ${isRenew?'renouvelé':'acheté'} !\nTon intérêt monte déjà en LIVE : + ${fmtLive(plan.perSec)} F / sec\nExpire le ${new Date(end).toLocaleDateString('fr-FR')}`);
+      showAlert(`✅ ${plan.nom} ${isRenew?'renouvelé':'acheté'} ! Il mine déjà en LIVE. Tu peux en acheter un autre.`);
+      switchTab('mesplans',document.querySelector('[data-tab="mesplans"]'));
     });
   });
 }
-function renouvelerPlan(){
-  const planId = currentUserData?.minage_plan?.planId || lastExpiredPlan;
-  if(!planId) return showAlert('Aucun plan à renouveler. Choisis un plan ci-dessous.');
-  acheterPlan(planId, true);
+function renouvelerDernier(){
+  if(!lastExpiredPlan) return showAlert('Choisis un plan ci-dessous.');
+  acheterPlan(lastExpiredPlan.id,true,lastExpiredPlan.key);
+}
+function renouvelerPlanByKey(key,planId){
+  acheterPlan(planId,true,key);
 }
 function chargerMinage(phone){
-  database.ref('clients/'+phone).on('value', snap=>{
+  database.ref('clients/'+phone).on('value',snap=>{
     const data=snap.val()||{}; currentUserData=data;
     document.getElementById('user-name').innerText=data.nom||phone;
     document.getElementById('user-phone').innerText=phone;
-    const plan = data.minage_plan;
-    const isActif = plan && plan.actif && plan.end > Date.now();
-    const isExpire = plan && plan.actif && plan.end <= Date.now();
-    if(isExpire){
-      lastExpiredPlan = plan.planId;
-      database.ref('clients/'+phone+'/minage_plan/actif').set(false);
-      document.getElementById('expired-banner').style.display='block';
-      document.getElementById('expired-text').innerText = `Ton plan ${plan.nom} (${plan.prix.toLocaleString('fr-FR')} F) a expiré le ${new Date(plan.end).toLocaleDateString('fr-FR')}. Renouvelle pour continuer à gagner ${fmt(plan.gainJour||0)} F / jour.`;
-      showAlert('⏰ Ton plan '+plan.nom+' a expiré. Renouvelle-le pour continuer.');
-    } else {
-      document.getElementById('expired-banner').style.display='none';
+    document.getElementById('solde-top-bar').innerText=fmt(data.solde||0)+' F';
+    // Expirés
+    let expired=null;
+    if(data.minage_plans){
+      Object.entries(data.minage_plans).forEach(([k,pl])=>{
+        if(pl.actif && pl.end<=Date.now()){ expired={...pl,key:k}; }
+      });
     }
-    document.getElementById('active-plan-zone').style.display = isActif ? 'block' : 'none';
-    document.getElementById('plans-zone').style.display = isActif ? 'none' : 'block';
-    if(isActif) updatePlanUI(plan, data);
-    else { clearInterval(liveTimer); renderPlans(); }
+    if(expired){
+      lastExpiredPlan=expired;
+      database.ref('clients/'+phone+'/minage_plans/'+expired.key+'/actif').set(false);
+      document.getElementById('expired-banner').style.display='block';
+      document.getElementById('expired-text').innerText=`${expired.nom} expiré le ${new Date(expired.end).toLocaleDateString('fr-FR')}. Renouvelle-le.`;
+    } else document.getElementById('expired-banner').style.display='none';
+    myPlans=getMyPlans(data);
+    const hasPlans=myPlans.length>0;
+    document.getElementById('intro-pro').style.display=hasPlans?'none':'block';
+    document.getElementById('hero-total').style.display=hasPlans?'block':'none';
+    document.getElementById('total-plans-label').innerText=myPlans.length+' PLAN'+(myPlans.length>1?'S':'')+' ACTIF'+(myPlans.length>1?'S':'');
+    document.getElementById('count-plans').innerText=hasPlans?`(${myPlans.length})`:'';
+    if(hasPlans){
+      document.getElementById('user-balance').innerText=fmt(data.solde||0)+' F';
+      document.getElementById('user-commission').innerText=fmt(data.commission||0)+' F';
+      const totalRecu=myPlans.reduce((s,p)=>s+(p.totalGagne||0),0);
+      document.getElementById('mine-total').innerText=fmt(totalRecu)+' F';
+      startLiveTicker();
+      renderMyPlans();
+    } else { clearInterval(liveTimer); }
+    renderPlans();
     chargerHistorique(phone);
   });
 }
-
-// ===== LIVE : L'INTERET MONTE CHAQUE 100ms =====
-function startLiveTicker(plan){
+function startLiveTicker(){
   clearInterval(liveTimer);
-  const gainJour = plan.gainJour || (plan.prix + (plan.gainTotal||0))/30;
-  const perSec = gainJour / 86400;
-  const perMin = gainJour / 1440;
-  // On part du dernier claim LIVE (lastClaimLive) ou du start
-  const baseTime = plan.lastClaimLive || plan.lastClaim || plan.start;
-  document.getElementById('live-per-sec').innerText = fmtLive(perSec)+' F';
-  document.getElementById('live-per-min').innerText = fmtLive(perMin)+' F';
-  document.getElementById('live-since').innerText = new Date(baseTime).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   function tick(){
-    const now = Date.now();
-    const elapsedSec = (now - baseTime)/1000;
-    // Intérêt accumulé depuis le dernier claim, même 0.0000001
-    let interest = elapsedSec * perSec;
-    // On ne dépasse pas le total restant du plan
-    const maxRemaining = (plan.totalRetour||0) - (plan.totalGagne||0);
-    if(interest > maxRemaining) interest = maxRemaining;
-    currentLiveInterest = interest;
-    document.getElementById('live-interest').innerText = fmtLive(interest);
-    document.getElementById('live-claim-amount').innerText = fmtLive(interest);
-    // Prochain claim dispo : on peut réclamer à tout moment en LIVE, mais le bouton jour reste après 24h
-    const nextClaim = new Date(baseTime + 24*60*60*1000);
-    document.getElementById('live-next').innerText = nextClaim.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-    // La barre aussi bouge en live (progression du plan)
-    const totalDuree = plan.end - plan.start;
-    const pct = Math.min(100, ((now - plan.start)/totalDuree)*100);
-    document.getElementById('mine-bar').style.width = pct+'%';
-    document.getElementById('mine-pct').innerText = pct.toFixed(2)+'%';
+    const now=Date.now();
+    let totalLive=0, totalPerSec=0, totalPerDay=0, totalPct=0;
+    myPlans.forEach(p=>{
+      const gainJour=p.gainJour||(p.prix+(p.gainTotal||0))/30;
+      const perSec=gainJour/86400;
+      const base=p.lastClaimLive||p.lastClaim||p.start;
+      let interest=((now-base)/1000)*perSec;
+      const max=(p.totalRetour||0)-(p.totalGagne||0);
+      if(interest>max) interest=max;
+      p._live=interest;
+      totalLive+=interest; totalPerSec+=perSec; totalPerDay+=gainJour;
+      totalPct+=Math.min(100,((now-p.start)/(p.end-p.start))*100);
+    });
+    currentTotalLive=totalLive;
+    const avgPct=myPlans.length?totalPct/myPlans.length:0;
+    document.getElementById('live-total').innerText=fmtLive(totalLive);
+    document.getElementById('live-total-per-sec').innerText=fmtLive(totalPerSec);
+    document.getElementById('live-total-per-day').innerText=fmt(totalPerDay);
+    document.getElementById('live-total-claim').innerText=fmtLive(totalLive);
+    document.getElementById('mine-bar-total').style.width=avgPct+'%';
+    document.getElementById('mine-pct-total').innerText=avgPct.toFixed(1)+'%';
+    const minEnd=Math.min(...myPlans.map(p=>p.end));
+    const joursRestants=Math.max(0,Math.ceil((minEnd-now)/(24*60*60*1000)));
+    document.getElementById('mine-timer-total').innerText=`Prochain expire dans ${joursRestants} j`;
+    // Mettre à jour chaque carte plan
+    myPlans.forEach(p=>{
+      const el=document.getElementById('live-plan-'+p.key);
+      if(el) el.innerText=fmtLive(p._live||0);
+      const bar=document.getElementById('bar-plan-'+p.key);
+      if(bar) bar.style.width=Math.min(100,((now-p.start)/(p.end-p.start))*100)+'%';
+    });
   }
-  tick();
-  liveTimer = setInterval(tick, 100); // 100ms = on voit même 0.0000001 bouger
+  tick(); liveTimer=setInterval(tick,100);
 }
-function updatePlanUI(plan, data){
-  const now=Date.now();
-  const totalDuree = plan.end - plan.start;
-  const elapsed = now - plan.start;
-  const pct = Math.min(100, Math.floor(elapsed/totalDuree*100));
-  const joursRestants = Math.max(0, Math.ceil((plan.end-now)/(24*60*60*1000)));
-  const gainJour = plan.gainJour || (plan.prix + (plan.gainTotal||0))/30;
-  document.getElementById('active-plan-name').innerText = 'PLAN '+plan.nom+' • '+fmt(gainJour)+' F / JOUR';
-  document.getElementById('active-formule').innerText = `(${plan.prix.toLocaleString('fr-FR')} + ${(plan.gainTotal||0).toLocaleString('fr-FR')}) ÷ 30 = ${fmt(gainJour)} F / jour • + ${fmtLive(gainJour/86400)} F / sec en LIVE`;
-  document.getElementById('mine-bar').style.width = pct+'%';
-  document.getElementById('mine-pct').innerText = pct+'%';
-  document.getElementById('mine-timer').innerText = joursRestants>0 ? `⏳ ${joursRestants} jour(s) restant(s)` : '⏰ Expire aujourd’hui';
-  document.getElementById('user-balance').innerText = (data.solde||0).toLocaleString('fr-FR')+' F';
-  document.getElementById('user-commission').innerText = (data.commission||0).toLocaleString('fr-FR')+' F';
-  document.getElementById('mine-total').innerText = fmt(plan.totalGagne||0)+' F';
-  document.getElementById('plan-start').innerText = new Date(plan.start).toLocaleDateString('fr-FR');
-  document.getElementById('plan-end').innerText = new Date(plan.end).toLocaleDateString('fr-FR');
-  const badge=document.getElementById('expire-badge');
-  if(joursRestants<=3){ badge.className='expire-badge expire-soon'; badge.innerText='⚠️ Expire dans '+joursRestants+' jour(s) — Renouvelable 🔁'; document.getElementById('btn-renew').style.display='block'; document.getElementById('btn-renew').innerText='🔁 RENOUVELER '+plan.nom+' — '+plan.prix.toLocaleString('fr-FR')+' F (30 jours de plus)'; }
-  else { badge.className='expire-badge expire-ok'; badge.innerText='✅ Actif — Expire dans '+joursRestants+' jours • Renouvelable'; document.getElementById('btn-renew').style.display='none'; }
-  ['step-25','step-50','step-75','step-100'].forEach((id,idx)=>{ document.getElementById(id).classList.toggle('active', pct>= [25,50,75,100][idx]); });
-  const lastClaim = plan.lastClaim || plan.start;
-  const peutReclamerJour = (now-lastClaim) >= 24*60*60*1000;
-  const btnClaim=document.getElementById('btn-claim');
-  if(peutReclamerJour){
-    btnClaim.style.display='block';
-    const jours = Math.floor((now-lastClaim)/(24*60*60*1000));
-    btnClaim.innerText=`🎉 RÉCLAMER MON INTÉRÊT DU JOUR — ${fmt(jours*gainJour)} F`;
-    document.getElementById('mine-info').innerText=`Tu as ${jours} jour(s) à réclamer. Ou réclame ton LIVE maintenant en dessous.`;
-  } else {
-    btnClaim.style.display='none';
-    const nextIn = 24*60*60*1000 - (now-lastClaim);
-    const h=Math.floor(nextIn/3600000), m=Math.floor((nextIn%3600000)/60000);
-    document.getElementById('mine-info').innerText=`Prochain intérêt du jour dans ${h}h ${m}m. Mais ton LIVE monte déjà — tu peux réclamer ton LIVE maintenant.`;
+function renderMyPlans(){
+  const box=document.getElementById('mes-plans-list');
+  const box2=document.getElementById('mes-plans-apercu');
+  if(myPlans.length===0){
+    box.innerHTML=`<div class="empty">Aucun plan actif.<br>Va dans <b>Acheter</b> pour lancer ton premier plan.<br>Tu peux en cumuler plusieurs.</div>`;
+    box2.innerHTML='';
+    return;
   }
-  // Lancer le ticker LIVE
-  startLiveTicker(plan);
-  clearInterval(mineTimer); mineTimer=setInterval(()=>{ if(currentUserData && currentUserData.minage_plan) updatePlanUI(currentUserData.minage_plan, currentUserData); }, 60000);
+  const html=myPlans.map(p=>{
+    const gainJour=p.gainJour||(p.prix+(p.gainTotal||0))/30;
+    const joursRestants=Math.max(0,Math.ceil((p.end-Date.now())/(24*60*60*1000)));
+    const pct=Math.min(100,((Date.now()-p.start)/(p.end-p.start))*100);
+    return `<div class="my-plan">
+      <div class="my-plan-top"><b>⛏️ ${p.nom}</b><span class="pill green" style="font-size:10px">Actif • ${joursRestants} j</span></div>
+      <div class="my-plan-live"><span id="live-plan-${p.key}">0.0000000</span> <small>F en LIVE</small></div>
+      <div style="font-size:11px;color:#888">${fmt(gainJour)} F / jour • + ${fmtLive(gainJour/86400)} F / sec • Expire ${new Date(p.end).toLocaleDateString('fr-FR')}</div>
+      <div class="my-plan-bar"><i id="bar-plan-${p.key}" style="width:${pct}%"></i></div>
+      <div class="my-plan-row"><span>${pct.toFixed(1)}%</span><span>Reçu : ${fmt(p.totalGagne||0)} / ${p.totalRetour.toLocaleString('fr-FR')} F</span></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-mini green" style="flex:1" onclick="reclamerUnPlan('${p.key}')">Réclamer ce plan</button>
+        <button class="btn-mini gold" onclick="renouvelerPlanByKey('${p.key}','${p.planId}')">🔁 Renouveler</button>
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML=html;
+  box2.innerHTML=`<h2>Mes plans (${myPlans.length})</h2><p class="sub">Chacun mine en même temps.</p>`+html;
 }
-function reclamerGain(){
-  if(!currentUserId || !currentUserData || !currentUserData.minage_plan) return;
-  const plan=currentUserData.minage_plan;
-  const now=Date.now();
-  if(plan.end <= now) return showAlert('Plan expiré. Renouvelle-le.');
-  const lastClaim = plan.lastClaim || plan.start;
-  if((now-lastClaim) < 24*60*60*1000) return showAlert('Tu as déjà réclamé. Utilise RÉCLAMER MON LIVE ou attends 24h.');
-  const jours = Math.floor((now-lastClaim)/(24*60*60*1000));
-  const gainJour = plan.gainJour || (plan.prix + (plan.gainTotal||0))/30;
-  const gain = jours * gainJour;
+function reclamerUnPlan(key){
+  const plan=myPlans.find(p=>p.key===key); if(!plan||!currentUserId) return;
+  const gain=plan._live||0;
+  if(gain<0.0000001) return showAlert('Attends quelques secondes, ton LIVE monte.');
   database.ref('clients/'+currentUserId).update({
     commission:(currentUserData.commission||0)+gain,
     mine_total:(currentUserData.mine_total||0)+gain,
-    'minage_plan/lastClaim':now,
-    'minage_plan/lastClaimLive':now,
-    'minage_plan/totalGagne':(plan.totalGagne||0)+gain
-  }).then(()=>{
-    database.ref('minage_history/'+currentUserId).push({type:'gain',plan:plan.nom,gain:gain,date:new Date().toLocaleString('fr-FR')});
-    showAlert(`🎉 +${fmt(gain)} F ajoutés à ton BONUS !`);
-  });
-}
-function reclamerGainLive(){
-  if(!currentUserId || !currentUserData || !currentUserData.minage_plan) return;
-  const plan=currentUserData.minage_plan;
-  const now=Date.now();
-  if(plan.end <= now) return showAlert('Plan expiré. Renouvelle-le.');
-  if(currentLiveInterest < 0.0000001) return showAlert('Ton LIVE est encore à 0.0000000 F, attends quelques secondes.');
-  const gain = currentLiveInterest;
-  database.ref('clients/'+currentUserId).update({
-    commission:(currentUserData.commission||0)+gain,
-    mine_total:(currentUserData.mine_total||0)+gain,
-    'minage_plan/lastClaimLive':now,
-    'minage_plan/totalGagne':(plan.totalGagne||0)+gain
+    ['minage_plans/'+key+'/lastClaimLive']:Date.now(),
+    ['minage_plans/'+key+'/totalGagne']:(plan.totalGagne||0)+gain
   }).then(()=>{
     database.ref('minage_history/'+currentUserId).push({type:'gain_live',plan:plan.nom,gain:gain,date:new Date().toLocaleString('fr-FR')});
-    showAlert(`⚡ +${fmtLive(gain)} F (LIVE) ajoutés à ton BONUS ! Le compteur repart à 0.0000000`);
-    currentLiveInterest=0;
+    showAlert(`+ ${fmtLive(gain)} F (${plan.nom}) ajoutés à ton Bonus.`);
   });
 }
-function showPlans(force){
-  document.getElementById('active-plan-zone').style.display='none';
-  document.getElementById('plans-zone').style.display='block';
-  renderPlans();
+function reclamerToutLive(){
+  if(myPlans.length===0) return;
+  if(currentTotalLive<0.0000001) return showAlert('Attends quelques secondes, ton LIVE monte.');
+  const gain=currentTotalLive;
+  const updates={commission:(currentUserData.commission||0)+gain, mine_total:(currentUserData.mine_total||0)+gain};
+  myPlans.forEach(p=>{
+    updates['minage_plans/'+p.key+'/lastClaimLive']=Date.now();
+    updates['minage_plans/'+p.key+'/totalGagne']=(p.totalGagne||0)+(p._live||0);
+  });
+  database.ref('clients/'+currentUserId).update(updates).then(()=>{
+    database.ref('minage_history/'+currentUserId).push({type:'gain_live',plan:'TOUS LES PLANS ('+myPlans.length+')',gain:gain,date:new Date().toLocaleString('fr-FR')});
+    showAlert(`+ ${fmtLive(gain)} F (tous tes plans) ajoutés à ton Bonus.`);
+  });
 }
 function chargerHistorique(phone){
+  if(!phone) return;
   database.ref('minage_history/'+phone).limitToLast(8).once('value').then(s=>{
     const box=document.getElementById('mine-history');
-    if(!s.exists()){ box.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px">Aucun historique.</div>'; return; }
-    let html=''; const arr=[]; s.forEach(ch=>arr.push(ch.val())); arr.reverse().forEach(h=>{
-      if(h.type==='achat') html+=`<div class="info-row"><span>🛒 Achat ${h.plan} — ${h.date}</span><span style="color:#ff5555">-${h.prix} F</span></div>`;
-      else if(h.type==='renouvellement') html+=`<div class="info-row"><span>🔁 Renouvellement ${h.plan} — ${h.date}</span><span style="color:#ff5555">-${h.prix} F</span></div>`;
-      else if(h.type==='gain_live') html+=`<div class="info-row"><span>⚡ LIVE ${h.plan} — ${h.date}</span><span>+ ${fmtLive(h.gain)} F</span></div>`;
-      else html+=`<div class="info-row"><span>💰 Intérêt ${h.plan} — ${h.date}</span><span>+ ${fmt(h.gain)} F</span></div>`;
+    if(!s.exists()){ box.innerHTML='<div style="font-size:12px;color:#888;text-align:center;padding:12px">Aucun historique.</div>'; return; }
+    let html=''; const arr=[]; s.forEach(c=>arr.push(c.val())); arr.reverse().forEach(h=>{
+      const gain=h.gain?`+ ${h.type==='gain_live'?fmtLive(h.gain):fmt(h.gain)} F`:`- ${h.prix} F`;
+      const label=h.type==='achat'?'Achat':h.type==='renouvellement'?'Renouvellement':'Gain LIVE';
+      html+=`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1A1A1A;font-size:12px"><span>${label} • ${h.plan} • ${h.date}</span><b style="color:${h.gain?'#2CE88A':'#FF5A00'}">${gain}</b></div>`;
     });
     box.innerHTML=html;
   });
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  applyTheme();
-  const saved=TinyDB.get('current_user') || JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(saved && saved.phone){ currentUserId=saved.phone; showZone(true); chargerMinage(saved.phone); }
+  const saved=TinyDB.get('current_user')||JSON.parse(localStorage.getItem('mayne_current_user')||'null');
+  if(saved&&saved.phone){ currentUserId=saved.phone; showZone(true); chargerMinage(saved.phone); }
   else showZone(false);
 });
 </script>
