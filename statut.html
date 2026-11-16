@@ -99,7 +99,7 @@ body{background:#0e0e0e;color:#fff;font-family:Inter,system-ui,-apple-system,san
 <div class="stat"><b id="stRejete" style="color:#dc3545">0</b><span>ANNULÉS</span></div>
 <div class="stat"><b id="stTotal">0</b><span>TOTAL</span></div>
 </div>
-<details class="bareme" id="journalierBox" open><summary>📅 JOURNALIER — Dernier validé par client / par service • <span id="journalierDate"></span> ▼</summary><div class="bareme-body"><div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn" style="background:#ff5000;padding:8px" onclick="afficherJournalier('today')">📅 Aujourd'hui</button><button class="btn" style="background:#333;padding:8px" onclick="afficherJournalier('all')">📜 Tous les jours</button></div><div id="journalierList">Chargement...</div></div></details>
+<details class="bareme" id="journalierBox" open><summary>📅 JOURNALIER — ENVOI / DÉCAISSEMENT / FORFAIT séparés • <span id="journalierDate"></span> ▼</summary><div class="bareme-body"><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap"><button class="btn" style="background:#ff5000;padding:8px" onclick="afficherJournalier('today')">📅 Aujourd'hui</button><button class="btn" style="background:#333;padding:8px" onclick="afficherJournalier('all')">📜 Tous les jours</button><button class="btn" style="background:#00BCD4;padding:8px" onclick="afficherJournalier('envoi')">🔵 ENVOI seul</button><button class="btn" style="background:#FF8A00;padding:8px" onclick="afficherJournalier('decaissement')">🟠 DÉCAISSEMENT seul</button><button class="btn" style="background:#8BC34A;padding:8px" onclick="afficherJournalier('forfait')">📱 FORFAIT seul</button></div><div id="journalierList">Chargement...</div></div></details>
 <div class="select-all-bar"><label><input type="checkbox" id="checkAll" class="chk-all" onchange="toggleSelectAll(this.checked)"> ☑️ Tout cocher <small id="selectAllLabel">— 0 en cours</small></label><span id="selectedLabel" style="font-size:11px;color:#ffeb3b;font-weight:900"></span></div>
 <div id="bulkBar" class="bulk-bar"><b id="bulkCount">0 sélectionné(s)</b><button class="bulk-btn" id="btnBulkVal" style="background:#28a745;color:#fff" onclick="bulkValidate()">✅ TOUT VALIDER</button><button class="bulk-btn" id="btnBulkAnn" style="background:#dc3545;color:#fff" onclick="bulkCancel()">❌ TOUT ANNULER</button><button class="bulk-btn" style="background:#000;color:#fff" onclick="clearSelection()">✖ Effacer</button></div>
 <div class="tabs" id="tabs"></div>
@@ -151,13 +151,63 @@ function getClientPhone(it){return it.client_id||it.phone||'';}
 function getBeneficiaire(it){const d=it.data||{};const isRet=isRetrait(it);const numeroComplet=d.numero_complet||d.numeroComplet||d.numero_complet_beneficiaire||d.numeroCompletBeneficiaire||d.num_complet||d.numeroCompletDestinataire;if(numeroComplet&&String(numeroComplet).trim()!=='')return String(numeroComplet).trim();if(it.service==='forfaits'||it.path==='commandes_forfaits'){const f=[d.numero_a_recharger,d.numeroARecharger,d.numero_recharge,d.numero_forfait,d.beneficiaire,d.numero,d.telephone];for(let v of f){if(v&&String(v).trim())return String(v).trim();}}if(isRet){const r=[d.numero_decaissement,d.numeroDecaissement,d.num_decaissement,d.numero_retrait,d.numeroRetrait,d.num_retrait,d.numero,d.telephone];for(let v of r){if(v&&String(v).trim())return String(v).trim();}}const e=[d.numero_beneficiaire,d.numeroBeneficiaire,d.beneficiaire,d.numero_destinataire,d.destinataire,d.numero_receveur,d.telephone_beneficiaire];for(let v of e){if(v&&String(v).trim())return String(v).trim();}return d.numero||d.telephone||'';}
 function getBenefLabel(it){if(it.service==='forfaits'||it.path==='commandes_forfaits')return 'N° À RECHARGER';if(isRetrait(it))return 'N° DÉCAISSEMENT';return 'N° BÉNÉFICIAIRE';}
 function getServiceLabel(it){const d=it.data||{};return d.service||d.categorie||it.serviceLabel||it.service||'';}
+// ===== SERVICE JOURNALIER SÉPARÉ : ENVOI / DÉCAISSEMENT / FORFAIT =====
+function getJournalierService(it){
+  if(it.service==='forfaits'||it.path==='commandes_forfaits') return 'FORFAIT';
+  if(it.service==='transfert'||it.path==='commandes_transferts'){
+    return isRetrait(it) ? 'TRANSFERT - DÉCAISSEMENT' : 'TRANSFERT - ENVOI';
+  }
+  if(it.service==='retrait'||it.path==='commandes_retraits') return 'TRANSFERT - DÉCAISSEMENT';
+  if(it.service==='depot'||it.path==='commandes_depots') return 'TRANSFERT - ENVOI';
+  if(it.service==='1xbet') return isRetrait(it) ? '1XBET - RETRAIT' : '1XBET - DEPOT';
+  return (getServiceLabel(it)||'').toUpperCase();
+}
 function getMotifLabel(it){const d=it.data||{};if(it.service==='forfaits'||it.path==='commandes_forfaits'){let nomForfait=d.nom_forfait||d.forfait||d.nomForfait||d.offre||d.pack||d.plan||d.produit||d.designation||d.libelle||d.nom_offre||d.forfait_nom||d.titre||'';let type=d.type||d.motif||d.categorie||d.operation||'';if(nomForfait&&type&&!nomForfait.toLowerCase().includes(type.toLowerCase()))return type+' • '+nomForfait;if(nomForfait)return nomForfait;if(type)return type;return 'Forfait';}if(it.service==='transfert'||it.path==='commandes_transferts'){return isRetrait(it)?'Décaissement':'Envoi';}let t=d.motif||d.type||d.operation||d.sens||'';if(!t&&it.path==='commandes_retraits')t='Décaissement';if(!t&&it.path==='commandes_depots')t='Dépôt';if(!t&&it.path==='commandes_1xbet')t='1XBET';return t?String(t).charAt(0).toUpperCase()+String(t).slice(1):'—';}
 function calcCommissions(){let fT=0,fC=0,fCom=0,tT=0,tC=0,tCom=0,tRC=0,tEC=0,xT=0,xC=0,xCom=0,xDC=0,xRC=0;allData.forEach(it=>{if(!it.statut.includes('valid'))return;if(it.service==='forfaits'){fT+=it.montant||0;fC++;fCom+=getCommissionForfait(it.montant);}if(it.service==='transfert'||it.service==='retrait'||it.service==='depot'){if(isRetrait(it)){tT+=it.montant||0;tC++;let c=getCommissionRetrait(it.montant);tCom+=c;tRC+=c;}else if(isEnvoi(it)||it.service==='depot'){tT+=it.montant||0;tC++;let c=getCommissionEnvoi(it.montant,getReseau(it));tCom+=c;tEC+=c;}}if(it.service==='1xbet'){let com=getCommissionForItem(it);xT+=it.montant||0;xC++;xCom+=com;if(isRetrait(it))xRC+=com;else xDC+=com;}});return{fT,fC,comForfait:fCom,tT,tC,comTransfert:tCom,tRC,tEC,xT,xC,comXbet:xCom,xDC,xRC,total:fCom+tCom+xCom};}
 function updateDashboard(){const c=calcCommissions();document.getElementById('dashComForfait').innerText=fmt(c.comForfait);document.getElementById('dashDetailForfait').innerText=fmt(c.fT)+' • '+c.fC+' cmds';document.getElementById('dashComTransfert').innerText=fmt(c.comTransfert);document.getElementById('dashDetailTransfert').innerText='Retrait '+fmt(c.tRC)+' + Envoi '+fmt(c.tEC);document.getElementById('dashComXbet').innerText=fmt(c.comXbet);document.getElementById('dashDetailXbet').innerText='Depot '+fmt(c.xDC)+' + Retrait '+fmt(c.xRC);document.getElementById('dashComTotal').innerText=fmt(c.total);document.getElementById('dashDetailTotal').innerText='Forfaits '+fmt(c.comForfait)+' + Transfert '+fmt(c.comTransfert)+' + 1XBET '+fmt(c.comXbet);}
 function getDateKey(dateStr){if(!dateStr)return '';if(dateStr.includes('/')){const [j,m,a]=dateStr.split(' ')[0].split('/');return `${a}-${m}-${j}`;}if(dateStr.includes('T'))return dateStr.slice(0,10);return dateStr.slice(0,10);}
 function getTodayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function afficherJournalier(mode){journalierMode=mode;renderJournalier();}
-function renderJournalier(){const box=document.getElementById('journalierList');if(!box)return;const today=getTodayKey();document.getElementById('journalierDate').innerText=today.split('-').reverse().join('/');const groupes={};allData.forEach(it=>{if(!it.statut.includes('valid'))return;const dateKey=getDateKey(it.data.updated_at_fr||it.data.date||it.date||it.data.updated_at||'');const isToday=(dateKey===today);if(journalierMode==='today'&&!isToday)return;const nom=getClientName(it);const service=getServiceLabel(it);const cle=nom+'|'+service;if(!groupes[cle])groupes[cle]={nom:nom,phone:getClientPhone(it),service:service,totalJour:0,countJour:0,comJour:0,dernier:0,dernierMontant:0,dernierDate:'',dernierType:'',dernierBenef:''};const g=groupes[cle];if(isToday){g.totalJour+=(it.montant||0);g.countJour++;g.comJour+=getCommissionForItem(it);}const t=it._time||0;if(!g.dernier||t>g.dernier){g.dernier=t;g.dernierMontant=it.montant||0;g.dernierDate=it.data.updated_at_fr||it.data.date||it.date||'';g.dernierType=getMotifLabel(it);g.dernierBenef=getBeneficiaire(it);}});const arr=Object.values(groupes).sort((a,b)=>b.totalJour-a.totalJour);if(arr.length===0){box.innerHTML='<div style="color:#888;text-align:center;padding:10px">Aucun validé aujourd\'hui pour le moment.</div>';return;}box.innerHTML=arr.map(g=>{const dernierStr=g.dernierDate?String(g.dernierDate).slice(0,16):'—';return `<div style="background:#111;border:1px solid #262626;border-radius:10px;padding:10px;margin-bottom:6px"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:13px">${g.nom}</b><span style="font-size:10px;background:#2a2a2a;padding:3px 7px;border-radius:999px;color:#ffeb3b">${g.service}</span></div><div style="font-size:10px;color:#888">📞 ${g.phone}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;text-align:center"><div style="background:#000;border-radius:8px;padding:6px"><b style="font-size:8px;color:#ffeb3b;display:block">AUJOURD'HUI</b><b style="font-size:13px;color:#0f0">${g.totalJour.toLocaleString('fr-FR')} F</b><span style="font-size:10px;color:#888;display:block">${g.countJour} cmd(s)</span></div><div style="background:#000;border-radius:8px;padding:6px"><b style="font-size:8px;color:#ffeb3b;display:block">COM. JOUR</b><b style="font-size:13px;color:#FFD700">${g.comJour.toLocaleString('fr-FR')} F</b></div><div style="background:#000;border-radius:8px;padding:6px"><b style="font-size:8px;color:#ffeb3b;display:block">DERNIER VALIDÉ</b><b style="font-size:11px">${dernierStr}</b><span style="font-size:10px;color:#888;display:block">${g.dernierType} • ${g.dernierMontant.toLocaleString('fr-FR')} F</span></div></div>${g.dernierBenef?`<div style="font-size:10px;color:#4da3ff;margin-top:6px">N° : ${g.dernierBenef}</div>`:''}</div>`;}).join('');}
+function renderJournalier(){
+  const box=document.getElementById('journalierList');if(!box)return;
+  const today=getTodayKey();document.getElementById('journalierDate').innerText=today.split('-').reverse().join('/');
+  const groupes={};
+  let totalEnvoi=0,totalDecaiss=0,totalForfait=0,comEnvoi=0,comDecaiss=0,comForfait=0,countEnvoi=0,countDecaiss=0,countForfait=0;
+  allData.forEach(it=>{
+    if(!it.statut.includes('valid'))return;
+    const dateKey=getDateKey(it.data.updated_at_fr||it.data.date||it.date||it.data.updated_at||'');
+    const isToday=(dateKey===today);
+    // Filtre par bouton journalier
+    const svcJ=getJournalierService(it);
+    if(journalierMode==='envoi' && svcJ!=='TRANSFERT - ENVOI') return;
+    if(journalierMode==='decaissement' && svcJ!=='TRANSFERT - DÉCAISSEMENT') return;
+    if(journalierMode==='forfait' && svcJ!=='FORFAIT') return;
+    if(journalierMode==='today' && !isToday) return;
+    const nom=getClientName(it);const cle=nom+'|'+svcJ;
+    if(!groupes[cle])groupes[cle]={nom:nom,phone:getClientPhone(it),service:svcJ,totalJour:0,countJour:0,comJour:0,dernier:0,dernierMontant:0,dernierDate:'',dernierType:'',dernierBenef:''};
+    const g=groupes[cle];
+    if(isToday){
+      g.totalJour+=(it.montant||0);g.countJour++;g.comJour+=getCommissionForItem(it);
+      if(svcJ==='TRANSFERT - ENVOI'){totalEnvoi+=(it.montant||0);comEnvoi+=getCommissionForItem(it);countEnvoi++;}
+      if(svcJ==='TRANSFERT - DÉCAISSEMENT'){totalDecaiss+=(it.montant||0);comDecaiss+=getCommissionForItem(it);countDecaiss++;}
+      if(svcJ==='FORFAIT'){totalForfait+=(it.montant||0);comForfait+=getCommissionForItem(it);countForfait++;}
+    }
+    const t=it._time||0;
+    if(!g.dernier||t>g.dernier){g.dernier=t;g.dernierMontant=it.montant||0;g.dernierDate=it.data.updated_at_fr||it.data.date||it.date||'';g.dernierType=getMotifLabel(it);g.dernierBenef=getBeneficiaire(it);}
+  });
+  const arr=Object.values(groupes).sort((a,b)=>b.totalJour-a.totalJour);
+  let resume=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;text-align:center">
+    <div style="background:#0a2a33;border:1px solid #00BCD4;border-radius:8px;padding:8px"><b style="font-size:9px;color:#00E5FF">🔵 ENVOI</b><b style="font-size:14px;color:#fff;display:block">${totalEnvoi.toLocaleString('fr-FR')} F</b><span style="font-size:10px;color:#888">${countEnvoi} cmds • Com ${comEnvoi.toLocaleString('fr-FR')} F</span></div>
+    <div style="background:#2a1500;border:1px solid #FF8A00;border-radius:8px;padding:8px"><b style="font-size:9px;color:#FF9F00">🟠 DÉCAISSEMENT</b><b style="font-size:14px;color:#fff;display:block">${totalDecaiss.toLocaleString('fr-FR')} F</b><span style="font-size:10px;color:#888">${countDecaiss} cmds • Com ${comDecaiss.toLocaleString('fr-FR')} F</span></div>
+    <div style="background:#1a2a00;border:1px solid #8BC34A;border-radius:8px;padding:8px"><b style="font-size:9px;color:#8BC34A">📱 FORFAIT</b><b style="font-size:14px;color:#fff;display:block">${totalForfait.toLocaleString('fr-FR')} F</b><span style="font-size:10px;color:#888">${countForfait} cmds • Com ${comForfait.toLocaleString('fr-FR')} F</span></div>
+  </div>`;
+  if(arr.length===0){box.innerHTML=resume+'<div style="color:#888;text-align:center;padding:10px">Aucun validé pour ce filtre.</div>';return;}
+  box.innerHTML=resume+arr.map(g=>{
+    const dernierStr=g.dernierDate?String(g.dernierDate).slice(0,16):'—';
+    let badgeColor='#ffeb3b'; if(g.service.includes('ENVOI')) badgeColor='#00E5FF'; if(g.service.includes('DÉCAISSEMENT')) badgeColor='#FF9F00'; if(g.service==='FORFAIT') badgeColor='#8BC34A';
+    return `<div style="background:#111;border:1px solid #262626;border-radius:10px;padding:10px;margin-bottom:6px"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:13px">${g.nom}</b><span style="font-size:10px;background:#2a2a2a;padding:3px 7px;border-radius:999px;color:${badgeColor}">${g.service}</span></div><div style="font-size:10px;color:#888">📞 ${g.phone}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;text-align:center"><div style="background:#000;border-radius:8px;padding:6px"><b style="font-size:8px;color:#ffeb3b;display:block">AUJOURD'HUI</b><b style="font-size:13px;color:#0f0">${g.totalJour.toLocaleString('fr-FR')} F</b><span style="font-size:10px;color:#888;display:block">${g.countJour} cmd(s)</span></div><div style="background:#000;border-radius:8px;padding:6px"><b style="font-size:8px;color:#ffeb3b;display:block">COM. JOUR</b><b style="font-size:13px;color:#FFD700">${g.comJour.toLocaleString('fr-FR')} F</b></div><div style="background:#000;border-radius:8px;padding:6px"><b style="font-size:8px;color:#ffeb3b;display:block">DERNIER VALIDÉ</b><b style="font-size:11px">${dernierStr}</b><span style="font-size:10px;color:#888;display:block">${g.dernierType} • ${g.dernierMontant.toLocaleString('fr-FR')} F</span></div></div>${g.dernierBenef?`<div style="font-size:10px;color:#4da3ff;margin-top:6px">N° : ${g.dernierBenef}</div>`:''}</div>`;
+  }).join('');
+}
 async function loadAll(){
   const btn=document.getElementById('btnRefresh');if(btn)btn.innerText='⏳';
   allData=[];counts={};SERVICES.forEach(s=>counts[s.key]=0);traitesCharges=false;loadClientsCache();
@@ -274,7 +324,7 @@ function annulerCurrent(){if(!currentItem)return;const it=currentItem;closeModal
 function notifierCurrent(){if(!currentItem)return;let t=prompt('Titre:',getServiceLabel(currentItem));if(!t)return;let m=prompt('Message:');if(!m)return;const ph=currentItem.client_id||currentItem.phone;db.ref('notifications/'+ph).push({titre:t,message:m,date:new Date().toLocaleString('fr-FR')}).then(()=>showToast('🔔 Envoyé'));}
 initTabs();
 firebase.auth().onAuthStateChanged(function(u){if(u){loadAll();}else{firebase.auth().signInAnonymously();}});
-setInterval(()=>{refreshData();},30000);
+setInterval(()=>{refreshData();},120000);
 </script>
 </body>
 </html>
