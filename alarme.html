@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ALARME MOUVEMENT — MINAGE PRO</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Arial,sans-serif;background:#080808;color:#fff;min-height:100vh}
+.app{max-width:480px;margin:0 auto;padding:16px 16px 30px}
+.top{position:sticky;top:0;background:#080808;padding:12px 0;border-bottom:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;font-size:19px} .logo span{color:#FF3B30}
+.logo small{display:block;font-size:9px;color:#888;letter-spacing:1px;font-weight:400}
+.pill{font-size:11px;font-weight:900;padding:6px 10px;border-radius:999px;background:#1A1A1A}
+.pill.green{background:#0F2A1A;color:#2CE88A} .pill.red{background:#2A0A0A;color:#FF6B6B}
+.card{background:#141414;border:1px solid #262626;border-radius:20px;padding:16px;margin:14px 0}
+.card.alarm{background:#2A0A0A;border-color:#FF3B30;animation:blink .5s infinite alternate}
+@keyframes blink{from{box-shadow:0 0 0 rgba(255,59,48,0)}to{box-shadow:0 0 30px rgba(255,59,48,.7)}}
+h1{font-size:24px;margin:0;line-height:1.1} h2{font-size:16px;margin:0 0 6px}
+.sub{color:#888;font-size:12px;line-height:1.5;margin:6px 0 0}
+.big{font-size:42px;font-weight:900;text-align:center;margin:10px 0 2px;font-variant-numeric:tabular-nums}
+.big small{font-size:14px;color:#888}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.kpi{background:#0F0F0F;border:1px solid #262626;border-radius:14px;padding:10px;text-align:center}
+.kpi b{display:block;font-size:16px} .kpi span{font-size:10px;color:#888}
+.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer}
+.btn-arm{background:#FF3B30;color:#fff}
+.btn-disarm{background:#00C853;color:#fff}
+.btn-grey{background:#222;color:#fff}
+.btn-gold{background:#FFD700;color:#000}
+.row{display:flex;gap:8px}
+.row button{flex:1;padding:13px;border:none;border-radius:12px;font-weight:900;font-size:13px;cursor:pointer}
+input[type=range]{width:100%;accent-color:#FF3B30}
+.field{margin:12px 0}
+.field label{font-size:12px;color:#888;display:block;margin-bottom:6px}
+.inp{width:100%;padding:13px;border-radius:12px;border:1px solid #262626;background:#0F0F0F;color:#fff;font-size:14px;outline:none}
+.log{font-size:12px;color:#ccc;background:#0F0F0F;border-radius:12px;padding:10px;max-height:140px;overflow:auto;line-height:1.6}
+.log b{color:#FF3B30}
+.countdown{font-size:60px;font-weight:900;text-align:center;color:#FFD700}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top">
+<div class="logo">ALARME <span>MOUVEMENT</span><small>DÉTECTION TÉLÉPHONE • MINAGE PRO</small></div>
+<span class="pill" id="statusPill">🔒 DÉSACTIVÉ</span>
+</div>
+
+<div class="card" id="mainCard">
+<h1 id="mainTitle">Pose le téléphone.<br>Active l'alarme.</h1>
+<p class="sub">Dès qu'on soulève, bouge ou secoue le téléphone, l'alarme sonne, ça vibre et l'écran clignote. Parfait pour protéger ton téléphone, ton sac, ta moto.</p>
+
+<div class="big"><span id="accelVal">0.0</span> <small>m/s²</small></div>
+<div style="text-align:center;font-size:12px;color:#888">Mouvement actuel • Seuil : <b id="seuilTxt" style="color:#fff">2.5</b></div>
+
+<div class="grid">
+<div class="kpi"><span>X</span><b id="ax">0.0</b></div>
+<div class="kpi"><span>Y</span><b id="ay">0.0</b></div>
+<div class="kpi"><span>Z</span><b id="az">0.0</b></div>
+</div>
+
+<div id="countdownZone" class="hidden">
+<div class="countdown" id="countdown">5</div>
+<div style="text-align:center;font-size:12px;color:#888">Pose le téléphone, ne le touche plus...</div>
+</div>
+
+<div class="field">
+<label>🎚️ Sensibilité — plus c'est bas, plus ça sonne vite</label>
+<input type="range" id="sensibilite" min="0.8" max="8" step="0.1" value="2.5" oninput="document.getElementById('seuilTxt').innerText=this.value">
+<div style="display:flex;justify-content:space-between;font-size:11px;color:#888"><span>Très sensible (0.8)</span><span>Peu sensible (8)</span></div>
+</div>
+
+<div class="field">
+<label>⏱️ Délai avant activation (sec)</label>
+<input type="range" id="delai" min="0" max="30" step="1" value="5" oninput="document.getElementById('delaiTxt').innerText=this.value+' sec'">
+<div style="font-size:12px;color:#fff">Délai : <b id="delaiTxt">5 sec</b></div>
+</div>
+
+<div class="field">
+<label>🔢 Code pour arrêter l'alarme (4 chiffres)</label>
+<input id="codeAlarme" class="inp" inputmode="numeric" maxlength="4" placeholder="Ex: 1234" value="1234">
+</div>
+
+<div class="field">
+<label><input type="checkbox" id="optVibreur" checked> 📳 Vibreur &nbsp; <input type="checkbox" id="optFlash" checked> 💡 Flash écran &nbsp; <input type="checkbox" id="optSon" checked> 🔊 Son</label>
+</div>
+
+<button class="btn btn-arm" id="btnArm" onclick="activerAlarme()">🔒 ACTIVER L'ALARME</button>
+<button class="btn btn-disarm hidden" id="btnDisarm" onclick="demanderCode()">🔓 DÉSACTIVER (code)</button>
+</div>
+
+<div class="card" id="alarmCard" style="display:none">
+<h2 style="color:#FF3B30">🚨 MOUVEMENT DÉTECTÉ !</h2>
+<p class="sub">Quelqu'un a bougé ton téléphone à <b id="alarmTime" style="color:#fff">—</b></p>
+<div class="row" style="margin-top:12px">
+<button style="background:#00C853;color:#fff" onclick="demanderCode()">🔓 Arrêter (code)</button>
+<button style="background:#222;color:#fff" onclick="snooze()">😴 Snooze 10 sec</button>
+</div>
+</div>
+
+<div class="card">
+<h2>📜 Journal</h2>
+<div class="log" id="log">Aucun événement.<br>Active l'alarme et pose le téléphone.</div>
+<button class="btn btn-grey" style="margin-top:10px;padding:11px;font-size:12px" onclick="testerSon()">🔊 Tester le son d'alarme</button>
+</div>
+
+<p style="font-size:11px;color:#666;text-align:center">Sur iPhone, autorise "Mouvement" quand on te le demande.<br>Garde l'écran allumé pour que l'alarme reste active.</p>
+</div>
+
+<script>
+let armed=false, alarming=false, baseX=0, baseY=0, baseZ=0, calibrated=false, countdownTimer=null, audioCtx=null, alarmOsc=null, alarmInterval=null, lastLog='';
+let lastAccel=0;
+
+function log(msg){
+  const el=document.getElementById('log');
+  const t=new Date().toLocaleTimeString('fr-FR');
+  el.innerHTML=`<b>${t}</b> — ${msg}<br>`+el.innerHTML;
+}
+function majUI(){
+  document.getElementById('statusPill').innerText=alarming?'🚨 ALARME !':armed?'🟢 ACTIVÉ':'🔒 DÉSACTIVÉ';
+  document.getElementById('statusPill').className='pill '+(alarming?'red':armed?'green':'');
+  document.getElementById('btnArm').classList.toggle('hidden',armed);
+  document.getElementById('btnDisarm').classList.toggle('hidden',!armed);
+  document.getElementById('mainTitle').innerText=alarming?'🚨 ALERTE !':'Pose le téléphone.\nActive l\'alarme.';
+  document.getElementById('mainCard').classList.toggle('alarm',alarming);
+}
+
+// --- SON ALARME avec Web Audio (pas besoin de fichier) ---
+function creerSon(){
+  if(!document.getElementById('optSon').checked) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    stopSon();
+    alarmOsc=audioCtx.createOscillator();
+    let gain=audioCtx.createGain();
+    alarmOsc.type='sawtooth';
+    alarmOsc.frequency.value=880;
+    gain.gain.value=0.25;
+    alarmOsc.connect(gain); gain.connect(audioCtx.destination);
+    alarmOsc.start();
+    // Sirène qui monte / descend
+    let up=true;
+    alarmInterval=setInterval(()=>{
+      if(!alarmOsc) return;
+      alarmOsc.frequency.value=up?1200:600;
+      up=!up;
+    },400);
+  }catch(e){}
+}
+function stopSon(){
+  try{ if(alarmOsc){alarmOsc.stop(); alarmOsc=null;} }catch(e){}
+  clearInterval(alarmInterval);
+}
+function testerSon(){
+  creerSon();
+  setTimeout(stopSon,1500);
+  log('Test son 🔊');
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+}
+
+async function demanderPermission(){
+  // iPhone iOS 13+ demande permission
+  if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){
+    try{ const r=await DeviceMotionEvent.requestPermission(); if(r!=='granted'){ alert('Autorise le mouvement pour que l\'alarme marche.'); return false; } }catch(e){ return false; }
+  }
+  return true;
+}
+
+async function activerAlarme(){
+  const ok=await demanderPermission();
+  if(!ok) return;
+  testerSon(); stopSon();
+  const delai=parseInt(document.getElementById('delai').value||'5');
+  calibrated=false;
+  document.getElementById('countdownZone').classList.remove('hidden');
+  document.getElementById('btnArm').innerText='⏳ Activation...';
+  document.getElementById('btnArm').disabled=true;
+  let c=delai;
+  document.getElementById('countdown').innerText=c;
+  if(delai===0){ finirActivation(); return; }
+  countdownTimer=setInterval(()=>{
+    c--;
+    document.getElementById('countdown').innerText=Math.max(0,c);
+    if(c<=0){ clearInterval(countdownTimer); finirActivation(); }
+  },1000);
+  log('Activation dans '+delai+' sec — pose le téléphone');
+}
+function finirActivation(){
+  document.getElementById('countdownZone').classList.add('hidden');
+  document.getElementById('btnArm').innerText='🔒 ACTIVER L\'ALARME';
+  document.getElementById('btnArm').disabled=false;
+  armed=true; alarming=false;
+  // Calibrage : on prend la position actuelle comme référence
+  calibrated=false;
+  setTimeout(()=>{ calibrated=true; log('✅ Alarme activée — ne touche plus le téléphone'); },800);
+  majUI();
+  // Garder l'écran allumé si possible
+  try{ if('wakeLock' in navigator) navigator.wakeLock.request('screen'); }catch(e){}
+}
+
+function demanderCode(){
+  const codeAttendu=document.getElementById('codeAlarme').value.trim()||'1234';
+  const code=prompt('Entre ton code pour arrêter l\'alarme :');
+  if(code===null) return;
+  if(code.trim()===codeAttendu){
+    desactiverAlarme();
+  } else {
+    alert('Code faux !');
+    log('❌ Mauvais code essayé');
+    if(navigator.vibrate) navigator.vibrate([300,100,300]);
+  }
+}
+function desactiverAlarme(){
+  armed=false; alarming=false; stopSon();
+  document.getElementById('alarmCard').style.display='none';
+  log('🔓 Alarme désactivée avec code');
+  majUI();
+}
+function snooze(){
+  alarming=false; stopSon();
+  document.getElementById('alarmCard').style.display='none';
+  log('😴 Snooze 10 sec');
+  setTimeout(()=>{ if(armed){ log('Snooze fini — alarme réactivée'); } },10000);
+  majUI();
+}
+function declencherAlarme(val){
+  if(!armed || alarming) return;
+  alarming=true;
+  document.getElementById('alarmCard').style.display='block';
+  document.getElementById('alarmTime').innerText=new Date().toLocaleString('fr-FR')+' • Mouvement : '+val.toFixed(1)+' m/s²';
+  creerSon();
+  if(document.getElementById('optVibreur').checked && navigator.vibrate){
+    navigator.vibrate([500,200,500,200,500,200,1000]);
+  }
+  log('🚨 MOUVEMENT DÉTECTÉ ! '+val.toFixed(1)+' m/s²');
+  majUI();
+}
+
+// --- DÉTECTION MOUVEMENT ---
+window.addEventListener('devicemotion',function(e){
+  const acc=e.accelerationIncludingGravity;
+  if(!acc) return;
+  const x=acc.x||0, y=acc.y||0, z=acc.z||0;
+  document.getElementById('ax').innerText=x.toFixed(1);
+  document.getElementById('ay').innerText=y.toFixed(1);
+  document.getElementById('az').innerText=z.toFixed(1);
+
+  // On calcule la variation par rapport à la position de repos
+  if(!calibrated){
+    baseX=x; baseY=y; baseZ=z;
+    document.getElementById('accelVal').innerText='0.0';
+    return;
+  }
+  // Si on est en train de calibrer (au début), on met à jour doucement la base
+  if(!armed){
+    baseX=baseX*0.9+x*0.1; baseY=baseY*0.9+y*0.1; baseZ=baseZ*0.9+z*0.1;
+    document.getElementById('accelVal').innerText='0.0';
+    return;
+  }
+  const dx=x-baseX, dy=y-baseY, dz=z-baseZ;
+  const total=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  lastAccel=total;
+  document.getElementById('accelVal').innerText=total.toFixed(1);
+  const seuil=parseFloat(document.getElementById('sensibilite').value||'2.5');
+  if(armed && !alarming && total>seuil){
+    declencherAlarme(total);
+  }
+});
+
+// Si pas de capteur (PC), simuler avec bouton
+if(!('DeviceMotionEvent' in window)){
+  log('⚠️ Ce navigateur n\'a pas de capteur de mouvement. Teste sur téléphone.');
+}
+majUI();
+</script>
+</body>
+</html>
