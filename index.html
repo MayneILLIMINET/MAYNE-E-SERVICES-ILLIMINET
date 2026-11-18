@@ -319,9 +319,5 @@ function fermerAPK(){document.getElementById('apk-modal').style.display='none';l
 function montrerAPK(){try{var last=parseInt(localStorage.getItem('actifer_apk_vu')||'0');if(Date.now()-last<24*60*60*1000)return;if(window.AppInventor)return;setTimeout(function(){var m=document.getElementById('apk-modal');if(m)m.style.display='flex';},2500);}catch(e){}}
 document.addEventListener('DOMContentLoaded',function(){chargerPhotoProfil();montrerAPK();});
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js"></script>
-<script>
-  twemoji.parse(document.body);
-</script>
 </body>
 </html>
