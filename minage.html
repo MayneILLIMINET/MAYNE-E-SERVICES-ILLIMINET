@@ -1,658 +1,79 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>MINAGE PRO</title>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>MINAGE PRO</title>
 <script>if(localStorage.getItem('mayne_pin_enabled')==='true' && !sessionStorage.getItem('mayne_unlocked')){location.href='lock.html';}</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script>
-let database;
-const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};
-if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-database=firebase.database();
-firebase.auth().onAuthStateChanged(u=>{ if(!u) firebase.auth().signInAnonymously().catch(()=>{}); });
-</script>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,-apple-system,Arial,sans-serif;background:#080808;color:#fff;min-height:100vh}
-.app{max-width:480px;margin:0 auto;padding:0 16px 110px}
-.topbar{position:sticky;top:0;z-index:20;background:rgba(8,8,8,.92);backdrop-filter:blur(12px);padding:12px 0 10px;border-bottom:1px solid #1A1A1A;margin:0 -16px;padding-left:16px;padding-right:16px}
-.top-row{display:flex;justify-content:space-between;align-items:center}
-.logo{font-weight:900;font-size:19px;letter-spacing:-.5px}
-.logo span{color:#FF5A00}
-.logo small{display:block;font-size:9px;color:#888;font-weight:400;letter-spacing:1px}
-.top-actions{display:flex;gap:8px;align-items:center}
-.pill-balance{background:#1A1A1A;border:1px solid #262626;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:900}
-.pill-balance b{color:#2CE88A}
-.icon-btn{width:38px;height:38px;border-radius:999px;background:#1A1A1A;border:1px solid #262626;color:#fff;font-size:16px;cursor:pointer}
-.menu-pro{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
-.menu-pro::-webkit-scrollbar{display:none}
-.menu-pro button{white-space:nowrap;border:none;padding:9px 14px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer;background:#141414;color:#888}
-.menu-pro button.active{background:#fff;color:#000}
-.intro{background:linear-gradient(135deg,#FF5A00 0%,#FF8A00 45%,#FFD700 100%);border-radius:24px;padding:20px;color:#000;position:relative;overflow:hidden;margin:16px 0}
-.intro::after{content:'⛏️';position:absolute;right:12px;top:-10px;font-size:90px;opacity:.18}
-.intro h1{font-size:24px;line-height:1.1;margin:0;letter-spacing:-.5px}
-.intro p{font-size:13px;line-height:1.45;margin:8px 0 14px;opacity:.85;font-weight:600}
-.intro-stats{display:flex;gap:8px}
-.intro-stats div{background:rgba(0,0,0,.18);border-radius:12px;padding:10px 12px;flex:1;text-align:center}
-.intro-stats b{display:block;font-size:16px}
-.intro-stats span{font-size:10px;font-weight:800;opacity:.75}
-.steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.steps div{background:#141414;border:1px solid #1F1F1F;border-radius:16px;padding:12px;text-align:center}
-.steps div span{font-size:22px}
-.steps div b{display:block;font-size:12px;margin-top:6px}
-.steps div small{font-size:10px;color:#888}
-h2{font-size:17px;margin:20px 0 4px}
-.sub{color:#888;font-size:12px;margin:0 0 12px}
-.hero{background:linear-gradient(180deg,#1B1B1B,#0F0F0F);border:1px solid #262626;border-radius:24px;padding:20px;text-align:center}
-.hero-top{display:flex;justify-content:space-between;align-items:center}
-.pill{font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;background:#FF5A00;color:#fff}
-.pill.green{background:#0F2A1A;color:#2CE88A}
-.pill.red{background:#2A0A0A;color:#FF6B6B}
-.live-label{font-size:11px;color:#888;letter-spacing:1.5px;margin-top:16px}
-.live{font-size:36px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1;margin:6px 0}
-.live small{font-size:15px;color:#FFD700}
-.live-sec{font-size:12px;color:#2CE88A;font-family:monospace}
-.bar{height:8px;background:#262626;border-radius:999px;overflow:hidden;margin:16px 0 8px}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,#FF5A00,#FFD700);border-radius:999px}
-.bar-row{display:flex;justify-content:space-between;font-size:11px;color:#888}
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
-.stat{background:#141414;border:1px solid #262626;border-radius:14px;padding:12px 8px}
-.stat span{font-size:10px;color:#888;display:block}
-.stat b{font-size:14px}
-.my-plan{background:#141414;border:1px solid #262626;border-radius:20px;padding:16px;margin-bottom:10px}
-.my-plan.expired{border-color:#FF3B30;background:#1A0F0F}
-.my-plan-top{display:flex;justify-content:space-between;align-items:center}
-.my-plan-top b{font-size:14px}
-.my-plan-live{font-size:22px;font-weight:900;color:#2CE88A;font-variant-numeric:tabular-nums;margin:8px 0 2px}
-.my-plan-live small{font-size:12px;color:#FFD700}
-.my-plan-bar{height:6px;background:#262626;border-radius:999px;overflow:hidden;margin:10px 0 6px}
-.my-plan-bar i{display:block;height:100%;background:#2CE88A;border-radius:999px}
-.my-plan-row{display:flex;justify-content:space-between;font-size:11px;color:#888}
-.btn-mini{border:none;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:900;cursor:pointer}
-.btn-mini.green{background:#00C853;color:#fff}
-.btn-mini.gold{background:#FFD700;color:#000}
-.btn-mini.grey{background:#262626;color:#888}
-.plan{background:#141414;border:1px solid #262626;border-radius:20px;padding:16px;margin-bottom:10px}
-.plan-top{display:flex;justify-content:space-between;align-items:center}
-.plan-top b{font-size:15px}
-.plan-top span{font-size:15px;font-weight:900;color:#FFD700}
-.plan-mid{display:flex;justify-content:space-between;align-items:flex-end;margin:12px 0 4px}
-.plan-mid .big{font-size:22px;font-weight:900}
-.plan-mid .big small{font-size:12px;color:#888;font-weight:400}
-.plan-mid .right{font-size:11px;color:#888;text-align:right}
-.plan-mid .right b{color:#2CE88A;font-size:12px;display:block}
-.formula{font-size:11px;color:#888;text-align:center;padding:8px;background:#0F0F0F;border-radius:10px;margin-top:10px}
-.btn{width:100%;padding:15px;border:none;border-radius:14px;background:#FF5A00;color:#fff;font-weight:900;font-size:15px;cursor:pointer}
-.btn:disabled{background:#222;color:#666}
-.btn-green{width:100%;padding:15px;border:none;border-radius:14px;background:#00C853;color:#fff;font-weight:900;font-size:15px;cursor:pointer;margin-top:14px}
-.btn-gold{width:100%;padding:13px;border:none;border-radius:14px;background:#FFD700;color:#000;font-weight:900;font-size:13px;cursor:pointer;margin-top:10px}
-.btn-recharge{flex:1;padding:13px;border:none;border-radius:14px;background:#FFC107;color:#000;font-weight:900;font-size:13px;cursor:pointer}
-.btn-retirer{flex:1;padding:13px;border:none;border-radius:14px;background:#fff;color:#000;font-weight:900;font-size:13px;cursor:pointer}
-.tabs{display:grid;grid-template-columns:1fr 1fr;background:#1A1A1A;border-radius:999px;padding:4px;margin-bottom:16px}
-.tabs button{border:none;background:none;color:#888;padding:10px;border-radius:999px;font-weight:800;cursor:pointer}
-.tabs button.active{background:#fff;color:#000}
-.field{margin-bottom:12px}
-.field label{font-size:12px;color:#888;display:block;margin-bottom:6px}
-.inp{width:100%;padding:14px 16px;border-radius:14px;border:1px solid #262626;background:#141414;color:#fff;font-size:15px;font-weight:700;outline:none}
-.inp:focus{border-color:#FF5A00}
-.link{width:100%;background:none;border:none;color:#888;font-size:12px;margin-top:12px;cursor:pointer;text-decoration:underline}
-.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:rgba(10,10,10,.96);backdrop-filter:blur(12px);border-top:1px solid #1A1A1A;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 4px calc(10px + env(safe-area-inset-bottom));z-index:30}
-.nav button{background:none;border:none;color:#888;font-size:10px;font-weight:700;cursor:pointer;position:relative}
-.nav button.active{color:#FF5A00}
-.nav button.active::before{content:'';position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:28px;height:3px;background:#FF5A00;border-radius:999px}
-.nav span{font-size:20px;display:block}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:flex-end;justify-content:center;z-index:99}
-.box{background:#1A1A1A;padding:20px;border-radius:20px 20px 0 0;width:100%;max-width:480px;text-align:center}
-.box p{font-size:14px;line-height:1.5}
-.box button{flex:1;padding:12px;border:none;border-radius:12px;font-weight:900;cursor:pointer}
-.yes{background:#00C853;color:#fff} .no{background:#333;color:#fff}
-.expired{background:#2A0A0A;border:1px solid #FF3B30;border-radius:16px;padding:14px;text-align:center;margin-bottom:12px}
-.expired b{color:#FF3B30}
-.empty{border:1px dashed #333;border-radius:20px;padding:20px;text-align:center;color:#888;font-size:12px}
-/* ===== MENU PRO - TIROIR ===== */
-.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:99}
-.menu-drawer{position:absolute;left:0;top:0;bottom:0;width:86%;max-width:340px;background:#101010;border-right:1px solid #222;display:flex;flex-direction:column;overflow:auto;padding-bottom:env(safe-area-inset-bottom)}
-.menu-head{background:linear-gradient(135deg,#FF5A00,#FF8A00);padding:18px 16px;color:#000}
-.menu-head .m-logo{font-weight:900;font-size:20px;letter-spacing:-.5px}
-.menu-head .m-sub{font-size:11px;font-weight:700;opacity:.8}
-.menu-user{display:flex;gap:10px;align-items:center;margin-top:14px;background:rgba(0,0,0,.22);border-radius:12px;padding:10px}
-.menu-user .avatar{width:40px;height:40px;border-radius:999px;background:#000;color:#FFD700;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0}
-.menu-user b{display:block;font-size:14px;line-height:1.1}
-.menu-user small{font-size:11px;opacity:.8}
-.menu-section{padding:14px 12px 4px;font-size:10px;letter-spacing:1.5px;color:#777;font-weight:900}
-.menu-item{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;cursor:pointer;border:1px solid transparent}
-.menu-item:active,.menu-item:hover{background:#1A1A1A;border-color:#262626}
-.menu-item .mi-icon{width:38px;height:38px;border-radius:12px;background:#1E1E1E;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.menu-item b{font-size:13.5px;display:block}
-.menu-item small{color:#888;font-size:11px;display:block;line-height:1.3}
-.menu-item .chev{margin-left:auto;color:#555;font-size:16px}
-.menu-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
-.menu-quick button{border:none;padding:12px;border-radius:12px;font-weight:900;font-size:12px;cursor:pointer}
-.menu-foot{margin-top:auto;padding:12px;text-align:center;color:#666;font-size:10px}
-</style>
-</head>
-<body>
-<div class="app">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script>let database;const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",authDomain:"mayneilliminetdb.firebaseapp.com",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb",storageBucket:"mayneilliminetdb.appspot.com",messagingSenderId:"904857888891",appId:"1:904857888891:web:a89e339ea89de0340a5ade"};if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);database=firebase.database();firebase.auth().onAuthStateChanged(u=>{if(!u)firebase.auth().signInAnonymously().catch(()=>{});});</script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial;background:#080808;color:#fff;min-height:100vh}.app{max-width:480px;margin:0 auto;padding:0 16px 110px}.topbar{position:sticky;top:0;z-index:20;background:rgba(8,8,8,.95);padding:12px 0 10px;border-bottom:1px solid #1A1A1A;margin:0 -16px;padding-left:16px;padding-right:16px}.top-row{display:flex;justify-content:space-between;align-items:center}.logo{font-weight:900;font-size:19px}.logo span{color:#FF5A00}.logo small{display:block;font-size:9px;color:#888;letter-spacing:1px}.pill-balance{background:#1A1A1A;border:1px solid #262626;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:900}.pill-balance b{color:#2CE88A}.icon-btn{width:38px;height:38px;border-radius:999px;background:#1A1A1A;border:1px solid #262626;color:#fff}.menu-pro{display:flex;gap:6px;margin-top:12px;overflow-x:auto}.menu-pro button{white-space:nowrap;border:none;padding:9px 14px;border-radius:999px;font-size:12px;font-weight:800;background:#141414;color:#888}.menu-pro button.active{background:#fff;color:#000}.intro{background:linear-gradient(135deg,#FF5A00,#FFD700);border-radius:24px;padding:20px;color:#000;margin:16px 0}.intro h1{font-size:24px;margin:0}.intro p{font-size:13px;font-weight:600}.intro-stats{display:flex;gap:8px}.intro-stats div{background:rgba(0,0,0,.18);border-radius:12px;padding:10px;flex:1;text-align:center}.steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.steps div{background:#141414;border:1px solid #1F1F1F;border-radius:16px;padding:12px;text-align:center}.steps div span{font-size:22px}h2{font-size:17px;margin:20px 0 4px}.sub{color:#888;font-size:12px}.hero{background:#1B1B1B;border:1px solid #262626;border-radius:24px;padding:20px;text-align:center}.pill{font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;background:#FF5A00}.pill.green{background:#0F2A1A;color:#2CE88A}.pill.red{background:#2A0A0A;color:#FF6B6B}.live{font-size:34px;font-weight:900}.live small{color:#FFD700}.live-sec{font-size:12px;color:#2CE88A;font-family:monospace}.bar{height:8px;background:#262626;border-radius:999px;overflow:hidden;margin:12px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,#FF5A00,#FFD700)}.bar-row{display:flex;justify-content:space-between;font-size:11px;color:#888}.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}.stat{background:#141414;border:1px solid #262626;border-radius:14px;padding:12px}.stat span{font-size:10px;color:#888;display:block}.my-plan{background:#141414;border:1px solid #262626;border-radius:20px;padding:16px;margin-bottom:10px}.my-plan.expired{border-color:#FF3B30}.my-plan-live{font-size:22px;font-weight:900;color:#2CE88A}.my-plan-bar{height:6px;background:#262626;border-radius:999px;overflow:hidden;margin:10px 0}.my-plan-bar i{display:block;height:100%;background:#2CE88A}.my-plan-row{display:flex;justify-content:space-between;font-size:11px;color:#888}.btn-mini{border:none;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:900}.btn-mini.green{background:#00C853;color:#fff}.btn-mini.gold{background:#FFD700;color:#000}.btn-mini.grey{background:#262626;color:#888}.plan{background:#141414;border:1px solid #262626;border-radius:20px;padding:16px;margin-bottom:10px}.plan-top{display:flex;justify-content:space-between}.plan-top span{font-weight:900;color:#FFD700}.plan-mid{display:flex;justify-content:space-between;margin:12px 0}.plan-mid .big{font-size:22px;font-weight:900}.btn{width:100%;padding:15px;border:none;border-radius:14px;background:#FF5A00;color:#fff;font-weight:900;cursor:pointer}.btn-green{width:100%;padding:15px;border:none;border-radius:14px;background:#00C853;color:#fff;font-weight:900;margin-top:12px}.btn-gold{width:100%;padding:13px;border:none;border-radius:14px;background:#FFD700;color:#000;font-weight:900;margin-top:10px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:#1A1A1A;border-radius:999px;padding:4px;margin-bottom:16px}.tabs button{border:none;background:none;color:#888;padding:10px;border-radius:999px;font-weight:800}.tabs button.active{background:#fff;color:#000}.field{margin-bottom:12px}.field label{font-size:12px;color:#888;display:block;margin-bottom:6px}.inp{width:100%;padding:14px;border-radius:14px;border:1px solid #262626;background:#141414;color:#fff;font-weight:700}.link{width:100%;background:none;border:none;color:#888;margin-top:12px;text-decoration:underline}.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;background:#0A0A0A;border-top:1px solid #1A1A1A;display:grid;grid-template-columns:repeat(4,1fr);padding:8px;z-index:30}.nav button{background:none;border:none;color:#888;font-size:10px;font-weight:700}.nav button.active{color:#FF5A00}.nav span{font-size:20px;display:block}.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:flex-end;justify-content:center;z-index:99}.box{background:#1A1A1A;padding:20px;border-radius:20px 20px 0 0;width:100%;max-width:480px}.yes{background:#00C853;color:#fff}.no{background:#333;color:#fff}.expired{background:#2A0A0A;border:1px solid #FF3B30;border-radius:16px;padding:14px;text-align:center;margin-bottom:12px}.empty{border:1px dashed #333;border-radius:20px;padding:20px;text-align:center;color:#888}.capture-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;display:none;border:2px solid #FF5A00;margin-top:6px}.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:99}.menu-drawer{position:absolute;left:0;top:0;bottom:0;width:86%;max-width:340px;background:#101010;display:flex;flex-direction:column;overflow:auto}.menu-head{background:linear-gradient(135deg,#FF5A00,#FF8A00);padding:18px;color:#000}.menu-item{display:flex;gap:12px;align-items:center;padding:12px}.menu-item .mi-icon{width:38px;height:38px;border-radius:12px;background:#1E1E1E;display:flex;align-items:center;justify-content:center}#img-viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99999}#img-viewer img{max-width:96%;max-height:96%}</style></head><body>
+<div id="img-viewer" onclick="this.style.display='none'"><img id="img-viewer-pic"></div><div class="app">
+<div class="topbar"><div class="top-row"><div class="logo">MINAGE <span>PRO</span><small>MINAGE PRO</small></div><div style="display:flex;gap:8px"><div class="pill-balance">💰 <b id="solde-top-bar">0 F</b></div><button class="icon-btn" onclick="openMenuPro()">☰</button></div></div><div class="menu-pro"><button class="active" data-tab="apercu" onclick="switchTab('apercu',this)">📊 Aperçu</button><button data-tab="mesplans" onclick="switchTab('mesplans',this)">⛏️ Mes Plans <span id="count-plans"></span></button><button data-tab="plans" onclick="switchTab('plans',this)">🛒 Acheter</button><button data-tab="historique" onclick="switchTab('historique',this)">📜 Historique</button><button data-tab="profil" onclick="switchTab('profil',this)">👤 Profil</button></div></div>
 
-<div class="topbar">
-<div class="top-row">
-<div class="logo">MINAGE <span>PRO</span><small>MINAGE PRO • COTONOU</small></div>
-<div class="top-actions">
-<div class="pill-balance">💰 <b id="solde-top-bar">0 F</b></div>
-<button class="icon-btn" onclick="openMenuPro()">☰</button>
-</div>
-</div>
-<div class="menu-pro" id="menu-pro">
-<button class="active" data-tab="apercu" onclick="switchTab('apercu',this)">📊 Aperçu</button>
-<button data-tab="mesplans" onclick="switchTab('mesplans',this)">⛏️ Mes Plans <span id="count-plans"></span></button>
-<button data-tab="plans" onclick="switchTab('plans',this)">🛒 Acheter</button>
-<button data-tab="historique" onclick="switchTab('historique',this)">📜 Historique</button>
-<button data-tab="profil" onclick="switchTab('profil',this)">👤 Profil</button>
-</div>
-</div>
+<div id="auth-zone" style="display:none"><div class="intro"><h1>Mine.<br>Gagne chaque seconde.</h1><p>Achète via Kkiapay, envoie ta preuve, ton plan s'active.</p><div class="intro-stats"><div><b>11</b><span>PLANS</span></div><div><b>30 j</b><span>DURÉE</span></div><div><b>LIVE</b><span>RÉEL</span></div></div></div><div class="tabs"><button id="tab-login-btn" class="active" onclick="showAuth('login')">Connexion</button><button id="tab-reg-btn" onclick="showAuth('register')">Inscription</button></div><div id="login-interface"><div class="field"><label>Numéro</label><input id="login-id" class="inp"></div><div class="field"><label>Mot de passe</label><input id="login-pin" type="password" class="inp" maxlength="6"></div><button class="btn" onclick="executerConnexion()">Se connecter</button><button class="link" onclick="showAuth('register')">Créer un compte</button></div><div id="register-interface" style="display:none"><div class="field"><label>Nom</label><input id="reg-name" class="inp"></div><div class="field"><label>Numéro</label><input id="reg-id" class="inp"></div><div class="field"><label>Email</label><input id="reg-email" class="inp"></div><div class="field"><label>Mot de passe 6 chiffres</label><input id="reg-pin" type="password" class="inp" maxlength="6"></div><div class="field"><label>Parrain</label><input id="reg-parrain" class="inp"></div><button class="btn" onclick="executerInscription()">Créer mon compte</button><button class="link" onclick="showAuth('login')">Connexion</button></div><div id="verify-interface" style="display:none"><h2 style="text-align:center">Vérifie ton email</h2><p class="sub" style="text-align:center"><b id="verify-email-affiche"></b></p><div class="field"><input id="verify-code" class="inp" style="text-align:center" placeholder="Code 6 chiffres"></div><button class="btn" onclick="verifierCodeEmail()">Vérifier</button><button class="link" onclick="envoyerCodeEmail(null,true)">Renvoyer</button></div></div>
 
-<div id="auth-zone" style="display:none">
-<div class="intro"><h1>Mine.<br>Gagne chaque seconde.</h1><p>Achète un plan, regarde ton intérêt monter en LIVE, réclame quand tu veux. Plusieurs plans à la fois.</p><div class="intro-stats"><div><b>8</b><span>PLANS</span></div><div><b>30 j</b><span>DURÉE</span></div><div><b>LIVE</b><span>EN TEMPS RÉEL</span></div></div></div>
-<div class="tabs"><button id="tab-login-btn" class="active" onclick="showAuth('login')">Connexion</button><button id="tab-reg-btn" onclick="showAuth('register')">Inscription</button></div>
-<div id="login-interface">
-<div class="field"><label>Numéro</label><input id="login-id" class="inp" inputmode="numeric"></div>
-<div class="field"><label>Mot de passe</label><input id="login-pin" type="password" class="inp" maxlength="6" placeholder="••••••"></div>
-<button class="btn" onclick="executerConnexion()">Se connecter</button>
-<button class="link" onclick="showAuth('register')">Pas de compte ? Créer un compte</button>
-</div>
-<div id="register-interface" style="display:none">
-<div class="field"><label>Nom et prénom</label><input id="reg-name" class="inp"></div>
-<div class="field"><label>Numéro</label><input id="reg-id" class="inp"></div>
-<div class="field"><label>Email</label><input id="reg-email" type="email" class="inp"></div>
-<div class="field"><label>Mot de passe (6 chiffres)</label><input id="reg-pin" type="password" class="inp" maxlength="6"></div>
-<div class="field"><label>Code parrain (optionnel)</label><input id="reg-parrain" class="inp"></div>
-<button class="btn" onclick="executerInscription()">Créer mon compte</button>
-<button class="link" onclick="showAuth('login')">Déjà inscrit ? Connexion</button>
-</div>
-<div id="verify-interface" style="display:none">
-<h2 style="text-align:center">Vérifie ton email</h2><p class="sub" style="text-align:center">Code envoyé à <b id="verify-email-affiche"></b></p>
-<div class="field"><input id="verify-code" class="inp" placeholder="Code à 6 chiffres" style="text-align:center"></div>
-<button class="btn" onclick="verifierCodeEmail()">Vérifier</button>
-<button class="link" onclick="envoyerCodeEmail(null,true)">Renvoyer le code</button>
-</div>
-</div>
-
-<div id="mine-zone" style="display:none">
-<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0">
-<div><b id="user-name">—</b><br><small id="user-phone" style="color:#888"></small></div>
-<button onclick="executerDeconnexion()" style="background:none;border:1px solid #333;color:#888;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:800;cursor:pointer">Déconnexion</button>
-</div>
-
-<div style="display:flex;gap:8px;margin:0 0 14px">
-<button class="btn-recharge" onclick="location.href="depot.html">⬆️ RECHARGER</button>
-<button class="btn-retirer" onclick="location.href="retrait.html">⬇️ RETIRER</button>
-</div>
-
-<div id="tab-apercu">
-<div id="intro-pro">
-<div class="intro"><h1>Mine.<br>Gagne chaque seconde.</h1><p>Achète un plan, regarde ton intérêt monter en LIVE. Tu peux cumuler plusieurs plans en même temps.</p><div class="intro-stats"><div><b>8</b><span>PLANS</span></div><div><b>30 j</b><span>DURÉE</span></div><div><b>LIVE</b><span>EN TEMPS RÉEL</span></div></div></div>
-<div class="steps"><div><span>🛒</span><b>1. Achète</b><small>Avec ton solde</small></div><div><span>👀</span><b>2. Regarde</b><small>LIVE qui monte</small></div><div><span>💰</span><b>3. Réclame</b><small>Vers ton Bonus</small></div></div>
-</div>
-
-<div class="hero" id="hero-total" style="display:none">
-<div class="hero-top"><span class="pill" id="total-plans-label">0 PLAN ACTIF</span><span class="pill green" id="total-status">● LIVE</span></div>
-<div class="live-label">TOTAL INTÉRÊT EN LIVE — TOUS TES PLANS</div>
-<div class="live"><span id="live-total">0.0000000</span> <small>F</small></div>
-<div class="live-sec">+ <span id="live-total-per-sec">0.0000000</span> F / sec • <span id="live-total-per-day">0</span> F / jour</div>
-<div class="bar"><i id="mine-bar-total" style="width:0%"></i></div>
-<div class="bar-row"><span id="mine-pct-total">0%</span><span id="mine-timer-total">—</span></div>
-<div class="stats">
-<div class="stat"><span>Solde</span><b id="user-balance">0 F</b></div>
-<div class="stat"><span>Bonus</span><b id="user-commission" style="color:#FFD700">0 F</b></div>
-<div class="stat"><span>Total reçu</span><b id="mine-total" style="color:#2CE88A">0 F</b></div>
-</div>
-<button class="btn-green" onclick="reclamerToutLive()">Réclamer tout — <span id="live-total-claim">0.0000000</span> F</button>
-<div class="meta" style="font-size:11px;color:#888;margin-top:10px">Tu peux acheter plusieurs plans en même temps. Chacun mine séparément.</div>
-</div>
-
-<div id="mes-plans-apercu"></div>
-</div>
-
-<div id="tab-mesplans" style="display:none">
-<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Mes plans</h2><span class="pill" id="mesplans-count">0 plan</span></div>
-<p class="sub">Actifs + expirés. Chaque plan actif mine en même temps.</p>
-<div style="display:flex;gap:6px;margin-bottom:12px">
-<button class="btn-mini green" id="filter-actif" style="flex:1" onclick="setPlanFilter('actif')">● Actifs</button>
-<button class="btn-mini gold" id="filter-expire" style="flex:1" onclick="setPlanFilter('expire')">Expirés</button>
-<button class="btn-mini grey" id="filter-tous" style="flex:1" onclick="setPlanFilter('tous')">Tous</button>
-</div>
-<div id="mes-plans-list"></div>
-<div id="expired-banner" class="expired" style="display:none"><b>⏰ Plan expiré</b><br><span id="expired-text" style="font-size:12px;color:#ccc"></span><br><button class="btn-gold" style="margin-top:10px" onclick="renouvelerDernier()">🔁 Renouveler le dernier plan</button></div>
-</div>
-
-<div id="tab-plans" style="display:none">
-<h2>Acheter un plan</h2><p class="sub">Tu peux cumuler plusieurs plans. Ex : Débutant + Normal = 2 LIVE en même temps.</p>
-<div id="plans-list"></div>
-<p style="font-size:11px;color:#666;text-align:center">Formule : (Prix + Gain) ÷ 30 = Intérêt / jour</p>
-</div>
-
-<div id="tab-historique" style="display:none">
-<h2>Historique</h2><p class="sub">Achats, renouvellements et gains LIVE.</p>
-<div id="mine-history"></div>
-</div>
-
-<div id="tab-profil" style="display:none">
-<h2>👤 Profil — MINAGE PRO</h2><p class="sub">Ton compte MINAGE PRO.</p>
-<div class="plan">
-<div style="display:flex;justify-content:space-between"><span style="color:#888;font-size:12px">Nom</span><b id="profil-nom">—</b></div>
-<div style="display:flex;justify-content:space-between;margin-top:8px"><span style="color:#888;font-size:12px">Téléphone</span><b id="profil-phone">—</b></div>
-<div style="display:flex;justify-content:space-between;margin-top:8px"><span style="color:#888;font-size:12px">Solde</span><b id="profil-solde" style="color:#2CE88A">0 F</b></div>
-<div style="display:flex;justify-content:space-between;margin-top:8px"><span style="color:#888;font-size:12px">Bonus</span><b id="profil-bonus" style="color:#FFD700">0 F</b></div>
-<div style="display:flex;justify-content:space-between;margin-top:8px"><span style="color:#888;font-size:12px">Total reçu</span><b id="profil-total">0 F</b></div>
-<div style="display:flex;justify-content:space-between;margin-top:8px"><span style="color:#888;font-size:12px">Plans actifs</span><b id="profil-plans">0</b></div>
-</div>
-<div style="display:flex;gap:8px">
-<button class="btn-recharge" onclick="openRecharger()">⬆️ RECHARGER</button>
-<button class="btn-retirer" onclick="openRetirer()">⬇️ RETIRER</button>
-</div>
-<button class="btn" style="margin-top:12px;background:#222;color:#fff" onclick="executerDeconnexion()">🚪 Déconnexion</button>
-</div>
-
-</div>
-</div>
-
-<div class="nav">
-<button id="nav-menu" onclick="openMenuPro()"><span>☰</span>Menu</button>
-<button id="nav-plans" onclick="switchTab('plans',document.querySelector('[data-tab=&quot;plans&quot;]'));setNavActive('nav-plans')"><span>🛒</span>Plans</button>
-<button id="nav-monplan" class="active" onclick="switchTab('mesplans',document.querySelector('[data-tab=&quot;mesplans&quot;]'));setNavActive('nav-monplan')"><span>⛏️</span>Mon Plan</button>
-<button id="nav-profil" onclick="switchTab('profil',document.querySelector('[data-tab=&quot;profil&quot;]'));setNavActive('nav-profil')"><span>👤</span>Profil</button>
-</div>
-
-<!-- MENU PRO -->
-<div id="menu-pro-overlay" class="menu-overlay" onclick="if(event.target==this) closeMenuPro()">
-<div class="menu-drawer">
-<div class="menu-head">
-<div style="display:flex;justify-content:space-between;align-items:center"><div class="m-logo">MINAGE PRO</div><button onclick="closeMenuPro()" style="background:#000;color:#fff;border:none;width:32px;height:32px;border-radius:999px;cursor:pointer">✖</button></div>
-<div class="m-sub">GAGNE CHAQUE SECONDE • COTONOU</div>
-<div class="menu-user"><div class="avatar" id="menu-avatar">⛏️</div><div><b id="menu-user-name">Invité</b><small id="menu-user-phone">— • <span id="menu-user-solde">0 F</span></small></div></div>
-</div>
-<div class="menu-quick">
-<button style="background:#FFC107;color:#000" onclick="closeMenuPro();openRecharger()">⬆️ RECHARGER</button>
-<button style="background:#fff;color:#000" onclick="closeMenuPro();openRetirer()">⬇️ RETIRER</button>
-</div>
-<div class="menu-section">MINAGE</div>
-<div class="menu-item" onclick="closeMenuPro();switchTab('apercu',document.querySelector('[data-tab=&quot;apercu&quot;]'));setNavActive('nav-monplan')"><div class="mi-icon">📊</div><div><b>Aperçu</b><small>Ton LIVE total, en temps réel</small></div><span class="chev">›</span></div>
-<div class="menu-item" onclick="closeMenuPro();switchTab('mesplans',document.querySelector('[data-tab=&quot;mesplans&quot;]'));setNavActive('nav-monplan')"><div class="mi-icon">⛏️</div><div><b>Mon Plan</b><small id="menu-monplan-sub">Aucun plan actif</small></div><span class="chev">›</span></div>
-<div class="menu-item" onclick="closeMenuPro();switchTab('plans',document.querySelector('[data-tab=&quot;plans&quot;]'));setNavActive('nav-plans')"><div class="mi-icon">🛒</div><div><b>Acheter un plan</b><small>8 plans • Cumule-les</small></div><span class="chev">›</span></div>
-<div class="menu-item" onclick="closeMenuPro();switchTab('historique',document.querySelector('[data-tab=&quot;historique&quot;]'));setNavActive('nav-monplan')"><div class="mi-icon">📜</div><div><b>Historique</b><small>Achats, gains, renouvellements</small></div><span class="chev">›</span></div>
-<div class="menu-section">COMPTE</div>
-<div class="menu-item" onclick="closeMenuPro();switchTab('profil',document.querySelector('[data-tab=&quot;profil&quot;]'));setNavActive('nav-profil')"><div class="mi-icon">👤</div><div><b>Profil</b><small>Ton nom, ton solde, tes totaux</small></div><span class="chev">›</span></div>
-<div class="menu-section">AIDE</div>
-<div class="menu-item" onclick="showIntroProFromMenu()"><div class="mi-icon">🚀</div><div><b>Intro Pro</b><small>C'est quoi MINAGE PRO ? En 2 min</small></div><span class="chev">›</span></div>
-<div class="menu-item" onclick="showGuideFromMenu()"><div class="mi-icon">📖</div><div><b>Guide</b><small>Recharger → Plan → Gagner → Retirer</small></div><span class="chev">›</span></div>
-<div id="menu-pro-content" style="display:none;padding:0 12px 12px"></div>
-<div class="menu-foot">MINAGE PRO v1 • Pas de Score Live • Pas de Messagerie ici</div>
-</div>
-</div>
-
-<div id="recharger-overlay" class="overlay"><div class="box" style="text-align:left">
-<h2 style="margin:0">⬆️ RECHARGER — MINAGE PRO</h2><p class="sub">Alimente ton solde pour acheter un plan.</p>
-<div class="field"><label>Montant (F)</label><input id="montant-recharge" class="inp" type="number" placeholder="Ex: 10000"></div>
-<div class="field"><label>Réseau</label><select id="reseau-recharge" class="inp"><option value="MTN">MTN MoMo</option><option value="MOOV">MOOV Money</option><option value="CELTIS">CELTIS</option></select></div>
-<div class="field"><label>Numéro qui paie</label><input id="numero-recharge" class="inp" placeholder="Ex: 0158612131"></div>
-<button class="btn" style="background:#FFC107;color:#000" onclick="doRechargerMinage()">✅ Confirmer la recharge</button>
-<button class="btn" style="background:#222;color:#fff;margin-top:8px" onclick="closeRechargerRetirer()">Annuler</button>
-</div></div>
-<div id="retirer-overlay" class="overlay"><div class="box" style="text-align:left">
-<h2 style="margin:0">⬇️ RETIRER — MINAGE PRO</h2><p class="sub">Solde disponible : <b id="solde-retrait-txt" style="color:#2CE88A">0 F</b> • Le retrait part de ton Bonus.</p>
-<div class="field"><label>Montant (F)</label><input id="montant-retrait" class="inp" type="number" placeholder="Ex: 5000"></div>
-<div class="field"><label>Réseau</label><select id="reseau-retrait" class="inp"><option value="MTN">MTN MoMo</option><option value="MOOV">MOOV Money</option><option value="CELTIS">CELTIS</option></select></div>
-<div class="field"><label>Numéro qui reçoit</label><input id="numero-retrait" class="inp" placeholder="Ex: 0158612131"></div>
-<button class="btn" style="background:#FF5A00" onclick="doRetirerMinage()">✅ Demander le retrait</button>
-<button class="btn" style="background:#222;color:#fff;margin-top:8px" onclick="closeRechargerRetirer()">Annuler</button>
+<div id="mine-zone" style="display:none"><div style="display:flex;justify-content:space-between;margin:14px 0"><div><b id="user-name">—</b><br><small id="user-phone" style="color:#888"></small></div><button onclick="executerDeconnexion()" style="background:none;border:1px solid #333;color:#888;padding:8px 12px;border-radius:999px;font-size:11px">Déconnexion</button></div>
+<div id="tab-apercu"><div id="intro-pro"><div class="intro"><h1>Mine.<br>Gagne chaque seconde.</h1><p>Paie Kkiapay, envoie preuve, mine en LIVE.</p></div><div class="steps"><div><span>💳</span><b>1. Paie</b></div><div><span>📷</span><b>2. Preuve</b></div><div><span>⛏️</span><b>3. Mine</b></div></div></div><div class="hero" id="hero-total" style="display:none"><div style="display:flex;justify-content:space-between"><span class="pill" id="total-plans-label">0 PLAN</span><span class="pill green">● LIVE</span></div><div class="live"><span id="live-total">0.0000000</span> <small>F</small></div><div class="live-sec">+ <span id="live-total-per-sec">0</span> F/sec • <span id="live-total-per-day">0</span> F/jour</div><div class="bar"><i id="mine-bar-total" style="width:0%"></i></div><div class="bar-row"><span id="mine-pct-total">0%</span><span id="mine-timer-total">—</span></div><div class="stats"><div class="stat"><span>Bonus</span><b id="user-commission" style="color:#FFD700">0 F</b></div><div class="stat"><span>Total reçu</span><b id="mine-total" style="color:#2CE88A">0 F</b></div><div class="stat"><span>Plans</span><b id="user-plans-count">0</b></div></div><button class="btn-green" onclick="reclamerToutLive()">Réclamer tout — <span id="live-total-claim">0</span> F</button><button class="btn-gold" onclick="openRetirer()">⬇️ DEMANDER UN RETRAIT</button></div><div id="mes-plans-apercu"></div></div>
+<div id="tab-mesplans" style="display:none"><h2>Mes plans</h2><p class="sub" id="mesplans-count"></p><div style="display:flex;gap:6px;margin-bottom:12px"><button class="btn-mini green" style="flex:1" onclick="setPlanFilter('actif')">Actifs</button><button class="btn-mini gold" style="flex:1" onclick="setPlanFilter('expire')">Expirés</button><button class="btn-mini grey" style="flex:1" onclick="setPlanFilter('tous')">Tous</button></div><div id="mes-plans-list"></div><div id="expired-banner" class="expired" style="display:none"><b>⏰ Expiré</b><br><span id="expired-text"></span><br><button class="btn-gold" onclick="renouvelerDernier()">🔁 Renouveler</button></div></div>
+<div id="tab-plans" style="display:none"><h2>Acheter un plan</h2><p class="sub">Kkiapay + preuve</p><div id="plans-list"></div></div>
+<div id="tab-historique" style="display:none"><h2>Historique</h2><div id="mine-history"></div></div>
+<div id="tab-profil" style="display:none"><h2>👤 Profil</h2><div class="plan"><div style="display:flex;justify-content:space-between"><span>Nom</span><b id="profil-nom"></b></div><div style="display:flex;justify-content:space-between;margin-top:8px"><span>Téléphone</span><b id="profil-phone"></b></div><div style="display:flex;justify-content:space-between;margin-top:8px"><span>Bonus</span><b id="profil-bonus" style="color:#FFD700"></b></div><div style="display:flex;justify-content:space-between;margin-top:8px"><span>Total reçu</span><b id="profil-total"></b></div></div><button class="btn-gold" onclick="openRetirer()">⬇️ DEMANDER UN RETRAIT</button><button class="btn" style="background:#222;margin-top:10px" onclick="executerDeconnexion()">Déconnexion</button></div>
 </div></div>
 
+<div class="nav"><button onclick="openMenuPro()"><span>☰</span>Menu</button><button onclick="switchTab('plans',document.querySelector('[data-tab=&quot;plans&quot;]'))"><span>🛒</span>Plans</button><button class="active" onclick="switchTab('mesplans',document.querySelector('[data-tab=&quot;mesplans&quot;]'))"><span>⛏️</span>Mon Plan</button><button onclick="switchTab('profil',document.querySelector('[data-tab=&quot;profil&quot;]'))"><span>👤</span>Profil</button></div>
+<div id="menu-pro-overlay" class="menu-overlay" onclick="if(event.target==this)closeMenuPro()"><div class="menu-drawer"><div class="menu-head"><div style="display:flex;justify-content:space-between"><div style="font-weight:900;font-size:20px">MINAGE PRO</div><button onclick="closeMenuPro()">✖</button></div><div style="display:flex;gap:10px;margin-top:10px"><div style="width:40px;height:40px;background:#000;color:#FFD700;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:900">⛏</div><div><b id="menu-user-name">Invité</b><br><small id="menu-user-phone"></small></div></div></div><div class="menu-item" onclick="closeMenuPro();switchTab('apercu',document.querySelector('[data-tab=&quot;apercu&quot;]'))"><div class="mi-icon">📊</div><div><b>Aperçu</b></div></div><div class="menu-item" onclick="closeMenuPro();switchTab('mesplans',document.querySelector('[data-tab=&quot;mesplans&quot;]'))"><div class="mi-icon">⛏️</div><div><b>Mon Plan</b></div></div><div class="menu-item" onclick="closeMenuPro();switchTab('plans',document.querySelector('[data-tab=&quot;plans&quot;]'))"><div class="mi-icon">🛒</div><div><b>Acheter</b></div></div><div class="menu-item" onclick="closeMenuPro();openRetirer()"><div class="mi-icon">⬇️</div><div><b>Retrait</b></div></div></div></div>
+
+<div id="preuve-overlay" class="overlay"><div class="box"><h2>💳 <span id="preuve-plan-nom"></span> — <span id="preuve-plan-prix"></span></h2><p class="sub">Paie Kkiapay puis envoie preuve</p><div class="field"><label>Numéro payeur</label><input id="preuve-numero" class="inp"></div><div class="field"><label>Capture OU ID</label><input type="file" id="preuve-file" class="inp" accept="image/*" onchange="previewPreuve(this)"><img id="preuve-preview" class="capture-preview"><input type="text" id="preuve-id" class="inp" placeholder="ID transaction" style="margin-top:8px"></div><p id="preuve-status" style="color:#2CE88A;text-align:center;font-weight:900"></p><button class="btn" style="background:#00C853" onclick="envoyerPreuve()">✅ Envoyer preuve</button><button class="btn" style="background:#222;margin-top:8px" onclick="closePreuve()">Plus tard</button></div></div>
+<div id="retirer-overlay" class="overlay"><div class="box"><h2>⬇️ RETRAIT</h2><p class="sub">Bonus dispo : <b id="solde-retrait-txt" style="color:#2CE88A"></b> • Min 1000 F</p><div class="field"><label>Montant</label><input id="montant-retrait" type="number" class="inp" placeholder="5000"></div><div class="field"><label>Réseau</label><select id="reseau-retrait" class="inp"><option>MTN</option><option>MOOV</option><option>CELTIS</option></select></div><div class="field"><label>Numéro reçoit</label><input id="numero-retrait" class="inp"></div><p id="retrait-status" style="color:#2CE88A;text-align:center;font-weight:900"></p><button class="btn" onclick="doRetirerMinage()">✅ Envoyer demande</button><button class="btn" style="background:#222;margin-top:8px" onclick="closeRetirer()">Annuler</button></div></div>
 <div id="custom-alert" class="overlay"><div class="box"><p id="custom-alert-msg"></p><button class="yes" style="width:100%" onclick="hideAlert()">OK</button></div></div>
-<div id="custom-confirm" class="overlay"><div class="box"><p id="custom-confirm-msg"></p><div style="display:flex;gap:8px"><button class="no" onclick="doConfirm(false)">Annuler</button><button class="yes" onclick="doConfirm(true)">Oui, acheter</button></div></div></div>
+<div id="custom-confirm" class="overlay"><div class="box"><p id="custom-confirm-msg"></p><div style="display:flex;gap:8px"><button class="no" onclick="doConfirm(false)">Annuler</button><button class="yes" onclick="doConfirm(true)">Payer Kkiapay</button></div></div></div>
 
 <script>
-const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';
-const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,d=null)=>{try{const v=localStorage.getItem('mayne_'+k);return v?JSON.parse(v):d;}catch{return d;}}};
+const OTP_URL='https://script.google.com/macros/s/AKfycbzfUdZWQ4zp8hmo9Pwq3w-V4iwY729lIL47iXEiUBl0MuWOiXUjeJteqNNmgiP_t2Uh6w/exec';const WEBHOOK_URL='https://script.google.com/macros/s/AKfycbwasVyjf7iuYpMoonjNy-byi-_DKBeg9VRUfrWsnXQSPJNDElCVgV67ZFiZjY-eckpH/exec';const ONESIGNAL_WEBHOOK='https://script.google.com/macros/s/AKfycbzoM5bqwSZm83RtFHaJK58ByQCqByYc2hCk58GA-97h0FTsC4cqca12cj38w0tf7jxv/exec';const ADMIN_ID=atob('MDE1ODYxMjEzMQ==');
+const TinyDB={put:(k,v)=>localStorage.setItem('mayne_'+k,JSON.stringify(v)),get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem('mayne_'+k))||d}catch{return d}}};
 const PLANS=[
-  {id:'debutant', nom:'Débutant', prix:5000, gainTotal:750},
-  {id:'amateur', nom:'Amateur', prix:10000, gainTotal:1200},
-  {id:'normal', nom:'Normal', prix:20000, gainTotal:3000, pop:true},
-  {id:'haut', nom:'Haut Niveau', prix:50000, gainTotal:6000},
-  {id:'pro', nom:'Professionnel', prix:100000, gainTotal:15000},
-  {id:'superstar', nom:'Superstar', prix:200000, gainTotal:21000},
-  {id:'legende', nom:'Légende', prix:300000, gainTotal:45000},
-  {id:'hell', nom:'Hell', prix:500000, gainTotal:75000},
+{id:'p5000',nom:'Starter',prix:5000,gainTotal:750,kkiapay:'https://direct.kkiapay.me/44188/paiement-5000f-75NsIoPXD'},
+{id:'p10000',nom:'Bronze',prix:10000,gainTotal:1200,kkiapay:'https://direct.kkiapay.me/44188/paiement-10000f-wlqG4XKkt'},
+{id:'p15000',nom:'Argent',prix:15000,gainTotal:1800,kkiapay:'https://direct.kkiapay.me/44188/paiement-15000f-oTnUqZWWg'},
+{id:'p20000',nom:'Normal',prix:20000,gainTotal:3000,pop:true,kkiapay:'https://direct.kkiapay.me/44188/paiement-20000f-6GfxIkKpF'},
+{id:'p35000',nom:'Élite',prix:35000,gainTotal:4200,kkiapay:'https://direct.kkiapay.me/44188/paiement-35000f-GVJnhDERU'},
+{id:'p50000',nom:'Haut Niveau',prix:50000,gainTotal:6000,kkiapay:'https://direct.kkiapay.me/44188/paiement-50000f-C0L8sy7R7'},
+{id:'p70000',nom:'Pro',prix:70000,gainTotal:9000,kkiapay:'https://direct.kkiapay.me/44188/paiement-70000f-oF_ap9lQS'},
+{id:'p100000',nom:'Professionnel',prix:100000,gainTotal:15000,kkiapay:'https://direct.kkiapay.me/44188/paiement-100000f-h0GyVC4Ew'},
+{id:'p150000',nom:'Superstar',prix:150000,gainTotal:18000,kkiapay:'https://direct.kkiapay.me/44188/paiement-150000f-YTXV5kOsG'},
+{id:'p200000',nom:'Légende',prix:200000,gainTotal:21000,kkiapay:'https://direct.kkiapay.me/44188/paiement-200000f-SQ1KONR_U'},
+{id:'p300000',nom:'Hell',prix:300000,gainTotal:45000,kkiapay:'https://direct.kkiapay.me/44188/paiement-300000-Z6l_pn1LZ'}
 ];
-PLANS.forEach(p=>{ p.gainJour=(p.prix+p.gainTotal)/30; p.totalRetour=p.prix+p.gainTotal; p.perSec=p.gainJour/86400; });
-function fmt(n){ return n.toLocaleString('fr-FR',{minimumFractionDigits:n%1===0?0:2,maximumFractionDigits:2}); }
-function fmtLive(n){ return n.toFixed(7); }
-let tempPhone='',tempEmail='',currentUserId=null,currentUserData=null,confirmCallback=null,liveTimer=null,lastExpiredPlan=null,myPlans=[],allMyPlans=[],currentTotalLive=0,planFilter='actif';
-function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex';}
-function hideAlert(){document.getElementById('custom-alert').style.display='none';}
-function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex';}
-function doConfirm(y){document.getElementById('custom-confirm').style.display='none'; if(confirmCallback) confirmCallback(y);}
-function showAuth(w){
-  document.getElementById('login-interface').style.display=w==='login'?'block':'none';
-  document.getElementById('register-interface').style.display=w==='register'?'block':'none';
-  document.getElementById('verify-interface').style.display='none';
-  document.getElementById('tab-login-btn').classList.toggle('active',w==='login');
-  document.getElementById('tab-reg-btn').classList.toggle('active',w==='register');
-}
-function showZone(logged){
-  document.getElementById('auth-zone').style.display=logged?'none':'block';
-  document.getElementById('mine-zone').style.display=logged?'block':'none';
-  if(!logged) showAuth('login');
-}
-function setNavActive(id){ document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function setPlanFilter(f){ planFilter=f; document.getElementById('filter-actif').style.opacity=f==='actif'?'1':'.5'; document.getElementById('filter-expire').style.opacity=f==='expire'?'1':'.5'; document.getElementById('filter-tous').style.opacity=f==='tous'?'1':'.5'; renderMyPlans(); }
-function switchTab(tab,btn){
-  ['apercu','mesplans','plans','historique','profil'].forEach(t=>{ const el=document.getElementById('tab-'+t); if(el) el.style.display = t===tab?'block':'none'; });
-  document.querySelectorAll('#menu-pro button').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  if(tab==='mesplans') renderMyPlans();
-  if(tab==='plans') renderPlans();
-  if(tab==='historique') chargerHistorique(currentUserId);
-  if(tab==='profil') renderProfil();
-}
-function openMenuPro(){
-  document.getElementById('menu-user-name').innerText=currentUserData?.nom||currentUserId||'Invité';
-  document.getElementById('menu-user-phone').innerHTML=(currentUserId||'—')+' • <span>'+fmt(currentUserData?.solde||0)+' F</span>';
-  document.getElementById('menu-avatar').innerText=(currentUserData?.nom||'⛏').charAt(0).toUpperCase();
-  const actifs=allMyPlans.filter(p=>isPlanActif(p)).length;
-  document.getElementById('menu-monplan-sub').innerText=actifs>0?actifs+' plan(s) actif(s) • '+fmt(allMyPlans.filter(p=>isPlanActif(p)).reduce((s,p)=>s+(p.gainJour||0),0))+' F / jour':'Aucun plan actif';
-  document.getElementById('menu-pro-overlay').style.display='block';
-  document.getElementById('menu-pro-content').style.display='none';
-  setNavActive('nav-menu');
-}
-function closeMenuPro(){ document.getElementById('menu-pro-overlay').style.display='none'; }
-function showIntroProFromMenu(){
-  const c=document.getElementById('menu-pro-content'); c.style.display='block';
-  c.innerHTML=`<div class="intro"><h1>Mine.<br>Gagne chaque seconde.</h1><p><b>MINAGE PRO</b>, c'est simple : tu recharges, tu choisis un plan, tu gagnes chaque jour en LIVE, tu retires.</p><div class="intro-stats"><div><b>8</b><span>PLANS</span></div><div><b>30 j</b><span>DURÉE</span></div><div><b>LIVE</b><span>EN TEMPS RÉEL</span></div></div></div><p style="font-size:13px;line-height:1.6">Exemple : Plan Normal à 20 000 F → <b>${fmt((20000+3000)/30)} F / jour</b> pendant 30 jours = <b>23 000 F</b> au total.<br>Tu peux cumuler plusieurs plans en même temps.</p><button class="btn" onclick="closeMenuPro();switchTab('plans',document.querySelector('[data-tab=&quot;plans&quot;]'));setNavActive('nav-plans')">🛒 Voir les plans</button>`;
-}
-function showGuideFromMenu(){
-  const c=document.getElementById('menu-pro-content'); c.style.display='block';
-  c.innerHTML=`<h2 style="margin:0">📖 GUIDE — MINAGE PRO pas à pas</h2><p style="font-size:13px;line-height:1.7"><b>1. Recharger :</b> Bouton RECHARGER → montant → réseau → confirmer.<br><b>2. Choisir un plan :</b> Onglet Plans → Choisir → Activer.<br><b>3. Miner :</b> Tes gains montent en LIVE chaque seconde. Suis-les dans Mon Plan.<br><b>4. Réclamer :</b> Bouton Réclamer → tes gains vont dans ton Bonus.<br><b>5. Retirer :</b> Bouton RETIRER → montant → numéro → confirmer.<br><br><b>Astuces :</b> Vérifie ton numéro avant chaque retrait. Garde une capture de chaque paiement.</p><button class="btn" onclick="closeMenuPro();openRecharger()">⬆️ Recharger maintenant</button>`;
-}
-function openRecharger(){ if(!currentUserId) return showAlert('Connecte-toi d\'abord'); document.getElementById('numero-recharge').value=currentUserId; document.getElementById('recharger-overlay').style.display='flex'; }
-function openRetirer(){ if(!currentUserId) return showAlert('Connecte-toi d\'abord'); document.getElementById('solde-retrait-txt').innerText=fmt(currentUserData?.commission||0)+' F'; document.getElementById('numero-retrait').value=currentUserId; document.getElementById('retirer-overlay').style.display='flex'; }
-function closeRechargerRetirer(){ document.getElementById('recharger-overlay').style.display='none'; document.getElementById('retirer-overlay').style.display='none'; }
-async function doRechargerMinage(){
-  const m=parseInt(document.getElementById('montant-recharge').value||'0'); const res=document.getElementById('reseau-recharge').value; const num=document.getElementById('numero-recharge').value.trim();
-  if(!m||m<1000) return showAlert('Montant minimum 1 000 F'); if(!num) return showAlert('Entre ton numéro');
-  await database.ref('demandes_recharge_minage').push({phone:currentUserId,montant:m,reseau:res,numero:num,date:new Date().toLocaleString('fr-FR'),statut:'en cours',service:'MINAGE PRO'});
-  closeRechargerRetirer(); showAlert('✅ Demande de recharge envoyée — '+m.toLocaleString('fr-FR')+' F');
-}
-async function doRetirerMinage(){
-  const m=parseInt(document.getElementById('montant-retrait').value||'0'); const res=document.getElementById('reseau-retrait').value; const num=document.getElementById('numero-retrait').value.trim();
-  const bonus=currentUserData?.commission||0;
-  if(!m||m<1000) return showAlert('Montant minimum 1 000 F'); if(m>bonus) return showAlert('Bonus insuffisant — Réclame d\'abord tes gains LIVE'); if(!num) return showAlert('Entre le numéro qui reçoit');
-  await database.ref('demandes_retrait_minage').push({phone:currentUserId,montant:m,reseau:res,numero:num,date:new Date().toLocaleString('fr-FR'),statut:'en cours',service:'MINAGE PRO'});
-  closeRechargerRetirer(); showAlert('✅ Demande de retrait envoyée — '+m.toLocaleString('fr-FR')+' F');
-}
-function renderProfil(){
-  if(!currentUserData) return;
-  document.getElementById('profil-nom').innerText=currentUserData.nom||'—';
-  document.getElementById('profil-phone').innerText=currentUserId||'—';
-  document.getElementById('profil-solde').innerText=fmt(currentUserData.solde||0)+' F';
-  document.getElementById('profil-bonus').innerText=fmt(currentUserData.commission||0)+' F';
-  document.getElementById('profil-total').innerText=fmt(currentUserData.mine_total||0)+' F';
-  document.getElementById('profil-plans').innerText=allMyPlans.filter(p=>isPlanActif(p)).length;
-}
-function executerConnexion(){
-  const i=document.getElementById('login-id').value.trim(),p=document.getElementById('login-pin').value.trim();
-  if(!i||!p) return showAlert('Remplis numéro + mot de passe');
-  const h=CryptoJS.MD5(p).toString();
-  database.ref('clients/'+i).once('value').then(s=>{
-    if(!s.exists()) return showAlert('Numéro ou mot de passe incorrect');
-    const dbPin=String(s.val().pin); if(dbPin!==h&&dbPin!==p) return showAlert('Numéro ou mot de passe incorrect');
-    const d=s.val();
-    if(d.email_verified===false){
-      tempPhone=i; tempEmail=d.email; document.getElementById('verify-email-affiche').innerText=d.email;
-      document.getElementById('login-interface').style.display='none'; document.getElementById('register-interface').style.display='none'; document.getElementById('verify-interface').style.display='block';
-      envoyerCodeEmail(d.email); return showAlert('Vérifie ton email — tu restes sur Minage');
-    }
-    currentUserId=i; TinyDB.put('current_user',{phone:i}); localStorage.setItem('mayne_current_user',JSON.stringify({phone:i}));
-    if(dbPin===p) database.ref('clients/'+i).update({pin:h});
-    showZone(true); chargerMinage(i);
-  });
-}
-function executerInscription(){
-  const n=document.getElementById('reg-name').value.trim(),i=document.getElementById('reg-id').value.trim(),e=document.getElementById('reg-email').value.trim().toLowerCase(),p=document.getElementById('reg-pin').value.trim();
-  if(!n||!i||!e||!p) return showAlert('Remplis tout');
-  const phone=i.replace(/\D/g,''),emailKey=e.replace(/\./g,','),h=CryptoJS.MD5(p).toString();
-  let parrain=new URLSearchParams(location.search).get('ref'); parrain=parrain?parrain.replace(/\D/g,''):''; if(parrain===phone) parrain='';
-  const rp=document.getElementById('reg-parrain').value.trim().replace(/\D/g,''); if(rp) parrain=rp;
-  database.ref('clients/'+phone).once('value').then(s=>{
-    if(s.exists()) return showAlert('Numéro déjà utilisé');
-    database.ref('emails_index/'+emailKey).once('value').then(se=>{
-      if(se.exists()) return showAlert('Email déjà utilisé');
-      database.ref('clients/'+phone).set({nom:n,email:e,pin:h,solde:0,commission:0,recompense:0,email_verified:false,parrain:parrain||'',date_inscription:new Date().toLocaleString('fr-FR'),mine_total:0}).then(()=>{
-        database.ref('emails_index/'+emailKey).set(phone).then(()=>{
-          if(parrain){ database.ref('clients/'+parrain).once('value').then(sp=>{ if(sp.exists()){ let pg=sp.val(); database.ref('clients/'+parrain).update({gain_parrainage:(pg.gain_parrainage||0)+100,commission:(pg.commission||0)+100}); } }); }
-          tempPhone=phone; tempEmail=e; document.getElementById('verify-email-affiche').innerText=e;
-          document.getElementById('login-interface').style.display='none'; document.getElementById('register-interface').style.display='none'; document.getElementById('verify-interface').style.display='block';
-          envoyerCodeEmail(e); showAlert('Compte créé ! Vérifie ton email — tu restes sur Minage');
-        });
-      });
-    });
-  });
-}
-function envoyerCodeEmail(email,isResend=false){ const mail=email||tempEmail; fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(mail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{ if(t.includes('sent')) showAlert(isResend?'Code renvoyé !':'Code envoyé à '+mail); }); }
-function verifierCodeEmail(){
-  const code=document.getElementById('verify-code').value.trim(); if(!code) return;
-  fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+code,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(r=>r.text()).then(t=>{
-    if(t.includes('ok')){
-      database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{
-        showAlert('✅ Email vérifié ! Connecte-toi.');
-        document.getElementById('verify-interface').style.display='none'; document.getElementById('login-id').value=tempPhone; showAuth('login');
-      });
-    } else showAlert('Code incorrect');
-  });
-}
-function executerDeconnexion(){ TinyDB.put('current_user',null); localStorage.removeItem('mayne_current_user'); currentUserId=null; clearInterval(liveTimer); showZone(false); }
-// ✅ FIX MON PLAN : on garde TOUS les plans, on calcule actif par date, pas par flag seul
-function isPlanActif(p){ if(!p) return false; if(p.end && Date.now()>p.end) return false; if(p.actif===false && p.end && Date.now()>p.end) return false; if(p.actif===false && !p.end) return false; return true; }
-function getMyPlans(data){
-  let arr=[];
-  if(data.minage_plans){ Object.entries(data.minage_plans).forEach(([key,pl])=>{ arr.push({...pl,key}); }); }
-  if(data.minage_plan && data.minage_plan.actif!==false){ arr.push({...data.minage_plan, key:'legacy'}); }
-  return arr;
-}
-function getActivePlans(){ return allMyPlans.filter(p=>isPlanActif(p)); }
-function renderPlans(){
-  const solde=currentUserData?(currentUserData.solde||0):0;
-  document.getElementById('plans-list').innerHTML=PLANS.map(p=>{
-    const peut=solde>=p.prix;
-    const dejaActif=getActivePlans().some(x=>x.planId===p.id);
-    return `<div class="plan">
-      <div class="plan-top"><b>${p.nom} ${p.pop?'<span style="font-size:9px;background:#FF5A00;color:#fff;padding:3px 7px;border-radius:999px;margin-left:6px">POPULAIRE</span>':''} ${dejaActif?'<span style="font-size:9px;background:#00C853;color:#fff;padding:3px 7px;border-radius:999px">ACTIF</span>':''}</b><span>${p.prix.toLocaleString('fr-FR')} F</span></div>
-      <div class="plan-mid"><div class="big">${fmt(p.gainJour)} <small>F / jour</small></div><div class="right"><b>+ ${fmtLive(p.perSec)} F / sec</b>Total ${p.totalRetour.toLocaleString('fr-FR')} F</div></div>
-      <div class="formula">(${p.prix.toLocaleString('fr-FR')} + ${p.gainTotal.toLocaleString('fr-FR')}) ÷ 30</div>
-      <button class="btn" style="margin-top:12px;padding:12px;font-size:13px;${peut?'':'opacity:.4'}" ${peut?'':'disabled'} onclick="acheterPlan('${p.id}')">${peut?'Acheter ce plan — Cumule avec les autres':'Solde insuffisant'}</button>
-    </div>`;
-  }).join('');
-}
-function acheterPlan(planId,isRenew=false,renewKey=null){
-  const plan=PLANS.find(p=>p.id===planId); if(!plan||!currentUserId) return;
-  const solde=currentUserData?(currentUserData.solde||0):0;
-  if(solde<plan.prix) return showAlert('Solde insuffisant. Recharge d’abord.');
-  showConfirm(`${isRenew?'Renouveler':'Acheter'} ${plan.nom} — ${plan.prix.toLocaleString('fr-FR')} F ?\n${fmt(plan.gainJour)} F / jour • ${fmtLive(plan.perSec)} F / sec • Total ${plan.totalRetour.toLocaleString('fr-FR')} F\n\nTu peux cumuler plusieurs plans.`,ok=>{
-    if(!ok) return;
-    const start=Date.now(), end=start+30*24*60*60*1000;
-    const newPlan={planId:plan.id,nom:plan.nom,prix:plan.prix,gainTotal:plan.gainTotal,gainJour:plan.gainJour,totalRetour:plan.totalRetour,dureeJours:30,start:start,end:end,lastClaim:start,lastClaimLive:start,totalGagne:0,actif:true,date_achat:new Date().toLocaleString('fr-FR')};
-    const updates={};
-    updates['solde']=solde-plan.prix;
-    if(renewKey) updates['minage_plans/'+renewKey]=newPlan;
-    else { const key='plan_'+Date.now(); updates['minage_plans/'+key]=newPlan; }
-    updates['minage_plan']=null;
-    database.ref('clients/'+currentUserId).update(updates).then(()=>{
-      database.ref('minage_history/'+currentUserId).push({type:isRenew?'renouvellement':'achat',plan:plan.nom,prix:plan.prix,date:new Date().toLocaleString('fr-FR'),gain:0});
-      showAlert(`✅ ${plan.nom} ${isRenew?'renouvelé':'acheté'} ! Il mine déjà en LIVE. Tu peux en acheter un autre.`);
-      switchTab('mesplans',document.querySelector('[data-tab="mesplans"]'));
-    });
-  });
-}
-function renouvelerDernier(){ if(!lastExpiredPlan) return showAlert('Choisis un plan ci-dessous.'); acheterPlan(lastExpiredPlan.id,true,lastExpiredPlan.key); }
-function renouvelerPlanByKey(key,planId){ acheterPlan(planId,true,key); }
-function chargerMinage(phone){
-  database.ref('clients/'+phone).on('value',snap=>{
-    const data=snap.val()||{}; currentUserData=data;
-    document.getElementById('user-name').innerText=data.nom||phone;
-    document.getElementById('user-phone').innerText=phone;
-    document.getElementById('solde-top-bar').innerText=fmt(data.solde||0)+' F';
-    allMyPlans=getMyPlans(data);
-    myPlans=getActivePlans();
-    // Expirés : juste pour la bannière, on ne supprime plus rien
-    let expired=allMyPlans.find(p=>!isPlanActif(p));
-    if(expired){
-      lastExpiredPlan=expired;
-      document.getElementById('expired-banner').style.display='block';
-      document.getElementById('expired-text').innerText=`${expired.nom} expiré le ${expired.end?new Date(expired.end).toLocaleDateString('fr-FR'):'—'}. Renouvelle-le.`;
-    } else document.getElementById('expired-banner').style.display='none';
-    const hasPlans=myPlans.length>0;
-    document.getElementById('intro-pro').style.display=hasPlans?'none':'block';
-    document.getElementById('hero-total').style.display=hasPlans?'block':'none';
-    document.getElementById('total-plans-label').innerText=myPlans.length+' PLAN'+(myPlans.length>1?'S':'')+' ACTIF'+(myPlans.length>1?'S':'');
-    document.getElementById('count-plans').innerText=myPlans.length?`(${myPlans.length})`:'';
-    document.getElementById('mesplans-count').innerText=allMyPlans.length+' plan(s) • '+myPlans.length+' actif(s)';
-    if(hasPlans){
-      document.getElementById('user-balance').innerText=fmt(data.solde||0)+' F';
-      document.getElementById('user-commission').innerText=fmt(data.commission||0)+' F';
-      const totalRecu=allMyPlans.reduce((s,p)=>s+(p.totalGagne||0),0);
-      document.getElementById('mine-total').innerText=fmt(totalRecu)+' F';
-      startLiveTicker();
-      renderMyPlans();
-    } else { clearInterval(liveTimer); renderMyPlans(); }
-    renderPlans();
-    renderProfil();
-    chargerHistorique(phone);
-  });
-}
-function startLiveTicker(){
-  clearInterval(liveTimer);
-  function tick(){
-    const now=Date.now();
-    let totalLive=0, totalPerSec=0, totalPerDay=0, totalPct=0;
-    myPlans.forEach(p=>{
-      const gainJour=p.gainJour||(p.prix+(p.gainTotal||0))/30;
-      const perSec=gainJour/86400;
-      const base=p.lastClaimLive||p.lastClaim||p.start;
-      let interest=((now-base)/1000)*perSec;
-      const max=(p.totalRetour||0)-(p.totalGagne||0);
-      if(interest>max) interest=max;
-      p._live=interest;
-      totalLive+=interest; totalPerSec+=perSec; totalPerDay+=gainJour;
-      totalPct+=Math.min(100,((now-p.start)/(p.end-p.start))*100);
-    });
-    currentTotalLive=totalLive;
-    const avgPct=myPlans.length?totalPct/myPlans.length:0;
-    const elTotal=document.getElementById('live-total'); if(elTotal) elTotal.innerText=fmtLive(totalLive);
-    document.getElementById('live-total-per-sec').innerText=fmtLive(totalPerSec);
-    document.getElementById('live-total-per-day').innerText=fmt(totalPerDay);
-    document.getElementById('live-total-claim').innerText=fmtLive(totalLive);
-    document.getElementById('mine-bar-total').style.width=avgPct+'%';
-    document.getElementById('mine-pct-total').innerText=avgPct.toFixed(1)+'%';
-    if(myPlans.length){
-      const minEnd=Math.min(...myPlans.map(p=>p.end));
-      const joursRestants=Math.max(0,Math.ceil((minEnd-now)/(24*60*60*1000)));
-      document.getElementById('mine-timer-total').innerText=`Prochain expire dans ${joursRestants} j`;
-    }
-    myPlans.forEach(p=>{
-      const el=document.getElementById('live-plan-'+p.key);
-      if(el) el.innerText=fmtLive(p._live||0);
-      const bar=document.getElementById('bar-plan-'+p.key);
-      if(bar) bar.style.width=Math.min(100,((now-p.start)/(p.end-p.start))*100)+'%';
-    });
-  }
-  tick(); liveTimer=setInterval(tick,100);
-}
-function renderMyPlans(){
-  const box=document.getElementById('mes-plans-list');
-  const box2=document.getElementById('mes-plans-apercu');
-  let list=allMyPlans;
-  if(planFilter==='actif') list=allMyPlans.filter(p=>isPlanActif(p));
-  if(planFilter==='expire') list=allMyPlans.filter(p=>!isPlanActif(p));
-  if(allMyPlans.length===0){
-    box.innerHTML=`<div class="empty">Aucun plan.<br>Va dans <b>Acheter</b> pour lancer ton premier plan.<br>Tu peux en cumuler plusieurs.</div>`;
-    box2.innerHTML='';
-    return;
-  }
-  if(list.length===0){
-    box.innerHTML=`<div class="empty">Aucun plan ${planFilter==='actif'?'actif':'expiré'} pour ce filtre.<br><button class="btn-mini green" onclick="setPlanFilter('tous')">Voir tous</button></div>`;
-    box2.innerHTML='';
-    return;
-  }
-  const html=list.map(p=>{
-    const actif=isPlanActif(p);
-    const gainJour=p.gainJour||(p.prix+(p.gainTotal||0))/30;
-    const joursRestants=p.end?Math.max(0,Math.ceil((p.end-Date.now())/(24*60*60*1000))):0;
-    const pct=p.end&&p.start?Math.min(100,((Date.now()-p.start)/(p.end-p.start))*100):0;
-    return `<div class="my-plan ${actif?'':'expired'}">
-      <div class="my-plan-top"><b>⛏️ ${p.nom}</b><span class="pill ${actif?'green':'red'}" style="font-size:10px">${actif?'● ACTIF • '+joursRestants+' j':'⏰ EXPIRÉ'}</span></div>
-      ${actif?`<div class="my-plan-live"><span id="live-plan-${p.key}">0.0000000</span> <small>F en LIVE</small></div><div style="font-size:11px;color:#888">${fmt(gainJour)} F / jour • + ${fmtLive(gainJour/86400)} F / sec • Expire ${p.end?new Date(p.end).toLocaleDateString('fr-FR'):'—'}</div>`:`<div style="font-size:12px;color:#FF6B6B;margin:8px 0">Expiré le ${p.end?new Date(p.end).toLocaleDateString('fr-FR'):'—'} • Reçu : ${fmt(p.totalGagne||0)} F</div>`}
-      <div class="my-plan-bar"><i id="bar-plan-${p.key}" style="width:${pct}%"></i></div>
-      <div class="my-plan-row"><span>${pct.toFixed(1)}%</span><span>Reçu : ${fmt(p.totalGagne||0)} / ${(p.totalRetour||0).toLocaleString('fr-FR')} F</span></div>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        ${actif?`<button class="btn-mini green" style="flex:1" onclick="reclamerUnPlan('${p.key}')">Réclamer ce plan</button>`:''}
-        <button class="btn-mini gold" onclick="renouvelerPlanByKey('${p.key}','${p.planId}')">🔁 Renouveler</button>
-      </div>
-    </div>`;
-  }).join('');
-  box.innerHTML=html;
-  box2.innerHTML=`<h2>Mes plans (${allMyPlans.length}) — ${myPlans.length} actif(s)</h2><p class="sub">Chacun mine en même temps.</p>`+html;
-}
-function reclamerUnPlan(key){
-  const plan=myPlans.find(p=>p.key===key); if(!plan||!currentUserId) return;
-  const gain=plan._live||0;
-  if(gain<0.0000001) return showAlert('Attends quelques secondes, ton LIVE monte.');
-  database.ref('clients/'+currentUserId).update({
-    commission:(currentUserData.commission||0)+gain,
-    mine_total:(currentUserData.mine_total||0)+gain,
-    ['minage_plans/'+key+'/lastClaimLive']:Date.now(),
-    ['minage_plans/'+key+'/totalGagne']:(plan.totalGagne||0)+gain
-  }).then(()=>{
-    database.ref('minage_history/'+currentUserId).push({type:'gain_live',plan:plan.nom,gain:gain,date:new Date().toLocaleString('fr-FR')});
-    showAlert(`+ ${fmtLive(gain)} F (${plan.nom}) ajoutés à ton Bonus.`);
-  });
-}
-function reclamerToutLive(){
-  if(myPlans.length===0) return;
-  if(currentTotalLive<0.0000001) return showAlert('Attends quelques secondes, ton LIVE monte.');
-  const gain=currentTotalLive;
-  const updates={commission:(currentUserData.commission||0)+gain, mine_total:(currentUserData.mine_total||0)+gain};
-  myPlans.forEach(p=>{
-    updates['minage_plans/'+p.key+'/lastClaimLive']=Date.now();
-    updates['minage_plans/'+p.key+'/totalGagne']=(p.totalGagne||0)+(p._live||0);
-  });
-  database.ref('clients/'+currentUserId).update(updates).then(()=>{
-    database.ref('minage_history/'+currentUserId).push({type:'gain_live',plan:'TOUS LES PLANS ('+myPlans.length+')',gain:gain,date:new Date().toLocaleString('fr-FR')});
-    showAlert(`+ ${fmtLive(gain)} F (tous tes plans) ajoutés à ton Bonus.`);
-  });
-}
-function chargerHistorique(phone){
-  if(!phone) return;
-  database.ref('minage_history/'+phone).limitToLast(8).once('value').then(s=>{
-    const box=document.getElementById('mine-history');
-    if(!s.exists()){ box.innerHTML='<div style="font-size:12px;color:#888;text-align:center;padding:12px">Aucun historique.</div>'; return; }
-    let html=''; const arr=[]; s.forEach(c=>arr.push(c.val())); arr.reverse().forEach(h=>{
-      const gain=h.gain?`+ ${h.type==='gain_live'?fmtLive(h.gain):fmt(h.gain)} F`:`- ${h.prix} F`;
-      const label=h.type==='achat'?'Achat':h.type==='renouvellement'?'Renouvellement':'Gain LIVE';
-      html+=`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1A1A1A;font-size:12px"><span>${label} • ${h.plan} • ${h.date}</span><b style="color:${h.gain?'#2CE88A':'#FF5A00'}">${gain}</b></div>`;
-    });
-    box.innerHTML=html;
-  });
-}
-document.addEventListener('DOMContentLoaded',()=>{
-  const saved=TinyDB.get('current_user')||JSON.parse(localStorage.getItem('mayne_current_user')||'null');
-  if(saved&&saved.phone){ currentUserId=saved.phone; showZone(true); chargerMinage(saved.phone); }
-  else showZone(false);
-});
-</script>
-</body>
-</html>
+PLANS.forEach(p=>{p.gainJour=(p.prix+p.gainTotal)/30;p.totalRetour=p.prix+p.gainTotal;p.perSec=p.gainJour/86400});
+function fmt(n){return n.toLocaleString('fr-FR',{maximumFractionDigits:2})}function fmtLive(n){return n.toFixed(7)}
+let tempPhone='',tempEmail='',currentUserId=null,currentUserData=null,confirmCallback=null,liveTimer=null,lastExpiredPlan=null,myPlans=[],allMyPlans=[],currentTotalLive=0,planFilter='actif',pendingPlan=null,_lock=false;
+function showAlert(m){document.getElementById('custom-alert-msg').innerText=m;document.getElementById('custom-alert').style.display='flex'}function hideAlert(){document.getElementById('custom-alert').style.display='none'}function showConfirm(m,cb){confirmCallback=cb;document.getElementById('custom-confirm-msg').innerText=m;document.getElementById('custom-confirm').style.display='flex'}function doConfirm(y){document.getElementById('custom-confirm').style.display='none';if(confirmCallback)confirmCallback(y)}
+function showAuth(w){document.getElementById('login-interface').style.display=w==='login'?'block':'none';document.getElementById('register-interface').style.display=w==='register'?'block':'none';document.getElementById('verify-interface').style.display='none'}
+function showZone(l){document.getElementById('auth-zone').style.display=l?'none':'block';document.getElementById('mine-zone').style.display=l?'block':'none';if(!l)showAuth('login')}
+function setPlanFilter(f){planFilter=f;renderMyPlans()}function switchTab(t,b){['apercu','mesplans','plans','historique','profil'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'block':'none');if(b)b.classList.add('active');if(t==='mesplans')renderMyPlans();if(t==='plans')renderPlans();if(t==='historique')chargerHistorique(currentUserId);if(t==='profil')renderProfil()}
+function openMenuPro(){document.getElementById('menu-user-name').innerText=currentUserData?.nom||'Invité';document.getElementById('menu-user-phone').innerText=currentUserId||'';document.getElementById('menu-pro-overlay').style.display='block'}function closeMenuPro(){document.getElementById('menu-pro-overlay').style.display='none'}
+function renderProfil(){if(!currentUserData)return;document.getElementById('profil-nom').innerText=currentUserData.nom;document.getElementById('profil-phone').innerText=currentUserId;document.getElementById('profil-bonus').innerText=fmt(currentUserData.commission||0)+' F';document.getElementById('profil-total').innerText=fmt(currentUserData.mine_total||0)+' F'}
+function executerConnexion(){const i=document.getElementById('login-id').value.trim(),p=document.getElementById('login-pin').value.trim();if(!i||!p)return showAlert('Remplis tout');const h=CryptoJS.MD5(p).toString();database.ref('clients/'+i).once('value').then(s=>{if(!s.exists())return showAlert('Incorrect');const db=String(s.val().pin);if(db!==h&&db!==p)return showAlert('Incorrect');const d=s.val();if(d.email_verified===false){tempPhone=i;tempEmail=d.email;document.getElementById('verify-email-affiche').innerText=d.email;document.getElementById('login-interface').style.display='none';document.getElementById('verify-interface').style.display='block';envoyerCodeEmail(d.email);return}currentUserId=i;TinyDB.put('current_user',{phone:i});showZone(true);chargerMinage(i);initOneSignal(i)})}
+function executerInscription(){const n=document.getElementById('reg-name').value.trim(),i=document.getElementById('reg-id').value.trim().replace(/\D/g,''),e=document.getElementById('reg-email').value.trim().toLowerCase(),p=document.getElementById('reg-pin').value.trim();if(!n||!i||!e||!p)return showAlert('Remplis tout');const h=CryptoJS.MD5(p).toString();database.ref('clients/'+i).once('value').then(s=>{if(s.exists())return showAlert('Déjà utilisé');database.ref('clients/'+i).set({nom:n,email:e,pin:h,commission:0,email_verified:false,date_inscription:new Date().toLocaleString('fr-FR'),mine_total:0}).then(()=>{tempPhone=i;tempEmail=e;document.getElementById('verify-email-affiche').innerText=e;document.getElementById('register-interface').style.display='none';document.getElementById('verify-interface').style.display='block';envoyerCodeEmail(e);showAlert('Vérifie ton email')})})}
+function envoyerCodeEmail(em,r){fetch(OTP_URL,{method:'POST',body:'action=send&email='+encodeURIComponent(em||tempEmail),headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(x=>x.text()).then(t=>{if(t.includes('sent'))showAlert('Code envoyé')})}
+function verifierCodeEmail(){const c=document.getElementById('verify-code').value.trim();fetch(OTP_URL,{method:'POST',body:'action=verify&email='+encodeURIComponent(tempEmail)+'&code='+c,headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(x=>x.text()).then(t=>{if(t.includes('ok'))database.ref('clients/'+tempPhone).update({email_verified:true}).then(()=>{showAlert('✅ Vérifié');document.getElementById('verify-interface').style.display='none';document.getElementById('login-id').value=tempPhone;showAuth('login')});else showAlert('Code incorrect')})}
+function executerDeconnexion(){TinyDB.put('current_user',null);currentUserId=null;clearInterval(liveTimer);showZone(false)}
+function initOneSignal(ph){if(window.OneSignalDeferred)window.OneSignalDeferred.push(async O=>{try{await O.init({appId:"9fe0a621-5b0e-45dd-9daf-8cdc6b29b6b1",serviceWorkerParam:{scope:'/MAYNE-E-SERVICES-ILLIMINET/'},serviceWorkerPath:'/MAYNE-E-SERVICES-ILLIMINET/OneSignalSDKWorker.js'});await O.login(ph);const id=await O.User.pushSubscription.id;if(id)database.ref('clients/'+ph+'/onesignal_id').set(id)}catch(e){}})}
+function isPlanActif(p){return p&&!(p.end&&Date.now()>p.end)&&p.actif!==false}function getMyPlans(d){let a=[];if(d.minage_plans)Object.entries(d.minage_plans).forEach(([k,p])=>a.push({...p,key:k}));return a}function getActivePlans(){return allMyPlans.filter(isPlanActif)}
+function renderPlans(){document.getElementById('plans-list').innerHTML=PLANS.map(p=>`<div class="plan"><div class="plan-top"><b>${p.nom} ${p.pop?'<span style="font-size:9px;background:#FF5A00;color:#fff;padding:3px 7px;border-radius:999px">POPULAIRE</span>':''}</b><span>${p.prix.toLocaleString('fr-FR')} F</span></div><div class="plan-mid"><div class="big">${fmt(p.gainJour)} <small>F/jour</small></div><div style="font-size:11px;color:#888;text-align:right"><b style="color:#2CE88A">+${fmtLive(p.perSec)}/sec</b><br>Total ${p.totalRetour.toLocaleString('fr-FR')} F</div></div><button class="btn" style="margin-top:10px" onclick="acheterPlan('${p.id}')">💳 Payer Kkiapay</button></div>`).join('')}
+function acheterPlan(id,ren=false,rk=null){const plan=PLANS.find(p=>p.id===id);pendingPlan={plan,isRenew:ren,renewKey:rk};showConfirm(`Payer ${plan.nom} ${plan.prix}F via Kkiapay ?`,ok=>{if(!ok)return;sessionStorage.setItem('mayne_pending_plan',JSON.stringify({planId:id,isRenew:ren,renewKey:rk}));window.open(plan.kkiapay,'_blank');setTimeout(()=>openPreuve(plan),1500)})}
+function openPreuve(p){document.getElementById('preuve-plan-nom').innerText=p.nom;document.getElementById('preuve-plan-prix').innerText=p.prix.toLocaleString('fr-FR')+' F';document.getElementById('preuve-numero').value=currentUserId;document.getElementById('preuve-overlay').style.display='flex'}function closePreuve(){document.getElementById('preuve-overlay').style.display='none'}function previewPreuve(i){var p=document.getElementById('preuve-preview');if(i.files[0]){var r=new FileReader();r.onload=e=>{p.src=e.target.result;p.style.display='block'};r.readAsDataURL(i.files[0])}}function openImage(u){document.getElementById('img-viewer-pic').src=u;document.getElementById('img-viewer').style.display='flex'}
+async function uploadToCloudinary(b){var fd=new FormData();fd.append('file',b);fd.append('upload_preset','mayneaudio');fd.append('folder','depot');var r=await fetch("https://api.cloudinary.com/v1_1/dkzpkvidk/image/upload",{method:'POST',body:fd});var d=await r.json();if(d.secure_url)return d.secure_url;throw new Error('Upload')}
+async function pushJS(id,t,m){try{await fetch(ONESIGNAL_WEBHOOK,{method:'POST',mode:'no-cors',body:JSON.stringify({destId:id,titre:t,message:m})})}catch{}}
+function envoyerAlerte(s,d){try{fetch(WEBHOOK_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({service:s,id:Date.now(),data:d}),keepalive:true})}catch{}}
+async function envoyerPreuve(){const plan=pendingPlan.plan,num=document.getElementById('preuve-numero').value.trim(),idTx=document.getElementById('preuve-id').value.trim(),file=document.getElementById('preuve-file').files[0];if(!num)return showAlert('Numéro requis');if(!file&&!idTx)return showAlert('Capture ou ID requis');if(_lock)return;_lock=true;const st=document.getElementById('preuve-status');try{let url='';if(file){st.innerText='⏳ Upload...';const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.readAsDataURL(file)});url=await uploadToCloudinary(b64)}const data={planId:plan.id,planNom:plan.nom,montant:plan.prix,numero_payeur:num,id_transaction:idTx||'N/A',capture_url:url,client_id:currentUserId,isRenew:pendingPlan.isRenew,renewKey:pendingPlan.renewKey,date:new Date().toLocaleString('fr-FR'),statut:'en cours'};await database.ref('commandes_plans_minage').push().set(data);const conv=[currentUserId,ADMIN_ID].sort().join('_');await database.ref('conversations/'+conv+'/messages').push().set({senderId:currentUserId,senderNom:currentUserData.nom,type:'text',texte:`💳 PLAN ${plan.nom} ${plan.prix}F\nClient:${currentUserId} Payeur:${num} ID:${idTx||'capture'}`,createdAt:Date.now()});if(url)await database.ref('conversations/'+conv+'/messages').push().set({senderId:currentUserId,senderNom:currentUserData.nom,type:'image',url,texte:'Preuve '+plan.nom,createdAt:Date.now()+100});envoyerAlerte('plan_kkiapay',data);pushJS(ADMIN_ID,`PLAN ${plan.nom} ${plan.prix}F`,`${plan.nom} ${plan.prix}F Client:${currentUserId} ${num} ${idTx||'capture'}`);st.innerText='✅ Envoyé !';sessionStorage.removeItem('mayne_pending_plan');setTimeout(()=>{closePreuve();switchTab('mesplans')},2000)}catch(e){showAlert(e.message)}finally{_lock=false}}
+function openRetirer(){document.getElementById('solde-retrait-txt').innerText=fmt(currentUserData?.commission||0)+' F';document.getElementById('numero-retrait').value=currentUserId;document.getElementById('retirer-overlay').style.display='flex'}function closeRetirer(){document.getElementById('retirer-overlay').style.display='none'}
+async function doRetirerMinage(){const m=parseInt(document.getElementById('montant-retrait').value||'0'),res=document.getElementById('reseau-retrait').value,num=document.getElementById('numero-retrait').value.trim(),bonus=currentUserData?.commission||0,st=document.getElementById('retrait-status');if(m<1000)return showAlert('Min 1000 F');if(m>bonus)return showAlert('Bonus insuffisant '+fmt(bonus)+' F');if(!num)return showAlert('Numéro requis');if(_lock)return;_lock=true;try{st.innerText='⏳ Envoi...';const data={montant:m,reseau:res,numero:num,client_id:currentUserId,date:new Date().toLocaleString('fr-FR'),statut:'en cours'};await database.ref('demandes_retrait_minage').push().set(data);const conv=[currentUserId,ADMIN_ID].sort().join('_');await database.ref('conversations/'+conv+'/messages').push().set({senderId:currentUserId,senderNom:currentUserData.nom,type:'text',texte:`⬇️ RETRAIT ${m}F ${res}\nClient:${currentUserId} Reçoit:${num}`,createdAt:Date.now()});envoyerAlerte('retrait',data);pushJS(ADMIN_ID,`RETRAIT ${m}F ${res}`,`${m}F ${res} Client:${currentUserId} Reçoit:${num}`);st.innerText='✅ Demande envoyée !';setTimeout(closeRetirer,2000)}catch(e){showAlert(e.message)}finally{_lock=false}}
+function renouvelerDernier(){if(lastExpiredPlan)acheterPlan(lastExpiredPlan.planId,true,lastExpiredPlan.key)}function renouvelerPlanByKey(k,id){acheterPlan(id,true,k)}
+function chargerMinage(ph){database.ref('clients/'+ph).on('value',s=>{const d=s.val()||{};currentUserData=d;document.getElementById('user-name').innerText=d.nom||ph;document.getElementById('user-phone').innerText=ph;document.getElementById('solde-top-bar').innerText=fmt(d.commission||0)+' F';allMyPlans=getMyPlans(d);myPlans=getActivePlans();const has=myPlans.length>0;document.getElementById('intro-pro').style.display=has?'none':'block';document.getElementById('hero-total').style.display=has?'block':'none';document.getElementById('total-plans-label').innerText=myPlans.length+' PLAN ACTIF';document.getElementById('count-plans').innerText=myPlans.length?`(${myPlans.length})`:'';document.getElementById('user-plans-count').innerText=myPlans.length;document.getElementById('user-commission').innerText=fmt(d.commission||0)+' F';document.getElementById('mine-total').innerText=fmt(allMyPlans.reduce((a,p)=>a+(p.totalGagne||0),0))+' F';if(has){startLiveTicker();renderMyPlans()}else{clearInterval(liveTimer);renderMyPlans()}renderPlans();renderProfil();chargerHistorique(ph)})}
+function startLiveTicker(){clearInterval(liveTimer);function tick(){const now=Date.now();let tot=0,perSec=0,perDay=0;myPlans.forEach(p=>{const gj=p.gainJour||(p.prix+p.gainTotal)/30,ps=gj/86400;let intr=((now-(p.lastClaimLive||p.start))/1000)*ps;intr=Math.min(intr,(p.totalRetour||0)-(p.totalGagne||0));p._live=intr;tot+=intr;perSec+=ps;perDay+=gj;const el=document.getElementById('live-plan-'+p.key);if(el)el.innerText=fmtLive(intr)});currentTotalLive=tot;document.getElementById('live-total').innerText=fmtLive(tot);document.getElementById('live-total-per-sec').innerText=fmtLive(perSec);document.getElementById('live-total-per-day').innerText=fmt(perDay);document.getElementById('live-total-claim').innerText=fmtLive(tot)}tick();liveTimer=setInterval(tick,100)}
+function renderMyPlans(){const b=document.getElementById('mes-plans-list'),b2=document.getElementById('mes-plans-apercu');let list=allMyPlans;if(planFilter==='actif')list=list.filter(isPlanActif);if(planFilter==='expire')list=list.filter(p=>!isPlanActif(p));document.getElementById('mesplans-count').innerText=allMyPlans.length+' plans • '+myPlans.length+' actifs';if(!list.length){b.innerHTML='<div class="empty">Aucun plan. Va dans Acheter.</div>';b2.innerHTML='';return}const html=list.map(p=>{const a=isPlanActif(p),gj=p.gainJour||(p.prix+p.gainTotal)/30,pct=p.end?Math.min(100,((Date.now()-p.start)/(p.end-p.start))*100):0;return `<div class="my-plan ${a?'':'expired'}"><div style="display:flex;justify-content:space-between"><b>⛏️ ${p.nom}</b><span class="pill ${a?'green':'red'}">${a?'ACTIF':'EXPIRÉ'}</span></div>${a?`<div class="my-plan-live"><span id="live-plan-${p.key}">0.0000000</span> F</div><div style="font-size:11px;color:#888">${fmt(gj)} F/jour</div>`:`<div style="color:#FF6B6B">Reçu ${fmt(p.totalGagne||0)} F</div>`}<div class="my-plan-bar"><i style="width:${pct}%"></i></div><div class="my-plan-row"><span>${pct.toFixed(1)}%</span><span>${fmt(p.totalGagne||0)}/${(p.totalRetour||0).toLocaleString('fr-FR')} F</span></div><div style="display:flex;gap:8px;margin-top:10px">${a?`<button class="btn-mini green" style="flex:1" onclick="reclamerUnPlan('${p.key}')">Réclamer</button>`:''}<button class="btn-mini gold" onclick="renouvelerPlanByKey('${p.key}','${p.planId}')">🔁 Renouveler</button></div></div>`}).join('');b.innerHTML=html;b2.innerHTML='<h2>Mes plans</h2>'+html}
+function reclamerUnPlan(k){const p=myPlans.find(x=>x.key===k),g=p._live||0;if(g<0.0001)return showAlert('Attends');database.ref('clients/'+currentUserId).update({commission:(currentUserData.commission||0)+g,mine_total:(currentUserData.mine_total||0)+g,['minage_plans/'+k+'/lastClaimLive']:Date.now(),['minage_plans/'+k+'/totalGagne']:(p.totalGagne||0)+g}).then(()=>showAlert('+'+fmtLive(g)+' F Bonus'))}
+function reclamerToutLive(){if(!myPlans.length||currentTotalLive<0.0001)return showAlert('Attends');const g=currentTotalLive,u={commission:(currentUserData.commission||0)+g,mine_total:(currentUserData.mine_total||0)+g};myPlans.forEach(p=>{u['minage_plans/'+p.key+'/lastClaimLive']=Date.now();u['minage_plans/'+p.key+'/totalGagne']=(p.totalGagne||0)+(p._live||0)});database.ref('clients/'+currentUserId).update(u).then(()=>showAlert('+'+fmtLive(g)+' F Bonus'))}
+function chargerHistorique(ph){database.ref('minage_history/'+ph).limitToLast(8).once('value').then(s=>{const b=document.getElementById('mine-history');if(!s.exists()){b.innerHTML='Aucun';return}let h=[];s.forEach(c=>h.push(c.val()));b.innerHTML=h.reverse().map(x=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #222;font-size:12px"><span>${x.type} ${x.plan||''} ${x.date}</span><b style="color:#2CE88A">${x.gain?'+'+fmtLive(x.gain)+' F':''}</b></div>`).join('')})}
+document.addEventListener('DOMContentLoaded',()=>{const s=TinyDB.get('current_user');if(s?.phone){currentUserId=s.phone;showZone(true);chargerMinage(s.phone);initOneSignal(s.phone);const pend=sessionStorage.getItem('mayne_pending_plan');if(pend){const pp=JSON.parse(pend),pl=PLANS.find(p=>p.id===pp.planId);if(pl){pendingPlan={plan:pl,isRenew:pp.isRenew,renewKey:pp.renewKey};setTimeout(()=>openPreuve(pl),800)}}}else showZone(false)});
+</script></body></html>
