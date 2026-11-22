@@ -2,100 +2,41 @@
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ADMIN MINAGE PRO</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const database=firebase.database();firebase.auth().onAuthStateChanged(u=>{if(!u)firebase.auth().signInAnonymously()});</script>
-<style>body{margin:0;font-family:system-ui,Arial;background:#0A0A0A;color:#fff;padding:14px;max-width:520px;margin:0 auto}.box{background:#161616;border:1px solid #2A2A2A;border-radius:18px;padding:16px;margin-bottom:12px}button{padding:12px 14px;border:none;border-radius:12px;font-weight:900;cursor:pointer;font-size:13px}.ok{background:#00C853;color:#fff;flex:1}.no{background:#FF3B30;color:#fff}img{max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #333}h1{font-size:22px;margin:0}h2{margin:22px 0 10px;font-size:17px}.sub{color:#888;font-size:12px}.pill{font-size:11px;padding:5px 9px;border-radius:999px;background:#FF5A00;font-weight:900}.row{display:flex;gap:8px;margin-top:12px}.small{font-size:12px;color:#AAA;line-height:1.5}.badge{background:#0F2A1A;color:#2CE88A;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900}</style></head><body>
+<style>body{margin:0;font-family:system-ui,Arial;background:#0A0A0A;color:#fff;padding:14px;max-width:540px;margin:0 auto}.box{background:#161616;border:1px solid #2A2A2A;border-radius:18px;padding:16px;margin-bottom:12px}button{padding:11px 12px;border:none;border-radius:12px;font-weight:900;cursor:pointer;font-size:12px}.ok{background:#00C853;color:#fff;flex:1}.no{background:#FF3B30;color:#fff}.stop{background:#FFD700;color:#000;flex:1}.del{background:#222;color:#FF6B6B}img{max-width:100%;border-radius:12px;margin-top:10px}h1{font-size:22px;margin:0}h2{margin:24px 0 10px;font-size:17px}.sub{color:#888;font-size:12px}.pill{font-size:11px;padding:5px 9px;border-radius:999px;background:#FF5A00;font-weight:900}.row{display:flex;gap:8px;margin-top:12px}.small{font-size:12px;color:#AAA;line-height:1.5}.badge{background:#0F2A1A;color:#2CE88A;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900}.badge.red{background:#2A0A0A;color:#FF6B6B}</style></head><body>
 <div style="display:flex;justify-content:space-between;align-items:center"><div><h1>🛠️ ADMIN</h1><div class="sub">MINAGE PRO • +10% • 75 jours</div></div><span class="pill">ADMIN</span></div>
-<p class="sub">Valide les plans et les retraits en 1 clic.</p>
 
-<h2>💳 PLANS À VALIDER <span id="count-plans" class="badge">0</span></h2>
-<div id="plans"></div>
-
-<h2>⬇️ RETRAITS À VALIDER <span id="count-retraits" class="badge">0</span></h2>
-<div id="retraits"></div>
+<h2>💳 PLANS À VALIDER <span id="count-plans" class="badge">0</span></h2><div id="plans"></div>
+<h2>⬇️ RETRAITS <span id="count-retraits" class="badge">0</span></h2><div id="retraits"></div>
+<h2>⛏️ PLANS ACTIFS (Stop / Supprimer)</h2><p class="sub">Arrête un plan en cas de fraude, ou supprime-le définitivement.</p><div id="active-plans"></div>
 
 <script>
 const DUREE=75;
-const PLANS=[
-{id:'p5000',nom:'Starter',prix:5000},
-{id:'p10000',nom:'Bronze',prix:10000},
-{id:'p15000',nom:'Argent',prix:15000},
-{id:'p20000',nom:'Normal',prix:20000},
-{id:'p35000',nom:'Elite',prix:35000},
-{id:'p50000',nom:'Haut Niveau',prix:50000},
-{id:'p70000',nom:'Pro',prix:70000},
-{id:'p100000',nom:'Professionnel',prix:100000},
-{id:'p150000',nom:'Superstar',prix:150000},
-{id:'p200000',nom:'Legende',prix:200000},
-{id:'p300000',nom:'Hell',prix:300000}
-];
+const PLANS=[{id:'p5000',nom:'Starter',prix:5000},{id:'p10000',nom:'Bronze',prix:10000},{id:'p15000',nom:'Argent',prix:15000},{id:'p20000',nom:'Normal',prix:20000},{id:'p35000',nom:'Elite',prix:35000},{id:'p50000',nom:'Haut Niveau',prix:50000},{id:'p70000',nom:'Pro',prix:70000},{id:'p100000',nom:'Professionnel',prix:100000},{id:'p150000',nom:'Superstar',prix:150000},{id:'p200000',nom:'Legende',prix:200000},{id:'p300000',nom:'Hell',prix:300000}];
 PLANS.forEach(p=>{p.gainTotal=Math.round(p.prix*0.10);p.totalRetour=p.prix+p.gainTotal;p.gainJour=p.totalRetour/DUREE});
 function fmt(n){return (n||0).toLocaleString('fr-FR')}
 
-function chargerPlans(){
-  database.ref('commandes_plans_minage').orderByChild('statut').equalTo('en cours').on('value',s=>{
-    const b=document.getElementById('plans');
-    document.getElementById('count-plans').innerText=s.exists()?Object.keys(s.val()).length:0;
-    if(!s.exists()){b.innerHTML='<div class="box sub">Aucun plan en attente</div>';return}
-    let h='';
-    s.forEach(c=>{
-      const v=c.val(),k=c.key;
-      const plan=PLANS.find(p=>p.id===v.planId);
-      const gainJour=plan?plan.gainJour.toLocaleString('fr-FR'):'—';
-      const total=plan?plan.totalRetour.toLocaleString('fr-FR'):'—';
-      h+=`<div class="box">
-        <div style="display:flex;justify-content:space-between"><b>${v.planNom} — ${fmt(v.montant)} F</b><span class="badge">${gainJour} F/j</span></div>
-        <div class="small">Client: <b>${v.client_id}</b> • Payeur: <b>${v.numero_payeur}</b><br>ID: ${v.id_transaction} • ${v.date}<br>Total retour: ${total} F • 75 jours</div>
-        ${v.capture_url?`<img src="${v.capture_url}" onclick="window.open('${v.capture_url}')">`:''}
-        <div class="row"><button class="ok" onclick="validerPlan('${k}','${v.client_id}','${v.planId}')">✅ VALIDER LE PLAN</button><button class="no" onclick="refuser('commandes_plans_minage','${k}')">❌</button></div>
-      </div>`;
+function chargerPlans(){database.ref('commandes_plans_minage').orderByChild('statut').equalTo('en cours').on('value',s=>{const b=document.getElementById('plans');document.getElementById('count-plans').innerText=s.exists()?Object.keys(s.val()).length:0;if(!s.exists()){b.innerHTML='<div class="box sub">Aucun</div>';return}let h='';s.forEach(c=>{const v=c.val(),k=c.key;const plan=PLANS.find(p=>p.id===v.planId);h+=`<div class="box"><b>${v.planNom} — ${fmt(v.montant)} F</b> <span class="badge">${plan?fmt(plan.gainJour):''} F/j</span><div class="small">Client: ${v.client_id} • Payeur: ${v.numero_payeur}<br>ID: ${v.id_transaction} • ${v.date}</div>${v.capture_url?`<img src="${v.capture_url}" onclick="window.open('${v.capture_url}')">`:''}<div class="row"><button class="ok" onclick="validerPlan('${k}','${v.client_id}','${v.planId}')">✅ VALIDER</button><button class="no" onclick="refuser('commandes_plans_minage','${k}')">❌</button></div></div>`});b.innerHTML=h})}
+function chargerRetraits(){database.ref('demandes_retrait_minage').orderByChild('statut').equalTo('en cours').on('value',s=>{const b=document.getElementById('retraits');document.getElementById('count-retraits').innerText=s.exists()?Object.keys(s.val()).length:0;if(!s.exists()){b.innerHTML='<div class="box sub">Aucun</div>';return}let h='';s.forEach(c=>{const v=c.val(),k=c.key;h+=`<div class="box"><b>RETRAIT ${fmt(v.montant)} F ${v.reseau}</b><div class="small">Client: ${v.client_id} • Reçoit: ${v.numero}<br>${v.date}</div><div class="row"><button class="ok" onclick="validerRetrait('${k}','${v.client_id}',${v.montant})">✅ PAYÉ</button><button class="no" onclick="refuser('demandes_retrait_minage','${k}')">❌</button></div></div>`});b.innerHTML=h})}
+
+function chargerPlansActifs(){
+  database.ref('clients').on('value',snap=>{
+    const b=document.getElementById('active-plans');let h='',count=0;
+    snap.forEach(cs=>{
+      const client=cs.key, d=cs.val();
+      if(d.minage_plans) Object.entries(d.minage_plans).forEach(([pk,p])=>{
+        const actif=p.actif!==false && !(p.end&&Date.now()>p.end);
+        if(!actif) return; count++;
+        h+=`<div class="box"><div style="display:flex;justify-content:space-between"><b>⛏️ ${p.nom} — ${fmt(p.prix)} F</b><span class="badge">ACTIF</span></div><div class="small">Client: <b>${client}</b> (${d.nom||''})<br>${fmt(p.gainJour)} F/jour • Reçu: ${fmt(p.totalGagne||0)} / ${fmt(p.totalRetour)} F<br>Début: ${p.date_achat||''}</div><div class="row"><button class="stop" onclick="stopperPlan('${client}','${pk}')">⏸️ ARRÊTER</button><button class="del" onclick="supprimerPlan('${client}','${pk}')">🗑️ SUPPRIMER</button></div></div>`;
+      });
     });
-    b.innerHTML=h;
+    b.innerHTML=h||'<div class="box sub">Aucun plan actif</div>';
   });
 }
 
-function chargerRetraits(){
-  database.ref('demandes_retrait_minage').orderByChild('statut').equalTo('en cours').on('value',s=>{
-    const b=document.getElementById('retraits');
-    document.getElementById('count-retraits').innerText=s.exists()?Object.keys(s.val()).length:0;
-    if(!s.exists()){b.innerHTML='<div class="box sub">Aucun retrait en attente</div>';return}
-    let h='';
-    s.forEach(c=>{
-      const v=c.val(),k=c.key;
-      h+=`<div class="box">
-        <div style="display:flex;justify-content:space-between"><b>RETRAIT ${fmt(v.montant)} F</b><span class="pill">${v.reseau}</span></div>
-        <div class="small">Client: <b>${v.client_id}</b> • Reçoit: <b>${v.numero}</b><br>${v.date}</div>
-        <div class="row"><button class="ok" onclick="validerRetrait('${k}','${v.client_id}',${v.montant})">✅ PAYÉ, DÉDUIRE BONUS</button><button class="no" onclick="refuser('demandes_retrait_minage','${k}')">❌</button></div>
-      </div>`;
-    });
-    b.innerHTML=h;
-  });
-}
-
-async function validerPlan(key,client,planId){
-  const plan=PLANS.find(p=>p.id===planId);
-  if(!plan) return alert('Plan introuvable');
-  const start=Date.now(), end=start+DUREE*24*60*60*1000;
-  const newPlan={planId:plan.id,nom:plan.nom,prix:plan.prix,gainTotal:plan.gainTotal,gainJour:plan.gainJour,totalRetour:plan.totalRetour,start,end,lastClaimLive:start,totalGagne:0,actif:true,date_achat:new Date().toLocaleString('fr-FR')};
-  await database.ref('clients/'+client+'/minage_plans/plan_'+Date.now()).set(newPlan);
-  await database.ref('commandes_plans_minage/'+key).update({statut:'validé'});
-  await database.ref('minage_history/'+client).push({type:'achat',plan:plan.nom,prix:plan.prix,date:new Date().toLocaleString('fr-FR')});
-  alert('✅ '+plan.nom+' activé 75 jours pour '+client+'\n'+fmt(plan.gainJour)+' F/jour');
-}
-
-async function validerRetrait(key,client,montant){
-  const s=await database.ref('clients/'+client).once('value');
-  const bonus=s.val()?.commission||0;
-  if(bonus<montant) return alert('Bonus insuffisant, il a '+fmt(bonus)+' F');
-  await database.ref('clients/'+client).update({commission:bonus-montant});
-  await database.ref('demandes_retrait_minage/'+key).update({statut:'payé'});
-  await database.ref('minage_history/'+client).push({type:'retrait',plan:'RETRAIT '+montant+'F',gain:-montant,date:new Date().toLocaleString('fr-FR')});
-  alert('✅ Retrait payé, Bonus déduit');
-}
-
-async function refuser(path,key){
-  if(!confirm('Refuser ?')) return;
-  await database.ref(path+'/'+key).update({statut:'annulé'});
-  alert('Refusé');
-}
-
-chargerPlans(); chargerRetraits();
+async function validerPlan(key,client,planId){const plan=PLANS.find(p=>p.id===planId);if(!plan)return alert('Plan introuvable');const start=Date.now(),end=start+DUREE*24*60*60*1000;const newPlan={planId:plan.id,nom:plan.nom,prix:plan.prix,gainTotal:plan.gainTotal,gainJour:plan.gainJour,totalRetour:plan.totalRetour,start,end,lastClaimLive:start,totalGagne:0,actif:true,date_achat:new Date().toLocaleString('fr-FR')};await database.ref('clients/'+client+'/minage_plans/plan_'+Date.now()).set(newPlan);await database.ref('commandes_plans_minage/'+key).update({statut:'validé'});await database.ref('minage_history/'+client).push({type:'achat',plan:plan.nom,prix:plan.prix,date:new Date().toLocaleString('fr-FR')});alert('✅ Activé 75j')}
+async function validerRetrait(key,client,montant){const s=await database.ref('clients/'+client).once('value');const solde=s.val()?.commission||0;if(solde<montant)return alert('Solde insuffisant: '+fmt(solde)+' F');await database.ref('clients/'+client).update({commission:solde-montant});await database.ref('demandes_retrait_minage/'+key).update({statut:'payé'});await database.ref('minage_history/'+client).push({type:'retrait',plan:'RETRAIT '+montant+'F',gain:-montant,date:new Date().toLocaleString('fr-FR')});alert('✅ Payé')}
+async function stopperPlan(client,pk){if(!confirm('Arrêter ce plan ? Le LIVE s\'arrête, il ne gagnera plus rien.'))return;await database.ref('clients/'+client+'/minage_plans/'+pk).update({actif:false,end:Date.now()});await database.ref('minage_history/'+client).push({type:'plan_arrete',plan:'Plan arrêté par admin',date:new Date().toLocaleString('fr-FR')});alert('⏸️ Plan arrêté')}
+async function supprimerPlan(client,pk){if(!confirm('SUPPRIMER définitivement ce plan ? Irréversible.'))return;await database.ref('clients/'+client+'/minage_plans/'+pk).remove();await database.ref('minage_history/'+client).push({type:'plan_supprime',plan:'Plan supprimé par admin',date:new Date().toLocaleString('fr-FR')});alert('🗑️ Plan supprimé')}
+async function refuser(path,key){if(!confirm('Refuser ?'))return;await database.ref(path+'/'+key).update({statut:'annulé'});alert('Refusé')}
+chargerPlans();chargerRetraits();chargerPlansActifs();
 </script></body></html>
