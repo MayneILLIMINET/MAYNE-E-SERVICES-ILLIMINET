@@ -2,9 +2,9 @@
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ADMIN MINAGE PRO</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>const firebaseConfig={apiKey:"AIzaSyDR0zDiGxisp4G-CDjltu8VFmxMMFjXI9E",databaseURL:"https://mayneilliminetdb-default-rtdb.firebaseio.com",projectId:"mayneilliminetdb"};if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);const database=firebase.database();firebase.auth().onAuthStateChanged(u=>{if(!u)firebase.auth().signInAnonymously()});</script>
-<style>body{margin:0;font-family:system-ui,Arial;background:#0A0A0A;color:#fff;padding:14px;max-width:520px;margin:0 auto}.box{background:#161616;border:1px solid #2A2A2A;border-radius:18px;padding:16px;margin-bottom:12px}button{padding:12px 14px;border:none;border-radius:12px;font-weight:900;cursor:pointer;font-size:13px}.ok{background:#00C853;color:#fff;flex:1}.no{background:#FF3B30;color:#fff}.gold{background:#FFD700;color:#000}img{max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #333}h1{font-size:22px;margin:0}h2{margin:22px 0 10px;font-size:17px}.sub{color:#888;font-size:12px}.pill{font-size:11px;padding:5px 9px;border-radius:999px;background:#FF5A00;font-weight:900}.row{display:flex;gap:8px;margin-top:12px}.small{font-size:12px;color:#AAA;line-height:1.5}.badge{background:#0F2A1A;color:#2CE88A;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900}</style></head><body>
-<div style="display:flex;justify-content:space-between;align-items:center"><div><h1>🛠️ ADMIN</h1><div class="sub">MINAGE PRO • Validation plans & retraits</div></div><span class="pill">ADMIN</span></div>
-<p class="sub">OneSignal te prévient déjà. Ici tu valides en 1 clic.</p>
+<style>body{margin:0;font-family:system-ui,Arial;background:#0A0A0A;color:#fff;padding:14px;max-width:520px;margin:0 auto}.box{background:#161616;border:1px solid #2A2A2A;border-radius:18px;padding:16px;margin-bottom:12px}button{padding:12px 14px;border:none;border-radius:12px;font-weight:900;cursor:pointer;font-size:13px}.ok{background:#00C853;color:#fff;flex:1}.no{background:#FF3B30;color:#fff}img{max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #333}h1{font-size:22px;margin:0}h2{margin:22px 0 10px;font-size:17px}.sub{color:#888;font-size:12px}.pill{font-size:11px;padding:5px 9px;border-radius:999px;background:#FF5A00;font-weight:900}.row{display:flex;gap:8px;margin-top:12px}.small{font-size:12px;color:#AAA;line-height:1.5}.badge{background:#0F2A1A;color:#2CE88A;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900}</style></head><body>
+<div style="display:flex;justify-content:space-between;align-items:center"><div><h1>🛠️ ADMIN</h1><div class="sub">MINAGE PRO • +10% • 75 jours</div></div><span class="pill">ADMIN</span></div>
+<p class="sub">Valide les plans et les retraits en 1 clic.</p>
 
 <h2>💳 PLANS À VALIDER <span id="count-plans" class="badge">0</span></h2>
 <div id="plans"></div>
@@ -13,19 +13,21 @@
 <div id="retraits"></div>
 
 <script>
+const DUREE=75;
 const PLANS=[
-{id:'p5000',nom:'Starter',prix:5000,gainTotal:750},
-{id:'p10000',nom:'Bronze',prix:10000,gainTotal:1200},
-{id:'p15000',nom:'Argent',prix:15000,gainTotal:1800},
-{id:'p20000',nom:'Normal',prix:20000,gainTotal:3000},
-{id:'p35000',nom:'Élite',prix:35000,gainTotal:4200},
-{id:'p50000',nom:'Haut Niveau',prix:50000,gainTotal:6000},
-{id:'p70000',nom:'Pro',prix:70000,gainTotal:9000},
-{id:'p100000',nom:'Professionnel',prix:100000,gainTotal:15000},
-{id:'p150000',nom:'Superstar',prix:150000,gainTotal:18000},
-{id:'p200000',nom:'Légende',prix:200000,gainTotal:21000},
-{id:'p300000',nom:'Hell',prix:300000,gainTotal:45000}
+{id:'p5000',nom:'Starter',prix:5000},
+{id:'p10000',nom:'Bronze',prix:10000},
+{id:'p15000',nom:'Argent',prix:15000},
+{id:'p20000',nom:'Normal',prix:20000},
+{id:'p35000',nom:'Elite',prix:35000},
+{id:'p50000',nom:'Haut Niveau',prix:50000},
+{id:'p70000',nom:'Pro',prix:70000},
+{id:'p100000',nom:'Professionnel',prix:100000},
+{id:'p150000',nom:'Superstar',prix:150000},
+{id:'p200000',nom:'Legende',prix:200000},
+{id:'p300000',nom:'Hell',prix:300000}
 ];
+PLANS.forEach(p=>{p.gainTotal=Math.round(p.prix*0.10);p.totalRetour=p.prix+p.gainTotal;p.gainJour=p.totalRetour/DUREE});
 function fmt(n){return (n||0).toLocaleString('fr-FR')}
 
 function chargerPlans(){
@@ -37,12 +39,13 @@ function chargerPlans(){
     s.forEach(c=>{
       const v=c.val(),k=c.key;
       const plan=PLANS.find(p=>p.id===v.planId);
-      const gainJour=plan?((plan.prix+plan.gainTotal)/30).toLocaleString('fr-FR'):'—';
+      const gainJour=plan?plan.gainJour.toLocaleString('fr-FR'):'—';
+      const total=plan?plan.totalRetour.toLocaleString('fr-FR'):'—';
       h+=`<div class="box">
         <div style="display:flex;justify-content:space-between"><b>${v.planNom} — ${fmt(v.montant)} F</b><span class="badge">${gainJour} F/j</span></div>
-        <div class="small">Client: <b>${v.client_id}</b> • Payeur: <b>${v.numero_payeur}</b><br>ID: ${v.id_transaction} • ${v.date} ${v.isRenew?'• <b style="color:#FFD700">RENOUVELLEMENT</b>':''}</div>
+        <div class="small">Client: <b>${v.client_id}</b> • Payeur: <b>${v.numero_payeur}</b><br>ID: ${v.id_transaction} • ${v.date}<br>Total retour: ${total} F • 75 jours</div>
         ${v.capture_url?`<img src="${v.capture_url}" onclick="window.open('${v.capture_url}')">`:''}
-        <div class="row"><button class="ok" onclick="validerPlan('${k}','${v.client_id}','${v.planId}',${v.isRenew?1:0},'${v.renewKey||''}')">✅ VALIDER LE PLAN</button><button class="no" onclick="refuser('commandes_plans_minage','${k}')">❌</button></div>
+        <div class="row"><button class="ok" onclick="validerPlan('${k}','${v.client_id}','${v.planId}')">✅ VALIDER LE PLAN</button><button class="no" onclick="refuser('commandes_plans_minage','${k}')">❌</button></div>
       </div>`;
     });
     b.innerHTML=h;
@@ -67,18 +70,15 @@ function chargerRetraits(){
   });
 }
 
-async function validerPlan(key,client,planId,isRenew,renewKey){
+async function validerPlan(key,client,planId){
   const plan=PLANS.find(p=>p.id===planId);
   if(!plan) return alert('Plan introuvable');
-  const start=Date.now(), end=start+30*24*60*60*1000;
-  const newPlan={planId:plan.id,nom:plan.nom,prix:plan.prix,gainTotal:plan.gainTotal,gainJour:(plan.prix+plan.gainTotal)/30,totalRetour:plan.prix+plan.gainTotal,start,end,lastClaimLive:start,totalGagne:0,actif:true,date_achat:new Date().toLocaleString('fr-FR')};
-  const upd={};
-  if(isRenew && renewKey) upd['minage_plans/'+renewKey]=newPlan;
-  else upd['minage_plans/plan_'+Date.now()]=newPlan;
-  await database.ref('clients/'+client).update(upd);
+  const start=Date.now(), end=start+DUREE*24*60*60*1000;
+  const newPlan={planId:plan.id,nom:plan.nom,prix:plan.prix,gainTotal:plan.gainTotal,gainJour:plan.gainJour,totalRetour:plan.totalRetour,start,end,lastClaimLive:start,totalGagne:0,actif:true,date_achat:new Date().toLocaleString('fr-FR')};
+  await database.ref('clients/'+client+'/minage_plans/plan_'+Date.now()).set(newPlan);
   await database.ref('commandes_plans_minage/'+key).update({statut:'validé'});
-  await database.ref('minage_history/'+client).push({type:isRenew?'renouvellement':'achat',plan:plan.nom,prix:plan.prix,date:new Date().toLocaleString('fr-FR')});
-  alert('✅ '+plan.nom+' activé pour '+client);
+  await database.ref('minage_history/'+client).push({type:'achat',plan:plan.nom,prix:plan.prix,date:new Date().toLocaleString('fr-FR')});
+  alert('✅ '+plan.nom+' activé 75 jours pour '+client+'\n'+fmt(plan.gainJour)+' F/jour');
 }
 
 async function validerRetrait(key,client,montant){
@@ -92,7 +92,7 @@ async function validerRetrait(key,client,montant){
 }
 
 async function refuser(path,key){
-  if(!confirm('Refuser cette demande ?')) return;
+  if(!confirm('Refuser ?')) return;
   await database.ref(path+'/'+key).update({statut:'annulé'});
   alert('Refusé');
 }
