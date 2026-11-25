@@ -161,7 +161,8 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .call-bubble b{font-size:15px;display:block}
 .call-bubble span{font-size:13px;color:rgba(255,255,255,.85)}
 .call-bubble.received span{color:var(--text2)}
-.select-bar{display:none;background:var(--orange-dark);color:#fff;padding:10px 12px;align-items:center;gap:8px;font-weight:800;font-size:14px;z-index:20}
+.select-bar{display:none;background:var(--orange-dark);color:#fff;padding:10px 12px;align-items:center;gap:8px;font-weight:800;font-size:14px;z-index:20;flex-wrap:wrap}
+.select-bar .all-btn{background:#fff!important;color:#D63E00!important;white-space:nowrap}
 .select-bar.show{display:flex}
 .select-bar button{border:none;border-radius:999px;padding:8px 10px;font-weight:900;cursor:pointer;background:rgba(255,255,255,.2);color:#fff;font-size:16px}
 .select-bar .del{background:#fff;color:#D63E00}
@@ -253,7 +254,12 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .viewer-body img{max-width:100%;max-height:100%;border-radius:12px;object-fit:contain}
 .viewer-text{width:100%;height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:28px;font-weight:900;line-height:1.3;padding:30px;white-space:pre-wrap;word-break:break-word}
 .viewer-caption{padding:0 14px 8px;font-size:14px;color:#ddd}
-.viewer-nav{position:absolute;inset:0;display:flex}
+.viewer-nav{position:absolute;top:68px;bottom:92px;left:0;right:0;display:flex;z-index:5}
+.viewer-head{position:relative;z-index:20}
+.viewer-bars{position:relative;z-index:20}
+.viewer-bottom{position:relative;z-index:20}
+.viewer-head button{pointer-events:auto;position:relative;z-index:21}
+#viewer-del{pointer-events:auto}
 .viewer-nav div{flex:1}
 .viewer-bottom{display:flex;gap:10px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));align-items:center}
 .viewer-input{flex:1;background:rgba(255,255,255,.15);border:none;border-radius:999px;padding:11px 14px;color:#fff;outline:none;font-size:14px}
@@ -409,12 +415,26 @@ function updateSelectBar(){
     const allText=[...selectedMsgs].every(k=>{ const m=_msgCache[k]; return m && m.type==='text' && !m.deletedEveryone; });
     copyBtn.style.display = allText ? 'inline-flex':'none';
   }
+  const allBtn=document.getElementById('select-all-btn'); if(allBtn){
+    const total=Object.keys(_msgCache).filter(k=>{ const m=_msgCache[k]; return m && !(m.deletedFor && m.deletedFor[currentUserId]) && (m.createdAt||0)>_convDeletedAt; }).length;
+    allBtn.textContent = (total>0 && selectedMsgs.size>=total) ? '☐ Tout décocher' : '☑️ Tout cocher';
+  }
 }
 function toggleSelect(key){
   if(!key) return;
   if(selectedMsgs.has(key)) selectedMsgs.delete(key); else selectedMsgs.add(key);
   document.querySelectorAll('.msg-row[data-key="'+key+'"]').forEach(r=>r.classList.toggle('selected', selectedMsgs.has(key)));
   if(selectedMsgs.size===0){ exitSelection(); } else updateSelectBar();
+}
+function toggleSelectAll(){
+  const keys=Object.keys(_msgCache).filter(k=>{ const m=_msgCache[k]; return m && !(m.deletedFor && m.deletedFor[currentUserId]) && (m.createdAt||0)>_convDeletedAt; });
+  if(!keys.length) return;
+  if(selectedMsgs.size>=keys.length){ exitSelection(); return; }
+  selectionMode=true;
+  selectedMsgs=new Set(keys);
+  document.querySelectorAll('.msg-row').forEach(r=>{ const k=r.dataset.key; if(k && selectedMsgs.has(k)) r.classList.add('selected'); });
+  updateSelectBar();
+  if(navigator.vibrate) navigator.vibrate(20);
 }
 function enterSelection(key){
   if(!key) return;
@@ -604,51 +624,68 @@ function setReply(nom,texte){ replyTo={nom,texte}; const p=document.getElementBy
 function clearReply(){ replyTo=null; const p=document.getElementById('reply-preview'); if(p) p.style.display='none'; }
 function initSwipe(){
   const scroll=document.getElementById('chat-scroll'); if(!scroll) return;
+  if(scroll.dataset.swipeBound==='1') return; scroll.dataset.swipeBound='1';
+  let tapX=0, tapY=0, tapTime=0, tapKey=null, tapMoved=false, longFired=false, lastTouchEnd=0;
+  function rowOf(e){ return e.target.closest ? e.target.closest('.msg-row') : null; }
+  function isPlayBtn(e){ return e.target.closest ? !!e.target.closest('[id^="play-"]') : false; }
+  // --- TOUCH : appui long = selection, tap = cocher/decocher ---
   scroll.addEventListener('touchstart',e=>{
-    lastTouchTime=Date.now();
-    const row=e.target.closest('.msg-row'); if(!row) return;
+    const row=rowOf(e); if(!row) return;
     const key=row.dataset.key; if(!key) return;
-    if(selectionMode){ return; }
+    tapKey=key; tapMoved=false; longFired=false;
+    const tt=e.touches[0]; tapX=tt.clientX; tapY=tt.clientY; tapTime=Date.now();
+    if(selectionMode) return; // en mode selection, pas de nouvel appui long, juste tap
     clearTimeout(longPressTimer);
-    longPressTimer=setTimeout(()=>{ enterSelection(key); },450);
+    longPressTimer=setTimeout(()=>{ longFired=true; enterSelection(key); }, 450);
     const b=e.target.closest('.msg-bubble, .audio-bubble, .call-bubble'); if(!b) return;
-    const t=e.touches[0]; swipeStartX=t.clientX; swipeStartY=t.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; swipeActive=false; b.style.transition='none';
+    swipeStartX=tt.clientX; swipeStartY=tt.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; swipeActive=false; b.style.transition='none';
   },{passive:true});
   scroll.addEventListener('touchmove',e=>{
-    clearTimeout(longPressTimer);
-    if(!swipeEl) return;
-    const t=e.touches[0]; const dx=t.clientX-swipeStartX; const dy=t.clientY-swipeStartY;
-    if(Math.abs(dy)>35 || Math.abs(dx)>10) clearTimeout(longPressTimer);
+    if(!tapKey) return;
+    const tt=e.touches[0]; const dx=tt.clientX-tapX; const dy=tt.clientY-tapY;
+    if(Math.abs(dx)>12 || Math.abs(dy)>12){ tapMoved=true; clearTimeout(longPressTimer); }
     if(selectionMode) return;
+    if(!swipeEl) return;
     if(Math.abs(dy)>35) return;
     if(dx>8 && dx<130){ swipeActive=true; swipeEl.style.transform='translateX('+dx+'px)'; const row=swipeEl.closest('.msg-row'); if(row) row.classList.add('swiping'); if(e.cancelable) e.preventDefault(); }
   },{passive:false});
   scroll.addEventListener('touchend',e=>{
+    lastTouchEnd=Date.now();
     clearTimeout(longPressTimer);
-    if(!swipeEl) return;
-    const dx=e.changedTouches[0].clientX-swipeStartX;
-    const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping');
-    swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)';
-    if(swipeActive && dx>60 && swipeData && swipeData.texte && !selectionMode){ setReply(swipeData.nom, swipeData.texte); }
-    swipeEl=null; swipeData=null; swipeActive=false;
+    const key=tapKey;
+    // Reset swipe visuel
+    if(swipeEl){ const dx=e.changedTouches[0].clientX-swipeStartX; const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping'); swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)'; if(swipeActive && dx>60 && swipeData && swipeData.texte && !selectionMode){ setReply(swipeData.nom, swipeData.texte); } swipeEl=null; swipeData=null; swipeActive=false; }
+    if(!key){ tapKey=null; return; }
+    if(longFired){ longFired=false; tapKey=null; return; } // l'appui long vient de selectionner, ne pas decocher tout de suite
+    if(selectionMode && !tapMoved && (Date.now()-tapTime)<700){
+      if(isPlayBtn(e)){ tapKey=null; return; } // le bouton play gere deja le toggle
+      toggleSelect(key);
+    }
+    tapKey=null;
   },{passive:true});
+  scroll.addEventListener('touchcancel',()=>{ clearTimeout(longPressTimer); if(swipeEl){ swipeEl.style.transform='translateX(0)'; swipeEl=null; } tapKey=null; },{passive:true});
+  // --- SOURIS / DESKTOP : click = cocher, appui long = selection ---
+  scroll.addEventListener('mousedown',e=>{
+    const row=rowOf(e); if(!row) return; const key=row.dataset.key; if(!key) return;
+    if(selectionMode) return;
+    clearTimeout(longPressTimer);
+    longPressTimer=setTimeout(()=>{ longFired=true; enterSelection(key); }, 450);
+  });
+  scroll.addEventListener('mouseup',()=>{ clearTimeout(longPressTimer); setTimeout(()=>{ longFired=false; }, 120); });
   scroll.addEventListener('click',e=>{
-    if(Date.now()-lastTouchTime < 600) return;
-    const row=e.target.closest('.msg-row'); if(!row) return;
-    if(selectionMode){ toggleSelect(row.dataset.key); return; }
+    // Si ca vient d'un touch, touchend a deja gere le toggle -> ne pas double-toggle
+    if(Date.now()-lastTouchEnd<500) return;
+    const row=rowOf(e); if(!row) return;
+    if(!selectionMode) return;
+    if(isPlayBtn(e)) return; // play gere deja
+    if(longFired) return;
+    toggleSelect(row.dataset.key);
   });
   scroll.addEventListener('contextmenu',e=>{
-    const row=e.target.closest('.msg-row'); if(!row) return;
-    e.preventDefault(); if(!selectionMode) enterSelection(row.dataset.key); else toggleSelect(row.dataset.key);
+    const row=rowOf(e); if(!row) return;
+    e.preventDefault();
+    if(!selectionMode) enterSelection(row.dataset.key); else toggleSelect(row.dataset.key);
   });
-  scroll.addEventListener('mousedown',e=>{
-    const row=e.target.closest('.msg-row'); if(!row) return;
-    clearTimeout(longPressTimer);
-    if(selectionMode) return;
-    longPressTimer=setTimeout(()=>{ enterSelection(row.dataset.key); },450);
-  });
-  scroll.addEventListener('mouseup',()=>clearTimeout(longPressTimer));
-  scroll.addEventListener('mouseleave',()=>clearTimeout(longPressTimer));
 }
 /* === POLLING APP INVENTOR - CORRIGÉ : gère aussi STATUS_URL_ === */
 setInterval(async ()=>{
@@ -706,7 +743,7 @@ function openViewer(){
   document.getElementById('viewer-name').textContent=g.nom;
   document.getElementById('viewer-time').textContent=timeAgo(item.createdAt)+' • '+new Date(item.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   const av=document.getElementById('viewer-avatar'); av.src=g.photo?getThumb(g.photo,200):''; av.style.display=g.photo?'block':'none';
-  document.getElementById('viewer-del').style.display=g.uid===currentUserId?'block':'none';
+  const _del=document.getElementById('viewer-del'); if(_del){ _del.style.display=g.uid===currentUserId?'block':'none'; _del.style.pointerEvents='auto'; _del.style.position='relative'; _del.style.zIndex='30'; }
   const viewsEl=document.getElementById('viewer-views');
   if(g.uid===currentUserId){ const n=item.viewedBy?Object.keys(item.viewedBy).length:0; viewsEl.style.display='block'; viewsEl.textContent='👁️ '+n+' vue(s)'; }
   else viewsEl.style.display='none';
@@ -730,7 +767,29 @@ function nextStatusItem(){ const g=allGroups[curGroupIndex]; if(!g) return; if(c
 function prevStatusItem(){ if(curItemIndex>0){ curItemIndex--; openViewer(); } else if(curGroupIndex>0){ curGroupIndex--; curItemIndex=allGroups[curGroupIndex].items.length-1; openViewer(); } else closeViewer(); }
 function closeViewer(){ if(viewerProgress) cancelAnimationFrame(viewerProgress); document.getElementById('viewer').classList.remove('show'); renderActus(); }
 function replyToStatus(){ const g=allGroups[curGroupIndex]; if(!g) return; const txt=document.getElementById('viewer-reply').value.trim(); if(!txt) return; const item=g.items[curItemIndex]; const label = item.type==='image' ? '📷 Statut photo' : '📝 Statut : '+(item.texte||''); const convId=[currentUserId,g.uid].sort().join('_'); database.ref(`conversations/${convId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:'↩️ '+label+'\n'+txt,createdAt:Date.now(),vu:false}); document.getElementById('viewer-reply').value=''; closeViewer(); ouvrirConversation(convId,g.nom); }
-async function deleteCurrentStatus(){ const g=allGroups[curGroupIndex]; if(!g||g.uid!==currentUserId) return; const item=g.items[curItemIndex]; if(!item) return; if(!confirm('Supprimer ce statut ?')) return; await database.ref('statuts/'+g.uid+'/'+item.id).remove(); if(viewerProgress) cancelAnimationFrame(viewerProgress); g.items.splice(curItemIndex,1); if(!g.items.length){ allGroups.splice(curGroupIndex,1); closeViewer(); return; } if(curItemIndex>=g.items.length) curItemIndex=g.items.length-1; openViewer(); }
+async function deleteCurrentStatus(){
+  const g=allGroups[curGroupIndex]; if(!g||g.uid!==currentUserId){ alert('Tu ne peux supprimer que ton propre statut.'); return; }
+  const item=g.items[curItemIndex]; if(!item){ alert('Aucun statut à supprimer.'); return; }
+  if(!confirm('Supprimer ce statut ? Il disparaîtra pour tout le monde.')) return;
+  try{
+    if(viewerProgress) cancelAnimationFrame(viewerProgress);
+    await database.ref('statuts/'+g.uid+'/'+item.id).remove();
+    // Attendre que le listener loadStatus reconstruise allGroups, sinon le splice manuel est ecrase
+    setTimeout(()=>{
+      const ng=allGroups.find(x=>x.uid===currentUserId);
+      if(!ng || !ng.items.length){ closeViewer(); renderActus(); return; }
+      curGroupIndex=allGroups.findIndex(x=>x.uid===currentUserId);
+      if(curItemIndex>=ng.items.length) curItemIndex=ng.items.length-1;
+      openViewer();
+    }, 350);
+  }catch(e){ alert('Suppression impossible : '+e.message); }
+}
+async function deleteMyStatusGroup(){
+  const g=allGroups.find(x=>x.uid===currentUserId); if(!g) return;
+  if(!confirm('Supprimer tous tes statuts ?')) return;
+  for(const it of g.items){ await database.ref('statuts/'+currentUserId+'/'+it.id).remove(); }
+  closeViewer();
+}
 function openTextModal(){ document.getElementById('status-colors').innerHTML=COLORS.map(c=>'<div class="color" data-c="'+c+'" style="background:'+c+'" onclick="selectColor(\''+c+'\')"></div>').join(''); selectColor(COLORS[0]); document.getElementById('text-modal').classList.add('show'); }
 function closeTextModal(){ document.getElementById('text-modal').classList.remove('show'); }
 function selectColor(c){ selectedColor=c; document.querySelectorAll('.color').forEach(el=>el.classList.toggle('active',el.dataset.c===c)); updateTextPreview(); }
@@ -807,7 +866,7 @@ function ouvrirConversation(convId,nom){
   window.currentConvId=convId; replyTo=null; exitSelection(); _msgCache={};
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
   const otherId=convId.split('_').find(id=>id!==currentUserId); window.currentOtherId=otherId; window.currentOtherName=nom;
-  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top" id="chat-top-bar"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span onclick="exitSelection()" style="cursor:pointer;font-size:18px">✕</span><span id="select-count">0 sélectionné(s)</span><div style="flex:1"></div><button id="select-reply-btn" onclick="replyToSelected()">↩️</button><button id="select-copy-btn" onclick="copySelected()">📋</button><button class="del" onclick="openDeleteModal()">🗑️ Supprimer</button></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-trash" onclick="discardPendingAudio()">🗑️</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top" id="chat-top-bar"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span onclick="exitSelection()" style="cursor:pointer;font-size:18px">✕</span><span id="select-count">0 sélectionné(s)</span><div style="flex:1"></div><button id="select-all-btn" class="all-btn" onclick="toggleSelectAll()">☑️ Tout cocher</button><button id="select-reply-btn" onclick="replyToSelected()">↩️</button><button id="select-copy-btn" onclick="copySelected()">📋</button><button class="del" onclick="openDeleteModal()">🗑️ Supprimer</button></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-trash" onclick="discardPendingAudio()">🗑️</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
   database.ref('clients/'+otherId).once('value').then(s=>{ const photo=getUserPhoto(s.val()||{}); const av=document.getElementById('chat-top-avatar'); if(av && photo) av.innerHTML='<img src="'+getThumb(photo,200)+'">'; });
