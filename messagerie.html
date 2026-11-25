@@ -164,7 +164,10 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .call-bubble b{font-size:15px;display:block}
 .call-bubble span{font-size:13px;color:rgba(255,255,255,.85)}
 .call-bubble.received span{color:var(--text2)}
-.select-bar{display:none;background:var(--orange-dark);color:#fff;padding:10px 12px;align-items:center;gap:8px;font-weight:800;font-size:14px;z-index:20;flex-wrap:wrap}
+.select-bar{display:none;background:var(--orange-dark);color:#fff;padding:8px 10px;align-items:center;gap:6px;font-weight:800;font-size:13px;z-index:20;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.select-bar::-webkit-scrollbar{display:none}
+.select-bar.show{display:flex}
+.select-bar button{flex-shrink:0}
 .select-bar .all-btn{background:#fff!important;color:#D63E00!important;white-space:nowrap}
 .select-bar.show{display:flex}
 .select-bar button{border:none;border-radius:999px;padding:8px 10px;font-weight:900;cursor:pointer;background:rgba(255,255,255,.2);color:#fff;font-size:16px}
@@ -180,8 +183,14 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .input-box input::placeholder{color:var(--text3);font-size:16px}
 .input-bottom{display:flex;align-items:center;gap:2px}
 .input-bottom .spacer{flex:1}
-.mini-icon{background:transparent;border:none;font-size:21px;cursor:pointer;color:var(--text2);padding:4px 6px}
-.mic-btn{width:50px;height:50px;border-radius:50%;background:var(--orange-dark);color:#fff;border:none;font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(214,62,0,.35);touch-action:none;user-select:none;-webkit-user-select:none}
+.mini-icon{background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--text2);padding:4px 6px;flex-shrink:0}
+.mic-btn{width:54px;height:54px;border-radius:50%;background:var(--orange-dark);color:#fff;border:none;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(214,62,0,.35);touch-action:none;user-select:none;-webkit-user-select:none;position:relative;overflow:hidden;transition:transform .12s, box-shadow .12s}
+.mic-btn:active{transform:scale(.92)}
+.mic-btn.pressed{transform:scale(.94);box-shadow:0 0 0 8px rgba(214,62,0,.18), 0 0 0 16px rgba(214,62,0,.08)}
+.mic-btn .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.65);transform:scale(0);pointer-events:none;animation:rippleDrop .6s ease-out forwards}
+@keyframes rippleDrop{to{transform:scale(3);opacity:0}}
+.mic-btn.recording{animation:micPulse 1s infinite}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,48,.45)}50%{box-shadow:0 0 0 10px rgba(255,59,48,0)}}
 .mic-btn.recording{background:#FF3B30;transform:scale(1.08)}
 .send-btn{width:50px;height:50px;border-radius:50%;background:var(--orange-dark);color:#fff;border:none;font-size:19px;cursor:pointer;flex-shrink:0;display:none;align-items:center;justify-content:center}
 .lock-hint{position:absolute;right:8px;bottom:72px;background:var(--text);color:var(--bg);font-size:12px;font-weight:700;padding:8px 12px;border-radius:999px;display:none;z-index:20}
@@ -410,7 +419,7 @@ function esc(s){ return String(s||'').replace(/'/g,"").replace(/"/g,''); }
 function updateSelectBar(){
   const bar=document.getElementById('select-bar'); if(!bar) return;
   const top=document.getElementById('chat-top-bar'); if(top) top.style.display = (selectionMode && selectedMsgs.size>0) ? 'none' : 'flex';
-  if(!selectionMode || selectedMsgs.size===0){ bar.classList.remove('show'); const _h=document.getElementById('select-hint'); if(_h) _h.style.display='none'; if(!selectionMode) return; }
+  if(!selectionMode){ bar.classList.remove('show'); const _h=document.getElementById('select-hint'); if(_h) _h.style.display='none'; return; } if(selectedMsgs.size===0){ bar.classList.add('show'); const _h2=document.getElementById('select-hint'); if(_h2) _h2.style.display='block'; }
   bar.classList.add('show');
   const c=document.getElementById('select-count'); if(c) c.textContent=selectedMsgs.size+' sélectionné(s)';
   const replyBtn=document.getElementById('select-reply-btn'); if(replyBtn) replyBtn.style.display = selectedMsgs.size===1 ? 'inline-flex':'none';
@@ -420,7 +429,7 @@ function updateSelectBar(){
   }
   const allBtn=document.getElementById('select-all-btn'); if(allBtn){
     const total=Object.keys(_msgCache).filter(k=>{ const m=_msgCache[k]; return m && !(m.deletedFor && m.deletedFor[currentUserId]) && (m.createdAt||0)>_convDeletedAt; }).length;
-    allBtn.textContent = (total>0 && selectedMsgs.size>=total) ? 'Tout décocher' : 'Tout cocher';
+    allBtn.textContent = (total>0 && selectedMsgs.size>=total) ? '☐ Tout' : '☑️ Tout';
   }
 }
 function toggleSelect(key){
@@ -439,12 +448,26 @@ function toggleSelectAll(){
   updateSelectBar();
   if(navigator.vibrate) navigator.vibrate(20);
 }
+let justLongPressedUntil=0;
+function handleLongPressSelect(key){
+  if(!key) return;
+  justLongPressedUntil=Date.now()+600;
+  if(!selectionMode){
+    selectionMode=true; selectedMsgs=new Set([key]);
+    document.querySelectorAll('.msg-row[data-key="'+key+'"]').forEach(r=>r.classList.add('selected'));
+    updateSelectBar();
+    if(navigator.vibrate) navigator.vibrate(30);
+  } else {
+    // Deja en selection : appui long = cocher / decocher CE message, tap ne fait rien
+    toggleSelect(key);
+  }
+}
 function startSelectionMode(){
   if(!window.currentConvId) return;
   selectionMode=true; selectedMsgs=new Set();
   updateSelectBar();
   const bar=document.getElementById('select-bar'); if(bar){ bar.classList.add('show'); }
-  const hint=document.getElementById('select-hint'); if(hint) hint.style.display='block';
+  const hint=document.getElementById('select-hint'); if(hint){ hint.textContent='Appui long sur chaque message à sélectionner, puis Supprimer'; hint.style.display='block'; }
 }
 function enterSelection(key){
   if(!key) return;
@@ -556,7 +579,7 @@ function getThumb(u,w){ if(!u) return ''; if(u.includes('/upload/')) return u.re
 function getUserPhoto(c){ return c?.photo || c?.photoUrl || c?.avatar || c?.image || ''; }
 function avatarHtml(nom, photo){ const init=(nom||'?').substring(0,2).toUpperCase(); if(photo) return '<img src="'+getThumb(photo,200)+'">'; return init; }
 function openImage(url, isProfilePhoto){
-  if(selectionMode) return;
+  if(selectionMode) return; if(Date.now()<justLongPressedUntil) return;
   if(!url) return;
   const v=document.getElementById('img-viewer');
   document.getElementById('img-viewer-pic').src=url;
@@ -618,17 +641,45 @@ const STICKERS={ "Joie":["😂","🤣","😊","😁","😄","😆","😅","🤭"
 function toggleStickers(){ const p=document.getElementById('sticker-panel'); if(!p) return; const show=!p.classList.contains('show'); p.classList.toggle('show',show); if(show) renderStickers('Joie'); }
 function renderStickers(cat){ document.querySelectorAll('.sticker-tab').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat)); const grid=document.getElementById('sticker-grid'); if(!grid) return; grid.innerHTML=STICKERS[cat].map(s=>'<div class="sticker-item" onclick="sendSticker(\''+s+'\')">'+s+'</div>').join(''); }
 function sendSticker(emoji){ if(!window.currentConvId) return; const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'sticker',texte:emoji,createdAt:Date.now()}); pushJS(otherId,'Sticker - '+document.getElementById('user-name').innerText,emoji); document.getElementById('sticker-panel').classList.remove('show'); }
-function togglePlayAudio(id){ if(selectionMode){ toggleSelect(id); return; } const aud=document.getElementById('aud-'+id); if(!aud) return; const btn=document.getElementById('play-'+id); document.querySelectorAll('audio').forEach(a=>{ if(a.id!=='aud-'+id) a.pause(); }); if(previewAudio) previewAudio.pause(); if(aud.paused){ aud.play().catch(e=>alert('Audio illisible : '+e.message)); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; } }
+function togglePlayAudio(id){ if(selectionMode) return; if(Date.now()<justLongPressedUntil) return; const aud=document.getElementById('aud-'+id); if(!aud) return; const btn=document.getElementById('play-'+id); document.querySelectorAll('audio').forEach(a=>{ if(a.id!=='aud-'+id) a.pause(); }); if(previewAudio) previewAudio.pause(); if(aud.paused){ aud.play().catch(e=>alert('Audio illisible : '+e.message)); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; } }
 function showAudioPreview(){ const recBox=document.getElementById('rec-box'); if(recBox) recBox.classList.add('show'); const inputBox=document.getElementById('input-box'); if(inputBox) inputBox.style.display='none'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.add('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='none'; const t=document.getElementById('preview-time'); if(t) t.textContent='0:00 / '+fmtTime(pendingAudioDuree||recElapsed); const w=document.getElementById('preview-wave'); if(w) w.innerHTML=waveHtml(24); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show'); const sendBtn=document.getElementById('rec-send-btn'); if(sendBtn){ sendBtn.innerHTML='➤'; sendBtn.style.display='flex'; } }
 function togglePreview(){ if(!pendingAudioUrl) return; let aud=document.getElementById('preview-aud'); if(!aud){ aud=document.createElement('audio'); aud.id='preview-aud'; aud.src=pendingAudioUrl; aud.style.display='none'; document.body.appendChild(aud); } if(previewPlaying && !aud.paused){ aud.pause(); previewPlaying=false; document.getElementById('preview-play').textContent='▶️'; return; } aud.play().catch(()=>{}); previewPlaying=true; document.getElementById('preview-play').textContent='⏸️'; aud.ontimeupdate=()=>{ const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(Math.floor(aud.currentTime))+' / '+fmtTime(pendingAudioDuree||recElapsed); }; aud.onended=()=>{ previewPlaying=false; document.getElementById('preview-play').textContent='▶️'; }; }
-async function confirmSendPendingAudio(){ if(!pendingAudioUrl) return; const url=pendingAudioUrl; const duree=pendingAudioDuree||recElapsed; const old=recElapsed; recElapsed=duree; await pushAudioMessage(url); recElapsed=old; pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; if(previewAudio) previewAudio.pause(); previewPlaying=false; const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); } resetRecUI(); }
+async function confirmSendPendingAudio(){ playMicSound('stop'); if(!pendingAudioUrl) return; const url=pendingAudioUrl; const duree=pendingAudioDuree||recElapsed; const old=recElapsed; recElapsed=duree; await pushAudioMessage(url); recElapsed=old; pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; if(previewAudio) previewAudio.pause(); previewPlaying=false; const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); } resetRecUI(); }
 function discardPendingAudio(){ pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; if(previewAudio) previewAudio.pause(); previewPlaying=false; const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); } resetRecUI(); }
 async function startRecording(){ if(isRecording) return; isPaused=false; updatePauseBtn(); pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; mediaChunks=[]; isRecording=true; micStarted=true; recElapsed=0; recStartTime=Date.now(); if(previewAudio) previewAudio.pause(); previewPlaying=false; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.classList.add('recording'); mic.style.display='flex'; } const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='Glisse vers le haut pour verrouiller • Glisse à gauche pour annuler'; hint.classList.remove('locked'); hint.classList.add('show'); } updateRecWave(); clearInterval(recTimer); recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); },300); if(IS_APP){ sendToApp('PICK_AUDIO'); return; } try{ mediaStream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(mediaStream); mediaChunks=[]; mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) mediaChunks.push(e.data); }; mediaRecorder.start(250); }catch(e){ alert('Micro refusé : '+e.message); cancelRecording(); } }
 function stopMedia(){ try{ if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop(); }catch(e){} try{ if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop()); }catch(e){} mediaRecorder=null; mediaStream=null; }
 function cancelRecording(){ isPaused=false; updatePauseBtn(); if(IS_APP) sendToApp('CANCEL_AUDIO'); isRecording=false; micStarted=false; micLocked=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false; if(!IS_APP) stopMedia(); mediaChunks=[]; pendingAudioUrl=null; resetRecUI(); }
 async function pushAudioMessage(url){ try{ const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false}); pushJS(otherId,'Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal'); }catch(e){ alert('Push échoué: '+e.message); } }
 async function stopAndSendRecording(){ if(pendingAudioUrl){ confirmSendPendingAudio(); return; } if(IS_APP){ if(!isRecording) return; waitingAudio=true; sendToApp('STOP_AUDIO'); isRecording=false; micLocked=false; micStarted=false; clearInterval(recTimer); const up=document.getElementById('rec-upload'); if(up){ up.textContent='Préparation...'; up.classList.add('show'); } setTimeout(()=>{ if(waitingAudio){ waitingAudio=false; resetRecUI(); } },15000); return; } if(!isRecording && !mediaChunks.length) return; isRecording=false; micLocked=false; micStarted=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false; const up=document.getElementById('rec-upload'); if(up){ up.textContent='Préparation...'; up.classList.add('show'); } try{ const blob=await new Promise((resolve)=>{ if(!mediaRecorder || mediaRecorder.state==='inactive'){ resolve(new Blob(mediaChunks,{type:'audio/webm'})); return; } mediaRecorder.onstop=()=>{ resolve(new Blob(mediaChunks,{type:'audio/webm'})); }; try{ mediaRecorder.stop(); }catch(e){ resolve(new Blob(mediaChunks,{type:'audio/webm'})); } }); stopMedia(); if(!blob || blob.size<500){ resetRecUI(); return; } pendingBlob=blob; const cloudUrl=await uploadAudioToCloudinary(blob,'vocal_'+Date.now()+'.webm'); pendingAudioUrl=cloudUrl; pendingAudioDuree=recElapsed; showAudioPreview(); }catch(e){ alert('Envoi vocal échoué : '+e.message); resetRecUI(); } if(up) up.classList.remove('show'); mediaChunks=[]; }
-function resetRecUI(){ isPaused=false; updatePauseBtn(); pendingAudioUrl=null; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='flex'; if(recBox) recBox.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('recording'); mic.innerText='Vocal'; mic.style.transform=''; } const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); const t=document.getElementById('rec-time'); if(t) t.textContent='0:00'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; }
+function resetRecUI(){ isPaused=false; updatePauseBtn(); pendingAudioUrl=null; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='flex'; if(recBox) recBox.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('recording'); mic.innerText='🎙️'; mic.style.transform=''; } const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); const t=document.getElementById('rec-time'); if(t) t.textContent='0:00'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; }
+let _audioCtx=null;
+function playMicSound(kind){
+  try{
+    if(!_audioCtx) _audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(_audioCtx.state==='suspended') _audioCtx.resume();
+    const ctx=_audioCtx, t0=ctx.currentTime;
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    if(kind==='start'){ osc.frequency.setValueAtTime(520,t0); osc.frequency.exponentialRampToValueAtTime(820,t0+0.09); gain.gain.setValueAtTime(0.0001,t0); gain.gain.exponentialRampToValueAtTime(0.18,t0+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,t0+0.14); osc.start(t0); osc.stop(t0+0.15); }
+    else if(kind==='lock'){ osc.frequency.setValueAtTime(700,t0); osc.frequency.exponentialRampToValueAtTime(950,t0+0.08); gain.gain.setValueAtTime(0.0001,t0); gain.gain.exponentialRampToValueAtTime(0.15,t0+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,t0+0.12); osc.start(t0); osc.stop(t0+0.13); }
+    else if(kind==='stop'){ osc.frequency.setValueAtTime(620,t0); osc.frequency.exponentialRampToValueAtTime(380,t0+0.10); gain.gain.setValueAtTime(0.0001,t0); gain.gain.exponentialRampToValueAtTime(0.14,t0+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,t0+0.13); osc.start(t0); osc.stop(t0+0.14); }
+    else if(kind==='cancel'){ osc.frequency.setValueAtTime(300,t0); gain.gain.setValueAtTime(0.0001,t0); gain.gain.exponentialRampToValueAtTime(0.12,t0+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,t0+0.12); osc.start(t0); osc.stop(t0+0.13); }
+  }catch(e){}
+}
+function createRipple(btn, e){
+  if(!btn) return;
+  const rect=btn.getBoundingClientRect();
+  const x = e.clientX!==undefined ? e.clientX-rect.left : rect.width/2;
+  const y = e.clientY!==undefined ? e.clientY-rect.top : rect.height/2;
+  const s=document.createElement('span'); s.className='ripple';
+  const size=Math.max(rect.width, rect.height);
+  s.style.width=s.style.height=size+'px';
+  s.style.left=(x-size/2)+'px'; s.style.top=(y-size/2)+'px';
+  btn.appendChild(s);
+  setTimeout(()=>{ s.remove(); }, 650);
+  btn.classList.add('pressed');
+  setTimeout(()=>{ btn.classList.remove('pressed'); }, 250);
+}
 let isPaused=false;
 function updatePauseBtn(){ const b=document.getElementById('rec-pause-btn'); if(b) b.textContent = isPaused ? 'Reprendre' : 'Pause'; const tm=document.getElementById('rec-time'); if(tm) tm.style.opacity = isPaused ? '0.5' : '1'; }
 function toggleRecPause(){
@@ -652,7 +703,7 @@ function toggleRecPause(){
   }
 }
 function lockRecording(){
-  if(micLocked) return;
+  if(micLocked) return; playMicSound('lock');
   micLocked=true;
   const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='Enregistrement verrouillé - Pause / Envoyer'; hint.classList.add('locked'); hint.classList.add('show'); }
   const mic=document.getElementById('btn-rec'); if(mic){ mic.style.transform='translateY(-6px)'; }
@@ -667,6 +718,7 @@ function initMicSwipe(){
     if(isRecording) return;
     const p = e.clientX!==undefined ? {x:e.clientX,y:e.clientY} : (e.touches && e.touches[0] ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : {x:0,y:0});
     mStartX=p.x; mStartY=p.y; mMoved=false; mCancelled=false;
+    const _micBtn=document.getElementById('btn-rec'); createRipple(_micBtn, e); playMicSound('start');
     startRecording();
   }
   function mMove(e){
@@ -686,7 +738,7 @@ function initMicSwipe(){
     const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
     const micEl=document.getElementById('btn-rec'); if(micEl) micEl.style.transform='translateY(0)';
     if(!isRecording) return;
-    if(mCancelled){ cancelRecording(); return; }
+    if(mCancelled){ playMicSound('cancel'); cancelRecording(); return; }
     if(micLocked){
       // Verrouille : on reste en enregistrement, on n'envoie pas tant qu'on n'appuie pas Envoyer
       if(hint){ hint.textContent='Enregistrement verrouillé - Pause / Envoyer'; hint.classList.add('locked'); hint.classList.add('show'); }
@@ -694,6 +746,7 @@ function initMicSwipe(){
     }
     // Pas verrouille : relacher = envoyer (maintien = enregistre, lacher = envoie)
     if(isPaused){ toggleRecPause(); }
+    playMicSound('stop');
     stopAndSendRecording();
   }
   mic.addEventListener('pointerdown', mDown);
@@ -721,9 +774,9 @@ function initSwipe(){
     const key=row.dataset.key; if(!key) return;
     pressKey=key; moved=false; longFired=false;
     const p=getXY(e); startX=p.x; startY=p.y; startTime=Date.now();
-    if(selectionMode) return;
     clearPress();
-    pressTimer=setTimeout(()=>{ longFired=true; enterSelection(key); }, 400);
+    // APPUI LONG SEUL selectionne. Le tap ne coche jamais.
+    pressTimer=setTimeout(()=>{ longFired=true; handleLongPressSelect(key); }, 420);
     const b=e.target.closest ? e.target.closest('.msg-bubble, .audio-bubble, .call-bubble') : null;
     if(b){ swipeEl2=b; swipeData2={nom:b.dataset.nom||'', texte:b.dataset.texte||''}; swipeActive2=false; b.style.transition='none'; }
   }
@@ -731,6 +784,8 @@ function initSwipe(){
     if(!pressKey) return;
     const p=getXY(e); const dx=p.x-startX, dy=p.y-startY;
     if(Math.abs(dx)>10 || Math.abs(dy)>10){ moved=true; clearPress(); }
+    // Si appui long deja declenche, on desactive le swipe Repondre pour ce geste
+    if(longFired) return;
     if(selectionMode) return;
     if(!swipeEl2) return;
     if(Math.abs(dy)>30) return;
@@ -739,23 +794,19 @@ function initSwipe(){
   function onUp(e){
     clearPress();
     const key=pressKey;
+    // Swipe Repondre : seulement si PAS d'appui long et PAS en selection
     if(swipeEl2){
       const p=getXY(e); const dx=p.x-startX;
       const row=swipeEl2.closest('.msg-row'); if(row) row.classList.remove('swiping');
       swipeEl2.style.transition='transform .2s'; swipeEl2.style.transform='translateX(0)';
-      if(swipeActive2 && dx>60 && swipeData2 && swipeData2.texte && !selectionMode){ setReply(swipeData2.nom, swipeData2.texte); }
+      if(!longFired && !selectionMode && swipeActive2 && dx>60 && swipeData2 && swipeData2.texte){ setReply(swipeData2.nom, swipeData2.texte); }
       swipeEl2=null; swipeData2=null; swipeActive2=false;
     }
-    if(!key){ pressKey=null; return; }
-    if(longFired){ longFired=false; pressKey=null; return; }
-    if(selectionMode && !moved){
-      if(isPlay(e)){ pressKey=null; return; }
-      toggleSelect(key);
-    }
+    // TAP NE COCHE JAMAIS. On ne fait rien ici. Seul l'appui long coche.
     pressKey=null;
+    if(longFired){ longFired=false; }
   }
   function onCancel(){ clearPress(); if(swipeEl2){ swipeEl2.style.transform='translateX(0)'; swipeEl2=null; } pressKey=null; }
-  // Pointer Events = UN SEUL systeme pour souris + tactile, fiable en WebView App Inventor
   scroll.addEventListener('pointerdown', onDown);
   scroll.addEventListener('pointermove', onMove);
   scroll.addEventListener('pointerup', onUp);
@@ -763,15 +814,14 @@ function initSwipe(){
   scroll.addEventListener('contextmenu', e=>{
     const row=rowOf(e); if(!row) return;
     e.preventDefault();
-    if(!selectionMode) enterSelection(row.dataset.key); else toggleSelect(row.dataset.key);
+    handleLongPressSelect(row.dataset.key);
   });
-  // Fallback click pour vieux WebView sans PointerEvent : ne double-toggle pas si pointerup vient de gerer
+  // Click apres appui long : ne pas ouvrir image / audio / repondre
   scroll.addEventListener('click', e=>{
-    if(window.PointerEvent) return;
-    const row=rowOf(e); if(!row || !selectionMode) return;
-    if(isPlay(e)) return;
-    toggleSelect(row.dataset.key);
-  });
+    if(Date.now()<justLongPressedUntil){ e.preventDefault(); e.stopPropagation(); return; }
+    // En mode selection, le tap ne fait rien du tout
+    if(selectionMode){ e.preventDefault(); e.stopPropagation(); return; }
+  }, true);
 }
 /* === POLLING APP INVENTOR - CORRIGÉ : gère aussi STATUS_URL_ === */
 setInterval(async ()=>{
@@ -952,7 +1002,7 @@ function ouvrirConversation(convId,nom){
   window.currentConvId=convId; replyTo=null; exitSelection(); _msgCache={};
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
   const otherId=convId.split('_').find(id=>id!==currentUserId); window.currentOtherId=otherId; window.currentOtherName=nom;
-  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top" id="chat-top-bar"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span onclick="exitSelection()" style="cursor:pointer;font-size:18px">✕</span><span id="select-count">0 sélectionné(s)</span><div style="flex:1"></div><button id="select-all-btn" class="all-btn" onclick="toggleSelectAll()">Tout cocher</button><button id="select-reply-btn" onclick="replyToSelected()">Répondre</button><button id="select-copy-btn" onclick="copySelected()">Copier</button><button class="del" onclick="openDeleteModal()">Supprimer</button></div><div class="select-hint" id="select-hint" style="display:none">Tape sur les messages à sélectionner, puis Supprimer</div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller • Glisse à gauche pour annuler</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">Stickers</button><button class="mini-icon" onclick="pickImageChat()">Joindre</button><button class="mini-icon" onclick="pickImageChat()">Photo</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-pause-btn" id="rec-pause-btn" onclick="toggleRecPause()">Pause</button><button class="rec-trash" onclick="discardPendingAudio()">Supprimer</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">Vocal</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top" id="chat-top-bar"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span onclick="exitSelection()" style="cursor:pointer;font-size:18px;flex-shrink:0">✕</span><span id="select-count" style="flex-shrink:0">0 sélectionné(s)</span><button id="select-all-btn" class="all-btn" onclick="toggleSelectAll()">☑️ Tout</button><button id="select-reply-btn" onclick="replyToSelected()">↩️</button><button id="select-copy-btn" onclick="copySelected()">📋</button><button class="del" onclick="openDeleteModal()">🗑️ Supprimer</button></div><div class="select-hint" id="select-hint" style="display:none">Appui long sur chaque message à sélectionner, puis Supprimer</div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller • Glisse à gauche pour annuler</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-pause-btn" id="rec-pause-btn" onclick="toggleRecPause()">Pause</button><button class="rec-trash" onclick="discardPendingAudio()">Supprimer</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
   database.ref('clients/'+otherId).once('value').then(s=>{ const photo=getUserPhoto(s.val()||{}); const av=document.getElementById('chat-top-avatar'); if(av && photo) av.innerHTML='<img src="'+getThumb(photo,200)+'">'; });
