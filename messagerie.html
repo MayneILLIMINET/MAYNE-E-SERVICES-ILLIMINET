@@ -128,9 +128,12 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 .msg-row.selected{background:rgba(214,62,0,.18);outline:2px solid var(--orange-dark)}
 .msg-row .check{position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--orange-dark);color:#fff;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:900;z-index:3}
 .msg-row.selected .check{display:flex}
-.swipe-icon{position:absolute;left:6px;top:50%;transform:translateY(-50%) scale(.6);opacity:0;font-size:20px;transition:all .15s;pointer-events:none;z-index:2}
+.swipe-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%) scale(.9);opacity:0;font-size:12px;font-weight:800;background:#fff;color:#111;padding:6px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:all .15s;pointer-events:none;z-index:2;white-space:nowrap}
 .msg-row.swiping .swipe-icon{opacity:1;transform:translateY(-50%) scale(1)}
-.msg-bubble{max-width:82%;padding:8px 10px 6px;border-radius:16px;font-size:16px;word-break:break-word;line-height:1.35;box-shadow:var(--shadow);position:relative;transition:transform .1s;touch-action:pan-y;user-select:none}
+.msg-bubble{max-width:82%;padding:8px 10px 6px;border-radius:16px;font-size:16px;word-break:break-word;line-height:1.35;box-shadow:var(--shadow);position:relative;transition:transform .1s;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.chat-container{ touch-action:pan-y; }
+.select-hint{font-size:12px;color:#fff;background:var(--orange-dark);padding:8px 12px;text-align:center;font-weight:700}
+.rec-pause-btn{width:44px;height:44px;border-radius:50%;background:#fff;color:#111;border:none;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0}
 .msg-left{background:var(--bubble-other);color:var(--text);align-self:flex-start;border-top-left-radius:4px}
 .msg-right{background:var(--bubble-me);color:#fff;align-self:flex-end;border-top-right-radius:4px}
 .msg-time{font-size:11px;color:var(--text2);margin-left:8px;float:right;margin-top:8px;white-space:nowrap}
@@ -295,24 +298,24 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
 </style>
 </head>
 <body data-theme="light">
-<div id="img-viewer" onclick="closeImageViewer()"><img id="img-viewer-pic"><div class="viewer-photo-btns" onclick="event.stopPropagation()"><button style="background:#fff;color:#111" onclick="closeImageViewer()">Fermer</button><button id="img-viewer-change-btn" style="background:#D63E00;color:#fff;display:none" onclick="closeImageViewer(); pickProfilePhoto()">📷 Changer cette photo</button></div></div>
+<div id="img-viewer" onclick="closeImageViewer()"><img id="img-viewer-pic"><div class="viewer-photo-btns" onclick="event.stopPropagation()"><button style="background:#fff;color:#111" onclick="closeImageViewer()">Fermer</button><button id="img-viewer-change-btn" style="background:#D63E00;color:#fff;display:none" onclick="closeImageViewer(); pickProfilePhoto()">Changer cette photo</button></div></div>
 <div id="profile-modal" onclick="if(event.target===this) closeProfile()">
   <div class="profile-sheet">
     <div class="profile-handle"></div>
     <div class="profile-top">
-      <div class="profile-avatar" id="profile-avatar" onclick="onProfileAvatarClick()">M<div class="profile-edit-badge" id="profile-edit-badge" style="display:none">📷</div></div>
+      <div class="profile-avatar" id="profile-avatar" onclick="onProfileAvatarClick()">M<div class="profile-edit-badge" id="profile-edit-badge" style="display:none">Photo</div></div>
       <div><div class="profile-name" id="profile-name">Nom</div><div class="profile-num" id="profile-num">+229 ...</div><div class="profile-status" id="profile-status">hors ligne</div></div>
     </div>
     <div class="profile-rows"><div class="profile-row"><span>Nom</span><span id="profile-row-nom">-</span></div><div class="profile-row"><span>Numéro</span><span id="profile-row-num">-</span></div><div class="profile-row"><span>Compte</span><span id="profile-row-id">-</span></div></div>
-    <div class="profile-actions"><button class="profile-btn edit" id="btn-change-photo" onclick="pickProfilePhoto()">📷 Changer photo</button><button class="profile-btn msg" onclick="closeProfile(); document.getElementById('msg-input')?.focus()">💬 Message</button><button class="profile-btn close" onclick="closeProfile()">Fermer</button></div>
-    <button class="btn btn-orange" onclick="closeProfile(); openInviteModal()">➕ Inviter des amis</button>
+    <div class="profile-actions"><button class="profile-btn edit" id="btn-change-photo" onclick="pickProfilePhoto()">Changer photo</button><button class="profile-btn msg" onclick="closeProfile(); document.getElementById('msg-input')?.focus()">Message</button><button class="profile-btn close" onclick="closeProfile()">Fermer</button></div>
+    <button class="btn btn-orange" onclick="closeProfile(); openInviteModal()">Inviter des amis</button>
   </div>
 </div>
 <div class="chat-menu" id="chat-menu" onclick="if(event.target===this) closeChatMenu()">
   <div class="chat-menu-sheet">
-    <button onclick="closeChatMenu(); openProfile(window.currentOtherId, window.currentOtherName)">👤 Voir le profil</button>
-    <button onclick="closeChatMenu(); openInviteModal()">➕ Inviter des amis</button>
-    <button class="danger" onclick="closeChatMenu(); deleteConversation()">🗑️ Supprimer la conversation</button>
+    <button onclick="closeChatMenu(); startSelectionMode()">Sélectionner des messages</button><button onclick="closeChatMenu(); openProfile(window.currentOtherId, window.currentOtherName)">Voir le profil</button>
+    <button onclick="closeChatMenu(); openInviteModal()">Inviter des amis</button>
+    <button class="danger" onclick="closeChatMenu(); deleteConversation()">Supprimer la conversation</button>
     <button onclick="closeChatMenu()" style="text-align:center;color:var(--text2)">Annuler</button>
   </div>
 </div>
@@ -325,24 +328,24 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
   <div class="viewer-bottom"><input class="viewer-input" id="viewer-reply" placeholder="Répondre..."><button class="viewer-send" onclick="replyToStatus()">➤</button></div>
 </div>
 <div class="modal" id="text-modal" onclick="if(event.target===this) closeTextModal()">
-  <div class="sheet"><h3>✏️ Écrire un statut</h3><textarea id="status-text" placeholder="Écris quelque chose..." maxlength="200" oninput="updateTextPreview()"></textarea><div class="colors" id="status-colors"></div><div class="preview-text" id="text-preview">Aperçu</div><input type="text" id="status-caption" placeholder="Légende (optionnel)..."><button class="btn btn-orange" onclick="publishTextStatus()">Publier • 24h</button><button class="btn btn-grey" onclick="closeTextModal()">Annuler</button></div>
+  <div class="sheet"><h3>Écrire un statut</h3><textarea id="status-text" placeholder="Écris quelque chose..." maxlength="200" oninput="updateTextPreview()"></textarea><div class="colors" id="status-colors"></div><div class="preview-text" id="text-preview">Aperçu</div><input type="text" id="status-caption" placeholder="Légende (optionnel)..."><button class="btn btn-orange" onclick="publishTextStatus()">Publier • 24h</button><button class="btn btn-grey" onclick="closeTextModal()">Annuler</button></div>
 </div>
 <div class="modal" id="photo-modal" onclick="if(event.target===this) closePhotoModal()">
-  <div class="sheet"><h3>📷 Ajouter une photo</h3><img id="photo-preview" style="width:100%;max-height:280px;object-fit:cover;border-radius:14px;display:none"><input type="text" id="photo-caption" placeholder="Légende (optionnel)..." style="margin-top:12px"><button class="btn btn-orange" onclick="publishPhotoStatus()">Publier • 24h</button><button class="btn btn-grey" onclick="closePhotoModal()">Annuler</button></div>
+  <div class="sheet"><h3>Ajouter une photo</h3><img id="photo-preview" style="width:100%;max-height:280px;object-fit:cover;border-radius:14px;display:none"><input type="text" id="photo-caption" placeholder="Légende (optionnel)..." style="margin-top:12px"><button class="btn btn-orange" onclick="publishPhotoStatus()">Publier • 24h</button><button class="btn btn-grey" onclick="closePhotoModal()">Annuler</button></div>
 </div>
 <div class="modal" id="delete-modal" onclick="if(event.target===this) closeDeleteModal()">
   <div class="sheet delete-sheet"><h3 id="delete-title">Supprimer les messages ?</h3><p id="delete-desc">Choisis comment supprimer. Comme sur WhatsApp.</p>
-  <button class="delete-opt" id="delete-for-me-btn" onclick="doDeleteForMe()"><b>🗑️ Supprimer pour moi</b><span>Disparaît de ton téléphone uniquement. L'autre personne le verra toujours.</span></button>
-  <button class="delete-opt" id="delete-for-all-btn" onclick="doDeleteForEveryone()"><b>🚫 Supprimer pour tout le monde</b><span id="delete-for-all-hint">Remplacé par « Ce message a été supprimé » chez tout le monde. Possible pendant 2 jours après l'envoi.</span></button>
+  <button class="delete-opt" id="delete-for-me-btn" onclick="doDeleteForMe()"><b>Supprimer pour moi</b><span>Disparaît de ton téléphone uniquement. L'autre personne le verra toujours.</span></button>
+  <button class="delete-opt" id="delete-for-all-btn" onclick="doDeleteForEveryone()"><b>Supprimer pour tout le monde</b><span id="delete-for-all-hint">Remplacé par « Ce message a été supprimé » chez tout le monde. Possible pendant 2 jours après l'envoi.</span></button>
   <button class="btn btn-grey" onclick="closeDeleteModal()">Annuler</button></div>
 </div>
 <div class="modal" id="invite-modal" onclick="if(event.target===this) closeInviteModal()">
   <div class="sheet">
-    <h3>➕ Inviter des amis sur MAYNE</h3>
+    <h3>Inviter des amis sur MAYNE</h3>
     <p style="color:var(--text2);font-size:14px;line-height:1.4;margin:0">Tes amis rejoignent MAYNE avec ton lien, ils te retrouvent direct en discussion.</p>
     <div class="invite-link-box" id="invite-link">—</div>
-    <div class="btn-row"><button class="btn btn-green" onclick="inviteWhatsApp()">💬 WhatsApp</button><button class="btn btn-orange" onclick="inviteSMS()">💬 SMS</button></div>
-    <div class="btn-row"><button class="btn btn-grey" onclick="copyInviteLink()">📋 Copier le lien</button><button class="btn btn-grey" onclick="shareInvite()">↗️ Partager</button></div>
+    <div class="btn-row"><button class="btn btn-green" onclick="inviteWhatsApp()">WhatsApp</button><button class="btn btn-orange" onclick="inviteSMS()">SMS</button></div>
+    <div class="btn-row"><button class="btn btn-grey" onclick="copyInviteLink()">Copier Copier le lien</button><button class="btn btn-grey" onclick="shareInvite()">↗️ Partager</button></div>
     <div style="height:1px;background:var(--border);margin:16px 0"></div>
     <h3 style="font-size:16px">📞 Inviter par numéro</h3>
     <input type="tel" id="invite-phone" placeholder="Ex : 229 96 00 00 00">
@@ -351,17 +354,17 @@ body{background:var(--bg);display:flex;justify-content:center;font-family:system
   </div>
 </div>
 <div class="app-container">
-  <div class="topbar"><div class="top-left"><div class="my-avatar" id="my-avatar" onclick="openMyProfile()">M</div><div class="top-name"><span id="user-name">Chargement...</span><small>Messagerie MAYNE</small></div></div><div class="top-actions"><button class="invite-btn" onclick="openInviteModal()">➕ Inviter</button><button id="theme-btn" onclick="toggleTheme()">🌙</button><button onclick="location.href='index.html'">🏠</button></div></div>
+  <div class="topbar"><div class="top-left"><div class="my-avatar" id="my-avatar" onclick="openMyProfile()">M</div><div class="top-name"><span id="user-name">Chargement...</span><small>Messagerie MAYNE</small></div></div><div class="top-actions"><button class="invite-btn" onclick="openInviteModal()">Inviter</button><button id="theme-btn" onclick="toggleTheme()">🌙</button><button onclick="location.href='index.html'">🏠</button></div></div>
   <div class="tabs" id="main-tabs">
-    <button class="tab active" id="tab-discussions" onclick="switchTab('discussions')">💬 Discussions</button>
-    <button class="tab" id="tab-actus" onclick="switchTab('actus')">🟢 Actus</button>
+    <button class="tab active" id="tab-discussions" onclick="switchTab('discussions')">Discussions</button>
+    <button class="tab" id="tab-actus" onclick="switchTab('actus')">Actus</button>
   </div>
-  <div id="search-zone" class="search-bar"><input type="text" id="recherche-user-input" class="search-input" placeholder="🔍 Rechercher un utilisateur..." oninput="rechercherUtilisateur()"><div id="resultats-recherche" class="search-results"></div></div>
+  <div id="search-zone" class="search-bar"><input type="text" id="recherche-user-input" class="search-input" placeholder="Rechercher un utilisateur..." oninput="rechercherUtilisateur()"><div id="resultats-recherche" class="search-results"></div></div>
   <div id="messagerie-feed"></div>
   <div id="actus-feed"></div>
   <div class="fab-wrap" id="actus-fabs">
     <button class="fab fab-text" onclick="openTextModal()">✏️</button>
-    <button class="fab fab-photo" onclick="pickStatusPhoto()">📷</button>
+    <button class="fab fab-photo" onclick="pickStatusPhoto()">Photo</button>
   </div>
 </div>
 <div class="bottom-nav">
@@ -407,7 +410,7 @@ function esc(s){ return String(s||'').replace(/'/g,"").replace(/"/g,''); }
 function updateSelectBar(){
   const bar=document.getElementById('select-bar'); if(!bar) return;
   const top=document.getElementById('chat-top-bar'); if(top) top.style.display = (selectionMode && selectedMsgs.size>0) ? 'none' : 'flex';
-  if(!selectionMode || selectedMsgs.size===0){ bar.classList.remove('show'); return; }
+  if(!selectionMode || selectedMsgs.size===0){ bar.classList.remove('show'); const _h=document.getElementById('select-hint'); if(_h) _h.style.display='none'; if(!selectionMode) return; }
   bar.classList.add('show');
   const c=document.getElementById('select-count'); if(c) c.textContent=selectedMsgs.size+' sélectionné(s)';
   const replyBtn=document.getElementById('select-reply-btn'); if(replyBtn) replyBtn.style.display = selectedMsgs.size===1 ? 'inline-flex':'none';
@@ -417,7 +420,7 @@ function updateSelectBar(){
   }
   const allBtn=document.getElementById('select-all-btn'); if(allBtn){
     const total=Object.keys(_msgCache).filter(k=>{ const m=_msgCache[k]; return m && !(m.deletedFor && m.deletedFor[currentUserId]) && (m.createdAt||0)>_convDeletedAt; }).length;
-    allBtn.textContent = (total>0 && selectedMsgs.size>=total) ? '☐ Tout décocher' : '☑️ Tout cocher';
+    allBtn.textContent = (total>0 && selectedMsgs.size>=total) ? 'Tout décocher' : 'Tout cocher';
   }
 }
 function toggleSelect(key){
@@ -436,6 +439,13 @@ function toggleSelectAll(){
   updateSelectBar();
   if(navigator.vibrate) navigator.vibrate(20);
 }
+function startSelectionMode(){
+  if(!window.currentConvId) return;
+  selectionMode=true; selectedMsgs=new Set();
+  updateSelectBar();
+  const bar=document.getElementById('select-bar'); if(bar){ bar.classList.add('show'); }
+  const hint=document.getElementById('select-hint'); if(hint) hint.style.display='block';
+}
 function enterSelection(key){
   if(!key) return;
   selectionMode=true; selectedMsgs=new Set([key]);
@@ -444,7 +454,7 @@ function enterSelection(key){
   if(navigator.vibrate) navigator.vibrate(30);
 }
 function exitSelection(){
-  selectionMode=false; selectedMsgs.clear();
+  selectionMode=false; selectedMsgs.clear(); const _h=document.getElementById('select-hint'); if(_h) _h.style.display='none';
   document.querySelectorAll('.msg-row.selected').forEach(r=>r.classList.remove('selected'));
   updateSelectBar();
 }
@@ -504,7 +514,7 @@ function copySelected(){
 function replyToSelected(){
   if(selectedMsgs.size!==1) return;
   const k=[...selectedMsgs][0]; const m=_msgCache[k]; if(!m) return;
-  const txt = m.type==='text' ? m.texte : m.type==='image' ? '📷 Photo' : m.type==='audio' ? '🎙️ Vocal' : m.type==='sticker' ? (m.texte||'🧩') : 'Message';
+  const txt = m.type==='text' ? m.texte : m.type==='image' ? 'Photo' : m.type==='audio' ? 'Vocal' : m.type==='sticker' ? (m.texte||'Sticker') : 'Message';
   setReply(m.senderNom||'', txt);
   exitSelection();
 }
@@ -603,88 +613,164 @@ async function saveProfilePhoto(url){
 }
 function formatPhone(n){ n=String(n||''); if(n.length>=8 && !n.startsWith('+')) return '+229 '+n; return n; }
 function pickImageChat(){ if(window.AppInventor) sendToApp('PICK_CHAT'); else document.getElementById('file-picker').click(); }
-async function onFilePicked(e){ const f=e.target.files[0]; if(!f||!window.currentConvId) return; try{ const url=await uploadImageToCloudinary(f); const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }catch(err){ alert('Photo échouée : '+err.message); } e.target.value=''; }
-const STICKERS={ "😍 Amour":["😍","🥰","😘","❤️","💋","💖","💘","💝","😻","🫶","💕","❤️‍🔥"], "😂 Drôle":["😂","🤣","😅","😆","🤪","😜","🤡","😹","😆","🤭","😁","😄"], "👋 Salut":["👋","🙏","🤝","👍","👏","✌️","🤞","🫡","👊","🙌","👋🏽","🤙"], "😢 Triste":["😢","😭","🥺","😔","😞","😥","🫂","💔","😿","😩","😤","😠"], "🎉 Fête":["🎉","🎊","🥳","🍾","🎂","🎁","✨","🔥","💃","🕺","🥂","🎈"], "🐷 MAYNE":["🐷","💰","📱","⚽","🎰","🛒","🚀","💸","🏆","👑","🦁","🐯"] };
-function toggleStickers(){ const p=document.getElementById('sticker-panel'); if(!p) return; const show=!p.classList.contains('show'); p.classList.toggle('show',show); if(show) renderStickers('😍 Amour'); }
+async function onFilePicked(e){ const f=e.target.files[0]; if(!f||!window.currentConvId) return; try{ const url=await uploadImageToCloudinary(f); const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:url,createdAt:Date.now()}); pushJS(otherId,'Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }catch(err){ alert('Photo échouée : '+err.message); } e.target.value=''; }
+const STICKERS={ "Joie":["😂","🤣","😊","😁","😄","😆","😅","🤭","🙂","😹"], "Salut":["👋","🙏","🤝","👍","👏","✌️","🤞","🙌"], "Fête":["🎉","🎊","🥳","🎂","🎁","✨","🏆","👑"], "MAYNE":["⚽","📱","🚀","🏆","👑","🦁","🐯","💰"] };
+function toggleStickers(){ const p=document.getElementById('sticker-panel'); if(!p) return; const show=!p.classList.contains('show'); p.classList.toggle('show',show); if(show) renderStickers('Joie'); }
 function renderStickers(cat){ document.querySelectorAll('.sticker-tab').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat)); const grid=document.getElementById('sticker-grid'); if(!grid) return; grid.innerHTML=STICKERS[cat].map(s=>'<div class="sticker-item" onclick="sendSticker(\''+s+'\')">'+s+'</div>').join(''); }
-function sendSticker(emoji){ if(!window.currentConvId) return; const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'sticker',texte:emoji,createdAt:Date.now()}); pushJS(otherId,'🧩 Sticker - '+document.getElementById('user-name').innerText,emoji); document.getElementById('sticker-panel').classList.remove('show'); }
+function sendSticker(emoji){ if(!window.currentConvId) return; const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'sticker',texte:emoji,createdAt:Date.now()}); pushJS(otherId,'Sticker - '+document.getElementById('user-name').innerText,emoji); document.getElementById('sticker-panel').classList.remove('show'); }
 function togglePlayAudio(id){ if(selectionMode){ toggleSelect(id); return; } const aud=document.getElementById('aud-'+id); if(!aud) return; const btn=document.getElementById('play-'+id); document.querySelectorAll('audio').forEach(a=>{ if(a.id!=='aud-'+id) a.pause(); }); if(previewAudio) previewAudio.pause(); if(aud.paused){ aud.play().catch(e=>alert('Audio illisible : '+e.message)); if(btn) btn.textContent='⏸️'; aud.onended=()=>{ if(btn) btn.textContent='▶️'; }; } else { aud.pause(); if(btn) btn.textContent='▶️'; } }
 function showAudioPreview(){ const recBox=document.getElementById('rec-box'); if(recBox) recBox.classList.add('show'); const inputBox=document.getElementById('input-box'); if(inputBox) inputBox.style.display='none'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.add('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='none'; const t=document.getElementById('preview-time'); if(t) t.textContent='0:00 / '+fmtTime(pendingAudioDuree||recElapsed); const w=document.getElementById('preview-wave'); if(w) w.innerHTML=waveHtml(24); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show'); const sendBtn=document.getElementById('rec-send-btn'); if(sendBtn){ sendBtn.innerHTML='➤'; sendBtn.style.display='flex'; } }
 function togglePreview(){ if(!pendingAudioUrl) return; let aud=document.getElementById('preview-aud'); if(!aud){ aud=document.createElement('audio'); aud.id='preview-aud'; aud.src=pendingAudioUrl; aud.style.display='none'; document.body.appendChild(aud); } if(previewPlaying && !aud.paused){ aud.pause(); previewPlaying=false; document.getElementById('preview-play').textContent='▶️'; return; } aud.play().catch(()=>{}); previewPlaying=true; document.getElementById('preview-play').textContent='⏸️'; aud.ontimeupdate=()=>{ const t=document.getElementById('preview-time'); if(t) t.textContent=fmtTime(Math.floor(aud.currentTime))+' / '+fmtTime(pendingAudioDuree||recElapsed); }; aud.onended=()=>{ previewPlaying=false; document.getElementById('preview-play').textContent='▶️'; }; }
 async function confirmSendPendingAudio(){ if(!pendingAudioUrl) return; const url=pendingAudioUrl; const duree=pendingAudioDuree||recElapsed; const old=recElapsed; recElapsed=duree; await pushAudioMessage(url); recElapsed=old; pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; if(previewAudio) previewAudio.pause(); previewPlaying=false; const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); } resetRecUI(); }
 function discardPendingAudio(){ pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; if(previewAudio) previewAudio.pause(); previewPlaying=false; const aud=document.getElementById('preview-aud'); if(aud){ aud.pause(); aud.remove(); } resetRecUI(); }
-async function startRecording(){ if(isRecording) return; pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; mediaChunks=[]; isRecording=true; micStarted=true; recElapsed=0; recStartTime=Date.now(); if(previewAudio) previewAudio.pause(); previewPlaying=false; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.classList.add('recording'); mic.style.display='flex'; } const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='Glisse vers le haut pour verrouiller'; hint.classList.remove('locked'); hint.classList.add('show'); } updateRecWave(); clearInterval(recTimer); recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); },300); if(IS_APP){ sendToApp('PICK_AUDIO'); return; } try{ mediaStream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(mediaStream); mediaChunks=[]; mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) mediaChunks.push(e.data); }; mediaRecorder.start(250); }catch(e){ alert('Micro refusé : '+e.message); cancelRecording(); } }
+async function startRecording(){ if(isRecording) return; isPaused=false; updatePauseBtn(); pendingAudioUrl=null; pendingAudioDuree=0; pendingBlob=null; mediaChunks=[]; isRecording=true; micStarted=true; recElapsed=0; recStartTime=Date.now(); if(previewAudio) previewAudio.pause(); previewPlaying=false; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='none'; if(recBox) recBox.classList.add('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.classList.add('recording'); mic.style.display='flex'; } const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='Glisse vers le haut pour verrouiller • Glisse à gauche pour annuler'; hint.classList.remove('locked'); hint.classList.add('show'); } updateRecWave(); clearInterval(recTimer); recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const t=document.getElementById('rec-time'); if(t) t.textContent=fmtTime(recElapsed); updateRecWave(); },300); if(IS_APP){ sendToApp('PICK_AUDIO'); return; } try{ mediaStream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(mediaStream); mediaChunks=[]; mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) mediaChunks.push(e.data); }; mediaRecorder.start(250); }catch(e){ alert('Micro refusé : '+e.message); cancelRecording(); } }
 function stopMedia(){ try{ if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop(); }catch(e){} try{ if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop()); }catch(e){} mediaRecorder=null; mediaStream=null; }
-function cancelRecording(){ if(IS_APP) sendToApp('CANCEL_AUDIO'); isRecording=false; micStarted=false; micLocked=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false; if(!IS_APP) stopMedia(); mediaChunks=[]; pendingAudioUrl=null; resetRecUI(); }
-async function pushAudioMessage(url){ try{ const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false}); pushJS(otherId,'🎙️ Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal'); }catch(e){ alert('Push échoué: '+e.message); } }
+function cancelRecording(){ isPaused=false; updatePauseBtn(); if(IS_APP) sendToApp('CANCEL_AUDIO'); isRecording=false; micStarted=false; micLocked=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false; if(!IS_APP) stopMedia(); mediaChunks=[]; pendingAudioUrl=null; resetRecUI(); }
+async function pushAudioMessage(url){ try{ const otherId=window.currentConvId.split('_').find(id=>id!==currentUserId); await database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'audio',url:url,createdAt:Date.now(),duree:recElapsed,vu:false}); pushJS(otherId,'Vocal - '+document.getElementById('user-name').innerText,'Vous avez reçu un message vocal'); }catch(e){ alert('Push échoué: '+e.message); } }
 async function stopAndSendRecording(){ if(pendingAudioUrl){ confirmSendPendingAudio(); return; } if(IS_APP){ if(!isRecording) return; waitingAudio=true; sendToApp('STOP_AUDIO'); isRecording=false; micLocked=false; micStarted=false; clearInterval(recTimer); const up=document.getElementById('rec-upload'); if(up){ up.textContent='Préparation...'; up.classList.add('show'); } setTimeout(()=>{ if(waitingAudio){ waitingAudio=false; resetRecUI(); } },15000); return; } if(!isRecording && !mediaChunks.length) return; isRecording=false; micLocked=false; micStarted=false; clearInterval(recTimer); if(previewAudio) previewAudio.pause(); previewPlaying=false; const up=document.getElementById('rec-upload'); if(up){ up.textContent='Préparation...'; up.classList.add('show'); } try{ const blob=await new Promise((resolve)=>{ if(!mediaRecorder || mediaRecorder.state==='inactive'){ resolve(new Blob(mediaChunks,{type:'audio/webm'})); return; } mediaRecorder.onstop=()=>{ resolve(new Blob(mediaChunks,{type:'audio/webm'})); }; try{ mediaRecorder.stop(); }catch(e){ resolve(new Blob(mediaChunks,{type:'audio/webm'})); } }); stopMedia(); if(!blob || blob.size<500){ resetRecUI(); return; } pendingBlob=blob; const cloudUrl=await uploadAudioToCloudinary(blob,'vocal_'+Date.now()+'.webm'); pendingAudioUrl=cloudUrl; pendingAudioDuree=recElapsed; showAudioPreview(); }catch(e){ alert('Envoi vocal échoué : '+e.message); resetRecUI(); } if(up) up.classList.remove('show'); mediaChunks=[]; }
-function resetRecUI(){ pendingAudioUrl=null; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='flex'; if(recBox) recBox.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('recording'); mic.innerText='🎙️'; mic.style.transform=''; } const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); const t=document.getElementById('rec-time'); if(t) t.textContent='0:00'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; }
-function initMicSwipe(){ const mic=document.getElementById('btn-rec'); if(!mic) return; mic.addEventListener('touchstart',e=>{ if(isRecording) return; if(pendingAudioUrl) return; micStartX=e.touches[0].clientX; micStartY=e.touches[0].clientY; micLocked=false; micCancelled=false; startRecording(); },{passive:true}); mic.addEventListener('touchmove',e=>{ if(!isRecording) return; const dx=e.touches[0].clientX-micStartX; const dy=micStartY-e.touches[0].clientY; const hint=document.getElementById('lock-hint'); if(dy>60 && !micLocked){ micLocked=true; if(hint){ hint.textContent='Verrouillé'; hint.classList.add('locked'); } mic.style.transform='translateY(-10px)'; } if(dx<-80 && !micCancelled){ micCancelled=true; if(hint){ hint.textContent='Relâche pour annuler'; hint.classList.remove('locked'); } } if(dx>-40 && micCancelled){ micCancelled=false; if(hint) hint.textContent='Glisse vers le haut pour verrouiller'; } },{passive:true}); mic.addEventListener('touchend',e=>{ const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); mic.style.transform='translateY(0)'; if(!isRecording) return; if(micCancelled){ cancelRecording(); return; } if(micLocked){ if(hint){ hint.textContent='Verrouillé'; hint.classList.add('locked'); hint.classList.add('show'); } return; } stopAndSendRecording(); },{passive:true}); mic.addEventListener('click',e=>{ if('ontouchstart' in window) return; if(pendingAudioUrl){ confirmSendPendingAudio(); return; } if(!isRecording) startRecording(); else stopAndSendRecording(); }); }
+function resetRecUI(){ isPaused=false; updatePauseBtn(); pendingAudioUrl=null; const inputBox=document.getElementById('input-box'); const recBox=document.getElementById('rec-box'); if(inputBox) inputBox.style.display='flex'; if(recBox) recBox.classList.remove('show'); const mic=document.getElementById('btn-rec'); if(mic){ mic.style.display='flex'; mic.classList.remove('recording'); mic.innerText='Vocal'; mic.style.transform=''; } const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show'); const t=document.getElementById('rec-time'); if(t) t.textContent='0:00'; const prev=document.getElementById('rec-preview'); if(prev) prev.classList.remove('show'); const up=document.getElementById('rec-upload'); if(up) up.classList.remove('show'); const recMain=document.getElementById('rec-main'); if(recMain) recMain.style.display='flex'; }
+let isPaused=false;
+function updatePauseBtn(){ const b=document.getElementById('rec-pause-btn'); if(b) b.textContent = isPaused ? 'Reprendre' : 'Pause'; const tm=document.getElementById('rec-time'); if(tm) tm.style.opacity = isPaused ? '0.5' : '1'; }
+function toggleRecPause(){
+  if(!isRecording && !micLocked) return;
+  if(!isPaused){
+    isPaused=true;
+    try{ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.pause(); }catch(e){}
+    if(IS_APP) sendToApp('PAUSE_AUDIO');
+    clearInterval(recTimer);
+    updatePauseBtn();
+    const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='En pause - Tape Reprendre pour continuer'; hint.classList.add('show'); }
+  } else {
+    isPaused=false;
+    try{ if(mediaRecorder && mediaRecorder.state==='paused') mediaRecorder.resume(); }catch(e){}
+    if(IS_APP) sendToApp('RESUME_AUDIO');
+    recStartTime = Date.now() - recElapsed*1000;
+    clearInterval(recTimer);
+    recTimer=setInterval(()=>{ recElapsed=Math.floor((Date.now()-recStartTime)/1000); const tt=document.getElementById('rec-time'); if(tt) tt.textContent=fmtTime(recElapsed); updateRecWave(); },300);
+    updatePauseBtn();
+    const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent = micLocked ? 'Enregistrement verrouillé - Pause / Envoyer' : 'Glisse vers le haut pour verrouiller • Glisse à gauche pour annuler'; }
+  }
+}
+function lockRecording(){
+  if(micLocked) return;
+  micLocked=true;
+  const hint=document.getElementById('lock-hint'); if(hint){ hint.textContent='Enregistrement verrouillé - Pause / Envoyer'; hint.classList.add('locked'); hint.classList.add('show'); }
+  const mic=document.getElementById('btn-rec'); if(mic){ mic.style.transform='translateY(-6px)'; }
+  if(navigator.vibrate) navigator.vibrate(40);
+}
+function initMicSwipe(){
+  const mic=document.getElementById('btn-rec'); if(!mic) return;
+  if(mic.dataset.micBound==='1') return; mic.dataset.micBound='1';
+  let mStartX=0, mStartY=0, mMoved=false, mCancelled=false;
+  function mDown(e){
+    if(pendingAudioUrl) return;
+    if(isRecording) return;
+    const p = e.clientX!==undefined ? {x:e.clientX,y:e.clientY} : (e.touches && e.touches[0] ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : {x:0,y:0});
+    mStartX=p.x; mStartY=p.y; mMoved=false; mCancelled=false;
+    startRecording();
+  }
+  function mMove(e){
+    if(!isRecording) return;
+    const p = e.clientX!==undefined ? {x:e.clientX,y:e.clientY} : (e.touches && e.touches[0] ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : {x:mStartX,y:mStartY});
+    const dx=p.x-mStartX, dy=mStartY-p.y;
+    if(Math.abs(dx)>10 || Math.abs(dy)>10) mMoved=true;
+    const hint=document.getElementById('lock-hint');
+    // WhatsApp : swipe BAS -> HAUT = verrouiller (mains libres)
+    if(dy>60 && !micLocked){ lockRecording(); }
+    // Glisse a gauche = annuler
+    if(dx<-80 && !mCancelled){ mCancelled=true; if(hint){ hint.textContent='Relâche pour annuler'; hint.classList.remove('locked'); } }
+    if(dx>-40 && mCancelled){ mCancelled=false; if(hint) hint.textContent = micLocked ? 'Enregistrement verrouillé - Pause / Envoyer' : 'Glisse vers le haut pour verrouiller • Glisse à gauche pour annuler'; }
+    if(e.cancelable && (dy>20 || dx<-20)) e.preventDefault();
+  }
+  function mUp(e){
+    const hint=document.getElementById('lock-hint'); if(hint) hint.classList.remove('show');
+    const micEl=document.getElementById('btn-rec'); if(micEl) micEl.style.transform='translateY(0)';
+    if(!isRecording) return;
+    if(mCancelled){ cancelRecording(); return; }
+    if(micLocked){
+      // Verrouille : on reste en enregistrement, on n'envoie pas tant qu'on n'appuie pas Envoyer
+      if(hint){ hint.textContent='Enregistrement verrouillé - Pause / Envoyer'; hint.classList.add('locked'); hint.classList.add('show'); }
+      return;
+    }
+    // Pas verrouille : relacher = envoyer (maintien = enregistre, lacher = envoie)
+    if(isPaused){ toggleRecPause(); }
+    stopAndSendRecording();
+  }
+  mic.addEventListener('pointerdown', mDown);
+  mic.addEventListener('pointermove', mMove);
+  mic.addEventListener('pointerup', mUp);
+  mic.addEventListener('pointercancel', ()=>{ if(isRecording && !micLocked) cancelRecording(); });
+  mic.addEventListener('click', e=>{
+    if(window.PointerEvent) return;
+    if(pendingAudioUrl){ confirmSendPendingAudio(); return; }
+    if(!isRecording) startRecording(); else stopAndSendRecording();
+  });
+}
 function setReply(nom,texte){ replyTo={nom,texte}; const p=document.getElementById('reply-preview'); if(p){ p.style.display='block'; p.innerHTML='<span class="close" onclick="clearReply()">✕</span><b>'+nom+'</b><span>'+texte.substring(0,80)+'</span>'; } const inp=document.getElementById('msg-input'); if(inp) inp.focus(); }
 function clearReply(){ replyTo=null; const p=document.getElementById('reply-preview'); if(p) p.style.display='none'; }
 function initSwipe(){
   const scroll=document.getElementById('chat-scroll'); if(!scroll) return;
   if(scroll.dataset.swipeBound==='1') return; scroll.dataset.swipeBound='1';
-  let tapX=0, tapY=0, tapTime=0, tapKey=null, tapMoved=false, longFired=false, lastTouchEnd=0;
-  function rowOf(e){ return e.target.closest ? e.target.closest('.msg-row') : null; }
-  function isPlayBtn(e){ return e.target.closest ? !!e.target.closest('[id^="play-"]') : false; }
-  // --- TOUCH : appui long = selection, tap = cocher/decocher ---
-  scroll.addEventListener('touchstart',e=>{
+  let startX=0, startY=0, startTime=0, pressKey=null, moved=false, longFired=false, pressTimer=null, swipeEl2=null, swipeData2=null, swipeActive2=false;
+  function rowOf(e){ return e.target && e.target.closest ? e.target.closest('.msg-row') : null; }
+  function isPlay(e){ return e.target && e.target.closest ? !!e.target.closest('[id^="play-"]') : false; }
+  function clearPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer=null; } }
+  function getXY(e){ if(e.clientX!==undefined) return {x:e.clientX, y:e.clientY}; if(e.touches && e.touches[0]) return {x:e.touches[0].clientX, y:e.touches[0].clientY}; if(e.changedTouches && e.changedTouches[0]) return {x:e.changedTouches[0].clientX, y:e.changedTouches[0].clientY}; return {x:startX, y:startY}; }
+  function onDown(e){
     const row=rowOf(e); if(!row) return;
     const key=row.dataset.key; if(!key) return;
-    tapKey=key; tapMoved=false; longFired=false;
-    const tt=e.touches[0]; tapX=tt.clientX; tapY=tt.clientY; tapTime=Date.now();
-    if(selectionMode) return; // en mode selection, pas de nouvel appui long, juste tap
-    clearTimeout(longPressTimer);
-    longPressTimer=setTimeout(()=>{ longFired=true; enterSelection(key); }, 450);
-    const b=e.target.closest('.msg-bubble, .audio-bubble, .call-bubble'); if(!b) return;
-    swipeStartX=tt.clientX; swipeStartY=tt.clientY; swipeEl=b; swipeData={nom:b.dataset.nom||'',texte:b.dataset.texte||''}; swipeActive=false; b.style.transition='none';
-  },{passive:true});
-  scroll.addEventListener('touchmove',e=>{
-    if(!tapKey) return;
-    const tt=e.touches[0]; const dx=tt.clientX-tapX; const dy=tt.clientY-tapY;
-    if(Math.abs(dx)>12 || Math.abs(dy)>12){ tapMoved=true; clearTimeout(longPressTimer); }
+    pressKey=key; moved=false; longFired=false;
+    const p=getXY(e); startX=p.x; startY=p.y; startTime=Date.now();
     if(selectionMode) return;
-    if(!swipeEl) return;
-    if(Math.abs(dy)>35) return;
-    if(dx>8 && dx<130){ swipeActive=true; swipeEl.style.transform='translateX('+dx+'px)'; const row=swipeEl.closest('.msg-row'); if(row) row.classList.add('swiping'); if(e.cancelable) e.preventDefault(); }
-  },{passive:false});
-  scroll.addEventListener('touchend',e=>{
-    lastTouchEnd=Date.now();
-    clearTimeout(longPressTimer);
-    const key=tapKey;
-    // Reset swipe visuel
-    if(swipeEl){ const dx=e.changedTouches[0].clientX-swipeStartX; const row=swipeEl.closest('.msg-row'); if(row) row.classList.remove('swiping'); swipeEl.style.transition='transform .2s'; swipeEl.style.transform='translateX(0)'; if(swipeActive && dx>60 && swipeData && swipeData.texte && !selectionMode){ setReply(swipeData.nom, swipeData.texte); } swipeEl=null; swipeData=null; swipeActive=false; }
-    if(!key){ tapKey=null; return; }
-    if(longFired){ longFired=false; tapKey=null; return; } // l'appui long vient de selectionner, ne pas decocher tout de suite
-    if(selectionMode && !tapMoved && (Date.now()-tapTime)<700){
-      if(isPlayBtn(e)){ tapKey=null; return; } // le bouton play gere deja le toggle
+    clearPress();
+    pressTimer=setTimeout(()=>{ longFired=true; enterSelection(key); }, 400);
+    const b=e.target.closest ? e.target.closest('.msg-bubble, .audio-bubble, .call-bubble') : null;
+    if(b){ swipeEl2=b; swipeData2={nom:b.dataset.nom||'', texte:b.dataset.texte||''}; swipeActive2=false; b.style.transition='none'; }
+  }
+  function onMove(e){
+    if(!pressKey) return;
+    const p=getXY(e); const dx=p.x-startX, dy=p.y-startY;
+    if(Math.abs(dx)>10 || Math.abs(dy)>10){ moved=true; clearPress(); }
+    if(selectionMode) return;
+    if(!swipeEl2) return;
+    if(Math.abs(dy)>30) return;
+    if(dx>15 && dx<140){ swipeActive2=true; swipeEl2.style.transform='translateX('+dx+'px)'; const row=swipeEl2.closest('.msg-row'); if(row) row.classList.add('swiping'); if(e.cancelable) e.preventDefault(); }
+  }
+  function onUp(e){
+    clearPress();
+    const key=pressKey;
+    if(swipeEl2){
+      const p=getXY(e); const dx=p.x-startX;
+      const row=swipeEl2.closest('.msg-row'); if(row) row.classList.remove('swiping');
+      swipeEl2.style.transition='transform .2s'; swipeEl2.style.transform='translateX(0)';
+      if(swipeActive2 && dx>60 && swipeData2 && swipeData2.texte && !selectionMode){ setReply(swipeData2.nom, swipeData2.texte); }
+      swipeEl2=null; swipeData2=null; swipeActive2=false;
+    }
+    if(!key){ pressKey=null; return; }
+    if(longFired){ longFired=false; pressKey=null; return; }
+    if(selectionMode && !moved){
+      if(isPlay(e)){ pressKey=null; return; }
       toggleSelect(key);
     }
-    tapKey=null;
-  },{passive:true});
-  scroll.addEventListener('touchcancel',()=>{ clearTimeout(longPressTimer); if(swipeEl){ swipeEl.style.transform='translateX(0)'; swipeEl=null; } tapKey=null; },{passive:true});
-  // --- SOURIS / DESKTOP : click = cocher, appui long = selection ---
-  scroll.addEventListener('mousedown',e=>{
-    const row=rowOf(e); if(!row) return; const key=row.dataset.key; if(!key) return;
-    if(selectionMode) return;
-    clearTimeout(longPressTimer);
-    longPressTimer=setTimeout(()=>{ longFired=true; enterSelection(key); }, 450);
-  });
-  scroll.addEventListener('mouseup',()=>{ clearTimeout(longPressTimer); setTimeout(()=>{ longFired=false; }, 120); });
-  scroll.addEventListener('click',e=>{
-    // Si ca vient d'un touch, touchend a deja gere le toggle -> ne pas double-toggle
-    if(Date.now()-lastTouchEnd<500) return;
-    const row=rowOf(e); if(!row) return;
-    if(!selectionMode) return;
-    if(isPlayBtn(e)) return; // play gere deja
-    if(longFired) return;
-    toggleSelect(row.dataset.key);
-  });
-  scroll.addEventListener('contextmenu',e=>{
+    pressKey=null;
+  }
+  function onCancel(){ clearPress(); if(swipeEl2){ swipeEl2.style.transform='translateX(0)'; swipeEl2=null; } pressKey=null; }
+  // Pointer Events = UN SEUL systeme pour souris + tactile, fiable en WebView App Inventor
+  scroll.addEventListener('pointerdown', onDown);
+  scroll.addEventListener('pointermove', onMove);
+  scroll.addEventListener('pointerup', onUp);
+  scroll.addEventListener('pointercancel', onCancel);
+  scroll.addEventListener('contextmenu', e=>{
     const row=rowOf(e); if(!row) return;
     e.preventDefault();
     if(!selectionMode) enterSelection(row.dataset.key); else toggleSelect(row.dataset.key);
+  });
+  // Fallback click pour vieux WebView sans PointerEvent : ne double-toggle pas si pointerup vient de gerer
+  scroll.addEventListener('click', e=>{
+    if(window.PointerEvent) return;
+    const row=rowOf(e); if(!row || !selectionMode) return;
+    if(isPlay(e)) return;
+    toggleSelect(row.dataset.key);
   });
 }
 /* === POLLING APP INVENTOR - CORRIGÉ : gère aussi STATUS_URL_ === */
@@ -692,7 +778,7 @@ setInterval(async ()=>{
   if(!window.AppInventor) return; let d=null; try{ d=window.AppInventor.getWebViewString(); }catch(e){ return; } if(!d) return; if(d===lastSentToApp) return;
   if(!(d.startsWith('AUDIO_URL_')||d.startsWith('CHAT_')||d.startsWith('PROFILE_URL_')||d.startsWith('STATUS_URL_'))) return;
   const otherId = window.currentConvId? window.currentConvId.split('_').find(id=>id!==currentUserId) : null;
-  if(d.startsWith('CHAT_')){ let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString(''); lastSentToApp=''; database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()}); pushJS(otherId,'📷 Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }
+  if(d.startsWith('CHAT_')){ let u=d.replace('CHAT_',''); window.AppInventor.setWebViewString(''); lastSentToApp=''; database.ref(`conversations/${window.currentConvId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'image',url:u,createdAt:Date.now()}); pushJS(otherId,'Photo - '+document.getElementById('user-name').innerText,'Vous avez reçu une photo'); }
   else if(d.startsWith('PROFILE_URL_')){ let u=d.replace('PROFILE_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp=''; await saveProfilePhoto(u); }
   else if(d.startsWith('STATUS_URL_')){ let u=d.replace('STATUS_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp=''; pendingPhotoUrl=u; pendingPhotoBlob=null; const img=document.getElementById('photo-preview'); if(img){ img.src=u; img.style.display='block'; } document.getElementById('photo-modal').classList.add('show'); }
   else if(d.startsWith('AUDIO_URL_')){ let u=d.replace('AUDIO_URL_',''); window.AppInventor.setWebViewString(''); lastSentToApp=''; waitingAudio=false; pendingAudioUrl=u; pendingAudioDuree=recElapsed; showAudioPreview(); }
@@ -721,7 +807,7 @@ function renderActus(){
   function statusAvatar(group){ const last=group.items[group.items.length-1]; if(last.type==='image') return '<img src="'+getThumb(last.url,200)+'">'; const txt=(last.texte||'').substring(0,18); return '<div class="status-mini-text" style="background:'+(last.bg||'#D63E00')+'">'+txt+'</div>'; }
   function profileAvatar(nom, photo){ if(photo) return '<img src="'+getThumb(photo,200)+'">'; return nom.substring(0,1).toUpperCase(); }
   let h='<div class="actus-title">Statut</div>';
-  h+='<div class="invite-card" onclick="openInviteModal()"><div class="invite-ico">➕</div><div><b>Inviter des amis</b><span>Partage ton lien, ils voient tes statuts et te parlent direct</span></div><div style="font-size:20px">›</div></div>';
+  h+='<div class="invite-card" onclick="openInviteModal()"><div class="invite-ico"></div><div><b>Inviter des amis</b><span>Partage ton lien, ils voient tes statuts et te parlent direct</span></div><div style="font-size:20px">›</div></div>';
   let myAvatarHtml=''; if(mine) myAvatarHtml=statusAvatar(mine); else myAvatarHtml=profileAvatar(myName, myPhoto);
   h+='<div class="my-status" onclick="'+(mine?'openViewerByUid(\''+currentUserId+'\')':'pickStatusPhoto()')+'"><div class="my-status-avatar">'+myAvatarHtml+'<div class="plus">+</div></div><div class="my-status-text"><b>Ajouter un statut</b><span>Disparaît au bout de 24 heures</span></div></div>';
   if(mine) h+='<div class="actus-sub">Mon statut • '+mine.items.length+' publication(s) • '+timeAgo(Math.max(...mine.items.map(x=>x.createdAt)))+'</div>';
@@ -745,7 +831,7 @@ function openViewer(){
   const av=document.getElementById('viewer-avatar'); av.src=g.photo?getThumb(g.photo,200):''; av.style.display=g.photo?'block':'none';
   const _del=document.getElementById('viewer-del'); if(_del){ _del.style.display=g.uid===currentUserId?'block':'none'; _del.style.pointerEvents='auto'; _del.style.position='relative'; _del.style.zIndex='30'; }
   const viewsEl=document.getElementById('viewer-views');
-  if(g.uid===currentUserId){ const n=item.viewedBy?Object.keys(item.viewedBy).length:0; viewsEl.style.display='block'; viewsEl.textContent='👁️ '+n+' vue(s)'; }
+  if(g.uid===currentUserId){ const n=item.viewedBy?Object.keys(item.viewedBy).length:0; viewsEl.style.display='block'; viewsEl.textContent='Vues : '+n+' vue(s)'; }
   else viewsEl.style.display='none';
   document.getElementById('viewer-caption').textContent = item.type==='image' ? (item.caption||'') : (item.caption||'');
   const bars=document.getElementById('viewer-bars'); bars.innerHTML=g.items.map((_,i)=>'<div class="viewer-bar"><i id="bar-'+i+'" style="width:'+(i<curItemIndex?'100%':'0%')+'"></i></div>').join('');
@@ -766,7 +852,7 @@ function startViewerTimer(){ if(viewerProgress) cancelAnimationFrame(viewerProgr
 function nextStatusItem(){ const g=allGroups[curGroupIndex]; if(!g) return; if(curItemIndex<g.items.length-1){ curItemIndex++; openViewer(); } else if(curGroupIndex<allGroups.length-1){ curGroupIndex++; curItemIndex=0; openViewer(); } else closeViewer(); }
 function prevStatusItem(){ if(curItemIndex>0){ curItemIndex--; openViewer(); } else if(curGroupIndex>0){ curGroupIndex--; curItemIndex=allGroups[curGroupIndex].items.length-1; openViewer(); } else closeViewer(); }
 function closeViewer(){ if(viewerProgress) cancelAnimationFrame(viewerProgress); document.getElementById('viewer').classList.remove('show'); renderActus(); }
-function replyToStatus(){ const g=allGroups[curGroupIndex]; if(!g) return; const txt=document.getElementById('viewer-reply').value.trim(); if(!txt) return; const item=g.items[curItemIndex]; const label = item.type==='image' ? '📷 Statut photo' : '📝 Statut : '+(item.texte||''); const convId=[currentUserId,g.uid].sort().join('_'); database.ref(`conversations/${convId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:'↩️ '+label+'\n'+txt,createdAt:Date.now(),vu:false}); document.getElementById('viewer-reply').value=''; closeViewer(); ouvrirConversation(convId,g.nom); }
+function replyToStatus(){ const g=allGroups[curGroupIndex]; if(!g) return; const txt=document.getElementById('viewer-reply').value.trim(); if(!txt) return; const item=g.items[curItemIndex]; const label = item.type==='image' ? 'Photo Statut photo' : '📝 Statut : '+(item.texte||''); const convId=[currentUserId,g.uid].sort().join('_'); database.ref(`conversations/${convId}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',texte:'Répondre '+label+'\n'+txt,createdAt:Date.now(),vu:false}); document.getElementById('viewer-reply').value=''; closeViewer(); ouvrirConversation(convId,g.nom); }
 async function deleteCurrentStatus(){
   const g=allGroups[curGroupIndex]; if(!g||g.uid!==currentUserId){ alert('Tu ne peux supprimer que ton propre statut.'); return; }
   const item=g.items[curItemIndex]; if(!item){ alert('Aucun statut à supprimer.'); return; }
@@ -830,12 +916,12 @@ function chargerMessagerie(){
           const amiNom = clients[otherId]?.nom || c.last.senderNom || otherId;
           const amiPhoto=getUserPhoto(clients[otherId]||{});
           let prev='';
-          if(c.last.deletedEveryone) prev='🚫 Ce message a été supprimé';
-          else if(c.last.type==='image') prev='📷 Photo';
-          else if(c.last.type==='audio') prev='🎙️ Vocal';
-          else if(c.last.type==='sticker') prev='🧩 Sticker';
-          else if(c.last.type==='call') prev='📞 Appel vocal';
-          else if(c.last.type==='deleted') prev='🚫 Ce message a été supprimé';
+          if(c.last.deletedEveryone) prev='Ce message a été supprimé';
+          else if(c.last.type==='image') prev='Photo';
+          else if(c.last.type==='audio') prev='Vocal';
+          else if(c.last.type==='sticker') prev='Sticker';
+          else if(c.last.type==='call') prev='Appel vocal';
+          else if(c.last.type==='deleted') prev='Ce message a été supprimé';
           else prev=(c.last.texte||'').substring(0,40);
           const h=new Date(c.last.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
           html+='<div class="chat-card"><div class="msg-avatar" onclick="event.stopPropagation();openProfile(\''+otherId+'\',\''+esc(amiNom)+'\')">'+avatarHtml(amiNom,amiPhoto)+'</div><div class="chat-main" onclick="ouvrirConversation(\''+c.id+'\',\''+esc(amiNom)+'\')"><div class="chat-name">'+amiNom+'</div><div class="chat-preview">'+(c.last.senderId===currentUserId?'<b style="color:#FF5000">Vous : </b>':'')+prev+'</div></div><div class="chat-meta" onclick="ouvrirConversation(\''+c.id+'\',\''+esc(amiNom)+'\')"><div class="chat-time '+(c.unread?'unread':'')+'">'+h+'</div>'+(c.unread?'<div class="unread-badge">'+c.unread+'</div>':'')+'</div></div>';
@@ -866,7 +952,7 @@ function ouvrirConversation(convId,nom){
   window.currentConvId=convId; replyTo=null; exitSelection(); _msgCache={};
   const feed=document.getElementById('messagerie-feed'); document.getElementById('search-zone').style.display='none'; feed.classList.add('chat-mode');
   const otherId=convId.split('_').find(id=>id!==currentUserId); window.currentOtherId=otherId; window.currentOtherName=nom;
-  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top" id="chat-top-bar"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span onclick="exitSelection()" style="cursor:pointer;font-size:18px">✕</span><span id="select-count">0 sélectionné(s)</span><div style="flex:1"></div><button id="select-all-btn" class="all-btn" onclick="toggleSelectAll()">☑️ Tout cocher</button><button id="select-reply-btn" onclick="replyToSelected()">↩️</button><button id="select-copy-btn" onclick="copySelected()">📋</button><button class="del" onclick="openDeleteModal()">🗑️ Supprimer</button></div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">😊</button><button class="mini-icon" onclick="pickImageChat()">📎</button><button class="mini-icon" onclick="pickImageChat()">📷</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-trash" onclick="discardPendingAudio()">🗑️</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">🎙️</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
+  feed.innerHTML='<div class="chat-wrapper"><div class="chat-top" id="chat-top-bar"><span onclick="retourListe()" style="font-size:24px;cursor:pointer">←</span><div class="chat-top-avatar" id="chat-top-avatar" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')">'+nom.substring(0,2).toUpperCase()+'</div><div class="chat-top-info" onclick="openProfile(\''+otherId+'\',\''+esc(nom)+'\')"><b>'+nom+'</b><div id="typing-indicator" style="font-size:11px;display:none;color:#FF5000">en train d\'écrire...</div><div id="online-text" style="font-size:11px;opacity:.7">hors ligne</div><div id="rec-indicator" style="font-size:11px;display:none;color:#FF3B30">● enregistrement...</div></div><span style="font-size:20px" onclick="lancerAppel(\''+convId+'\')">📞</span><span style="font-size:20px" onclick="openChatMenu()">⋮</span></div><div class="select-bar" id="select-bar"><span onclick="exitSelection()" style="cursor:pointer;font-size:18px">✕</span><span id="select-count">0 sélectionné(s)</span><div style="flex:1"></div><button id="select-all-btn" class="all-btn" onclick="toggleSelectAll()">Tout cocher</button><button id="select-reply-btn" onclick="replyToSelected()">Répondre</button><button id="select-copy-btn" onclick="copySelected()">Copier</button><button class="del" onclick="openDeleteModal()">Supprimer</button></div><div class="select-hint" id="select-hint" style="display:none">Tape sur les messages à sélectionner, puis Supprimer</div><div class="chat-container" id="chat-scroll"></div><div class="chat-input-bar"><div class="lock-hint" id="lock-hint">Glisse vers le haut pour verrouiller • Glisse à gauche pour annuler</div><div class="input-box" id="input-box"><div class="reply-preview" id="reply-preview"></div><input id="msg-input" placeholder="Message" oninput="onInputChange(this,\''+convId+'\')" onkeypress="if(event.key===\'Enter\')envoyerDirect(\''+convId+'\')"><div class="input-bottom"><div class="spacer"></div><button class="mini-icon" onclick="toggleStickers()">Stickers</button><button class="mini-icon" onclick="pickImageChat()">Joindre</button><button class="mini-icon" onclick="pickImageChat()">Photo</button></div></div><div class="rec-box" id="rec-box"><div id="rec-main" class="rec-main"><span class="rec-time"><span class="rec-dot"></span><span id="rec-time">0:00</span></span><div class="rec-wave" id="rec-wave"></div></div><div class="rec-preview" id="rec-preview"><button class="rec-preview-play" id="preview-play" onclick="togglePreview()">▶️</button><div class="rec-preview-wave" id="preview-wave"></div><span class="rec-preview-time" id="preview-time">0:00 / 0:00</span></div><div class="rec-upload" id="rec-upload">Préparation...</div><button class="rec-pause-btn" id="rec-pause-btn" onclick="toggleRecPause()">Pause</button><button class="rec-trash" onclick="discardPendingAudio()">Supprimer</button><button class="rec-send" id="rec-send-btn" onclick="stopAndSendRecording()">➤</button></div><button class="mic-btn" id="btn-rec">Vocal</button><button class="send-btn" id="btn-send" onclick="envoyerDirect(\''+convId+'\')">➤</button></div><div class="sticker-panel" id="sticker-panel"><div class="sticker-tabs" id="sticker-tabs"></div><div class="sticker-grid" id="sticker-grid"></div></div></div>';
   const tabs=document.getElementById('sticker-tabs'); if(tabs) tabs.innerHTML=Object.keys(STICKERS).map(k=>'<button class="sticker-tab" data-cat="'+k+'" onclick="renderStickers(\''+k+'\')">'+k+'</button>').join('');
   initMicSwipe(); initSwipe();
   database.ref('clients/'+otherId).once('value').then(s=>{ const photo=getUserPhoto(s.val()||{}); const av=document.getElementById('chat-top-avatar'); if(av && photo) av.innerHTML='<img src="'+getThumb(photo,200)+'">'; });
@@ -879,20 +965,20 @@ function ouvrirConversation(convId,nom){
     _msgCache={};
     snap.forEach(m=>{ const v=m.val(); const key=m.key; _msgCache[key]=v; if(v.deletedFor && v.deletedFor[currentUserId]) return; if((v.createdAt||0) <= _convDeletedAt) return; const isMe=v.senderId===currentUserId; const h=new Date(v.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); const tick=isMe?(v.vu?' <span style="color:#53bdeb">✓✓</span>':' <span style="color:#8696a0">✓</span>'):''; const imgUrl = v.url || v.image || v.photo || ''; const safeNom=esc(v.senderNom||''); const safeTxt=esc(v.texte||'').substring(0,120); let quoteHtml=''; if(v.replyTo){ quoteHtml='<div class="quote"><b>'+esc(v.replyTo.nom)+'</b><span>'+esc(v.replyTo.texte)+'</span></div>'; }
       const dk=dayKey(v.createdAt||Date.now()); if(dk!==lastDay){ lastDay=dk; html+='<div class="date-sep"><span>'+dateLabel(v.createdAt||Date.now())+'</span></div>'; }
-      if(v.deletedEveryone || v.type==='deleted'){ const label=isMe?'🚫 Vous avez supprimé ce message':'🚫 Ce message a été supprimé'; html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" data-nom="'+safeNom+'" data-texte="Message supprimé"><div class="msg-deleted">'+label+'</div><span class="msg-time">'+h+tick+'</span></div></div>'; }
-      else if(v.type==='text'){ let txt=v.texte||''; let extra=''; const murl=txt.match(/https:\/\/res\.cloudinary\.com\/[^\s]+\.(jpg|png|jpeg)/); if(murl){ extra='<img src="'+getThumb(murl[0],600)+'" onclick="openImage(\''+getThumb(murl[0],1000)+'\')" style="margin-top:6px;max-width:220px;border-radius:8px;display:block;cursor:pointer">'; } html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" data-nom="'+safeNom+'" data-texte="'+safeTxt+'">'+quoteHtml+txt+extra+'<span class="msg-time">'+h+tick+'</span></div></div>'; }
-      else if(v.type==='sticker'){ html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">↩️</span><div class="msg-bubble sticker-bubble" data-nom="'+safeNom+'" data-texte="'+(v.texte||'🧩')+'">'+(v.texte||'🧩')+'<span class="msg-time">'+h+tick+'</span></div></div>'; }
-      else if(v.type==='call'){ html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">↩️</span><div class="call-bubble '+(isMe?'':'received')+'"><div class="call-icon">📞</div><div style="flex:1"><b>Appel vocal</b><span>'+(v.statut||'Sans réponse')+'</span></div><span style="font-size:11px;color:#cfd8dc">'+h+tick+'</span></div></div>'; }
-      else if(v.type==='image'){ const thumb=getThumb(imgUrl,600); const big=getThumb(imgUrl,1000)||imgUrl; html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">↩️</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" style="padding:3px" data-nom="'+safeNom+'" data-texte="📷 Photo">'+quoteHtml+'<img src="'+thumb+'" loading="lazy" onerror="this.src=\''+imgUrl+'\'" onclick="openImage(\''+big+'\')" style="max-width:220px;border-radius:8px;display:block;cursor:pointer"><span class="msg-time">'+h+tick+'</span></div></div>'; }
-      else if(v.type==='audio'){ const init=v.senderNom? v.senderNom.substring(0,2).toUpperCase() : 'MA'; const duree=v.duree?fmtTime(v.duree):'0:10'; const senderIdForProfile=isMe?currentUserId:otherId; html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">↩️</span><div class="audio-bubble '+(isMe?'sent':'received')+'" data-nom="'+safeNom+'" data-texte="🎙️ Vocal"><div class="audio-avatar" onclick="openProfile(\''+senderIdForProfile+'\',\''+safeNom+'\')">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" preload="auto" style="display:none"></audio></div></div>'; }
+      if(v.deletedEveryone || v.type==='deleted'){ const label=isMe?'Vous avez supprimé ce message':'Ce message a été supprimé'; html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">Répondre</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" data-nom="'+safeNom+'" data-texte="Message supprimé"><div class="msg-deleted">'+label+'</div><span class="msg-time">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='text'){ let txt=v.texte||''; let extra=''; const murl=txt.match(/https:\/\/res\.cloudinary\.com\/[^\s]+\.(jpg|png|jpeg)/); if(murl){ extra='<img src="'+getThumb(murl[0],600)+'" onclick="openImage(\''+getThumb(murl[0],1000)+'\')" style="margin-top:6px;max-width:220px;border-radius:8px;display:block;cursor:pointer">'; } html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">Répondre</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" data-nom="'+safeNom+'" data-texte="'+safeTxt+'">'+quoteHtml+txt+extra+'<span class="msg-time">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='sticker'){ html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">Répondre</span><div class="msg-bubble sticker-bubble" data-nom="'+safeNom+'" data-texte="'+(v.texte||'Sticker')+'">'+(v.texte||'Sticker')+'<span class="msg-time">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='call'){ html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">Répondre</span><div class="call-bubble '+(isMe?'':'received')+'"><div class="call-icon">📞</div><div style="flex:1"><b>Appel vocal</b><span>'+(v.statut||'Sans réponse')+'</span></div><span style="font-size:11px;color:#cfd8dc">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='image'){ const thumb=getThumb(imgUrl,600); const big=getThumb(imgUrl,1000)||imgUrl; html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">Répondre</span><div class="msg-bubble '+(isMe?'msg-right':'msg-left')+'" style="padding:3px" data-nom="'+safeNom+'" data-texte="Photo">'+quoteHtml+'<img src="'+thumb+'" loading="lazy" onerror="this.src=\''+imgUrl+'\'" onclick="openImage(\''+big+'\')" style="max-width:220px;border-radius:8px;display:block;cursor:pointer"><span class="msg-time">'+h+tick+'</span></div></div>'; }
+      else if(v.type==='audio'){ const init=v.senderNom? v.senderNom.substring(0,2).toUpperCase() : 'MA'; const duree=v.duree?fmtTime(v.duree):'0:10'; const senderIdForProfile=isMe?currentUserId:otherId; html+='<div class="msg-row '+(isMe?'right':'left')+'" data-key="'+key+'"><span class="check">✓</span><span class="swipe-icon">Répondre</span><div class="audio-bubble '+(isMe?'sent':'received')+'" data-nom="'+safeNom+'" data-texte="Vocal"><div class="audio-avatar" onclick="openProfile(\''+senderIdForProfile+'\',\''+safeNom+'\')">'+init+'</div><button class="audio-play" id="play-'+key+'" onclick="togglePlayAudio(\''+key+'\')">▶️</button><div style="flex:1"><div class="audio-wave">'+waveHtml(28)+'</div><div class="audio-meta"><span>'+duree+'</span><span>'+h+tick+'</span></div></div><audio id="aud-'+key+'" src="'+imgUrl+'" preload="auto" style="display:none"></audio></div></div>'; }
       if(v.senderId!==currentUserId&&!v.vu) m.ref.update({vu:true}); });
     const wasBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 80; scroll.innerHTML=html; if(wasBottom || scroll.scrollTop===0) scroll.scrollTop=scroll.scrollHeight;
     if(selectionMode){ selectedMsgs.forEach(k=>{ document.querySelectorAll('.msg-row[data-key="'+k+'"]').forEach(r=>r.classList.add('selected')); }); updateSelectBar(); }
   });
 }
-function lancerAppel(cid){ const otherId=cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'call',statut:'Sans réponse',createdAt:Date.now()}); pushJS(otherId,'📞 Appel vocal - '+document.getElementById('user-name').innerText,'Appel vocal manqué'); }
+function lancerAppel(cid){ const otherId=cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'call',statut:'Sans réponse',createdAt:Date.now()}); pushJS(otherId,'Appel vocal - '+document.getElementById('user-name').innerText,'Appel vocal manqué'); }
 function onInputChange(inp,cid){ jeTape(cid); const hasText=inp.value.trim().length>0; const mic=document.getElementById('btn-rec'); const send=document.getElementById('btn-send'); if(isRecording) return; if(mic) mic.style.display=hasText?'none':'flex'; if(send) send.style.display=hasText?'flex':'none'; }
-function envoyerDirect(cid){ const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return; const otherId = cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,replyTo:replyTo||null,createdAt:Date.now()}); pushJS(otherId, '💬 '+document.getElementById('user-name').innerText, t.substring(0,90)); i.value=''; clearReply(); onInputChange(i,cid); }
+function envoyerDirect(cid){ const i=document.getElementById('msg-input');const t=i.value.trim();if(!t)return; const otherId = cid.split('_').find(id=>id!==currentUserId); database.ref(`conversations/${cid}/messages`).push({senderId:currentUserId,senderNom:document.getElementById('user-name').innerText,type:'text',vu:false,texte:t,replyTo:replyTo||null,createdAt:Date.now()}); pushJS(otherId, ''+document.getElementById('user-name').innerText, t.substring(0,90)); i.value=''; clearReply(); onInputChange(i,cid); }
 function jeTape(cid){database.ref(`conversations/${cid}/typing/${currentUserId}`).set(true);clearTimeout(window.typTO);window.typTO=setTimeout(()=>{database.ref(`conversations/${cid}/typing/${currentUserId}`).set(false);},1500);}
 function init(){let s=JSON.parse(localStorage.getItem('mayne_current_user')||'null');if(!s){location.href='index.html';return;}currentUserId=s.phone.replace(/[^0-9]/g,'');database.ref('clients/'+currentUserId).once('value').then(v=>{const c=v.val()||{};const nom=c.nom||currentUserId;document.getElementById('user-name').innerText=nom;const photo=getUserPhoto(c);window.myPhoto=photo||'';const av=document.getElementById('my-avatar'); if(av) av.innerHTML=photo? '<img src="'+getThumb(photo,200)+'">' : nom.substring(0,1).toUpperCase();});if(currentTab==='discussions') chargerMessagerie(); else loadStatus();
 let pending=null;
@@ -910,7 +996,7 @@ if(pending || params.get('conv')){
         senderNom: document.getElementById('user-name').innerText,
         type:'text', texte: pending.texte, vu:false, createdAt: Date.now()
       });
-      pushJS(pending.adminId, '🆕 Commande Transfert - '+document.getElementById('user-name').innerText, pending.texte.substring(0,90));
+      pushJS(pending.adminId, 'Commande Transfert - '+document.getElementById('user-name').innerText, pending.texte.substring(0,90));
     }
     history.replaceState({},'', 'messagerie.html');
   }, 600);
