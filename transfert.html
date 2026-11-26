@@ -267,6 +267,22 @@ function handleEnvoi(){
     document.getElementById('warning-envoi').style.display='block';document.getElementById('btn-envoi').innerText='Valider Envoi';document.getElementById('btn-envoi').className='btn btn-valid';etapeEnvoi=2;
   } else { executerEnvoi(); }
 }
+
+function getCommissionRetraitCalc(m){ if(m<=5000)return 45; if(m<=10000)return 76; if(m<=20000)return 125; if(m<=50000)return 275; if(m<=100000)return 387; if(m<=200000)return 1170; return 1170; }
+function getCommissionEnvoiCalc(m,reseau){ var r=(reseau||'').toUpperCase();
+  if(m<=500000){ if(r.includes('CELTIS'))return Math.round(m*0.00302); return Math.round(m*0.0033); }
+  if(m<=2000000){ if(r.includes('MTN'))return 1628; if(r.includes('MOOV'))return Math.round(m*0.004); if(r.includes('CELTIS'))return Math.round(m*0.00302); return Math.round(m*0.0033); }
+  if(r.includes('MTN'))return 1628; if(r.includes('MOOV'))return Math.round(m*0.004); if(r.includes('CELTIS'))return Math.round(m*0.00302); return Math.round(m*0.0033); }
+async function getDailyTransfert(uid, typeRecherche){
+  var snap = await db.ref('commandes_transferts').orderByChild('client_id').equalTo(uid).once('value');
+  var valide=0, enCours=0;
+  snap.forEach(ch=>{ var v=ch.val(); if(!isToday(v)) return;
+    var t=(v.type||'').toLowerCase().includes('retrait')?'retrait':'envoi';
+    if(t!==typeRecherche) return;
+    var m=Number(v.montant||0);
+    if(isEnCours(v)) enCours+=m; else if(!String(v.statut||'').toLowerCase().includes('annul')) valide+=m; });
+  return {valide:valide, enCours:enCours};
+}
 async function executerEnvoi(){
   var sel=document.getElementById('transfert-pays'); var indicatif=sel.value; var paysNom=sel.options[sel.selectedIndex].getAttribute('data-pays');
   var reseau=document.getElementById('transfert-reseau').value; var numeroSans=document.getElementById('transfert-numero').value.trim(); var montant=Number(document.getElementById('transfert-montant').value); var motif=document.getElementById('transfert-motif').value.trim(); var wa=document.getElementById('transfert-wa').value.trim();
@@ -277,6 +293,26 @@ async function executerEnvoi(){
     let full={type:'Envoi',client_id:uid,client_nom:userNom,pays:paysNom,pays_code:indicatif,reseau:reseau,numero_complet:numeroComplet,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
 
+var dailyE = await getDailyTransfert(uid,'envoi');
+var comE = getCommissionEnvoiCalc(montant, reseau);
+var convId=[uid,ADMIN_UID].sort().join('_');
+await db.ref('conversations/'+convId+'/messages').push().set({
+  senderId:uid, senderNom:userNom, type:'text',
+  texte:`🆕 TRANSFERT ENVOI
+Client:${userNom} (${uid})
+Pays:${paysNom} - ${reseau}
+Numero:${numeroComplet}
+Montant:${montant}F
+Motif:${motif||'Non précisé'} - WA:${wa||'Non précisé'}
+
+📊 CALCUL DU JOUR - ENVOI SEULEMENT :
+Envoi validé ${dailyE.valide}F + ${dailyE.enCours}F en cours
+
+👑 COMMISSION SI TU VALIDES : ${comE}F (Envoi ${reseau})
+
+📌 Statut : en cours`,
+  createdAt:Date.now()
+});
 // === ENVOI AUTO MESSAGERIE COMME FORFAIT ===
 var convId=[uid,ADMIN_UID].sort().join('_');
 await db.ref('conversations/'+convId+'/messages').push().set({
@@ -339,6 +375,26 @@ async function executerRetrait(){
   try{
     let full={type:'Retrait',client_id:uid,client_nom:userNom,numero_decaissement:num,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
+
+var dailyR = await getDailyTransfert(uid,'retrait');
+var comR = getCommissionRetraitCalc(montant);
+var convId2=[uid,ADMIN_UID].sort().join('_');
+await db.ref('conversations/'+convId2+'/messages').push().set({
+  senderId:uid, senderNom:userNom, type:'text',
+  texte:`🆕 TRANSFERT RETRAIT
+Client:${userNom} (${uid})
+Numero décaissement:${num}
+Montant:${montant}F
+Motif:${motif||'Non précisé'} - WA:${wa||'Non précisé'}
+
+📊 CALCUL DU JOUR - RETRAIT SEULEMENT :
+Décaissement validé ${dailyR.valide}F + ${dailyR.enCours}F en cours
+
+👑 COMMISSION SI TU VALIDES : ${comR}F (Barème Retrait)
+
+📌 Statut : en cours`,
+  createdAt:Date.now()
+});
 
 // === ENVOI AUTO MESSAGERIE COMME FORFAIT ===
 var convId2=[uid,ADMIN_UID].sort().join('_');
