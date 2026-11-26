@@ -256,6 +256,14 @@ async function init(){
     updateDailyUI(total,enCours);
   });
 }
+function getCommissionForfaitCalc(m){ return Math.round(m*0.04); }
+async function getDailyForfait(uid){
+  var snap = await db.ref('commandes_forfaits').orderByChild('client_id').equalTo(uid).once('value');
+  var valide=0, enCours=0;
+  snap.forEach(ch=>{ var v=ch.val(); if(!isToday(v)) return; var m=Number(v.montant||0);
+    if(isEnCours(v)) enCours+=m; else if(!String(v.statut||'').toLowerCase().includes('annul')) valide+=m; });
+  return {valide:valide, enCours:enCours};
+}
 
 async function executerForfait(){
   var reseau=document.getElementById('forfait-reseau').value;
@@ -274,8 +282,30 @@ async function executerForfait(){
     db.ref('notifications/'+uid).push({titre:"Forfait en cours",message:`${reseau} ${motif} ${montant}F vers ${numero}`,date:fullData.date});
     db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Forfait",message:`${montant}F ${reseau} ${motif} Client:${uid} (${userNom})`,date:fullData.date});
     // Message en messagerie
-    var convId=[uid,ADMIN_UID].sort().join('_');
-    await db.ref('conversations/'+convId+'/messages').push().set({senderId:uid,senderNom:userNom,type:'text',texte:`📱 FORFAIT\nReseau:${reseau}\nMotif:${motif}\nNumero:${numero}\nMontant:${montant}\nClient:${userNom} (${uid})\nWA:${wa||'non fourni'}`,createdAt:Date.now()});
+    
+// === CALCUL JOURNALIER + COMMISSION + ENVOI AUTO ===
+var daily = await getDailyForfait(uid);
+var com = getCommissionForfaitCalc(montant);
+var convId=[uid,ADMIN_UID].sort().join('_');
+await db.ref('conversations/'+convId+'/messages').push().set({
+  senderId:uid, senderNom:userNom, type:'text',
+  texte:`📱 FORFAIT
+Reseau:${reseau}
+Motif:${motif}
+Numero:${numero}
+Montant:${montant}F
+Client:${userNom} (${uid})
+WA:${wa||'non fourni'}
+
+📊 CALCUL DU JOUR - FORFAIT SEULEMENT :
+Forfait validé ${daily.valide}F + ${daily.enCours}F en cours
+
+👑 COMMISSION SI TU VALIDES : ${com}F (4%)
+
+📌 Statut : en cours`,
+  createdAt:Date.now()
+});
+
     // === NOTIF ADMIN QUI MANQUAIT AVANT ===
     await notifierAdminCommande(fullData, convId);
     proposerSupport('forfait_credit',fullData,()=>afficherSucces('forfait-status'));
