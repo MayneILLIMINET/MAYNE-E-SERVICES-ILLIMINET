@@ -276,6 +276,32 @@ async function executerEnvoi(){
     let numeroComplet='+'+indicatif+numeroSans;
     let full={type:'Envoi',client_id:uid,client_nom:userNom,pays:paysNom,pays_code:indicatif,reseau:reseau,numero_complet:numeroComplet,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
+
+// === ENVOI AUTO MESSAGERIE COMME FORFAIT ===
+var convId=[uid,ADMIN_UID].sort().join('_');
+await db.ref('conversations/'+convId+'/messages').push().set({
+  senderId:uid,
+  senderNom:userNom,
+  type:'text',
+  texte:'🆕 NOUVELLE COMMANDE - TRANSFERT ENVOI\n'
+    + '━━━━━━━━━━━━━━\n'
+    + '👤 Client : '+userNom+'\n'
+    + '📞 N° client : '+uid+'\n'
+    + '🕐 Date : '+full.date+'\n'
+    + '━━━━━━━━━━━━━━\n'
+    + '🌍 Pays : '+paysNom+'\n'
+    + '📱 Réseau : '+reseau+'\n'
+    + '📞 N° bénéficiaire : '+numeroComplet+'\n'
+    + '💰 Montant : '+montant+'F\n'
+    + '📝 Motif : '+(motif||'Non précisé')+'\n'
+    + '💬 WhatsApp : '+(wa||'Non précisé')+'\n'
+    + '📌 Statut : en cours\n'
+    + '━━━━━━━━━━━━━━\n'
+    + 'Merci de traiter ma commande 🙏',
+  createdAt:Date.now()
+});
+await db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Transfert Envoi",message:montant+"F vers "+numeroComplet+" - Client:"+uid+" ("+userNom+")",date:full.date,createdAt:Date.now(),type:'commande_transfert',from_id:uid,from_nom:userNom,convId:convId,lu:false});
+
     pushJS(ADMIN_UID, "ENVOI "+montant+"F - "+uid, "TRANSFERT ENVOI\nCLIENT: "+uid+" ("+userNom+")\nNUM BENEF: "+numeroComplet+"\nMONTANT: "+montant+"F\nMOTIF: "+(motif||'Facultatif'));
     lastCommandeType='Envoi';
     lastCommandeTexte = '🆕 NOUVELLE COMMANDE - TRANSFERT ENVOI\n'
@@ -313,6 +339,30 @@ async function executerRetrait(){
   try{
     let full={type:'Retrait',client_id:uid,client_nom:userNom,numero_decaissement:num,montant:montant,motif:motif||'Non précisé',whatsapp_client:wa||'Non précisé',date:new Date().toLocaleString('fr-FR'),createdAt:Date.now(),statut:'en cours'};
     await db.ref('commandes_transferts').push().set(full);
+
+// === ENVOI AUTO MESSAGERIE COMME FORFAIT ===
+var convId2=[uid,ADMIN_UID].sort().join('_');
+await db.ref('conversations/'+convId2+'/messages').push().set({
+  senderId:uid,
+  senderNom:userNom,
+  type:'text',
+  texte:'🆕 NOUVELLE COMMANDE - TRANSFERT RETRAIT\n'
+    + '━━━━━━━━━━━━━━\n'
+    + '👤 Client : '+userNom+'\n'
+    + '📞 N° client : '+uid+'\n'
+    + '🕐 Date : '+full.date+'\n'
+    + '━━━━━━━━━━━━━━\n'
+    + '💸 Type : Retrait\n'
+    + '📞 N° décaissement : '+num+'\n'
+    + '💰 Montant : '+montant+'F\n'
+    + '📝 Motif : '+(motif||'Non précisé')+'\n'
+    + '💬 WhatsApp : '+(wa||'Non précisé')+'\n'
+    + '📌 Statut : en cours\n'
+    + '━━━━━━━━━━━━━━\n'
+    + 'Merci de traiter mon retrait 🙏',
+  createdAt:Date.now()
+});
+await db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Retrait",message:montant+"F - Client:"+uid+" ("+userNom+")",date:full.date,createdAt:Date.now(),type:'commande_transfert',from_id:uid,from_nom:userNom,convId:convId2,lu:false});
     pushJS(ADMIN_UID, "RETRAIT "+montant+"F - "+uid, "TRANSFERT RETRAIT\nCLIENT: "+uid+" ("+userNom+")\nNUM DECAISSEMENT: "+num+"\nMONTANT: "+montant+"F\nMOTIF: "+(motif||'Facultatif'));
     lastCommandeType='Retrait';
     lastCommandeTexte = '🆕 NOUVELLE COMMANDE - TRANSFERT RETRAIT\n'
