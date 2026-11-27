@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Transfert - MAYNE - AVEC PREUVE</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -192,7 +213,45 @@ function envoyerVersMessagerieAdmin(texte, choix){
   localStorage.setItem('mayne_pending_admin_msg', JSON.stringify({convId:convId, adminId:ADMIN_UID, adminNom:ADMIN_NOM, texte:texteFinal}));
   location.href='messagerie.html?conv='+convId+'&to='+ADMIN_UID;
 }
-function proposerSupportMessagerie(){
+
+/* === TEXTE UNIQUE : MESSAGERIE AUTO = WHATSAPP === */
+/* Envoi et Retrait ont chacun leur builder, pour que WhatsApp = auto à l'identique */
+function buildTexteEnvoi(d, daily, com){
+  return `🆕 TRANSFERT ENVOI
+Client:${userNom} (${uid})
+Pays:${d.pays} - ${d.reseau}
+Numero:${d.numero_complet}
+Montant:${d.montant}F
+Motif:${d.motif||'Non précisé'} - WA:${d.whatsapp_client||'Non précisé'}
+
+📊 CALCUL DU JOUR - ENVOI SEULEMENT :
+Envoi validé ${daily.valide}F + ${daily.enCours}F en cours
+
+👑 COMMISSION SI TU VALIDES : ${com}F (Envoi ${d.reseau})
+
+📌 Statut : en cours`;
+}
+function buildTexteRetrait(d, daily, com){
+  return `🆕 TRANSFERT RETRAIT
+Client:${userNom} (${uid})
+Numero décaissement:${d.numero_decaissement}
+Montant:${d.montant}F
+Motif:${d.motif||'Non précisé'} - WA:${d.whatsapp_client||'Non précisé'}
+
+📊 CALCUL DU JOUR - RETRAIT SEULEMENT :
+Décaissement validé ${daily.valide}F + ${daily.enCours}F en cours
+
+👑 COMMISSION SI TU VALIDES : ${com}F (Barème Retrait)
+
+📌 Statut : en cours`;
+}
+
+function proposerSupportMessagerie(daily, com, type, fullData){
+  // Si on reçoit daily/com/full, on reconstruit le texte exact auto pour être sûr que WhatsApp = messagerie auto
+  if(fullData && daily && com!==undefined && com!==null){
+    if(type==='Envoi') lastCommandeTexte = buildTexteEnvoi(fullData, daily, com);
+    else if(type==='Retrait') lastCommandeTexte = buildTexteRetrait(fullData, daily, com);
+  }
   showConfirm('Contacter le personnel ?<br><span style="font-size:13px;color:#aaa">Pas besoin = <b style="color:#fff">Messagerie</b><br>Oui bien sûr = <b style="color:#25D366">WhatsApp</b></span>', function(oui){
     if(oui){
       var txt = lastCommandeTexte + '\n━━━━━━━━━━━━━━\n💬 Réponse personnel : Oui bien sûr → WhatsApp';
@@ -296,21 +355,10 @@ async function executerEnvoi(){
 var dailyE = await getDailyTransfert(uid,'envoi');
 var comE = getCommissionEnvoiCalc(montant, reseau);
 var convId=[uid,ADMIN_UID].sort().join('_');
+var texteEnvoi = buildTexteEnvoi(full, dailyE, comE);
 await db.ref('conversations/'+convId+'/messages').push().set({
   senderId:uid, senderNom:userNom, type:'text',
-  texte:`🆕 TRANSFERT ENVOI
-Client:${userNom} (${uid})
-Pays:${paysNom} - ${reseau}
-Numero:${numeroComplet}
-Montant:${montant}F
-Motif:${motif||'Non précisé'} - WA:${wa||'Non précisé'}
-
-📊 CALCUL DU JOUR - ENVOI SEULEMENT :
-Envoi validé ${dailyE.valide}F + ${dailyE.enCours}F en cours
-
-👑 COMMISSION SI TU VALIDES : ${comE}F (Envoi ${reseau})
-
-📌 Statut : en cours`,
+  texte: texteEnvoi,
   createdAt:Date.now()
 });
 
@@ -318,25 +366,11 @@ await db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Transfert Envoi",m
 
     pushJS(ADMIN_UID, "ENVOI "+montant+"F - "+uid, "TRANSFERT ENVOI\nCLIENT: "+uid+" ("+userNom+")\nNUM BENEF: "+numeroComplet+"\nMONTANT: "+montant+"F\nMOTIF: "+(motif||'Facultatif'));
     lastCommandeType='Envoi';
-    lastCommandeTexte = '🆕 NOUVELLE COMMANDE - TRANSFERT ENVOI\n'
-      + '━━━━━━━━━━━━━━\n'
-      + '👤 Client : '+userNom+'\n'
-      + '📞 N° client : '+uid+'\n'
-      + '🕐 Date : '+full.date+'\n'
-      + '━━━━━━━━━━━━━━\n'
-      + '🌍 Pays : '+paysNom+'\n'
-      + '📱 Réseau : '+reseau+'\n'
-      + '📞 N° bénéficiaire : '+numeroComplet+'\n'
-      + '💰 Montant : '+montant+'F\n'
-      + '📝 Motif : '+(motif||'Non précisé')+'\n'
-      + '💬 WhatsApp : '+(wa||'Non précisé')+'\n'
-      + '📌 Statut : en cours\n'
-      + '━━━━━━━━━━━━━━\n'
-      + 'Merci de traiter ma commande 🙏';
+    lastCommandeTexte = texteEnvoi;
     document.getElementById('transfert-numero').value='';document.getElementById('transfert-montant').value='';document.getElementById('transfert-motif').value='';document.getElementById('transfert-wa').value='';
     document.getElementById('warning-envoi').style.display='none';document.getElementById('btn-envoi').innerText='Continuer';document.getElementById('btn-envoi').className='btn btn-envoi';etapeEnvoi=1;
     _lock=false;
-    proposerSupportMessagerie();
+    proposerSupportMessagerie(dailyE, comE, 'Envoi', full);
   }catch(e){showAlert(e.message);_lock=false;}
 }
 function handleRetrait(){
@@ -357,47 +391,24 @@ async function executerRetrait(){
 var dailyR = await getDailyTransfert(uid,'retrait');
 var comR = getCommissionRetraitCalc(montant);
 var convId2=[uid,ADMIN_UID].sort().join('_');
+var texteRetrait = buildTexteRetrait(full, dailyR, comR);
 await db.ref('conversations/'+convId2+'/messages').push().set({
   senderId:uid, senderNom:userNom, type:'text',
-  texte:`🆕 TRANSFERT RETRAIT
-Client:${userNom} (${uid})
-Numero décaissement:${num}
-Montant:${montant}F
-Motif:${motif||'Non précisé'} - WA:${wa||'Non précisé'}
-
-📊 CALCUL DU JOUR - RETRAIT SEULEMENT :
-Décaissement validé ${dailyR.valide}F + ${dailyR.enCours}F en cours
-
-👑 COMMISSION SI TU VALIDES : ${comR}F (Barème Retrait)
-
-📌 Statut : en cours`,
+  texte: texteRetrait,
   createdAt:Date.now()
 });
 
 await db.ref('notifications/'+ADMIN_UID).push({titre:"Nouveau Retrait",message:montant+"F - Client:"+uid+" ("+userNom+")",date:full.date,createdAt:Date.now(),type:'commande_transfert',from_id:uid,from_nom:userNom,convId:convId2,lu:false});
     pushJS(ADMIN_UID, "RETRAIT "+montant+"F - "+uid, "TRANSFERT RETRAIT\nCLIENT: "+uid+" ("+userNom+")\nNUM DECAISSEMENT: "+num+"\nMONTANT: "+montant+"F\nMOTIF: "+(motif||'Facultatif'));
     lastCommandeType='Retrait';
-    lastCommandeTexte = '🆕 NOUVELLE COMMANDE - TRANSFERT RETRAIT\n'
-      + '━━━━━━━━━━━━━━\n'
-      + '👤 Client : '+userNom+'\n'
-      + '📞 N° client : '+uid+'\n'
-      + '🕐 Date : '+full.date+'\n'
-      + '━━━━━━━━━━━━━━\n'
-      + '💸 Type : Retrait\n'
-      + '📞 N° décaissement : '+num+'\n'
-      + '💰 Montant : '+montant+'F\n'
-      + '📝 Motif : '+(motif||'Non précisé')+'\n'
-      + '💬 WhatsApp : '+(wa||'Non précisé')+'\n'
-      + '📌 Statut : en cours\n'
-      + '━━━━━━━━━━━━━━\n'
-      + 'Merci de traiter mon retrait 🙏';
+    lastCommandeTexte = texteRetrait;
     document.getElementById('retrait-numero').value='';document.getElementById('retrait-montant').value='';document.getElementById('retrait-motif').value='';document.getElementById('retrait-wa').value='';
     document.getElementById('warning-retrait').style.display='none';document.getElementById('btn-retrait').innerText='Continuer';document.getElementById('btn-retrait').className='btn btn-retrait';etapeRetrait=1;
     _lock=false;
-    proposerSupportMessagerie();
+    proposerSupportMessagerie(dailyR, comR, 'Retrait', full);
   }catch(e){showAlert(e.message);_lock=false;}
 }
 firebase.auth().onAuthStateChanged(function(user){ if(user){ init(); } else { firebase.auth().signInAnonymously(); } });
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
 </html>
